@@ -26,28 +26,32 @@ Werkwijze:
   status = todo | doing | wait | done ("wait" als er op iemand gewacht wordt).
 - project_id = kies de best passende uit de catalogus, of null als je het echt nog niet zeker weet.
 
-BELANGRIJK over "items":
-- Geef in "items" ALTIJD de VOLLEDIGE, actuele set actiepunten voor het HUIDIGE gesprek terug — dus inclusief eerder genoemde,
-  met je correcties erin verwerkt. NIET alleen de nieuwe. De app vervangt de set van dit gesprek door wat jij teruggeeft.
-- Laat "items" leeg ([]) zolang je alleen een vraag stelt of nog niets concreets hebt.
-- Zet "done" op true zodra dit onderwerp echt is afgerond en de gebruiker tevreden lijkt (of duidelijk een nieuw onderwerp begint).
-  Zolang er nog iets aan deze taken kan veranderen, houd je "done" op false.
+DATUMS — HEEL BELANGRIJK:
+- Reken NOOIT zelf weekdagen of datums uit. Gebruik UITSLUITEND de meegestuurde DATUMTABEL om "morgen", "vrijdag", "volgende week" enz. om te zetten naar een YYYY-MM-DD datum.
+
+NIEUW vs. AANPASSEN vs. VERWIJDEREN:
+- "items" = NIEUWE actiepunten (alleen dingen die nog niet bestaan).
+- "updates" = WIJZIGINGEN aan een BESTAANDE taak. Gebruik dit bij "verplaats/verzet naar …", "hernoem", "zet op …", "is voor Marlon", "klaar", enz.
+  Elk update-object heeft de "id" van de bestaande taak (uit de lijst hieronder) + alleen de velden die wijzigen (bv. {"id":"…","due":"2026-06-27"}).
+  Maak NOOIT een nieuwe taak als de bedoeling is een bestaande te verplaatsen of aan te passen.
+- "removes" = id's van taken die weg mogen ([{"id":"…","title":"…"}] of gewoon ["id"]).
+- Laat alle drie leeg zolang je alleen een vraag stelt.
 
 Antwoord ALTIJD met geldige JSON en niets eromheen:
-{"reply":"je bericht aan de gebruiker","done":false,"items":[{"title":"","owner":"","contact":"","due":null,"status":"todo","project_id":null}]}`;
+{"reply":"je bericht aan de gebruiker","done":false,"items":[{"title":"","owner":"","contact":"","due":null,"status":"todo","project_id":null}],"updates":[{"id":"","title":"","due":null}],"removes":[]}`;
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "method not allowed" });
   try {
-    const { history = [], catalog = [], existing = [], today, who } = req.body || {};
+    const { history = [], catalog = [], existing = [], today, dates = "", who } = req.body || {};
     if (!anthropic) {
-      return res.status(200).json({ reply: "(AI staat nog uit — ik heb je input genoteerd.)", items: [], done: false, noai: true });
+      return res.status(200).json({ reply: "(AI staat nog uit — ik heb je input genoteerd.)", items: [], updates: [], removes: [], done: false, noai: true });
     }
     const cat = (catalog || []).map(c => `- ${c.project_id} → ${c.client} · ${c.project}`).join("\n") || "(nog geen klanten/projecten)";
-    const ex = (existing || []).slice(0, 80)
-      .map(t => `- ${t.title} [${t.client || "?"}${t.project ? " · " + t.project : ""}] ${t.owner ? "@" + t.owner : ""}${t.due ? " due " + t.due : ""}`)
+    const ex = (existing || []).slice(0, 90)
+      .map(t => `- id:${t.id} | ${t.title} [${t.client || "?"}${t.project ? " · " + t.project : ""}] ${t.owner ? "@" + t.owner : ""}${t.due ? " due " + t.due : ""}`)
       .join("\n") || "(nog geen openstaande taken)";
-    const sys = `${SYSTEM}\n\nVANDAAG: ${today || ""}\nGEBRUIKER: ${who || ""}\nCATALOGUS (project_id → klant · project):\n${cat}\n\nBESTAANDE OPENSTAANDE TAKEN (voor dubbele-check en werkdruk):\n${ex}`;
+    const sys = `${SYSTEM}\n\nVANDAAG: ${today || ""}\nGEBRUIKER: ${who || ""}\n\nDATUMTABEL (gebruik deze voor alle relatieve dagen):\n${dates}\n\nCATALOGUS (project_id → klant · project):\n${cat}\n\nBESTAANDE OPENSTAANDE TAKEN (met id; voor dubbele-check, werkdruk, en updates/removes):\n${ex}`;
     const messages = (history || []).slice(-24).map(m => ({
       role: m.role === "assistant" ? "assistant" : "user",
       content: String(m.content || ""),
@@ -65,6 +69,8 @@ export default async function handler(req, res) {
     return res.status(200).json({
       reply: parsed.reply || "",
       items: Array.isArray(parsed.items) ? parsed.items : [],
+      updates: Array.isArray(parsed.updates) ? parsed.updates : [],
+      removes: Array.isArray(parsed.removes) ? parsed.removes : [],
       done: !!parsed.done,
     });
   } catch (e) {

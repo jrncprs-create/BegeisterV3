@@ -8,16 +8,24 @@ const MODEL = "claude-haiku-4-5-20251001";
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "method not allowed" });
   try {
-    const { who = "", partner = "", busy = "", openCount = 0, partnerOpen = 0, partnerDone = [], day = "" } = req.body || {};
+    const { who = "", partner = "", busy = "", openCount = 0, partnerOpen = 0, partnerDone = [], day = "", projects = [] } = req.body || {};
     if (!anthropic) return res.status(200).json({ text: "" });
-    const done = Array.isArray(partnerDone) ? partnerDone.filter(Boolean).slice(0, 4) : [];
-    const sys = `Schrijf ÉÉN korte, warme en licht grappige one-liner in het Nederlands, gericht aan ${who} (werkt samen met ${partner}) bij Begeister (licht, decor en events).
-Stijl: droge, speelse, lieve AI-humor. Persoonlijk en oprecht positief. Maximaal ~22 woorden. Geen emoji. Geen aanhalingstekens. Varieer sterk, nooit cliché.
-HEEL BELANGRIJK: zeg NOOIT iets ten nadele van ${who} of ${partner}. Geen sneren, geen vergelijkingen waarin iemand er slechter uitkomt, geen subtiele steken. Alleen opbouwend en aardig — humor mag, maar altijd liefdevol.
-Je mag riffen op precies één van deze hoeken:
-- de drukte van de week (${busy}; ${openCount} open taken) — bemoedigend;
-- het weer (verzin iets aannemelijk Nederlands);
-- een leuk nieuwtje/compliment over ${partner} qua werk${done.length ? ` (zojuist afgerond: ${done.join("; ")})` : ""} — waarderend, niet competitief.
+    const projlist = (projects || []).map(p => typeof p === "string" ? p : `${p.client || ""}${p.project ? " · " + p.project : ""}`).filter(Boolean).join(", ") || "(geen)";
+    const sys = `Schrijf ÉÉN korte, INSPIRERENDE one-liner in het Nederlands, gericht aan ${who} (werkt samen met ${partner}) bij Begeister — een studio die met licht, decor en events mooie dingen maakt.
+Toon: warm, oprecht en inspirerend, met trots op vakmanschap. Wissel af tussen deze invalshoeken:
+- trots op het maken ("vandaag bouwen jullie iets dat er gisteren nog niet was");
+- poëtisch over licht & sfeer ("jullie werken met het mooiste materiaal: licht");
+- creativiteit & verbeelding ("het mooiste idee bestaat nog niet — tot jij het bedenkt");
+- impact op het publiek / herinneringen maken;
+- een oprecht talent-compliment (oog voor detail, gevoel voor sfeer);
+- rust & focus voor de dag;
+- teamspirit (jullie samen);
+- spreukachtig-krachtig;
+- af en toe droog-speels maar altijd opbouwend.
+Regels: maximaal ~22 woorden. Geen emoji. Geen aanhalingstekens. Varieer sterk, nooit cliché.
+NOOIT iets ten nadele van ${who} of ${partner} — geen sneren of competitieve vergelijkingen.
+Het weer of de drukte mag HOOGSTENS een klein terloops bonusje zijn, nooit het hoofdthema.
+Je MAG soms (niet altijd) een projectnaam noemen ter inspiratie. Bestaande projecten: ${projlist}.
 Spreek ${who} direct aan met de naam. Geef ALLEEN de zin terug, niets eromheen.`;
     const resp = await anthropic.messages.create({
       model: MODEL, max_tokens: 120, system: sys,

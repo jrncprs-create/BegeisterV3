@@ -471,11 +471,6 @@
       </g>
     </svg>
     <h2 class="home-compliment" id="compliment"></h2>
-    <div class="home-pills">
-      <button class="home-pill" onclick="voiceMode()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>Voice Mode</button>
-      <button class="home-pill" onclick="pasteClip()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="4" width="8" height="4" rx="1"/><path d="M9 4H6a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3"/></svg>Plakken</button>
-      <button class="home-pill" onclick="openCamera()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h3l2-2h8l2 2h3v11H3z"/><circle cx="12" cy="13" r="3.4"/></svg>Open Camera</button>
-    </div>
   </div>
 </div>
 
@@ -1334,14 +1329,15 @@ const COMPLIMENTS=[
 ];
 function localSpark(me,other,busy){
   const pool=[
-    `Goeiemorgen ${me}. Het is ${busy} deze week — maar jij en ${other} fixen dat samen met gemak.`,
-    `${me}, jij en ${other} zijn samen het soort team waar de mooiste producties uit ontstaan.`,
-    `${me}, ${other} heeft weer iets moois geregeld — en samen maken jullie het helemaal af.`,
-    `Het wordt een ${busy} dag, ${me}. Maar met ${other} naast je komt het altijd goed.`,
-    `${me}, regen of zon: binnen brengen jullie de magie. Trots op jullie tweeën.`,
-    `Klein compliment, ${me}: jij en ${other} maken van elk project iets bijzonders.`,
-    `${me}, de planning is ${busy}, maar paniek staat je niet — jij straalt rust uit.`,
-    `${me}, vandaag wordt weer een mooie dag om samen met ${other} iets moois te bouwen.`
+    `${me}, vandaag bouwen jullie weer iets dat er gisteren nog niet was. Dat is best bijzonder.`,
+    `${me}, jullie werken met het mooiste materiaal dat er is: licht. Maak er iets magisch van.`,
+    `Het mooiste idee van vandaag bestaat nog niet — tot jij het bedenkt, ${me}.`,
+    `${me}, straks staat iemand stil te genieten van iets dat jij hebt gemaakt. Daar doe je het voor.`,
+    `${me}, jouw oog voor detail is precies waarom het altijd net even beter wordt.`,
+    `Eén ding tegelijk, ${me}. Jij maakt van complex altijd weer iets dat klopt.`,
+    `${me} en ${other}: de een droomt, de ander bouwt — en samen staat het er.`,
+    `${me}, perfectie zit in de details die niemand bewust ziet, maar iedereen voelt.`,
+    `${me}, vandaag maken jullie weer iets moois. De wereld mag het straks zien.`
   ];
   return pool[Math.floor(Math.random()*pool.length)];
 }
@@ -1355,8 +1351,9 @@ async function renderCompliment(){
   const busy=openCount>20?'erg druk':(openCount>10?'aardig druk':'lekker behapbaar');
   el.textContent=localSpark(me,other,busy);            // direct iets tonen
   try{
+    const projects=state.projects.filter(p=>p.id!=='__inbox__').map(p=>({client:p.client,project:p.project||''}));
     const r=await fetch('/api/spark?cb='+Date.now(),{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({who:me,partner:other,busy,openCount,partnerOpen,partnerDone,day:new Date().toLocaleDateString('nl-NL',{weekday:'long'})})});
+      body:JSON.stringify({who:me,partner:other,busy,openCount,partnerOpen,partnerDone,projects,day:TODAY.toLocaleDateString('nl-NL',{weekday:'long'})})});
     const d=await r.json();
     if(d&&d.text) el.textContent=d.text;
   }catch(_){}
@@ -1391,63 +1388,92 @@ function addTyping(){const t=document.getElementById('chatThread');if(!t)return 
 function knownIds(){return new Set(state.projects.filter(p=>p.id!=='__inbox__').map(p=>p.id));}
 // AI-first: voorstel tonen (samenvatting + af-vinkbare, bewerkbare lijst) en
 // pas op "Opslaan" wegzetten. pendingSourceId = bron van een foto/bijlage.
-let proposal=[], proposalCard=null, pendingSourceId=null;
-function resetConversation(){ chatHistory=[]; proposal=[]; proposalCard=null; pendingSourceId=null;
+let proposal={items:[],updates:[],removes:[]}, proposalCard=null, pendingSourceId=null;
+function resetConversation(){ chatHistory=[]; proposal={items:[],updates:[],removes:[]}; proposalCard=null; pendingSourceId=null;
   const t=document.getElementById('chatThread'); if(t)t.innerHTML=''; clearChips(); }
-function renderProposal(items){
+function cleanPatch(u){const p={};const ok=knownIds();
+  if(typeof u.title==='string'&&u.title.trim())p.title=u.title.trim();
+  if(u.owner==='Jeroen'||u.owner==='Marlon')p.owner=u.owner; else if(u.owner==='')p.owner=null;
+  if('due' in u)p.due=u.due||null;
+  if('contact' in u)p.contact=u.contact||null;
+  if(['todo','doing','wait','done'].includes(u.status))p.status=u.status;
+  if(u.project_id&&ok.has(u.project_id))p.project_id=u.project_id;
+  return p;}
+function itemTitleById(id){for(const p of state.projects){const it=p.items.find(i=>i.id===id);if(it)return it.t;}return '';}
+function renderProposal(data){
   const ok=knownIds();
-  proposal=(items||[]).filter(it=>it&&it.title).map(it=>({
-    title:String(it.title).trim(),
-    owner:(it.owner==='Jeroen'||it.owner==='Marlon')?it.owner:'',
-    contact:it.contact||'', due:it.due||null,
-    project_id:(it.project_id&&ok.has(it.project_id))?it.project_id:null,
-    checked:true }));
-  if(!proposal.length) return;
-  if(proposalCard&&proposalCard.parentNode) proposalCard.remove();   // oude voorstel vervangen
+  proposal={
+    items:(data.items||[]).filter(it=>it&&it.title).map(it=>({title:String(it.title).trim(),
+      owner:(it.owner==='Jeroen'||it.owner==='Marlon')?it.owner:'', contact:it.contact||'', due:it.due||null,
+      project_id:(it.project_id&&ok.has(it.project_id))?it.project_id:null, checked:true})),
+    updates:(data.updates||[]).filter(u=>u&&u.id).map(u=>({id:u.id, title:(u.title||itemTitleById(u.id)||'taak'), patch:cleanPatch(u), checked:true})),
+    removes:(data.removes||[]).map(r=>({id:(typeof r==='string'?r:r.id), title:(typeof r==='object'&&r.title)?r.title:itemTitleById(typeof r==='string'?r:r.id), checked:true})).filter(r=>r.id)
+  };
+  if(!proposal.items.length&&!proposal.updates.length&&!proposal.removes.length) return;
+  if(proposalCard&&proposalCard.parentNode) proposalCard.remove();
   const t=document.getElementById('chatThread'); if(!t)return;
   const card=document.createElement('div'); card.className='msg ai proposal';
-  const head = proposal.length>1 ? 'Voorstel — vink aan, pas aan, en sla op' : 'Voorstel — check en sla op';
-  card.innerHTML='<div class="prop-h">'+head+'</div>'
-    + proposal.map((p,i)=>{const meta=[p.owner,p.due?dStr(p.due):'',projName(p.project_id)].filter(Boolean).join(' · ');
-        return '<div class="prop-row">'
-          +'<input type="checkbox" checked onchange="proposal['+i+'].checked=this.checked">'
-          +'<input class="prop-title" value="'+escapeHtml(p.title).replace(/"/g,'&quot;')+'" oninput="proposal['+i+'].title=this.value">'
-          +'<span class="prop-pencil" onclick="this.previousElementSibling.focus()">✎</span>'
-          +(meta?'<span class="prop-meta">'+escapeHtml(meta)+'</span>':'')
-          +'</div>';}).join('')
-    + '<div class="prop-foot"><button class="prop-save" onclick="saveProposal()">Opslaan</button></div>';
+  let html='<div class="prop-h">Voorstel — vink aan, pas aan, en sla op</div>';
+  html+=proposal.items.map((p,i)=>{const meta=[p.owner,p.due?dStr(p.due):'',projName(p.project_id)].filter(Boolean).join(' · ');
+    return '<div class="prop-row"><input type="checkbox" checked onchange="proposal.items['+i+'].checked=this.checked">'
+      +'<input class="prop-title" value="'+escapeHtml(p.title).replace(/"/g,'&quot;')+'" oninput="proposal.items['+i+'].title=this.value">'
+      +'<span class="prop-pencil" onclick="this.previousElementSibling.focus()">✎</span>'
+      +(meta?'<span class="prop-meta">'+escapeHtml(meta)+'</span>':'')+'</div>';}).join('');
+  html+=proposal.updates.map((u,i)=>{const m=[];if(u.patch.due!==undefined)m.push(u.patch.due?dStr(u.patch.due):'geen datum');if(u.patch.owner!==undefined)m.push(u.patch.owner||'—');if(u.patch.project_id)m.push(projName(u.patch.project_id));
+    return '<div class="prop-row"><input type="checkbox" checked onchange="proposal.updates['+i+'].checked=this.checked">'
+      +'<span class="prop-title" style="opacity:.95">↻ '+escapeHtml(u.patch.title||u.title)+'</span>'
+      +(m.length?'<span class="prop-meta">'+escapeHtml(m.join(' · '))+'</span>':'')+'</div>';}).join('');
+  html+=proposal.removes.map((r,i)=>'<div class="prop-row"><input type="checkbox" checked onchange="proposal.removes['+i+'].checked=this.checked">'
+      +'<span class="prop-title" style="opacity:.8;text-decoration:line-through">✕ '+escapeHtml(r.title||'taak')+'</span></div>').join('');
+  html+='<div class="prop-foot"><button class="prop-save" onclick="saveProposal()">Opslaan</button></div>';
+  card.innerHTML=html;
   t.appendChild(card); proposalCard=card; card.scrollIntoView&&card.scrollIntoView({block:'nearest'});
 }
 function dStr(due){try{return d(due).toLocaleDateString('nl-NL',{day:'numeric',month:'short'});}catch(_){return due;}}
 async function saveProposal(){
-  const chosen=proposal.filter(p=>p.checked&&p.title.trim());
-  if(!chosen.length){ addMsg('ai','Niets aangevinkt — ik bewaar niets.'); return; }
-  const transcript=chatHistory.filter(m=>m.role==='user').map(m=>m.content).join('\n')||'(chat)';
-  let srcId=pendingSourceId;
-  if(!srcId){ const {data:src}=await sb.from('sources').insert({channel:'chat',sender:who||'Chat',body:transcript,processed:true}).select().single(); srcId=src?src.id:null; }
-  const rows=chosen.map(p=>({project_id:p.project_id||null,source_id:srcId,title:p.title.trim(),
-    owner:p.owner||null,contact:p.contact||null,due:p.due||null,status:'todo'}));
-  const {data:ins}=await sb.from('items').insert(rows).select('id,project_id');
-  lastAddedIds=(ins||[]).map(r=>r.id);   // net toegevoegd → bovenaan
+  const news=proposal.items.filter(p=>p.checked&&p.title.trim());
+  const ups=proposal.updates.filter(u=>u.checked&&Object.keys(u.patch).length);
+  const rems=proposal.removes.filter(r=>r.checked&&r.id);
+  if(!news.length&&!ups.length&&!rems.length){ addMsg('ai','Niets aangevinkt — ik bewaar niets.'); return; }
+  // wijzigingen + verwijderingen op bestaande taken
+  for(const u of ups){ await sb.from('items').update(u.patch).eq('id',u.id); }
+  if(rems.length){ await sb.from('items').delete().in('id',rems.map(r=>r.id)); }
+  // nieuwe taken
+  let ins=[];
+  if(news.length){
+    const transcript=chatHistory.filter(m=>m.role==='user').map(m=>m.content).join('\n')||'(chat)';
+    let srcId=pendingSourceId;
+    if(!srcId){ const {data:src}=await sb.from('sources').insert({channel:'chat',sender:who||'Chat',body:transcript,processed:true}).select().single(); srcId=src?src.id:null; }
+    const rows=news.map(p=>({project_id:p.project_id||null,source_id:srcId,title:p.title.trim(),owner:p.owner||null,contact:p.contact||null,due:p.due||null,status:'todo'}));
+    const r=await sb.from('items').insert(rows).select('id,project_id'); ins=r.data||[];
+  }
+  lastAddedIds=[...ins.map(r=>r.id), ...ups.map(u=>u.id)];   // nieuw + verplaatst bovenaan
   if(proposalCard){proposalCard.classList.add('saved');}
-  // bepaal waar het landde → daarheen navigeren
-  const pids=[...new Set((ins||[]).map(r=>r.project_id))];
-  const orphan=(ins||[]).some(r=>!r.project_id);
+  const pids=[...new Set(ins.map(r=>r.project_id))];
+  const orphan=ins.some(r=>!r.project_id);
   resetConversation();
   await refresh();
-  if(orphan){ activeTab='__inbox__'; }
-  else if(pids.length===1 && pids[0]){ activeTab=pids[0]; }
-  else { activeTab='all'; }
+  if(news.length){ activeTab = orphan ? '__inbox__' : (pids.length===1&&pids[0] ? pids[0] : 'all'); }
+  else { activeTab='all'; }   // alleen wijzigingen/verwijderingen → overzicht
   setView('taken');
+}
+function dateTable(){
+  const days=['zondag','maandag','dinsdag','woensdag','donderdag','vrijdag','zaterdag'];
+  const base=new Date(TODAY.getFullYear(),TODAY.getMonth(),TODAY.getDate());
+  const out=[];
+  for(let i=0;i<16;i++){const dt=new Date(base.getFullYear(),base.getMonth(),base.getDate()+i);
+    const lbl=i===0?' (vandaag)':(i===1?' (morgen)':(i===2?' (overmorgen)':''));
+    out.push(iso(dt)+' = '+days[dt.getDay()]+lbl);}
+  return out.join('\n');
 }
 async function chatTurn(){
   const typing=addTyping();
   let data=null;
   try{
     const catalog=state.projects.filter(p=>p.id!=='__inbox__').map(p=>({project_id:p.id,client:p.client,project:p.project||''}));
-    const existing=allItems().filter(x=>x.it.status!=='done').slice(0,80).map(x=>({title:x.it.t,owner:x.it.owner||'',due:x.it.due||null,client:x.p.client,project:x.p.project||''}));
+    const existing=allItems().filter(x=>x.it.status!=='done').slice(0,90).map(x=>({id:x.it.id,title:x.it.t,owner:x.it.owner||'',due:x.it.due||null,client:x.p.client,project:x.p.project||''}));
     const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({history:chatHistory,catalog,existing,today:iso(new Date()),who})});
+      body:JSON.stringify({history:chatHistory,catalog,existing,today:iso(TODAY),dates:dateTable(),who})});
     data=await r.json();
   }catch(_){}
   if(typing)typing.remove();
@@ -1463,7 +1489,7 @@ async function chatSend(){
   if(!data||data.error||data.noai){ chatHistory.pop(); addMsg('ai','Sorry, ik ben er even niet bij — de AI is niet bereikbaar. Probeer het zo nog eens.'); const t=document.getElementById('chatInput'); if(t){t.value=text;t.dispatchEvent(new Event('input'));} return; }
   const reply=data.reply||'';
   if(reply){addMsg('ai',reply);chatHistory.push({role:'assistant',content:reply});}
-  if(data.items&&data.items.length){ renderProposal(data.items); }
+  if((data.items&&data.items.length)||(data.updates&&data.updates.length)||(data.removes&&data.removes.length)){ renderProposal(data); }
 }
 let _greeted=false;
 function chatGreet(){
@@ -1507,13 +1533,13 @@ async function handlePhoto(e){
     const b64=await fileToB64(f);
     const catalog=state.projects.filter(p=>p.id!=='__inbox__').map(p=>({project_id:p.id,client:p.client,project:p.project||''}));
     const r=await fetch('/api/vision',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({image:b64,media_type:f.type||'image/jpeg',filename:f.name,catalog,today:iso(new Date()),who})});
+      body:JSON.stringify({image:b64,media_type:f.type||'image/jpeg',filename:f.name,catalog,today:iso(TODAY),dates:dateTable(),who})});
     data=await r.json();
   }catch(_){}
   if(typing)typing.remove();
   if(!data||data.error){ addMsg('ai','De foto staat onder Bronnen, maar ik kon \'m niet automatisch lezen. Vertel kort wat erop staat?'); return; }
   if(data.reply){ addMsg('ai',data.reply); chatHistory.push({role:'assistant',content:data.reply}); }
-  if(data.items&&data.items.length){ renderProposal(data.items); }
+  if(data.items&&data.items.length){ renderProposal(data); }
   else { addMsg('ai','Geen concrete actiepunten uit de foto — vertel maar wat je ermee wilt.'); }
 }
 let _rec=null;
