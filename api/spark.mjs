@@ -12,11 +12,12 @@ export default async function handler(req, res) {
     if (!anthropic) return res.status(200).json({ text: "" });
     const done = Array.isArray(partnerDone) ? partnerDone.filter(Boolean).slice(0, 4) : [];
     const sys = `Schrijf ÉÉN korte, warme en licht grappige one-liner in het Nederlands, gericht aan ${who} (werkt samen met ${partner}) bij Begeister (licht, decor en events).
-Stijl: droge, speelse AI-humor. Persoonlijk. Maximaal ~22 woorden. Geen emoji. Geen aanhalingstekens. Varieer sterk, nooit cliché.
+Stijl: droge, speelse, lieve AI-humor. Persoonlijk en oprecht positief. Maximaal ~22 woorden. Geen emoji. Geen aanhalingstekens. Varieer sterk, nooit cliché.
+HEEL BELANGRIJK: zeg NOOIT iets ten nadele van ${who} of ${partner}. Geen sneren, geen vergelijkingen waarin iemand er slechter uitkomt, geen subtiele steken. Alleen opbouwend en aardig — humor mag, maar altijd liefdevol.
 Je mag riffen op precies één van deze hoeken:
-- de drukte van de week (${busy}; ${openCount} open taken, ${partnerOpen} bij ${partner});
+- de drukte van de week (${busy}; ${openCount} open taken) — bemoedigend;
 - het weer (verzin iets aannemelijk Nederlands);
-- een nieuwtje over ${partner} qua werk${done.length ? ` (zojuist afgevinkt: ${done.join("; ")})` : ""}.
+- een leuk nieuwtje/compliment over ${partner} qua werk${done.length ? ` (zojuist afgerond: ${done.join("; ")})` : ""} — waarderend, niet competitief.
 Spreek ${who} direct aan met de naam. Geef ALLEEN de zin terug, niets eromheen.`;
     const resp = await anthropic.messages.create({
       model: MODEL, max_tokens: 120, system: sys,

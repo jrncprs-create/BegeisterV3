@@ -213,10 +213,9 @@
   .src-derived .di{font-size:12.5px;padding:6px 0;border-bottom:1px dashed var(--line);display:flex;gap:8px;align-items:flex-start}
 
   /* RAIL */
-  .rail{background:var(--side);border-right:1px solid var(--line);width:360px;flex:0 0 360px;display:flex;flex-direction:column;overflow:hidden;position:sticky;top:0;height:100dvh;align-self:flex-start}
-  #wachterBlock{padding:18px 16px 4px;overflow:auto;flex:1;min-height:0}
-  .rail #chatThread{padding:2px 14px;max-height:32vh;overflow:auto;border-top:1px solid var(--line)}
-  .rail #chatDock{border-top:1px solid var(--line)}
+  .rail{background:var(--side);border-right:1px solid var(--line);width:360px;flex:0 0 360px;position:sticky;top:0;height:100dvh;align-self:flex-start;overflow-y:auto;overflow-x:hidden;padding-bottom:150px}
+  #wachterBlock{padding:18px 16px 4px}
+  .rail #chatThread{padding:6px 14px}
   .wachter{background:linear-gradient(180deg,#1f1f1f,#161616);border:1px solid var(--line);border-radius:var(--r);padding:15px 16px;position:relative;overflow:hidden;margin-bottom:18px}
   .wachter::before{content:none}
   .wachter h2{margin:0 0 2px;font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:var(--primary2)}
@@ -311,14 +310,15 @@
   .chat-chip{font-size:12.5px;padding:8px 13px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--txt);cursor:pointer}
   .chat-chip:hover{background:var(--panel2)}
   .chat-chip.ghost{color:var(--mut2)}
-  #chatDock{background:var(--side);position:relative}
+  #chatDock{position:fixed;left:0;bottom:0;width:360px;z-index:60;background:var(--side);border-top:1px solid var(--line);border-right:1px solid var(--line)}
   .plusmenu{position:absolute;left:14px;bottom:62px;background:#1b1b1b;border:1px solid var(--line);border-radius:12px;padding:6px;display:flex;flex-direction:column;gap:2px;box-shadow:0 14px 32px rgba(0,0,0,.55);z-index:60;min-width:160px}
   .plusmenu.hidden{display:none}
   .plusmenu button{background:transparent;border:none;color:var(--txt);text-align:left;padding:11px 13px;border-radius:9px;font-size:14.5px;cursor:pointer;display:flex;align-items:center;gap:10px}
   .plusmenu button:hover{background:var(--panel2)}
   .plusmenu svg{width:16px;height:16px;opacity:.85}
-  .chatrow{display:flex;align-items:center;gap:8px;background:var(--panel2);border:1px solid var(--line);border-radius:20px;padding:6px 8px 6px 10px;margin:8px 12px 12px}
-  #chatInput{flex:1;background:transparent;border:none;color:var(--txt);font-size:16px;resize:none;outline:none;max-height:140px;min-height:24px;font-family:inherit;line-height:1.45;padding:6px 0}
+  .chatrow{display:flex;align-items:center;gap:9px;background:var(--panel2);border:1px solid var(--line);border-radius:24px;padding:8px 10px 8px 14px;margin:10px 12px 12px}
+  #chatInput{flex:1;background:transparent;border:0;outline:none;box-shadow:none;-webkit-appearance:none;appearance:none;color:var(--txt);font-size:16px;resize:none;max-height:160px;min-height:30px;font-family:inherit;line-height:1.5;padding:9px 2px}
+  #chatInput:focus{outline:none;box-shadow:none;border:0}
   #chatInput::placeholder{color:var(--mut2)}
   .ci-btn{background:transparent;border:none;color:var(--mut);cursor:pointer;padding:5px;display:flex;align-items:center;justify-content:center;line-height:1}
   .ci-btn:hover{color:var(--txt)}
@@ -328,27 +328,28 @@
   .ci-send{background:#fff;color:#0c0c0c;border:none;border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;flex:0 0 auto}
   .ci-send:hover{background:#e6e6e6}
   .msg.typing{opacity:.6;letter-spacing:3px}
-  .chat-thread{display:flex;flex-direction:column;gap:8px;padding:10px 0}
-  .msg{padding:10px 13px;border-radius:14px;font-size:14px;line-height:1.45;max-width:92%;white-space:pre-wrap;text-align:left}
+  .chat-thread{display:flex;flex-direction:column;gap:9px;padding:26px 4px 14px}
+  .msg{padding:11px 14px;border-radius:15px;font-size:14.5px;line-height:1.5;max-width:92%;white-space:pre-wrap;text-align:left}
   .msg.ai{background:var(--panel);align-self:flex-start;border:1px solid var(--line);color:var(--txt)}
   .msg.me{background:#fff;align-self:flex-end;color:#111}
 
-  .homeview{display:flex;flex-direction:column;align-items:center;text-align:center;justify-content:center;min-height:calc(100dvh - 200px)}
-  #homeIntro{display:flex;flex-direction:column;align-items:center;transition:transform .35s ease,opacity .3s ease,max-height .4s ease;max-height:700px;overflow:hidden}
-  #view-home.composing{justify-content:flex-start}
-  #view-home.composing #homeIntro{transform:translateY(-24px);opacity:0;max-height:0;margin:0;pointer-events:none}
+  /* WELKOMST-OVERLAY */
+  .welcome-overlay{position:fixed;inset:0;z-index:50;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px 26px 190px;opacity:0;transform:translateY(-8px);pointer-events:none;transition:opacity .28s ease,transform .32s ease}
+  .welcome-overlay.show{opacity:1;transform:none;pointer-events:auto}
+  #homeIntro{display:flex;flex-direction:column;align-items:center;max-width:560px}
   .home-star{width:78px;height:78px;margin-bottom:20px;filter:drop-shadow(0 0 22px rgba(120,220,160,.30))}
-  .home-compliment{font-size:24px;line-height:1.28;font-weight:650;max-width:16ch;margin:0 0 24px;color:var(--txt)}
+  .home-compliment{font-size:24px;line-height:1.3;font-weight:650;max-width:18ch;margin:0 0 24px;color:var(--txt)}
   .home-pills{display:flex;gap:9px;flex-wrap:wrap;justify-content:center}
   .home-pill{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--txt);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:9px 14px;cursor:pointer}
   .home-pill:hover{background:var(--panel2)}
   .home-pill svg{width:15px;height:15px}
-  #view-home .chat-thread{width:100%;max-width:560px;margin:18px auto 0}
+  .homeview{display:flex;flex-direction:column;align-items:stretch}
+  #view-home .chat-thread{width:100%;max-width:620px;margin:0 auto}
 
   @media(max-width:600px){
     .rail{display:none}
-    #chatDock{position:fixed;left:0;right:0;bottom:0;z-index:55;border-top:1px solid var(--line);box-shadow:0 -10px 26px rgba(0,0,0,.4);padding-bottom:env(safe-area-inset-bottom)}
-    .main{padding-bottom:172px}
+    #chatDock{position:fixed;left:0;right:0;width:auto;bottom:0;z-index:60;border-top:1px solid var(--line);border-right:none;box-shadow:0 -10px 26px rgba(0,0,0,.4);padding-bottom:env(safe-area-inset-bottom)}
+    .main{padding-bottom:184px}
     .src-head{flex-wrap:wrap;row-gap:7px}
     .src-meta{order:3;margin-left:auto;font-size:11.5px}
     .src-from{order:4;flex:1 1 100%;font-size:14.5px}
@@ -409,23 +410,7 @@
         <div id="headExtra"></div>
       </div>
 
-      <div id="view-home" class="homeview hidden">
-        <div id="homeIntro">
-          <svg class="home-star" viewBox="0 0 64 64" aria-label="Begeister">
-            <g stroke="#fff" stroke-width="5" stroke-linecap="round">
-              <line x1="32" y1="9" x2="32" y2="55"/>
-              <line x1="12" y1="20.5" x2="52" y2="43.5"/>
-              <line x1="12" y1="43.5" x2="52" y2="20.5"/>
-            </g>
-          </svg>
-          <h2 class="home-compliment" id="compliment"></h2>
-          <div class="home-pills">
-            <button class="home-pill" onclick="voiceMode()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>Voice Mode</button>
-            <button class="home-pill" onclick="pasteClip()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="4" width="8" height="4" rx="1"/><path d="M9 4H6a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3"/></svg>Plakken</button>
-            <button class="home-pill" onclick="openCamera()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h3l2-2h8l2 2h3v11H3z"/><circle cx="12" cy="13" r="3.4"/></svg>Open Camera</button>
-          </div>
-        </div>
-      </div>
+      <div id="view-home" class="homeview hidden"></div>
 
       <div id="view-taken" class="hidden">
         <div class="ptabs" id="ptabs"></div>
@@ -465,6 +450,25 @@
   </div>
 </div>
 
+<!-- WELKOMST-OVERLAY: schuift over alles behalve de chat-input -->
+<div id="welcomeOverlay" class="welcome-overlay" onclick="overlayBackdrop(event)">
+  <div id="homeIntro">
+    <svg class="home-star" viewBox="0 0 64 64" aria-label="Begeister">
+      <g stroke="#fff" stroke-width="5" stroke-linecap="round">
+        <line x1="32" y1="9" x2="32" y2="55"/>
+        <line x1="12" y1="20.5" x2="52" y2="43.5"/>
+        <line x1="12" y1="43.5" x2="52" y2="20.5"/>
+      </g>
+    </svg>
+    <h2 class="home-compliment" id="compliment"></h2>
+    <div class="home-pills">
+      <button class="home-pill" onclick="voiceMode()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>Voice Mode</button>
+      <button class="home-pill" onclick="pasteClip()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="4" width="8" height="4" rx="1"/><path d="M9 4H6a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3"/></svg>Plakken</button>
+      <button class="home-pill" onclick="openCamera()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h3l2-2h8l2 2h3v11H3z"/><circle cx="12" cy="13" r="3.4"/></svg>Open Camera</button>
+    </div>
+  </div>
+</div>
+
 <!-- CHAT THREAD (verplaatst per layout) -->
 <div id="chatThread" class="chat-thread"></div>
 
@@ -478,7 +482,7 @@
   </div>
   <div class="chatrow">
     <button class="ci-btn ci-plus" onclick="togglePlus(event)" title="Meer" aria-label="Meer">+</button>
-    <textarea id="chatInput" rows="1" placeholder="Gooi de chaos erin of stel een vraag…"></textarea>
+    <textarea id="chatInput" rows="1" placeholder="Kom maar door…"></textarea>
     <button class="ci-btn ci-mic" onclick="voiceMode()" title="Spreek in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
     <button class="ci-send" onclick="chatSend()" title="Stuur" aria-label="Stuur">↑</button>
   </div>
@@ -740,8 +744,7 @@ function setView(v){
   document.getElementById('viewTitle').textContent={home:'',taken:'Taken',agenda:'Agenda',wachter:'AI-wachter',bronnen:'Bronnen',beheer:'Klanten & projecten'}[v];
   const mh=document.querySelector('.main-head'); if(mh) mh.style.display = v==='home' ? 'none' : 'flex';
   if(typeof closePlus==='function') closePlus();
-  if(v==='home'){ renderCompliment(); composeMode(welcomeDismissed); }
-  else { welcomeDismissed=true; }
+  if(typeof hideWelcome==='function') hideWelcome();
   document.getElementById('nav').classList.remove('open');
   render();
   window.scrollTo({top:0,behavior:'instant'});
@@ -1251,14 +1254,17 @@ function applyLayout(){
   const hi=document.getElementById('homeIntro');
   const home=document.getElementById('view-home');
   const wview=document.getElementById('view-wachter');
-  if(mob){ wview.appendChild(wb); home.appendChild(hi); home.appendChild(ct); document.body.appendChild(cd); }
-  else { rail.appendChild(hi); rail.appendChild(wb); rail.appendChild(ct); rail.appendChild(cd); if(view==='home'||view==='wachter') setView('taken'); }
+  if(mob){ wview.appendChild(wb); home.appendChild(ct); }
+  else { rail.appendChild(wb); rail.appendChild(ct); if(view==='home'||view==='wachter') setView('taken'); }
+  document.body.appendChild(cd);
   _lastMob=mob;
 }
 window.addEventListener('resize',()=>{ if(isMobile()!==_lastMob) applyLayout(); });
-let welcomeDismissed=false;
-function composeMode(on){const h=document.getElementById('view-home');if(h)h.classList.toggle('composing',!!on);if(on)welcomeDismissed=true;}
-function goHome(){welcomeDismissed=false;setView('home');}
+function showWelcome(){const o=document.getElementById('welcomeOverlay');if(!o)return;renderCompliment();o.classList.add('show');}
+function hideWelcome(){const o=document.getElementById('welcomeOverlay');if(o)o.classList.remove('show');}
+function overlayBackdrop(e){if(e.target.id==='welcomeOverlay')hideWelcome();}
+function composeMode(on){if(on)hideWelcome();}
+function goHome(){ if(isMobile())setView('home'); showWelcome(); }
 function togglePlus(e){if(e)e.stopPropagation();const m=document.getElementById('plusMenu');const open=m.classList.contains('hidden');m.classList.toggle('hidden');if(open)composeMode(true);}
 function closePlus(){const m=document.getElementById('plusMenu');if(m)m.classList.add('hidden');}
 document.addEventListener('click',e=>{const m=document.getElementById('plusMenu');if(m&&!m.classList.contains('hidden')&&!m.contains(e.target)&&!(e.target.closest&&e.target.closest('.ci-plus')))m.classList.add('hidden');});
@@ -1292,14 +1298,14 @@ const COMPLIMENTS=[
 ];
 function localSpark(me,other,busy){
   const pool=[
-    `${me}, terwijl jij dit leest vinkt ${other} waarschijnlijk alweer iets af. Of doet alsof.`,
-    `Goeiemorgen ${me}. Het is ${busy} deze week — maar jij en ${other} fixen dat met je ogen dicht.`,
-    `Nieuwsflits, ${me}: ${other} is vandaag verdacht productief. Bijhouden die handel.`,
-    `${me}, jij en ${other} zijn samen het soort team waar checklists bang voor zijn.`,
-    `Het wordt een ${busy} dag, ${me}. Koffie, ${other}, doorpakken — in die volgorde.`,
-    `${me}, regen of niet: binnen brengen jullie de productie. ${other} knikt instemmend.`,
-    `Klein gerucht, ${me}: ${other} heeft alweer iets moois geregeld. Bal ligt bij jou.`,
-    `${me}, de planning is ${busy}, maar paniek staat je niet. Regelen wel.`
+    `Goeiemorgen ${me}. Het is ${busy} deze week — maar jij en ${other} fixen dat samen met gemak.`,
+    `${me}, jij en ${other} zijn samen het soort team waar de mooiste producties uit ontstaan.`,
+    `${me}, ${other} heeft weer iets moois geregeld — en samen maken jullie het helemaal af.`,
+    `Het wordt een ${busy} dag, ${me}. Maar met ${other} naast je komt het altijd goed.`,
+    `${me}, regen of zon: binnen brengen jullie de magie. Trots op jullie tweeën.`,
+    `Klein compliment, ${me}: jij en ${other} maken van elk project iets bijzonders.`,
+    `${me}, de planning is ${busy}, maar paniek staat je niet — jij straalt rust uit.`,
+    `${me}, vandaag wordt weer een mooie dag om samen met ${other} iets moois te bouwen.`
   ];
   return pool[Math.floor(Math.random()*pool.length)];
 }
@@ -1385,11 +1391,10 @@ async function chatSend(){
 }
 let _greeted=false;
 function chatGreet(){
-  if(_greeted)return;_greeted=true;renderCompliment();
+  if(_greeted)return;_greeted=true;
   const inbox=state.projects.find(p=>p.id==='__inbox__');
   if(inbox&&inbox.items.length){
     const ids=inbox.items.map(i=>i.id);
-    composeMode(true);
     addMsg('ai','Er staan '+inbox.items.length+' binnengekomen ding(en) die ik nog niet kon plaatsen. Bij welke klant horen ze?');
     inbox.items.slice(0,6).forEach(i=>addMsg('ai','• '+i.t));
     renderClientChips(ids);
@@ -1447,7 +1452,7 @@ async function startApp(session){
   const el=document.getElementById('who'); if(el){el.textContent=who;} const av=document.getElementById('userAv'); if(av)av.textContent=who[0];
   await refresh();
   applyLayout();
-  if(!_booted){_booted=true; setView(isMobile()?'home':'taken'); if(!isMobile())renderCompliment(); chatGreet();}
+  if(!_booted){_booted=true; setView(isMobile()?'home':'taken'); showWelcome(); chatGreet();}
 }
 sb.auth.getSession().then(({data})=>{ if(data.session) startApp(data.session); else showLogin(); });
 sb.auth.onAuthStateChange((_e,session)=>{ if(session) startApp(session); else showLogin(); });
