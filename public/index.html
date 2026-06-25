@@ -40,8 +40,8 @@
   /* BODY */
   .body{display:grid;grid-template-columns:1fr 320px;flex:1;min-height:0}
   @media(max-width:1080px){
-    .body{grid-template-columns:1fr}
-    .rail{border-left:none;border-top:1px solid var(--line)}
+    .body{display:flex;flex-direction:column}
+    .rail{order:-1;border-left:none;border-bottom:1px solid var(--line)}
   }
   @media(max-width:600px){
     .topbar{flex-wrap:wrap;gap:8px 12px;padding:9px 13px}
@@ -52,11 +52,18 @@
     .main{padding:14px 13px 44px}
     .main-head h1{font-size:17px}
     .ptabs{gap:6px}
-    .task{display:grid;grid-template-columns:22px 34px 1fr;column-gap:11px;row-gap:8px;align-items:start;padding:13px 14px}
-    .task .chk{grid-column:1;grid-row:1}
-    .task .picon{grid-column:2;grid-row:1;width:34px;height:34px;font-size:14px}
-    .task .t-main{grid-column:3;grid-row:1;min-width:0}
-    .task .t-right{grid-column:3;grid-row:2;flex-direction:row;justify-content:flex-start;align-items:center;gap:14px}
+    .task{display:grid;grid-template-columns:auto auto 1fr;column-gap:10px;row-gap:6px;align-items:center;padding:12px 13px}
+    .task .t-main{display:contents}
+    .task .chk{grid-row:1;grid-column:1}
+    .task .picon{grid-row:1;grid-column:2;width:30px;height:30px;font-size:13px}
+    .task .t-title{grid-row:1;grid-column:3}
+    .task .t-sub{grid-row:2;grid-column:1 / -1;margin-top:0}
+    .task .t-right{grid-row:3;grid-column:1 / -1;flex-direction:row;justify-content:flex-start;align-items:center;gap:14px}
+    .arow{flex-wrap:wrap;gap:6px 10px;padding:10px 4px;align-items:center}
+    .arow .evdot{order:0}
+    .arow .adate{order:1;width:auto}
+    .arow .pill{order:2}
+    .arow .atitle{order:3;flex:1 1 100%}
     .iomonth,.iolist,.daylist,.intake-note,.clienthead{max-width:100%}
     .iohd{font-size:11px}
     .iocell{height:54px;padding-top:5px}
@@ -66,7 +73,7 @@
     .proj-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
     .proj-row input[type=text]{flex:1 1 140px;min-width:0}
     .modal{padding:18px 16px}
-    .modal .twocol{flex-direction:column;gap:0}
+    .modal .twocol{gap:10px}
     .ingest textarea,.modal textarea{font-size:16px}
     .addrow input,.proj-row input,.modal input,.modal select{font-size:16px}
     #auth_email{font-size:16px}
@@ -635,6 +642,7 @@ function setView(v){
   document.getElementById('view-beheer').classList.toggle('hidden',v!=='beheer');
   document.getElementById('viewTitle').textContent={taken:'Taken',agenda:'Agenda',bronnen:'Bronnen',beheer:'Klanten & projecten'}[v];
   render();
+  window.scrollTo({top:0,behavior:'instant'});
 }
 function setWho(){who=document.getElementById('who').value;document.getElementById('userAv').textContent=who[0];}
 
