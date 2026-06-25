@@ -213,7 +213,7 @@
   .src-derived .di{font-size:12.5px;padding:6px 0;border-bottom:1px dashed var(--line);display:flex;gap:8px;align-items:flex-start}
 
   /* RAIL */
-  .rail{background:var(--side);border-right:1px solid var(--line);width:360px;flex:0 0 360px;display:flex;flex-direction:column;overflow:hidden}
+  .rail{background:var(--side);border-right:1px solid var(--line);width:360px;flex:0 0 360px;display:flex;flex-direction:column;overflow:hidden;position:sticky;top:0;height:100dvh;align-self:flex-start}
   #wachterBlock{padding:18px 16px 4px;overflow:auto;flex:1;min-height:0}
   .rail #chatThread{padding:2px 14px;max-height:32vh;overflow:auto;border-top:1px solid var(--line)}
   .rail #chatDock{border-top:1px solid var(--line)}
@@ -325,8 +325,9 @@
   .ci-plus{font-size:27px;width:38px;height:38px;border-radius:50%}
   .ci-plus:hover{background:var(--panel)}
   .ci-mic svg{width:22px;height:22px}
-  .ci-send{background:#a7f3d0;color:#06281d;border:none;border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;flex:0 0 auto}
-  .ci-send:hover{background:#86efac}
+  .ci-send{background:#fff;color:#0c0c0c;border:none;border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;flex:0 0 auto}
+  .ci-send:hover{background:#e6e6e6}
+  .msg.typing{opacity:.6;letter-spacing:3px}
   .chat-thread{display:flex;flex-direction:column;gap:8px;padding:10px 0}
   .msg{padding:10px 13px;border-radius:14px;font-size:14px;line-height:1.45;max-width:92%;white-space:pre-wrap}
   .msg.ai{background:var(--panel);align-self:flex-start;border:1px solid var(--line);color:var(--txt)}
@@ -363,7 +364,7 @@
   <header class="topbar">
     <button class="hamburger" id="hbtn" onclick="toggleNav(event)" aria-label="Menu">☰</button>
     <nav class="topnav" id="nav">
-      <button data-v="home" onclick="setView('home')">AI</button>
+      <button data-v="home" onclick="goHome()">AI</button>
       <button data-v="taken" class="active" onclick="setView('taken')">Taken <span class="badge" id="nb-taken"></span></button>
       <button data-v="agenda" onclick="setView('agenda')">Agenda</button>
       <button data-v="wachter" onclick="setView('wachter')">Wachter <span class="badge" id="nb-wachter"></span></button>
@@ -374,7 +375,7 @@
     <div class="userbox">
       <span id="who" style="font-size:13.5px;font-weight:600">Jeroen</span>
     </div>
-    <div class="logo" id="logoSlot" onclick="setView('home')" style="cursor:pointer" title="Beginscherm">
+    <div class="logo" id="logoSlot" onclick="goHome()" style="cursor:pointer" title="Beginscherm">
       <svg viewBox="0 0 32 32" width="26" height="26" aria-label="Begeister — beginscherm">
         <g stroke="#fff" stroke-width="2.6" stroke-linecap="round">
           <line x1="16" y1="4.5" x2="16" y2="27.5"/>
@@ -725,12 +726,13 @@ function setView(v){
   document.getElementById('viewTitle').textContent={home:'',taken:'Taken',agenda:'Agenda',wachter:'AI-wachter',bronnen:'Bronnen',beheer:'Klanten & projecten'}[v];
   const mh=document.querySelector('.main-head'); if(mh) mh.style.display = v==='home' ? 'none' : 'flex';
   if(typeof closePlus==='function') closePlus();
-  if(v==='home'){ renderCompliment(); composeMode(false); }
+  if(v==='home'){ renderCompliment(); composeMode(welcomeDismissed); }
+  else { welcomeDismissed=true; }
   document.getElementById('nav').classList.remove('open');
   render();
   window.scrollTo({top:0,behavior:'instant'});
 }
-function toggleNav(e){if(e)e.stopPropagation();document.getElementById('nav').classList.toggle('open');}
+function toggleNav(e){if(e)e.stopPropagation();const n=document.getElementById('nav');n.classList.toggle('open');if(n.classList.contains('open'))composeMode(true);}
 document.addEventListener('click',e=>{const nav=document.getElementById('nav');if(nav&&nav.classList.contains('open')&&!nav.contains(e.target)&&e.target.id!=='hbtn')nav.classList.remove('open');});
 function setWho(){who=document.getElementById('who').value;document.getElementById('userAv').textContent=who[0];}
 
@@ -1240,7 +1242,9 @@ function applyLayout(){
   _lastMob=mob;
 }
 window.addEventListener('resize',()=>{ if(isMobile()!==_lastMob) applyLayout(); });
-function composeMode(on){const h=document.getElementById('view-home');if(h)h.classList.toggle('composing',!!on);}
+let welcomeDismissed=false;
+function composeMode(on){const h=document.getElementById('view-home');if(h)h.classList.toggle('composing',!!on);if(on)welcomeDismissed=true;}
+function goHome(){welcomeDismissed=false;setView('home');}
 function togglePlus(e){if(e)e.stopPropagation();const m=document.getElementById('plusMenu');const open=m.classList.contains('hidden');m.classList.toggle('hidden');if(open)composeMode(true);}
 function closePlus(){const m=document.getElementById('plusMenu');if(m)m.classList.add('hidden');}
 document.addEventListener('click',e=>{const m=document.getElementById('plusMenu');if(m&&!m.classList.contains('hidden')&&!m.contains(e.target)&&!(e.target.closest&&e.target.closest('.ci-plus')))m.classList.add('hidden');});
@@ -1299,10 +1303,46 @@ function renderProjectChips(ids,projs){_pendingIds=ids||[];
 async function assignChatProject(pid){const ids=_pendingIds.slice();if(!pid||!ids.length){clearChips();return;}
   const p=projById(pid);
   await sb.from('items').update({project_id:pid}).in('id',ids);clearChips();addMsg('me',p?(p.project||p.client):'');addMsg('ai','Top — bij '+(p?p.client+(p.project?' · '+p.project:''):'')+' gezet. Nog iets?');await refresh();}
+let chatHistory=[];
+function addTyping(){const t=document.getElementById('chatThread');if(!t)return null;const d=document.createElement('div');d.className='msg ai typing';d.textContent='…';t.appendChild(d);d.scrollIntoView&&d.scrollIntoView({block:'nearest'});return d;}
+function knownIds(){return new Set(state.projects.filter(p=>p.id!=='__inbox__').map(p=>p.id));}
+async function createItemsFromAI(items,srcText){
+  const ok=knownIds();
+  const {data:src}=await sb.from('sources').insert({channel:'chat',sender:who||'Chat',body:srcText,processed:true}).select().single();
+  const rows=items.filter(it=>it&&it.title).map(it=>({
+    project_id:(it.project_id&&ok.has(it.project_id))?it.project_id:null,
+    source_id:src?src.id:null, title:String(it.title).trim(),
+    owner:(it.owner==='Jeroen'||it.owner==='Marlon')?it.owner:null,
+    contact:it.contact||null, due:it.due||null,
+    status:['todo','doing','wait','done'].includes(it.status)?it.status:'todo'}));
+  if(!rows.length){return;}
+  const {data:ins}=await sb.from('items').insert(rows).select('id,project_id');
+  await refresh();
+  const orphan=(ins||[]).filter(r=>!r.project_id).map(r=>r.id);
+  if(orphan.length){renderClientChips(orphan);}
+}
 async function chatSend(){
   const ta=document.getElementById('chatInput');const text=(ta.value||'').trim();if(!text)return;
   if(isMobile()&&view!=='home')setView('home');
-  addMsg('me',text);ta.value='';ta.style.height='auto';clearChips();
+  composeMode(true);
+  addMsg('me',text);ta.value='';ta.style.height='auto';clearChips();closePlus();
+  chatHistory.push({role:'user',content:text});
+  const typing=addTyping();
+  let data=null;
+  try{
+    const catalog=state.projects.filter(p=>p.id!=='__inbox__').map(p=>({project_id:p.id,client:p.client,project:p.project||''}));
+    const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({history:chatHistory,catalog,today:iso(new Date()),who})});
+    data=await r.json();
+  }catch(_){}
+  if(typing)typing.remove();
+  if(!data||data.error||data.noai){ chatHistory.pop(); return chatSendLocal(text); }
+  const reply=data.reply||'';
+  if(reply){addMsg('ai',reply);chatHistory.push({role:'assistant',content:reply});}
+  if(data.items&&data.items.length){ await createItemsFromAI(data.items,text); }
+}
+// Fallback zonder AI: lokale parser + klant-chips
+async function chatSendLocal(text){
   const ctx=(view!=='home'&&activeTab!=='all'&&activeTab!=='__inbox__'&&state.projects.find(p=>p.id===activeTab&&p.id!=='__inbox__'))?activeTab:null;
   const {data:src}=await sb.from('sources').insert({channel:'chat',sender:who||'Chat',body:text,project_id:ctx,processed:true}).select().single();
   const chunks=text.split(/[\n.;]+/).map(x=>x.trim()).filter(x=>x.length>4);
