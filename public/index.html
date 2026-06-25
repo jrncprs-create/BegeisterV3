@@ -1514,6 +1514,17 @@ async function chatSend(){
   const reply=data.reply||'';
   if(reply){addMsg('ai',reply);chatHistory.push({role:'assistant',content:reply});}
   if((data.items&&data.items.length)||(data.updates&&data.updates.length)||(data.removes&&data.removes.length)){ renderProposal(data); }
+  if(data.action&&data.action.view){ doChatAction(data.action); }
+}
+function doChatAction(a){
+  const map={taken:'taken',agenda:'agenda',wachter:'wachter',bronnen:'bronnen',klanten:'beheer'};
+  const v=map[String(a.view||'').toLowerCase()]; if(!v) return;
+  if(a.client){
+    const p=state.projects.find(x=>x.id!=='__inbox__'&&x.client&&x.client.toLowerCase()===String(a.client).toLowerCase());
+    if(p){ if(v==='taken')activeTab=p.id; if(v==='wachter')wachterTab=p.id; }
+  } else { if(v==='taken')activeTab='all'; if(v==='wachter')wachterTab='all'; }
+  _animateNext=true;
+  setView(v);
 }
 let _greeted=false;
 function chatGreet(){

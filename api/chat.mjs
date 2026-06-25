@@ -37,8 +37,16 @@ NIEUW vs. AANPASSEN vs. VERWIJDEREN:
 - "removes" = id's van taken die weg mogen ([{"id":"…","title":"…"}] of gewoon ["id"]).
 - Laat alle drie leeg zolang je alleen een vraag stelt.
 
+APP-ACTIES (navigeren):
+- Vraagt de gebruiker om iets te OPENEN, TONEN of ergens NAARTOE te gaan ("open die in taken", "laat de taken van House of Chi zien", "ga naar de agenda", "open in afwachting", "naar bronnen/klanten"),
+  geef dan een "action" terug en hoef je geen items te maken.
+- action.view = een van: "taken" | "agenda" | "wachter" (= In afwachting) | "bronnen" | "klanten".
+- action.client = de exacte klantnaam uit de catalogus om op te filteren (alleen bij "taken"/"wachter"), of laat leeg voor alles.
+- Zet "reply" dan kort bevestigend ("Ik open je taken." / "Hier zijn de taken van House of Chi.").
+- Geen action? Laat 'm weg of op null.
+
 Antwoord ALTIJD met geldige JSON en niets eromheen:
-{"reply":"je bericht aan de gebruiker","done":false,"items":[{"title":"","owner":"","contact":"","due":null,"status":"todo","project_id":null}],"updates":[{"id":"","title":"","due":null}],"removes":[]}`;
+{"reply":"je bericht aan de gebruiker","done":false,"items":[...],"updates":[...],"removes":[],"action":{"view":"taken","client":""}}`;
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "method not allowed" });
@@ -71,6 +79,7 @@ export default async function handler(req, res) {
       items: Array.isArray(parsed.items) ? parsed.items : [],
       updates: Array.isArray(parsed.updates) ? parsed.updates : [],
       removes: Array.isArray(parsed.removes) ? parsed.removes : [],
+      action: (parsed.action && typeof parsed.action === "object") ? parsed.action : null,
       done: !!parsed.done,
     });
   } catch (e) {
