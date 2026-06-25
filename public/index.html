@@ -357,7 +357,10 @@
   /* WELKOMST-OVERLAY */
   .welcome-overlay{position:fixed;inset:0;z-index:90;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px 26px;opacity:0;transform:translateY(-8px);pointer-events:none;transition:opacity .7s cubic-bezier(.19,1,.22,1),transform .7s cubic-bezier(.19,1,.22,1)}
   .welcome-overlay.show{opacity:1;transform:none;pointer-events:auto}
-  #homeIntro{display:flex;flex-direction:column;align-items:center;max-width:560px}
+  #welcomeBg{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0;transition:opacity 1.4s ease;z-index:0;pointer-events:none}
+  #welcomeBg.on{opacity:1}
+  .welcome-scrim{position:absolute;inset:0;z-index:1;pointer-events:none;background:radial-gradient(ellipse at center, rgba(13,13,13,.45) 0%, rgba(13,13,13,.78) 62%, rgba(13,13,13,.96) 100%)}
+  #homeIntro{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;max-width:560px}
   .home-star{width:74px;height:74px;margin-bottom:22px}
   .home-compliment{font-size:24px;line-height:1.3;font-weight:650;max-width:20ch;margin:0 0 12px;color:var(--txt)}
   .home-author{font-size:13px;color:var(--mut2);letter-spacing:.3px;margin-bottom:20px}
@@ -483,6 +486,8 @@
 
 <!-- WELKOMST-OVERLAY: schuift over alles behalve de chat-input -->
 <div id="welcomeOverlay" class="welcome-overlay" onclick="overlayBackdrop(event)">
+  <div id="welcomeBg"></div>
+  <div class="welcome-scrim"></div>
   <div id="homeIntro">
     <svg class="home-star" viewBox="0 0 64 64" aria-label="Begeister">
       <g stroke="#fff" stroke-width="4.6" stroke-linecap="butt">
@@ -1327,7 +1332,20 @@ function applyLayout(){
   _lastMob=mob;
 }
 window.addEventListener('resize',()=>{ if(isMobile()!==_lastMob) applyLayout(); });
-function showWelcome(){const o=document.getElementById('welcomeOverlay');if(!o)return;renderCompliment();o.classList.add('show');}
+const UNSPLASH_KEY="zSttsMB9D_sKDPLNBZp4M7VUB4kgPMXZQzD52xOAiHU";
+const ART_QUERIES=["dark abstract texture","black abstract art","dark smoke","liquid ink dark","dark minimal abstract","macro dark texture","long exposure light dark","dark fluid art"];
+function setWelcomeBg(url){const bg=document.getElementById('welcomeBg');if(!bg||!url)return;const im=new Image();im.onload=()=>{bg.style.backgroundImage="url("+url+")";bg.classList.add('on');};im.src=url;}
+async function loadWelcomeImage(){
+  const bg=document.getElementById('welcomeBg');if(!bg)return;
+  try{
+    const q=ART_QUERIES[Math.floor(Math.random()*ART_QUERIES.length)];
+    const r=await fetch('https://api.unsplash.com/photos/random?orientation=portrait&content_filter=high&query='+encodeURIComponent(q)+'&client_id='+UNSPLASH_KEY);
+    const d=await r.json();
+    const url=d&&d.urls&&((d.urls.raw?d.urls.raw+'&w=1200&q=80&fit=crop':null)||d.urls.regular||d.urls.full);
+    if(url) setWelcomeBg(url);
+  }catch(_){}
+}
+function showWelcome(){const o=document.getElementById('welcomeOverlay');if(!o)return;renderCompliment();loadWelcomeImage();o.classList.add('show');}
 function hideWelcome(){const o=document.getElementById('welcomeOverlay');if(o)o.classList.remove('show');}
 function overlayBackdrop(e){if(e.target.id==='welcomeOverlay')hideWelcome();}
 function composeMode(on){if(on)hideWelcome();}
