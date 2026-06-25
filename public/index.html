@@ -355,7 +355,7 @@
   .msg.proposal.saved .prop-foot,.msg.proposal.saved input{pointer-events:none}
 
   /* WELKOMST-OVERLAY */
-  .welcome-overlay{position:fixed;inset:0;z-index:50;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px 26px;opacity:0;transform:translateY(-8px);pointer-events:none;transition:opacity .7s cubic-bezier(.19,1,.22,1),transform .7s cubic-bezier(.19,1,.22,1)}
+  .welcome-overlay{position:fixed;inset:0;z-index:90;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px 26px;opacity:0;transform:translateY(-8px);pointer-events:none;transition:opacity .7s cubic-bezier(.19,1,.22,1),transform .7s cubic-bezier(.19,1,.22,1)}
   .welcome-overlay.show{opacity:1;transform:none;pointer-events:auto}
   #homeIntro{display:flex;flex-direction:column;align-items:center;max-width:560px}
   .home-star{width:74px;height:74px;margin-bottom:22px}
@@ -363,6 +363,9 @@
   .home-author{font-size:13px;color:var(--mut2);letter-spacing:.3px;margin-bottom:20px}
   @keyframes fadeUp{0%{opacity:0;transform:translateY(8px)}100%{opacity:1;transform:translateY(0)}}
   .welcome-overlay.show .home-author{animation:fadeUp .9s ease 1.5s both}
+  .welcome-close{margin-top:30px;width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--mut);font-size:24px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;align-self:center;transition:color .15s,border-color .15s}
+  .welcome-close:hover{color:var(--txt);border-color:var(--mut)}
+  .welcome-overlay.show .welcome-close{animation:fadeUp .9s ease 1.8s both}
   /* intro-animatie: elegant & traag — sterretje gecentreerd → schuift zacht omhoog + verkleint, tekst fadet rustig in */
   @keyframes starRise{0%{opacity:0;transform:translateY(64px) scale(1.22)}30%{opacity:1}100%{opacity:1;transform:translateY(0) scale(1)}}
   @keyframes textReveal{0%{opacity:0;transform:translateY(18px);max-height:0;margin-bottom:0}100%{opacity:1;transform:translateY(0);max-height:300px;margin-bottom:24px}}
@@ -490,6 +493,7 @@
     </svg>
     <h2 class="home-compliment" id="compliment"></h2>
     <div class="home-author" id="complimentAuthor"></div>
+    <button class="welcome-close" onclick="hideWelcome()" aria-label="Sluiten">×</button>
   </div>
 </div>
 
