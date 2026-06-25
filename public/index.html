@@ -38,16 +38,18 @@
   .userbox select{background:transparent;border:none;color:var(--txt);font-size:13.5px;font-weight:600;cursor:pointer}
 
   /* BODY */
-  .body{display:grid;grid-template-columns:1fr 320px;flex:1;min-height:0}
-  @media(max-width:1080px){
-    .body{display:flex;flex-direction:column}
-    .rail{order:-1;border-left:none;border-bottom:1px solid var(--line)}
-  }
+  .body{display:flex;flex:1;min-height:0}
+  .hamburger{display:none;border:none;background:transparent;color:var(--txt);font-size:21px;cursor:pointer;padding:2px 8px;line-height:1}
+  #view-wachter{max-width:560px}
+  #wachterSub{color:var(--mut2);font-size:12px;margin-bottom:14px}
   @media(max-width:600px){
-    .topbar{flex-wrap:wrap;gap:8px 12px;padding:9px 13px}
+    .topbar{flex-wrap:nowrap;gap:10px;padding:9px 13px}
     .logo img,.logo svg{height:24px}
-    .topnav button{padding:6px 9px;font-size:13px}
-    .topnav .badge{padding:1px 6px}
+    .hamburger{display:block}
+    .topnav{position:absolute;top:100%;left:0;right:0;flex-direction:column;gap:2px;background:var(--side);border-bottom:1px solid var(--line);padding:7px;display:none;z-index:45;box-shadow:0 12px 26px rgba(0,0,0,.4)}
+    .topnav.open{display:flex}
+    .topnav button{width:100%;justify-content:flex-start;border-bottom:none!important;border-radius:9px;padding:12px 13px;font-size:15px}
+    .topnav button.active{background:#2a2a2a}
     .userbox select{font-size:13px}
     .main{padding:14px 13px 44px}
     .main-head h1{font-size:17px}
@@ -79,7 +81,7 @@
     #auth_email{font-size:16px}
   }
 
-  .main{padding:18px 24px 32px;min-width:0}
+  .main{padding:18px 24px 32px;min-width:0;flex:1}
   .main-head{display:flex;align-items:center;gap:14px;margin-bottom:16px;flex-wrap:wrap}
   .main-head h1{font-size:19px;margin:0;font-weight:650}
   .spacer{flex:1}
@@ -317,6 +319,7 @@
     <nav class="topnav" id="nav">
       <button data-v="taken" class="active" onclick="setView('taken')">Taken <span class="badge" id="nb-taken"></span></button>
       <button data-v="agenda" onclick="setView('agenda')">Agenda</button>
+      <button data-v="wachter" onclick="setView('wachter')">Wachter <span class="badge" id="nb-wachter"></span></button>
       <button data-v="bronnen" onclick="setView('bronnen')">Bronnen <span class="badge" id="nb-bron"></span></button>
       <button data-v="beheer" onclick="setView('beheer')">Klanten</button>
     </nav>
@@ -325,6 +328,7 @@
       <span class="av" id="userAv">J</span>
       <span id="who" style="font-size:13.5px;font-weight:600">Jeroen</span>
     </div>
+    <button class="hamburger" id="hbtn" onclick="toggleNav(event)" aria-label="Menu">☰</button>
   </header>
 
   <div class="body">
@@ -380,14 +384,13 @@
           <button class="addbtn" onclick="addProject()">Toevoegen</button>
         </div>
       </div>
+      <div id="view-wachter" class="hidden">
+        <div class="rail-title">AI-wachter — wat vraagt aandacht</div>
+        <div class="sub" id="wachterSub"></div>
+        <div class="mini" id="wachterList"></div>
+        <div class="wachter-foot" id="wachterFoot"></div>
+      </div>
     </main>
-
-    <aside class="rail">
-      <h2 class="rail-title">AI-wachter</h2>
-      <div class="sub" id="wachterSub"></div>
-      <div class="mini" id="wachterList"></div>
-      <div class="wachter-foot" id="wachterFoot"></div>
-    </aside>
   </div>
 </div>
 
@@ -638,12 +641,16 @@ function setView(v){
   document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('active',b.dataset.v===v));
   document.getElementById('view-taken').classList.toggle('hidden',v!=='taken');
   document.getElementById('view-agenda').classList.toggle('hidden',v!=='agenda');
+  document.getElementById('view-wachter').classList.toggle('hidden',v!=='wachter');
   document.getElementById('view-bronnen').classList.toggle('hidden',v!=='bronnen');
   document.getElementById('view-beheer').classList.toggle('hidden',v!=='beheer');
-  document.getElementById('viewTitle').textContent={taken:'Taken',agenda:'Agenda',bronnen:'Bronnen',beheer:'Klanten & projecten'}[v];
+  document.getElementById('viewTitle').textContent={taken:'Taken',agenda:'Agenda',wachter:'AI-wachter',bronnen:'Bronnen',beheer:'Klanten & projecten'}[v];
+  document.getElementById('nav').classList.remove('open');
   render();
   window.scrollTo({top:0,behavior:'instant'});
 }
+function toggleNav(e){if(e)e.stopPropagation();document.getElementById('nav').classList.toggle('open');}
+document.addEventListener('click',e=>{const nav=document.getElementById('nav');if(nav&&nav.classList.contains('open')&&!nav.contains(e.target)&&e.target.id!=='hbtn')nav.classList.remove('open');});
 function setWho(){who=document.getElementById('who').value;document.getElementById('userAv').textContent=who[0];}
 
 // ---------- render ----------
@@ -855,6 +862,7 @@ function renderRail(){
   flags.sort((a,b)=> a.sev-b.sev || ((a.it.due?d(a.it.due):8.64e15)-(b.it.due?d(b.it.due):8.64e15)));
   const sub=document.getElementById('wachterSub'),list=document.getElementById('wachterList'),foot=document.getElementById('wachterFoot');
   const attn=flags.filter(f=>f.sev<=2).length;
+  const nbw=document.getElementById('nb-wachter');if(nbw){nbw.textContent=attn||'';nbw.style.display=attn?'':'none';}
   sub.textContent = flags.length ? (attn?`${attn} ding${attn>1?'en':''} die aandacht vragen`:'Even vooruitkijken') : 'Alles op koers ✦';
   list.innerHTML = flags.map(f=>{
     const di=dueInfo(f.it.due);
@@ -872,7 +880,7 @@ function renderRail(){
 
 // ---------- projectbeheer ----------
 function renderProjecten(){
-  document.getElementById('beheerWrap').innerHTML=state.projects.map(p=>{
+  document.getElementById('beheerWrap').innerHTML=state.projects.filter(p=>p.id!=='__inbox__').map(p=>{
     const cnt=p.items.length,open=p.items.filter(i=>i.status!=='done').length;
     return `<div class="proj-row">
       <button class="cpick" style="background:${p.color}" onclick="openColorPicker(event,'proj','${p.id}')">${escapeHtml(p.icon||'')}</button>
@@ -927,7 +935,7 @@ function deleteProject(id){const p=projById(id);if(!p)return;
 function toggle(id){const r=findItem(id);if(!r)return;r.it.status=r.it.status==='done'?'todo':'done';render();}
 let editingId=null,mDue=null,duePickerRef=iso(TODAY);
 const CONTACTS=['Willem','Leon','Joep','Idz','Noa','Hans','Stavros','Len'];
-function uniqueClients(){const seen=[];state.projects.forEach(p=>{if(!seen.includes(p.client))seen.push(p.client);});return seen;}
+function uniqueClients(){const seen=[];state.projects.forEach(p=>{if(p.id==='__inbox__')return;if(!seen.includes(p.client))seen.push(p.client);});return seen;}
 function fillProjectSelect(client,selId){
   const sel=document.getElementById('m_project');
   sel.innerHTML=state.projects.filter(p=>p.client===client).map(p=>`<option value="${p.id}">${escapeHtml(p.project||'—')}</option>`).join('');
@@ -940,8 +948,10 @@ function openModal(id){const r=findItem(id);if(!r)return;editingId=id;
   document.getElementById('m_contact').innerHTML='<option value="">— geen —</option>'+cs.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
   document.getElementById('m_contact').value=r.it.contact||'';
   document.getElementById('m_client').innerHTML=uniqueClients().map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
-  document.getElementById('m_client').value=r.p.client;
-  fillProjectSelect(r.p.client,r.p.id);
+  const isInbox=r.p.id==='__inbox__';
+  const clientVal=isInbox?(uniqueClients()[0]||''):r.p.client;
+  document.getElementById('m_client').value=clientVal;
+  fillProjectSelect(clientVal,isInbox?null:r.p.id);
   document.getElementById('m_t').value=r.it.t;document.getElementById('m_status').value=r.it.status;
   mDue=r.it.due||null;duePickerRef=mDue||iso(TODAY);updateDueLabel();
   document.getElementById('overlay').classList.add('open');}
@@ -1056,6 +1066,13 @@ async function sbLoad(){
   const projects=p.data||[], items=i.data||[], sources=s.data||[], atts=a.data||[];
   state.projects = projects.map(pr=>({id:pr.id,client:pr.client,project:pr.project,color:pr.color,icon:pr.icon,role:pr.role,
     items: items.filter(x=>x.project_id===pr.id).map(_mapItem)}));
+  // Items zonder (bekende) klant → Inbox, zodat nieuwe intake nooit verdwijnt
+  const known=new Set(projects.map(pr=>pr.id));
+  const orphans=items.filter(x=>!x.project_id || !known.has(x.project_id));
+  if(orphans.length){
+    state.projects.push({id:'__inbox__',client:'Inbox',project:'nog te sorteren',color:'#9ca3af',icon:'📥',role:'nieuw binnengekomen — koppel aan een klant',
+      items:orphans.map(_mapItem)});
+  }
   state.sources = sources.map(src=>_mapSource(src,atts));
   if(activeTab!=='all' && !state.projects.find(x=>x.id===activeTab)) activeTab='all';
 }
@@ -1078,15 +1095,16 @@ saveModal = async function(){const r=findItem(editingId);if(!r)return;
 deleteItem = async function(){const r=findItem(editingId);if(!r)return;
   await sb.from('items').delete().eq('id',editingId); closeModal(); await refresh();};
 
+function firstRealId(){const p=state.projects.find(x=>x.id!=='__inbox__');return p&&p.id;}
 addItem = async function(){const inp=document.getElementById('newTitle');const raw=inp.value.trim();if(!raw)return;
-  const pid=activeTab==='all'?(state.projects[0]&&state.projects[0].id):activeTab; if(!pid)return;
+  let pid=(activeTab==='all'||activeTab==='__inbox__')?firstRealId():activeTab; if(!pid)return;
   const it=parseLine(raw);
   await sb.from('items').insert({project_id:pid,title:it.t,owner:it.owner||null,contact:it.contact||null,due:it.due||null,status:'todo'});
   inp.value=''; await refresh();};
 
 parseRaw = async function(){const ta=document.getElementById('raw');const text=ta.value.trim();const hint=document.getElementById('ingestHint');
   if(!text){hint.textContent='Plak eerst wat tekst.';return;}
-  const pid=activeTab==='all'?(state.projects[0]&&state.projects[0].id):activeTab;
+  const pid=(activeTab==='all'||activeTab==='__inbox__')?firstRealId():activeTab;
   const {data:src}=await sb.from('sources').insert({channel:'paste',sender:'Handmatig geplakt',body:text,project_id:pid,processed:true}).select().single();
   const chunks=text.split(/[\n.;]+/).map(x=>x.trim()).filter(x=>x.length>6);let added=0;
   const rows=chunks.map(c=>{const it=parseLine(c);return {project_id:pid,source_id:src?src.id:null,title:it.t.charAt(0).toUpperCase()+it.t.slice(1),owner:it.owner||null,contact:it.contact||null,due:it.due||null,status:'todo'};});
