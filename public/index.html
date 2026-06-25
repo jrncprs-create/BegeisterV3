@@ -139,7 +139,7 @@
   .due.warn{color:var(--warn)} .due.risk{color:var(--risk)} .due.late{color:var(--late);font-weight:600}
   /* subtiele stagger bij laden — van onder naar boven */
   @keyframes itemIn{0%{opacity:0;transform:translateY(22px)}100%{opacity:1;transform:translateY(0)}}
-  .task.in{animation:itemIn .8s cubic-bezier(.19,1,.22,1) both}
+  .task.in{animation:itemIn 1.25s cubic-bezier(.16,1,.3,1) both}
   .addrow{display:flex;gap:9px;margin-top:14px}
   .addrow input{flex:1;background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:10px;padding:10px 13px;font-size:14px}
 
@@ -257,7 +257,18 @@
   .ingest .actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:11px}
   .hint{color:var(--mut2);font-size:12px}
 
-  /* PROJECTBEHEER */
+  /* PROJECTBEHEER — minimal, subtiel zoals de agendalijst */
+  .kli{display:flex;align-items:center;gap:13px;padding:13px 2px;border-bottom:1px solid var(--line)}
+  .kli.knew{border-bottom:none;margin-top:8px}
+  .kdot{width:15px;height:15px;border-radius:50%;border:1px solid rgba(255,255,255,.12);cursor:pointer;flex:0 0 auto;padding:0}
+  .kmain{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+  .kname{background:transparent;border:none;color:var(--txt);font-size:15px;font-weight:600;padding:3px 0;width:100%;border-bottom:1px solid transparent}
+  .ksub{background:transparent;border:none;color:var(--mut2);font-size:12.5px;padding:2px 0;width:100%;border-bottom:1px solid transparent}
+  .kname:focus,.ksub:focus{outline:none;border-bottom-color:var(--line)}
+  .kname::placeholder,.ksub::placeholder{color:var(--mut2)}
+  .kcnt{font-size:12.5px;color:var(--mut2);flex:0 0 auto;font-variant-numeric:tabular-nums;min-width:18px;text-align:right}
+  .kicon{background:transparent;border:none;color:var(--mut2);cursor:pointer;padding:7px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;border-radius:8px}
+  .kicon:hover{color:var(--txt);background:var(--panel2)}
   .proj-row{display:grid;grid-template-columns:42px minmax(0,1.5fr) minmax(0,1.5fr) 56px auto;gap:12px;align-items:center;padding:10px 4px;border-bottom:1px solid var(--line)}
   .proj-row input[type=text]{width:100%;min-width:0;background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:9px 11px;font-size:14px}
   .proj-row input::placeholder{color:var(--mut2)}
@@ -355,8 +366,8 @@
   .msg.proposal.saved .prop-foot,.msg.proposal.saved input{pointer-events:none}
 
   /* WELKOMST-OVERLAY */
-  .welcome-overlay{position:fixed;inset:0;z-index:90;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px 26px;opacity:0;transform:translateY(-8px);pointer-events:none;transition:opacity .7s cubic-bezier(.19,1,.22,1),transform .7s cubic-bezier(.19,1,.22,1)}
-  .welcome-overlay.show{opacity:1;transform:none;pointer-events:auto}
+  .welcome-overlay{position:fixed;inset:0;z-index:90;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px 26px;opacity:1;pointer-events:auto;transition:opacity .7s cubic-bezier(.16,1,.3,1)}
+  .welcome-overlay.dismissed{opacity:0;pointer-events:none}
   #welcomeBg{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0;transition:opacity 1.4s ease;z-index:0;pointer-events:none;filter:grayscale(.62) contrast(1.04) brightness(.9)}
   #welcomeBg.on{opacity:1}
   .welcome-scrim{position:absolute;inset:0;z-index:1;pointer-events:none;background:radial-gradient(ellipse at center, rgba(13,13,13,.45) 0%, rgba(13,13,13,.78) 62%, rgba(13,13,13,.96) 100%)}
@@ -365,15 +376,15 @@
   .home-compliment{font-size:24px;line-height:1.3;font-weight:650;max-width:20ch;margin:0 0 12px;color:var(--txt)}
   .home-author{font-size:13px;color:rgba(255,255,255,.8);letter-spacing:.3px;margin-bottom:20px}
   @keyframes fadeUp{0%{opacity:0;transform:translateY(8px)}100%{opacity:1;transform:translateY(0)}}
-  .welcome-overlay.show .home-author{animation:fadeUp .9s ease 1.5s both}
+  .welcome-overlay.playing .home-author{animation:fadeUp 1.4s ease 4.4s both}
   .welcome-close{margin-top:32px;width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.55);background:transparent;color:#fff;font-size:25px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;align-self:center;transition:border-color .15s,background .15s}
   .welcome-close:hover{border-color:#fff;background:rgba(255,255,255,.08)}
-  .welcome-overlay.show .welcome-close{animation:fadeUp .9s ease 1.8s both}
+  .welcome-overlay.playing .welcome-close{animation:fadeUp 1.4s ease 5.2s both}
   /* intro-animatie: elegant & traag — sterretje gecentreerd → schuift zacht omhoog + verkleint, tekst fadet rustig in */
   @keyframes starRise{0%{opacity:0;transform:translateY(64px) scale(1.22)}30%{opacity:1}100%{opacity:1;transform:translateY(0) scale(1)}}
   @keyframes textReveal{0%{opacity:0;transform:translateY(18px);max-height:0;margin-bottom:0}100%{opacity:1;transform:translateY(0);max-height:300px;margin-bottom:24px}}
-  .welcome-overlay.show .home-star{animation:starRise 1.9s cubic-bezier(.19,1,.22,1) both}
-  .welcome-overlay.show .home-compliment{overflow:hidden;animation:textReveal 1.5s cubic-bezier(.19,1,.22,1) 1.15s both}
+  .welcome-overlay.playing .home-star{animation:starRise 3.4s cubic-bezier(.16,1,.3,1) both}
+  .welcome-overlay.playing .home-compliment{overflow:hidden;animation:textReveal 2.6s cubic-bezier(.16,1,.3,1) 2.6s both}
   .home-pills{display:flex;gap:9px;flex-wrap:wrap;justify-content:center}
   .home-pill{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--txt);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:9px 14px;cursor:pointer}
   .home-pill:hover{background:var(--panel2)}
@@ -463,14 +474,14 @@
       </div>
 
       <div id="view-beheer" class="hidden">
-        <div class="intake-note">Elke <b>klant</b> heeft een <b>project</b> eronder. Hernoem, geef een kleur of verwijder. De kleur wordt overal als accent gebruikt. Wijzigingen worden <b>automatisch bewaard</b>.</div>
         <div id="beheerWrap"></div>
-        <div class="proj-row newrow">
-          <button class="cpick" id="np_color_btn" style="background:#fbbf24" onclick="openColorPicker(event,'new')"></button>
-          <input type="text" id="np_name" placeholder="Nieuwe klant — naam" />
-          <input type="text" id="np_project" placeholder="Project / event" />
-          <span class="cnt"></span>
-          <button class="addbtn" onclick="addProject()">Toevoegen</button>
+        <div class="kli knew">
+          <button class="kdot" id="np_color_btn" style="background:#fbbf24" onclick="openColorPicker(event,'new')" title="Kleur"></button>
+          <div class="kmain">
+            <input class="kname" id="np_name" placeholder="Nieuwe klant" />
+            <input class="ksub" id="np_project" placeholder="Project / event" />
+          </div>
+          <button class="kicon kadd" onclick="addProject()" title="Toevoegen"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg></button>
         </div>
       </div>
       <div id="view-wachter" class="hidden">
@@ -839,7 +850,7 @@ function taskCard(p,it,idx){
   const stPill=it.status==='doing'?'<span class="pill doing">bezig</span>':(it.status==='wait'?'<span class="pill wait">wacht op</span>':(it.status==='todo'?'<span class="pill">te doen</span>':'<span class="pill">klaar</span>'));
   const srcPill=it.src?`<span class="pill src" onclick="event.stopPropagation();gotoSource('${it.src}')">↪ bron</span>`:'';
   const proj=projName(p.id), psub=projProj(p.id);
-  const style=`--ccol:${col}`+(_animateNext?`;animation-delay:${Math.min(idx,24)*70}ms`:'');
+  const style=`--ccol:${col}`+(_animateNext?`;animation-delay:${450+Math.min(idx,24)*130}ms`:'');
   return `<div class="task${done?' done':''}${_animateNext?' in':''}" style="${style}">
     <div class="t-top">
       <div class="picon" style="background:${col}">${escapeHtml(p.icon||'')}</div>
@@ -1048,13 +1059,15 @@ function renderRail(){
 // ---------- projectbeheer ----------
 function renderProjecten(){
   document.getElementById('beheerWrap').innerHTML=state.projects.filter(p=>p.id!=='__inbox__').map(p=>{
-    const cnt=p.items.length,open=p.items.filter(i=>i.status!=='done').length;
-    return `<div class="proj-row">
-      <button class="cpick" style="background:${p.color}" onclick="openColorPicker(event,'proj','${p.id}')">${escapeHtml(p.icon||'')}</button>
-      <input type="text" value="${escapeHtml(p.client||'')}" placeholder="Klant" oninput="updateProject('${p.id}','client',this.value)" />
-      <input type="text" value="${escapeHtml(p.project||'')}" placeholder="Project" oninput="updateProject('${p.id}','project',this.value)" />
-      <span class="cnt">${open}/${cnt}</span>
-      <button class="del" onclick="deleteProject('${p.id}')">Verwijderen</button>
+    const open=p.items.filter(i=>i.status!=='done').length;
+    return `<div class="kli">
+      <button class="kdot" style="background:${p.color}" onclick="openColorPicker(event,'proj','${p.id}')" title="Kleur"></button>
+      <div class="kmain">
+        <input class="kname" value="${escapeHtml(p.client||'')}" placeholder="Klant" oninput="updateProject('${p.id}','client',this.value)" />
+        <input class="ksub" value="${escapeHtml(p.project||'')}" placeholder="Project / event" oninput="updateProject('${p.id}','project',this.value)" />
+      </div>
+      <span class="kcnt">${open}</span>
+      <button class="kicon" onclick="deleteProject('${p.id}')" title="Verwijderen"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/></svg></button>
     </div>`;
   }).join('');
 }
@@ -1345,7 +1358,7 @@ async function loadWelcomeImage(){
     if(url) setWelcomeBg(url);
   }catch(_){}
 }
-function showWelcome(){const o=document.getElementById('welcomeOverlay');if(!o)return;renderCompliment();loadWelcomeImage();o.classList.add('show');}
+function showWelcome(){const o=document.getElementById('welcomeOverlay');if(!o)return;o.classList.remove('dismissed');renderCompliment();loadWelcomeImage();o.classList.remove('playing');void o.offsetWidth;o.classList.add('playing');}
 function hideWelcome(){const o=document.getElementById('welcomeOverlay');if(o)o.classList.remove('show');}
 function overlayBackdrop(e){if(e.target.id==='welcomeOverlay')dismissWelcome();}
 function composeMode(on){if(on)hideWelcome();}
