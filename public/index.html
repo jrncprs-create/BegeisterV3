@@ -569,7 +569,7 @@
 
 <script>
 // ---------- helpers ----------
-const TODAY=new Date(2026,5,25);
+const TODAY=(()=>{const n=new Date();return new Date(n.getFullYear(),n.getMonth(),n.getDate());})();
 function d(s){if(s instanceof Date)return new Date(s);const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(s);return m?new Date(+m[1],+m[2]-1,+m[3]):new Date(s);}
 function daysUntil(dt){if(!dt)return null;return Math.round((d(dt)-TODAY)/86400000);}
 let _id=0;function uid(p){return (p||'i')+(++_id)+Math.random().toString(36).slice(2,5);}
