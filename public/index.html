@@ -303,7 +303,7 @@
   /* TOOLTIP */
   #tip{position:fixed;display:none;z-index:200;max-width:280px;background:#0d0d0d;border:1px solid var(--line);border-radius:9px;padding:9px 11px;font-size:12px;color:var(--txt);box-shadow:0 10px 26px rgba(0,0,0,.55);pointer-events:none;line-height:1.45}
   #tip b{color:var(--primary2)}
-  .hidden{display:none}
+  .hidden{display:none!important}
 
   /* ---------- CHAT + HOME ---------- */
   #chatDock{background:var(--side)}
@@ -354,6 +354,12 @@
   }
   @media(min-width:601px){
     #nav button[data-v="home"],#nav button[data-v="wachter"]{display:none}
+    .rail #homeIntro{padding:16px 16px 4px;border-bottom:1px solid var(--line);margin-bottom:4px}
+    .rail #homeIntro .home-pills{display:none}
+    .rail .home-star{width:48px;height:48px;margin-bottom:10px}
+    .rail .home-compliment{font-size:16px;line-height:1.3;margin:0 0 12px;max-width:none}
+    .rail #wachterBlock{flex:1;min-height:60px}
+    .rail #chatThread:empty{display:none}
   }
 </style>
 </head>
@@ -1238,7 +1244,7 @@ function applyLayout(){
   const home=document.getElementById('view-home');
   const wview=document.getElementById('view-wachter');
   if(mob){ wview.appendChild(wb); home.appendChild(hi); home.appendChild(ct); document.body.appendChild(cd); }
-  else { rail.appendChild(wb); rail.appendChild(ct); rail.appendChild(cd); if(view==='home'||view==='wachter') setView('taken'); }
+  else { rail.appendChild(hi); rail.appendChild(wb); rail.appendChild(ct); rail.appendChild(cd); if(view==='home'||view==='wachter') setView('taken'); }
   _lastMob=mob;
 }
 window.addEventListener('resize',()=>{ if(isMobile()!==_lastMob) applyLayout(); });
@@ -1276,8 +1282,35 @@ const COMPLIMENTS=[
   "Marlon, jij maakt het werk lichter én leuker. Topvrouw.",
   "Even doorademen: jullie staan er sterk voor deze week."
 ];
-function dailyCompliment(){const day=Math.floor(Date.now()/864e5);return COMPLIMENTS[day%COMPLIMENTS.length];}
-function renderCompliment(){const el=document.getElementById('compliment');if(el)el.textContent=dailyCompliment();}
+function localSpark(me,other,busy){
+  const pool=[
+    `${me}, terwijl jij dit leest vinkt ${other} waarschijnlijk alweer iets af. Of doet alsof.`,
+    `Goeiemorgen ${me}. Het is ${busy} deze week — maar jij en ${other} fixen dat met je ogen dicht.`,
+    `Nieuwsflits, ${me}: ${other} is vandaag verdacht productief. Bijhouden die handel.`,
+    `${me}, jij en ${other} zijn samen het soort team waar checklists bang voor zijn.`,
+    `Het wordt een ${busy} dag, ${me}. Koffie, ${other}, doorpakken — in die volgorde.`,
+    `${me}, regen of niet: binnen brengen jullie de productie. ${other} knikt instemmend.`,
+    `Klein gerucht, ${me}: ${other} heeft alweer iets moois geregeld. Bal ligt bij jou.`,
+    `${me}, de planning is ${busy}, maar paniek staat je niet. Regelen wel.`
+  ];
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+async function renderCompliment(){
+  const el=document.getElementById('compliment'); if(!el) return;
+  const me=who||'Jeroen', other=(me==='Jeroen')?'Marlon':'Jeroen';
+  const all=(typeof allItems==='function')?allItems():[];
+  const openCount=all.filter(x=>x.it.status!=='done').length;
+  const partnerOpen=all.filter(x=>x.it.status!=='done'&&x.it.owner===other).length;
+  const partnerDone=all.filter(x=>x.it.status==='done'&&x.it.owner===other).map(x=>x.it.t).slice(0,4);
+  const busy=openCount>20?'erg druk':(openCount>10?'aardig druk':'lekker behapbaar');
+  el.textContent=localSpark(me,other,busy);            // direct iets tonen
+  try{
+    const r=await fetch('/api/spark?cb='+Date.now(),{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({who:me,partner:other,busy,openCount,partnerOpen,partnerDone,day:new Date().toLocaleDateString('nl-NL',{weekday:'long'})})});
+    const d=await r.json();
+    if(d&&d.text) el.textContent=d.text;
+  }catch(_){}
+}
 
 // ---------- chat ----------
 function addMsg(role,text){const t=document.getElementById('chatThread');if(!t)return;const dv=document.createElement('div');dv.className='msg '+(role==='me'?'me':'ai');dv.textContent=text;t.appendChild(dv);t.scrollTop=t.scrollHeight;dv.scrollIntoView&&dv.scrollIntoView({block:'nearest'});}
@@ -1417,7 +1450,7 @@ async function startApp(session){
   const el=document.getElementById('who'); if(el){el.textContent=who;} const av=document.getElementById('userAv'); if(av)av.textContent=who[0];
   await refresh();
   applyLayout();
-  if(!_booted){_booted=true; setView(isMobile()?'home':'taken'); chatGreet();}
+  if(!_booted){_booted=true; setView(isMobile()?'home':'taken'); if(!isMobile())renderCompliment(); chatGreet();}
 }
 sb.auth.getSession().then(({data})=>{ if(data.session) startApp(data.session); else showLogin(); });
 sb.auth.onAuthStateChange((_e,session)=>{ if(session) startApp(session); else showLogin(); });
