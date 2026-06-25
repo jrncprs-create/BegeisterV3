@@ -11,23 +11,23 @@ export default async function handler(req, res) {
     const { who = "", partner = "", busy = "", openCount = 0, partnerOpen = 0, partnerDone = [], projects = [] } = req.body || {};
     if (!anthropic) return res.status(200).json({ text: "" });
     const projlist = (projects || []).map(p => typeof p === "string" ? p : `${p.client || ""}${p.project ? " · " + p.project : ""}`).filter(Boolean).join(", ") || "(geen)";
-    const sys = `Schrijf ÉÉN korte, INSPIRERENDE one-liner in het Nederlands, gericht aan ${who} (werkt samen met ${partner}) bij Begeister — een studio die met licht, decor en events mooie dingen maakt.
-Toon: warm, oprecht en inspirerend, met trots op vakmanschap. Wissel af tussen deze invalshoeken:
-- trots op het maken ("vandaag bouwen jullie iets dat er gisteren nog niet was");
-- poëtisch over licht & sfeer ("jullie werken met het mooiste materiaal: licht");
-- creativiteit & verbeelding ("het mooiste idee bestaat nog niet — tot jij het bedenkt");
-- impact op het publiek / herinneringen maken;
-- een oprecht talent-compliment (oog voor detail, gevoel voor sfeer);
-- rust & focus voor de dag;
-- teamspirit (jullie samen);
-- spreukachtig-krachtig;
-- af en toe droog-speels maar altijd opbouwend.
-Regels: maximaal ~22 woorden. Geen emoji. Geen aanhalingstekens. Varieer sterk, nooit cliché.
-Noem NOOIT de dag van de week (geen "maandag/donderdag/weekend") en geen datum — dat is suf.
-NOOIT iets ten nadele van ${who} of ${partner} — geen sneren of competitieve vergelijkingen.
-Het weer of de drukte mag HOOGSTENS een klein terloops bonusje zijn, nooit het hoofdthema.
-Je MAG soms (niet altijd) een projectnaam noemen ter inspiratie. Bestaande projecten: ${projlist}.
-Spreek ${who} direct aan met de naam. Geef ALLEEN de zin terug, niets eromheen.`;
+    const profiel = who === "Marlon"
+      ? `MARLON werkt op het snijvlak van live experience, hospitality, productie en organisatie. Ze denkt in mensen, sfeer, timing, ontvangst, programma en flow; haar kracht is aanvoelen wat nodig is zodat mensen zich openen, verbinden of bewegen. Thema's: aandacht, ontmoeting, bedding, gastvrijheid, intuïtie, vertrouwen, timing, ruimte maken, menselijke energie, live momenten, organisatie als onzichtbare structuur.`
+      : `JEROEN is kunstenaar, ontwerper en maker. Hij werkt met licht, techniek, installaties, objecten, decor, oude materialen, autonome systemen en hergebruik — bouwen met de handen. Hij houdt van experiment, tactiele materialen, oude apparaten, systemen die gedrag krijgen. Thema's: maken, experiment, materiaal, licht, techniek, bouwen, falen/proberen, autonomie, ambacht, verbeelding, oude dingen nieuw leven geven, kunst als onderzoek.`;
+    const sys = `Schrijf ÉÉN korte, inspirerende one-liner in het Nederlands voor het beginscherm van Klara — de rustige, slimme werkplek van Marlon en Jeroen (samen: Begeister, makers van live ervaringen waarin sfeer, mensen, plek, licht, techniek en organisatie samenvallen).
+Gericht aan ${who}. ${profiel}
+
+Het is een kleine richtinggever voor de dag: creatief, scherp, warm, makerig. Voel als een maker/kunstenaar/ontwerper/denker (in de geest van makers als Rick Rubin, niet als manager).
+Put vooral uit de thema's van ${who} hierboven; soms mag het gaan over samen maken voor een publiek of het moment waarop alles samenvalt.
+
+Regels:
+- Maximaal ~18 woorden. Liever kort en krachtig dan uitleggerig.
+- Niet corporate, niet zweverig, niet cliché. Vermijd versleten zinnen zoals "creativity takes courage".
+- Schrijf een ORIGINELE zin in die geest; verzin geen quote en plak er geen beroemde naam op (geen misattributie).
+- Geen emoji, geen aanhalingstekens. Noem nooit de dag/datum/weer als hoofdthema. Nooit iets ten nadele van ${who} of ${partner}.
+- Mag ${who} bij naam aanspreken, maar hoeft niet — een mooie spreukachtige richtinggever zonder naam mag ook.
+- Soms (niet altijd) mag een projectnaam meeklinken: ${projlist}.
+Geef ALLEEN de zin terug, niets eromheen.`;
     const resp = await anthropic.messages.create({
       model: MODEL, max_tokens: 120, system: sys,
       messages: [{ role: "user", content: `Geef een frisse, inspirerende one-liner voor ${who}. Variatie ${Math.random().toString(36).slice(2, 7)}.` }],
