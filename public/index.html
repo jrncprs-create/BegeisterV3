@@ -23,7 +23,7 @@
   .shell{display:flex;flex-direction:column;min-height:100vh}
 
   /* TOPBAR */
-  .topbar{display:flex;align-items:center;gap:18px;padding:11px 22px;border-bottom:1px solid var(--line);background:var(--side);position:sticky;top:0;z-index:40}
+  .topbar{display:flex;align-items:center;gap:18px;padding:11px 22px;border-bottom:1px solid var(--line);background:var(--side);position:sticky;top:0;z-index:70}
   .logo{display:flex;align-items:center;gap:10px}
   .logo img{height:30px;width:auto;display:block}
   .logo .mark{width:30px;height:30px;border-radius:8px;background:#2a2a2a;border:1px solid #3a3a3a;display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--mut);font-size:14px}
@@ -46,7 +46,7 @@
     .topbar{flex-wrap:nowrap;gap:10px;padding:9px 13px}
     .logo img,.logo svg{height:24px}
     .hamburger{display:block}
-    .topnav{position:absolute;top:100%;left:0;right:0;flex-direction:column;gap:2px;background:var(--side);border-bottom:1px solid var(--line);padding:7px;display:none;z-index:45;box-shadow:0 12px 26px rgba(0,0,0,.4)}
+    .topnav{position:absolute;top:100%;left:0;right:0;flex-direction:column;gap:2px;background:var(--side);border-bottom:1px solid var(--line);padding:7px;display:none;z-index:75;box-shadow:0 12px 26px rgba(0,0,0,.4)}
     .topnav.open{display:flex}
     .topnav button{width:100%;justify-content:flex-start;border-bottom:none!important;border-radius:9px;padding:12px 13px;font-size:15px}
     .topnav button.active{background:#2a2a2a}
@@ -328,10 +328,24 @@
   .ci-send{background:#fff;color:#0c0c0c;border:none;border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;flex:0 0 auto}
   .ci-send:hover{background:#e6e6e6}
   .msg.typing{opacity:.6;letter-spacing:3px}
-  .chat-thread{display:flex;flex-direction:column;gap:9px;padding:26px 4px 14px}
-  .msg{padding:11px 14px;border-radius:15px;font-size:14.5px;line-height:1.5;max-width:92%;white-space:pre-wrap;text-align:left}
+  .chat-thread{display:flex;flex-direction:column;gap:15px;padding:32px 4px 22px}
+  .msg{padding:12px 15px;border-radius:15px;font-size:14.5px;line-height:1.5;max-width:92%;white-space:pre-wrap;text-align:left}
   .msg.ai{background:var(--panel);align-self:flex-start;border:1px solid var(--line);color:var(--txt)}
   .msg.me{background:#fff;align-self:flex-end;color:#111}
+  /* VOORSTEL-KAART (samenvatten → review → opslaan) */
+  .msg.proposal{align-self:stretch;width:100%;max-width:100%;background:var(--panel);border:1px solid var(--line)}
+  .prop-h{font-size:11.5px;letter-spacing:.6px;text-transform:uppercase;color:var(--primary2);margin-bottom:11px}
+  .prop-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line)}
+  .prop-row input[type=checkbox]{width:19px;height:19px;accent-color:#a7f3d0;flex:0 0 auto;cursor:pointer}
+  .prop-title{flex:1;min-width:0;background:transparent;border:none;border-bottom:1px dashed transparent;color:var(--txt);font-size:14px;padding:4px 2px}
+  .prop-title:focus{outline:none;border-bottom-color:var(--mut2)}
+  .prop-pencil{flex:0 0 auto;color:var(--mut2);cursor:pointer;font-size:13px}
+  .prop-meta{flex:0 0 auto;font-size:11px;color:var(--mut2);white-space:nowrap;max-width:42%;overflow:hidden;text-overflow:ellipsis}
+  .prop-foot{display:flex;justify-content:flex-end;gap:10px;margin-top:14px}
+  .prop-save{background:#fff;color:#0c0c0c;border:none;border-radius:10px;padding:10px 18px;font-size:14px;font-weight:600;cursor:pointer}
+  .prop-save:hover{background:#e6e6e6}
+  .msg.proposal.saved{opacity:.5}
+  .msg.proposal.saved .prop-foot,.msg.proposal.saved input{pointer-events:none}
 
   /* WELKOMST-OVERLAY */
   .welcome-overlay{position:fixed;inset:0;z-index:50;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px 26px 190px;opacity:0;transform:translateY(-8px);pointer-events:none;transition:opacity .28s ease,transform .32s ease}
@@ -1353,41 +1367,57 @@ async function assignChatProject(pid){const ids=_pendingIds.slice();if(!pid||!id
 let chatHistory=[];
 function addTyping(){const t=document.getElementById('chatThread');if(!t)return null;const d=document.createElement('div');d.className='msg ai typing';d.textContent='…';t.appendChild(d);d.scrollIntoView&&d.scrollIntoView({block:'nearest'});return d;}
 function knownIds(){return new Set(state.projects.filter(p=>p.id!=='__inbox__').map(p=>p.id));}
-// Eén "batch" per lopend gesprek: de AI geeft telkens de VOLLEDIGE set terug,
-// wij vervangen de batch (geen dubbele meer). Bij done laten we 'm staan en starten vers.
-let convItemIds=[], convSourceId=null;
-function resetConversation(){ chatHistory=[]; convItemIds=[]; convSourceId=null; }
-async function syncItemsFromAI(items,done){
+// AI-first: voorstel tonen (samenvatting + af-vinkbare, bewerkbare lijst) en
+// pas op "Opslaan" wegzetten. pendingSourceId = bron van een foto/bijlage.
+let proposal=[], proposalCard=null, pendingSourceId=null;
+function resetConversation(){ chatHistory=[]; proposal=[]; proposalCard=null; pendingSourceId=null;
+  const t=document.getElementById('chatThread'); if(t)t.innerHTML=''; clearChips(); }
+function renderProposal(items){
   const ok=knownIds();
-  const rows=(items||[]).filter(it=>it&&it.title).map(it=>({
-    project_id:(it.project_id&&ok.has(it.project_id))?it.project_id:null,
+  proposal=(items||[]).filter(it=>it&&it.title).map(it=>({
     title:String(it.title).trim(),
-    owner:(it.owner==='Jeroen'||it.owner==='Marlon')?it.owner:null,
-    contact:it.contact||null, due:it.due||null,
-    status:['todo','doing','wait','done'].includes(it.status)?it.status:'todo'}));
-  // bron van dit gesprek (één keer), met de lopende transcriptie
-  const transcript=chatHistory.filter(m=>m.role==='user').map(m=>m.content).join('\n')||'(chat)';
-  if(!convSourceId){ const {data:src}=await sb.from('sources').insert({channel:'chat',sender:who||'Chat',body:transcript,processed:true}).select().single(); convSourceId=src?src.id:null; }
-  else { await sb.from('sources').update({body:transcript}).eq('id',convSourceId); }
-  // vervang de eerder in dit gesprek aangemaakte taken
-  if(convItemIds.length){ await sb.from('items').delete().in('id',convItemIds); convItemIds=[]; }
-  let orphan=[];
-  if(rows.length){
-    const payload=rows.map(r=>({...r,source_id:convSourceId}));
-    const {data:ins}=await sb.from('items').insert(payload).select('id,project_id');
-    convItemIds=(ins||[]).map(r=>r.id);
-    orphan=(ins||[]).filter(r=>!r.project_id).map(r=>r.id);
-  }
-  await refresh();
-  if(orphan.length) renderClientChips(orphan);
-  if(done){ convItemIds=[]; convSourceId=null; }   // afgerond: taken blijven staan, volgende onderwerp begint vers
+    owner:(it.owner==='Jeroen'||it.owner==='Marlon')?it.owner:'',
+    contact:it.contact||'', due:it.due||null,
+    project_id:(it.project_id&&ok.has(it.project_id))?it.project_id:null,
+    checked:true }));
+  if(!proposal.length) return;
+  if(proposalCard&&proposalCard.parentNode) proposalCard.remove();   // oude voorstel vervangen
+  const t=document.getElementById('chatThread'); if(!t)return;
+  const card=document.createElement('div'); card.className='msg ai proposal';
+  const head = proposal.length>1 ? 'Voorstel — vink aan, pas aan, en sla op' : 'Voorstel — check en sla op';
+  card.innerHTML='<div class="prop-h">'+head+'</div>'
+    + proposal.map((p,i)=>{const meta=[p.owner,p.due?dStr(p.due):'',projName(p.project_id)].filter(Boolean).join(' · ');
+        return '<div class="prop-row">'
+          +'<input type="checkbox" checked onchange="proposal['+i+'].checked=this.checked">'
+          +'<input class="prop-title" value="'+escapeHtml(p.title).replace(/"/g,'&quot;')+'" oninput="proposal['+i+'].title=this.value">'
+          +'<span class="prop-pencil" onclick="this.previousElementSibling.focus()">✎</span>'
+          +(meta?'<span class="prop-meta">'+escapeHtml(meta)+'</span>':'')
+          +'</div>';}).join('')
+    + '<div class="prop-foot"><button class="prop-save" onclick="saveProposal()">Opslaan</button></div>';
+  t.appendChild(card); proposalCard=card; card.scrollIntoView&&card.scrollIntoView({block:'nearest'});
 }
-async function chatSend(){
-  const ta=document.getElementById('chatInput');const text=(ta.value||'').trim();if(!text)return;
-  if(isMobile()&&view!=='home')setView('home');
-  composeMode(true);
-  addMsg('me',text);ta.value='';ta.style.height='auto';clearChips();closePlus();
-  chatHistory.push({role:'user',content:text});
+function dStr(due){try{return d(due).toLocaleDateString('nl-NL',{day:'numeric',month:'short'});}catch(_){return due;}}
+async function saveProposal(){
+  const chosen=proposal.filter(p=>p.checked&&p.title.trim());
+  if(!chosen.length){ addMsg('ai','Niets aangevinkt — ik bewaar niets.'); return; }
+  const transcript=chatHistory.filter(m=>m.role==='user').map(m=>m.content).join('\n')||'(chat)';
+  let srcId=pendingSourceId;
+  if(!srcId){ const {data:src}=await sb.from('sources').insert({channel:'chat',sender:who||'Chat',body:transcript,processed:true}).select().single(); srcId=src?src.id:null; }
+  const rows=chosen.map(p=>({project_id:p.project_id||null,source_id:srcId,title:p.title.trim(),
+    owner:p.owner||null,contact:p.contact||null,due:p.due||null,status:'todo'}));
+  const {data:ins}=await sb.from('items').insert(rows).select('id,project_id');
+  if(proposalCard){proposalCard.classList.add('saved');}
+  // bepaal waar het landde → daarheen navigeren
+  const pids=[...new Set((ins||[]).map(r=>r.project_id))];
+  const orphan=(ins||[]).some(r=>!r.project_id);
+  resetConversation();
+  await refresh();
+  if(orphan){ activeTab='__inbox__'; }
+  else if(pids.length===1 && pids[0]){ activeTab=pids[0]; }
+  else { activeTab='all'; }
+  setView('taken');
+}
+async function chatTurn(){
   const typing=addTyping();
   let data=null;
   try{
@@ -1398,10 +1428,19 @@ async function chatSend(){
     data=await r.json();
   }catch(_){}
   if(typing)typing.remove();
+  return data;
+}
+async function chatSend(){
+  const ta=document.getElementById('chatInput');const text=(ta.value||'').trim();if(!text)return;
+  if(isMobile()&&view!=='home')setView('home');
+  composeMode(true);
+  addMsg('me',text);ta.value='';ta.style.height='auto';clearChips();closePlus();
+  chatHistory.push({role:'user',content:text});
+  const data=await chatTurn();
   if(!data||data.error||data.noai){ chatHistory.pop(); addMsg('ai','Sorry, ik ben er even niet bij — de AI is niet bereikbaar. Probeer het zo nog eens.'); const t=document.getElementById('chatInput'); if(t){t.value=text;t.dispatchEvent(new Event('input'));} return; }
   const reply=data.reply||'';
   if(reply){addMsg('ai',reply);chatHistory.push({role:'assistant',content:reply});}
-  if((data.items&&data.items.length)||data.done){ await syncItemsFromAI(data.items||[],data.done); }
+  if(data.items&&data.items.length){ renderProposal(data.items); }
 }
 let _greeted=false;
 function chatGreet(){
@@ -1418,19 +1457,34 @@ function chatGreet(){
 // ---------- camera / bijlage / voice / beeld ----------
 function openCamera(){closePlus();if(isMobile()&&view!=='home')setView('home');composeMode(true);document.getElementById('camInput').click();}
 function chatAttach(){closePlus();if(isMobile()&&view!=='home')setView('home');composeMode(true);document.getElementById('attInput').click();}
+function fileToB64(f){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>{const s=String(r.result);res(s.slice(s.indexOf(',')+1));};r.onerror=rej;r.readAsDataURL(f);});}
 async function handlePhoto(e){
   const f=e.target.files&&e.target.files[0];if(!f)return;e.target.value='';
   if(isMobile()&&view!=='home')setView('home');
+  composeMode(true);
   addMsg('me','Foto: '+f.name);
+  chatHistory.push({role:'user',content:'(afbeelding toegevoegd: '+f.name+')'});
+  // origineel bewaren onder Bronnen
   const {data:src}=await sb.from('sources').insert({channel:'camera',sender:who||'Camera',body:f.name,processed:true}).select().single();
+  pendingSourceId=src?src.id:null;
   try{const path='chat/'+(src?src.id:Date.now())+'_'+f.name.replace(/[^\w.\-]/g,'_');
     const up=await sb.storage.from('intake').upload(path,f,{contentType:f.type,upsert:true});
     if(!up.error&&src){await sb.from('attachments').insert({source_id:src.id,filename:f.name,storage_path:path,mime:f.type,size:f.size});}
   }catch(_){}
-  const {data:ins}=await sb.from('items').insert([{project_id:null,source_id:src?src.id:null,title:'Foto bekijken: '+f.name,status:'todo'}]).select('id');
-  await refresh();
-  addMsg('ai','Foto opgeslagen onder Bronnen. Bij welke klant hoort die?');
-  renderClientChips((ins||[]).map(r=>r.id));
+  // AI-first: foto laten samenvatten + actiepunten voorstellen
+  const typing=addTyping(); let data=null;
+  try{
+    const b64=await fileToB64(f);
+    const catalog=state.projects.filter(p=>p.id!=='__inbox__').map(p=>({project_id:p.id,client:p.client,project:p.project||''}));
+    const r=await fetch('/api/vision',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({image:b64,media_type:f.type||'image/jpeg',filename:f.name,catalog,today:iso(new Date()),who})});
+    data=await r.json();
+  }catch(_){}
+  if(typing)typing.remove();
+  if(!data||data.error){ addMsg('ai','De foto staat onder Bronnen, maar ik kon \'m niet automatisch lezen. Vertel kort wat erop staat?'); return; }
+  if(data.reply){ addMsg('ai',data.reply); chatHistory.push({role:'assistant',content:data.reply}); }
+  if(data.items&&data.items.length){ renderProposal(data.items); }
+  else { addMsg('ai','Geen concrete actiepunten uit de foto — vertel maar wat je ermee wilt.'); }
 }
 let _rec=null;
 function voiceMode(){
