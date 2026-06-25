@@ -39,7 +39,37 @@
 
   /* BODY */
   .body{display:grid;grid-template-columns:1fr 320px;flex:1;min-height:0}
-  @media(max-width:1080px){.body{grid-template-columns:1fr}.rail{display:none}}
+  @media(max-width:1080px){
+    .body{grid-template-columns:1fr}
+    .rail{border-left:none;border-top:1px solid var(--line)}
+  }
+  @media(max-width:600px){
+    .topbar{flex-wrap:wrap;gap:8px 12px;padding:9px 13px}
+    .logo img,.logo svg{height:24px}
+    .topnav button{padding:6px 9px;font-size:13px}
+    .topnav .badge{padding:1px 6px}
+    .userbox select{font-size:13px}
+    .main{padding:14px 13px 44px}
+    .main-head h1{font-size:17px}
+    .ptabs{gap:6px}
+    .task{display:flex;align-items:flex-start;gap:11px;padding:12px}
+    .task .picon{width:34px;height:34px;font-size:14px}
+    .task .t-main{flex:1;min-width:0}
+    .t-right{gap:6px;align-items:flex-end}
+    .iomonth,.iolist,.daylist,.intake-note,.clienthead{max-width:100%}
+    .iohd{font-size:11px}
+    .iocell{height:54px;padding-top:5px}
+    .ionum{width:26px;height:26px;font-size:13px}
+    .cal-head{flex-wrap:wrap;gap:8px}
+    .cal-head .label{flex:1 0 100%;order:-1;text-align:left;min-width:0;font-size:16px}
+    .proj-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+    .proj-row input[type=text]{flex:1 1 140px;min-width:0}
+    .modal{padding:18px 16px}
+    .modal .twocol{flex-direction:column;gap:0}
+    .ingest textarea,.modal textarea{font-size:16px}
+    .addrow input,.proj-row input,.modal input,.modal select{font-size:16px}
+    #auth_email{font-size:16px}
+  }
 
   .main{padding:18px 24px 32px;min-width:0}
   .main-head{display:flex;align-items:center;gap:14px;margin-bottom:16px;flex-wrap:wrap}
