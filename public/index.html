@@ -32,7 +32,7 @@
   .shell{display:flex;flex-direction:column;min-height:100vh}
 
   /* TOPBAR */
-  .topbar{display:flex;align-items:center;gap:18px;padding:11px 22px;border-bottom:1px solid var(--line);background:var(--side);position:sticky;top:0;z-index:70}
+  .topbar{display:flex;align-items:center;gap:18px;padding:calc(env(safe-area-inset-top) + 11px) 22px 11px;border-bottom:1px solid var(--line);background:var(--side);position:sticky;top:0;z-index:70}
   .logo{display:flex;align-items:center;gap:10px}
   .logo img{height:30px;width:auto;display:block}
   .logo .mark{width:30px;height:30px;border-radius:8px;background:#2a2a2a;border:1px solid #3a3a3a;display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--mut);font-size:14px}
@@ -52,7 +52,7 @@
   #view-wachter{max-width:560px}
   #wachterSub{color:var(--mut2);font-size:12px;margin-bottom:14px}
   @media(max-width:600px){
-    .topbar{flex-wrap:nowrap;gap:10px;padding:9px 13px}
+    .topbar{flex-wrap:nowrap;gap:10px;padding:calc(env(safe-area-inset-top) + 9px) 13px 9px}
     .logo img,.logo svg{height:24px}
     .hamburger{display:block}
     .topnav{position:absolute;top:100%;left:0;right:0;flex-direction:column;gap:2px;background:var(--side);border-bottom:1px solid var(--line);padding:7px;display:none;z-index:75;box-shadow:0 12px 26px rgba(0,0,0,.4)}
