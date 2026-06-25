@@ -1,7 +1,8 @@
 // Haalt met Claude gestructureerde actiepunten uit een binnengekomen bericht.
 import Anthropic from "@anthropic-ai/sdk";
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const KEY = process.env.ANTHROPIC_API_KEY;
+const anthropic = KEY ? new Anthropic({ apiKey: KEY }) : null;
 const MODEL = "claude-sonnet-4-6";
 
 const SYSTEM = `Je bent de intake-assistent van Begeister (licht, decor en event-productie).
@@ -24,6 +25,11 @@ Regels:
  * @returns {Promise<{items:Array, summary:string}>}
  */
 export async function extractItems({ text, sender = "", subject = "", today, catalog }) {
+  // Geen AI-key? Val terug op één concept-actiepunt zodat intake blijft werken.
+  if (!anthropic) {
+    const firstLine = (subject || (text || "").split("\n").find(l => l.trim()) || "Nieuw bericht").trim().slice(0, 120);
+    return { items: [{ title: firstLine, owner: "", contact: "", due: null, status: "todo", project_id: (catalog[0] ? catalog[0].project_id : null) }], summary: "" };
+  }
   const user = `VANDAAG: ${today}
 AFZENDER: ${sender}
 ONDERWERP: ${subject}
