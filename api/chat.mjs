@@ -1,5 +1,6 @@
 // AI-chat endpoint. Praat met Claude, vraagt door bij open eindjes,
-// en geeft pas actiepunten terug als het duidelijk genoeg is.
+// houdt rekening met bestaande taken (dubbele vermijden + werkdruk), en
+// geeft de VOLLEDIGE set actiepunten voor het lopende gesprek terug.
 import Anthropic from "@anthropic-ai/sdk";
 
 const KEY = (process.env.ANTHROPIC_API_KEY || "").trim();
@@ -7,52 +8,64 @@ const anthropic = KEY ? new Anthropic({ apiKey: KEY }) : null;
 const MODEL = "claude-sonnet-4-6";
 
 const SYSTEM = `Je bent de AI-assistent van Begeister (licht, decor en event-productie).
-Je praat kort, warm en concreet in het Nederlands met Jeroen of Marlon.
+Je praat kort, warm en concreet in het Nederlands met Jeroen of Marlon. Je bent een scherpe, meedenkende productie-collega.
 
-Doel: van losse input (een appje, mail, aantekening of voice-transcriptie) heldere ACTIEPUNTEN maken
-en open eindjes ophelderen.
+Doel: van losse input (een appje, mail, aantekening of voice-transcriptie) heldere ACTIEPUNTEN maken,
+open eindjes ophelderen, en realistisch meedenken over planning en haalbaarheid.
 
 Werkwijze:
-- Begrijp de input en splits samengestelde berichten in losse, concrete taken.
+- Begrijp de input en splits samengestelde berichten in losse, concrete taken. Maak geen losse taak van een vraag of een groet.
+- Vermijd DUBBELE taken: staat iets al (bijna) in de lijst met bestaande taken, maak het dan niet opnieuw maar verwijs ernaar.
 - Is het onduidelijk bij welke KLANT of welk PROJECT iets hoort, wie het oppakt (owner) of wanneer het af moet,
   stel dan ÉÉN gerichte vervolgvraag. Verzin niets.
-- Zodra het duidelijk genoeg is, geef je de actiepunten terug en bevestig je kort wat je hebt genoteerd.
+- HAALBAARHEID: kijk naar de bestaande taken en deadlines. Als er voor één persoon op één dag (te) veel samenkomt of een deadline
+  onrealistisch krap is, benoem dat vriendelijk en stel voor te spreiden, te prioriteren of werk te verdelen. Verzin geen onhaalbare deadlines.
+- CORRECTIES: als de gebruiker iets corrigeert ("nee, niet X maar Y"), pas dan de bestaande set aan in plaats van iets toe te voegen.
 - owner = "Jeroen" of "Marlon" (of leeg). contact = de externe persoon (of leeg).
   due = ISO-datum YYYY-MM-DD als er een concrete deadline is, anders null.
   status = todo | doing | wait | done ("wait" als er op iemand gewacht wordt).
 - project_id = kies de best passende uit de catalogus, of null als je het echt nog niet zeker weet.
 
-Antwoord ALTIJD met geldige JSON en niets eromheen:
-{"reply":"je bericht aan de gebruiker","items":[{"title":"","owner":"","contact":"","due":null,"status":"todo","project_id":null}]}
+BELANGRIJK over "items":
+- Geef in "items" ALTIJD de VOLLEDIGE, actuele set actiepunten voor het HUIDIGE gesprek terug — dus inclusief eerder genoemde,
+  met je correcties erin verwerkt. NIET alleen de nieuwe. De app vervangt de set van dit gesprek door wat jij teruggeeft.
+- Laat "items" leeg ([]) zolang je alleen een vraag stelt of nog niets concreets hebt.
+- Zet "done" op true zodra dit onderwerp echt is afgerond en de gebruiker tevreden lijkt (of duidelijk een nieuw onderwerp begint).
+  Zolang er nog iets aan deze taken kan veranderen, houd je "done" op false.
 
-Laat "items" leeg ([]) zolang je nog een vraag stelt. Vul "items" pas als je zeker genoeg bent.`;
+Antwoord ALTIJD met geldige JSON en niets eromheen:
+{"reply":"je bericht aan de gebruiker","done":false,"items":[{"title":"","owner":"","contact":"","due":null,"status":"todo","project_id":null}]}`;
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "method not allowed" });
   try {
-    const { history = [], catalog = [], today, who } = req.body || {};
+    const { history = [], catalog = [], existing = [], today, who } = req.body || {};
     if (!anthropic) {
-      return res.status(200).json({ reply: "(AI staat nog uit — ik heb je input genoteerd.)", items: [], noai: true });
+      return res.status(200).json({ reply: "(AI staat nog uit — ik heb je input genoteerd.)", items: [], done: false, noai: true });
     }
     const cat = (catalog || []).map(c => `- ${c.project_id} → ${c.client} · ${c.project}`).join("\n") || "(nog geen klanten/projecten)";
-    const sys = `${SYSTEM}\n\nVANDAAG: ${today || ""}\nGEBRUIKER: ${who || ""}\nCATALOGUS (project_id → klant · project):\n${cat}`;
+    const ex = (existing || []).slice(0, 80)
+      .map(t => `- ${t.title} [${t.client || "?"}${t.project ? " · " + t.project : ""}] ${t.owner ? "@" + t.owner : ""}${t.due ? " due " + t.due : ""}`)
+      .join("\n") || "(nog geen openstaande taken)";
+    const sys = `${SYSTEM}\n\nVANDAAG: ${today || ""}\nGEBRUIKER: ${who || ""}\nCATALOGUS (project_id → klant · project):\n${cat}\n\nBESTAANDE OPENSTAANDE TAKEN (voor dubbele-check en werkdruk):\n${ex}`;
     const messages = (history || []).slice(-24).map(m => ({
       role: m.role === "assistant" ? "assistant" : "user",
       content: String(m.content || ""),
     })).filter(m => m.content);
-    if (!messages.length) return res.status(200).json({ reply: "Waar kan ik mee helpen?", items: [] });
+    if (!messages.length) return res.status(200).json({ reply: "Waar kan ik mee helpen?", items: [], done: false });
 
     const resp = await anthropic.messages.create({
-      model: MODEL, max_tokens: 1400, system: sys, messages,
+      model: MODEL, max_tokens: 1600, system: sys, messages,
     });
     const raw = resp.content.map(b => (b.type === "text" ? b.text : "")).join("");
     const slice = raw.slice(raw.indexOf("{"), raw.lastIndexOf("}") + 1);
     let parsed;
     try { parsed = JSON.parse(slice); }
-    catch (_) { parsed = { reply: raw.trim() || "Sorry, dat snapte ik niet helemaal.", items: [] }; }
+    catch (_) { parsed = { reply: raw.trim() || "Sorry, dat snapte ik niet helemaal.", items: [], done: false }; }
     return res.status(200).json({
       reply: parsed.reply || "",
       items: Array.isArray(parsed.items) ? parsed.items : [],
+      done: !!parsed.done,
     });
   } catch (e) {
     return res.status(500).json({ error: String(e.message || e) });

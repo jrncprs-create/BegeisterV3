@@ -1353,21 +1353,34 @@ async function assignChatProject(pid){const ids=_pendingIds.slice();if(!pid||!id
 let chatHistory=[];
 function addTyping(){const t=document.getElementById('chatThread');if(!t)return null;const d=document.createElement('div');d.className='msg ai typing';d.textContent='…';t.appendChild(d);d.scrollIntoView&&d.scrollIntoView({block:'nearest'});return d;}
 function knownIds(){return new Set(state.projects.filter(p=>p.id!=='__inbox__').map(p=>p.id));}
-async function createItemsFromAI(items){
+// Eén "batch" per lopend gesprek: de AI geeft telkens de VOLLEDIGE set terug,
+// wij vervangen de batch (geen dubbele meer). Bij done laten we 'm staan en starten vers.
+let convItemIds=[], convSourceId=null;
+function resetConversation(){ chatHistory=[]; convItemIds=[]; convSourceId=null; }
+async function syncItemsFromAI(items,done){
   const ok=knownIds();
-  const transcript=chatHistory.filter(m=>m.role==='user').map(m=>m.content).join('\n');
-  const {data:src}=await sb.from('sources').insert({channel:'chat',sender:who||'Chat',body:transcript||'(chat)',processed:true}).select().single();
-  const rows=items.filter(it=>it&&it.title).map(it=>({
+  const rows=(items||[]).filter(it=>it&&it.title).map(it=>({
     project_id:(it.project_id&&ok.has(it.project_id))?it.project_id:null,
-    source_id:src?src.id:null, title:String(it.title).trim(),
+    title:String(it.title).trim(),
     owner:(it.owner==='Jeroen'||it.owner==='Marlon')?it.owner:null,
     contact:it.contact||null, due:it.due||null,
     status:['todo','doing','wait','done'].includes(it.status)?it.status:'todo'}));
-  if(!rows.length){return;}
-  const {data:ins}=await sb.from('items').insert(rows).select('id,project_id');
+  // bron van dit gesprek (één keer), met de lopende transcriptie
+  const transcript=chatHistory.filter(m=>m.role==='user').map(m=>m.content).join('\n')||'(chat)';
+  if(!convSourceId){ const {data:src}=await sb.from('sources').insert({channel:'chat',sender:who||'Chat',body:transcript,processed:true}).select().single(); convSourceId=src?src.id:null; }
+  else { await sb.from('sources').update({body:transcript}).eq('id',convSourceId); }
+  // vervang de eerder in dit gesprek aangemaakte taken
+  if(convItemIds.length){ await sb.from('items').delete().in('id',convItemIds); convItemIds=[]; }
+  let orphan=[];
+  if(rows.length){
+    const payload=rows.map(r=>({...r,source_id:convSourceId}));
+    const {data:ins}=await sb.from('items').insert(payload).select('id,project_id');
+    convItemIds=(ins||[]).map(r=>r.id);
+    orphan=(ins||[]).filter(r=>!r.project_id).map(r=>r.id);
+  }
   await refresh();
-  const orphan=(ins||[]).filter(r=>!r.project_id).map(r=>r.id);
-  if(orphan.length){renderClientChips(orphan);}
+  if(orphan.length) renderClientChips(orphan);
+  if(done){ convItemIds=[]; convSourceId=null; }   // afgerond: taken blijven staan, volgende onderwerp begint vers
 }
 async function chatSend(){
   const ta=document.getElementById('chatInput');const text=(ta.value||'').trim();if(!text)return;
@@ -1379,15 +1392,16 @@ async function chatSend(){
   let data=null;
   try{
     const catalog=state.projects.filter(p=>p.id!=='__inbox__').map(p=>({project_id:p.id,client:p.client,project:p.project||''}));
+    const existing=allItems().filter(x=>x.it.status!=='done').slice(0,80).map(x=>({title:x.it.t,owner:x.it.owner||'',due:x.it.due||null,client:x.p.client,project:x.p.project||''}));
     const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({history:chatHistory,catalog,today:iso(new Date()),who})});
+      body:JSON.stringify({history:chatHistory,catalog,existing,today:iso(new Date()),who})});
     data=await r.json();
   }catch(_){}
   if(typing)typing.remove();
   if(!data||data.error||data.noai){ chatHistory.pop(); addMsg('ai','Sorry, ik ben er even niet bij — de AI is niet bereikbaar. Probeer het zo nog eens.'); const t=document.getElementById('chatInput'); if(t){t.value=text;t.dispatchEvent(new Event('input'));} return; }
   const reply=data.reply||'';
   if(reply){addMsg('ai',reply);chatHistory.push({role:'assistant',content:reply});}
-  if(data.items&&data.items.length){ await createItemsFromAI(data.items); }
+  if((data.items&&data.items.length)||data.done){ await syncItemsFromAI(data.items||[],data.done); }
 }
 let _greeted=false;
 function chatGreet(){
