@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Begeister — Workflow</title>
+<style>
+  :root{
+    --bg:#0d0d0d; --side:#151515; --panel:#1a1a1a; --panel2:#212121; --line:#2e2e2e;
+    --txt:#ececec; --mut:#9b9b9b; --mut2:#6a6a6a;
+    --primary:#6366f1; --primary2:#8a8fb5;
+    --ok:#34d399; --warn:#fbbf24; --risk:#fb923c; --late:#f87171;
+    --chi:#a78bfa; --bbv:#60a5fa; --ost:#34d399;
+    --r:14px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--txt);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+    font-size:14.5px;line-height:1.5;-webkit-font-smoothing:antialiased}
+  a{color:inherit}
+  input,textarea,select{accent-color:#fff}
+  input:focus,textarea:focus,select:focus{outline:none;border-color:rgba(255,255,255,.32);box-shadow:0 0 0 2px rgba(255,255,255,.06)}
+  .shell{display:flex;flex-direction:column;min-height:100vh}
+
+  /* TOPBAR */
+  .topbar{display:flex;align-items:center;gap:18px;padding:11px 22px;border-bottom:1px solid var(--line);background:var(--side);position:sticky;top:0;z-index:40}
+  .logo{display:flex;align-items:center;gap:10px}
+  .logo img{height:30px;width:auto;display:block}
+  .logo .mark{width:30px;height:30px;border-radius:8px;background:#2a2a2a;border:1px solid #3a3a3a;display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--mut);font-size:14px}
+  .topnav{display:flex;gap:6px}
+  .topnav button{border:none;background:transparent;color:var(--mut);padding:7px 10px;cursor:pointer;font-size:14px;display:flex;align-items:center;gap:8px;border-bottom:2px solid transparent}
+  .topnav button:hover{color:var(--txt)}
+  .topnav button.active{color:var(--txt);border-bottom-color:var(--txt)}
+  .topnav .badge{background:#000;color:var(--mut);border-radius:999px;font-size:11px;padding:1px 7px}
+  .topnav button.active .badge{color:var(--txt)}
+  .userbox{display:flex;align-items:center;gap:9px}
+  .userbox .av{width:30px;height:30px;border-radius:50%;background:#333;border:1px solid #444;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--txt);font-size:12px}
+  .userbox select{background:transparent;border:none;color:var(--txt);font-size:13.5px;font-weight:600;cursor:pointer}
+
+  /* BODY */
+  .body{display:grid;grid-template-columns:1fr 320px;flex:1;min-height:0}
+  @media(max-width:1080px){.body{grid-template-columns:1fr}.rail{display:none}}
+
+  .main{padding:18px 24px 32px;min-width:0}
+  .main-head{display:flex;align-items:center;gap:14px;margin-bottom:16px;flex-wrap:wrap}
+  .main-head h1{font-size:19px;margin:0;font-weight:650}
+  .spacer{flex:1}
+  .seg{display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:4px}
+  .seg button{border:none;background:transparent;color:var(--mut);padding:6px 14px;border-radius:999px;cursor:pointer;font-size:13px}
+  .seg button.active{background:var(--panel2);color:var(--txt);box-shadow:inset 0 0 0 1px var(--primary)}
+  .btn{background:var(--primary);color:#fff;border:none;border-radius:10px;padding:9px 15px;font-weight:600;cursor:pointer;font-size:13.5px}
+  .btn:hover{background:#5457e6}
+  .btn.ghost{background:transparent;color:var(--mut);border:1px solid var(--line)}
+  .btn.danger{background:transparent;color:var(--late);border:1px solid #3a2424}
+
+  /* project tabs */
+  .ptabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .ptab{background:transparent;border:1px solid transparent;color:var(--mut);padding:7px 12px;border-radius:8px;cursor:pointer;font-size:13.5px;display:flex;align-items:center;gap:9px}
+  .ptab:hover{color:var(--txt);background:var(--panel)}
+  .ptab.active{color:var(--txt);background:var(--panel)}
+  .pdot{width:9px;height:9px;border-radius:3px}
+  .ptab .badge{background:#000;color:var(--mut);border-radius:999px;font-size:11px;padding:1px 7px}
+  .clienthead{margin:4px 0 14px}
+  .clienthead h2{margin:0;font-size:18px;font-weight:650}
+  .clienthead .sub{font-size:12.5px;color:var(--mut2);margin-top:3px}
+  .clienthead .cproj{color:var(--mut);font-weight:600}
+  .projsub{font-size:11.5px;color:var(--mut2)}
+
+  /* task rows */
+  .list{display:flex;flex-direction:column;gap:9px}
+  .task{background:var(--panel);border:1px solid transparent;border-radius:var(--r);padding:13px 15px;
+    display:grid;grid-template-columns:22px 38px 1fr auto;gap:13px;align-items:center}
+  .task:hover{background:var(--panel2)}
+  .task.done{opacity:.5}
+  .task.done .t-title{text-decoration:line-through}
+  .chk{width:19px;height:19px;border:1.6px solid var(--mut2);border-radius:50%;cursor:pointer;flex:none;display:flex;align-items:center;justify-content:center;font-size:11px;color:transparent}
+  .chk.on{background:var(--ok);border-color:var(--ok);color:#06281c}
+  .picon{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#0c0d10;font-size:15px}
+  .t-main{min-width:0}
+  .t-title{font-size:14.5px}
+  .t-title .ttext{cursor:pointer}
+  .t-title .ttext:hover{color:var(--primary2)}
+  .t-sub{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;align-items:center}
+  .t-right{display:flex;align-items:center;gap:14px}
+  .pill{font-size:11px;padding:2px 9px;border-radius:999px;border:1px solid var(--line);white-space:nowrap;color:var(--mut)}
+  .pill.who{color:var(--txt)}
+  .pill.doing{color:var(--warn);border-color:#3a3320}
+  .pill.wait{color:var(--primary2);border-color:#2c2f4d}
+  .pill.proj{color:var(--mut)}
+  .pill.src{cursor:pointer;color:var(--mut2)}
+  .pill.src:hover{color:var(--primary2);border-color:var(--primary)}
+  .due{font-size:12.5px;font-variant-numeric:tabular-nums;color:var(--mut);white-space:nowrap}
+  .due.warn{color:var(--warn)} .due.risk{color:var(--risk)} .due.late{color:var(--late);font-weight:600}
+  .iconbtn{width:30px;height:30px;border-radius:9px;border:1px solid var(--line);background:transparent;color:var(--mut);cursor:pointer;font-size:13px}
+  .iconbtn:hover{color:var(--primary2);border-color:var(--primary)}
+  .addrow{display:flex;gap:9px;margin-top:14px}
+  .addrow input{flex:1;background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:10px;padding:10px 13px;font-size:14px}
+
+  /* AGENDA list */
+  .agenda-group{margin-bottom:18px}
+  .agenda-group h4{font-size:11.5px;letter-spacing:1px;text-transform:uppercase;color:var(--mut2);margin:0 0 9px;display:flex;align-items:center;gap:8px}
+  .agenda-group h4 .dotc{width:8px;height:8px;border-radius:50%}
+  .arow{background:transparent;border:none;border-bottom:1px solid var(--line);border-radius:0;padding:11px 4px;display:flex;align-items:center;gap:12px;cursor:pointer}
+  .arow:hover{background:var(--panel)}
+  .arow .adate{font-size:12.5px;width:120px;flex:none;font-variant-numeric:tabular-nums}
+  .arow .atitle{flex:1}
+
+  /* CALENDAR */
+  .cal-head{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+  .cal-head .navbtn{width:32px;height:32px;border-radius:9px;border:1px solid var(--line);background:var(--panel);color:var(--txt);cursor:pointer;font-size:15px}
+  .cal-head .navbtn:hover{border-color:var(--primary)}
+  .cal-head .label{font-weight:650;font-size:16px;min-width:190px;text-align:center}
+  .cal-head .today{font-size:12.5px;color:var(--mut);border:1px solid var(--line);border-radius:9px;padding:7px 13px;cursor:pointer;background:var(--panel)}
+  /* week = verticale daglijst */
+  .daylist{max-width:780px}
+  .dayblock{margin-bottom:10px}
+  .dayhd{font-size:12.5px;color:var(--mut);font-weight:600;border-bottom:1px solid var(--line);padding-bottom:6px;margin-bottom:2px;display:flex;align-items:center;gap:9px}
+  .dayblock.today .dayhd{color:var(--txt)}
+  .todaytag{font-size:10px;color:#000;background:#fff;border-radius:999px;padding:1px 8px;font-weight:700}
+  .dayempty{font-size:12.5px;color:var(--mut2);padding:7px 4px}
+  /* gedeelde event-rij (borderloos) */
+  .evrow{display:flex;gap:12px;align-items:flex-start;padding:11px 4px;border-bottom:1px solid var(--line);cursor:pointer}
+  .evrow:hover{background:var(--panel)}
+  .evdot{width:9px;height:9px;border-radius:50%;margin-top:5px;flex:none}
+  .evtitle{font-size:14px}
+  .evsub{font-size:12px;color:var(--mut2);margin-top:3px}
+  /* maand = iOS-stijl */
+  .iomonth{max-width:680px}
+  .iohdr{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:6px}
+  .iohd{text-align:center;font-size:12px;color:var(--mut2)}
+  .iogrid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+  .iocell{height:64px;display:flex;flex-direction:column;align-items:center;padding-top:8px;gap:6px;cursor:pointer;border-radius:10px}
+  .iocell:hover{background:var(--panel)}
+  .iocell.other .ionum{color:var(--mut2);opacity:.45}
+  .ionum{font-size:15px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:50%}
+  .iocell.today .ionum{background:#fff;color:#000;font-weight:700}
+  .iocell.sel .ionum{box-shadow:0 0 0 1.5px var(--mut)}
+  .iodots{display:flex;gap:3px;height:6px}
+  .iodot{width:5px;height:5px;border-radius:50%}
+  .iolist{margin-top:20px;max-width:680px}
+  .iolist-hd{font-size:13px;color:var(--mut2);margin-bottom:8px;text-transform:capitalize}
+  .undated-note{margin-top:14px;font-size:12.5px;color:var(--mut2)}
+
+  /* BRONNEN */
+  .intake-note{background:transparent;border:none;border-radius:0;padding:0 0 6px;margin-bottom:14px;font-size:13px;color:var(--mut2);max-width:780px}
+  .intake-note b{color:var(--txt)}
+  .src-card{background:var(--panel);border:1px solid transparent;border-radius:var(--r);margin-bottom:8px;overflow:hidden}
+  .src-head{display:flex;align-items:center;gap:11px;padding:13px 16px;cursor:pointer}
+  .src-head:hover{background:var(--panel2)}
+  .src-chan{font-size:11px;padding:2px 9px;border-radius:999px;border:1px solid var(--line);white-space:nowrap}
+  .src-chan.whatsapp{color:var(--ok);border-color:#1f3a2c}
+  .src-chan.email{color:var(--bbv);border-color:#21333f}
+  .src-chan.paste{color:var(--mut)}
+  .src-from{font-weight:650}
+  .src-meta{color:var(--mut2);font-size:12px;margin-left:auto;white-space:nowrap}
+  .src-body{border-top:1px solid var(--line);padding:15px 16px;display:none}
+  .src-body.open{display:block}
+  .chat{display:flex;flex-direction:column;gap:6px;max-height:340px;overflow:auto;padding:4px 2px}
+  .msg{max-width:78%;padding:8px 11px;border-radius:12px;font-size:13px;line-height:1.45}
+  .msg .mh{font-size:10.5px;color:var(--mut2);margin-bottom:2px}
+  .msg.them{align-self:flex-start;background:#262626;border-bottom-left-radius:4px}
+  .msg.me{align-self:flex-end;background:#0f3b2e;border-bottom-right-radius:4px}
+  .summary{font-size:13.5px;color:var(--txt);line-height:1.6}
+  .full-block{margin-top:12px;background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:13px 15px;font-size:12.5px;color:var(--mut);white-space:pre-wrap;line-height:1.55;max-height:300px;overflow:auto;display:none}
+  .full-block.open{display:block}
+  .src-attach{font-size:12px;color:var(--mut2);margin-top:10px;display:flex;flex-wrap:wrap;gap:8px}
+  .src-attach .att{border:1px solid var(--line);border-radius:7px;padding:3px 9px}
+  .src-img{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}
+  .src-img .imgph{background:var(--panel2);border:1px dashed var(--line);border-radius:9px;width:150px;height:96px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:11px;color:var(--mut2);padding:8px}
+  .gear{text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;cursor:pointer}
+  .src-derived{margin-top:13px}
+  .src-derived .lbl{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--mut2);margin-bottom:7px}
+  .src-derived .di{font-size:12.5px;padding:6px 0;border-bottom:1px dashed var(--line);display:flex;gap:8px;align-items:flex-start}
+
+  /* RAIL */
+  .rail{background:var(--side);border-left:1px solid var(--line);padding:18px 18px;overflow:auto}
+  .wachter{background:linear-gradient(180deg,#1f1f1f,#161616);border:1px solid var(--line);border-radius:var(--r);padding:15px 16px;position:relative;overflow:hidden;margin-bottom:18px}
+  .wachter::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--primary)}
+  .wachter h2{margin:0 0 2px;font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:var(--primary2)}
+  .wachter .sub{color:var(--mut2);font-size:11.5px;margin-bottom:11px}
+  .wachter ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px}
+  .wachter li{font-size:12.5px;color:var(--mut);display:flex;flex-direction:column;gap:3px}
+  .wachter li .tag{font-size:9.5px;letter-spacing:.5px;padding:1px 7px;border-radius:999px;width:max-content}
+  .wachter li b{color:var(--txt);font-weight:600}
+  .wachter .empty{color:var(--mut2);font-size:12.5px}
+  .rail h3{font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut2);margin:6px 0 10px}
+  .mini{display:flex;flex-direction:column;gap:7px}
+  .mini .mi{background:var(--panel);border:1px solid transparent;border-radius:10px;padding:9px 11px;cursor:pointer}
+  .mini .mi:hover{background:var(--panel2)}
+  .mini .mi .mt{font-size:12.5px}
+  .mini .mi .md{font-size:11px;color:var(--mut2);margin-top:4px;display:flex;align-items:center;gap:7px}
+
+  /* INGEST */
+  .ingest{margin-top:24px;border-top:1px solid var(--line);padding-top:18px}
+  .ingest h2{font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:var(--mut);margin:0 0 4px}
+  .ingest p{color:var(--mut2);font-size:12.5px;margin:0 0 11px;max-width:660px}
+  .ingest .channels{display:flex;gap:7px;flex-wrap:wrap;margin:9px 0 11px}
+  .ch{font-size:11px;color:var(--mut2);border:1px dashed var(--line);border-radius:999px;padding:3px 10px}
+  .ch.live{color:var(--primary2);border-style:solid;border-color:#2c2f4d}
+  .ingest textarea{width:100%;min-height:80px;background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:11px;padding:13px;font-size:14px;resize:vertical;font-family:inherit}
+  .ingest .actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:11px}
+  .hint{color:var(--mut2);font-size:12px}
+
+  /* PROJECTBEHEER */
+  .proj-row{display:grid;grid-template-columns:42px minmax(0,1.5fr) minmax(0,1.5fr) 56px auto;gap:12px;align-items:center;padding:10px 4px;border-bottom:1px solid var(--line)}
+  .proj-row input[type=text]{width:100%;min-width:0;background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:9px 11px;font-size:14px}
+  .proj-row input::placeholder{color:var(--mut2)}
+  .proj-row .cnt{font-size:12px;color:var(--mut2);text-align:right}
+  .proj-row.newrow{border-bottom:none;margin-top:14px}
+  .del,.addbtn{background:transparent;border-radius:8px;padding:8px 12px;cursor:pointer;font-size:12.5px;white-space:nowrap}
+  .del{border:1px solid #3a2424;color:var(--late)}
+  .del:hover{background:#2a1c1c}
+  .addbtn{border:1px solid #20402f;color:#34d399}
+  .addbtn:hover{background:#15241c}
+  .cpick{width:42px;height:34px;border-radius:8px;border:1px solid var(--line);cursor:pointer;color:#0c0d10;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center}
+  .cpop{position:fixed;display:none;z-index:120;background:#161616;border:1px solid var(--line);border-radius:10px;padding:9px;box-shadow:0 12px 30px rgba(0,0,0,.6);grid-template-columns:repeat(4,1fr);gap:8px}
+  .cpop.open{display:grid}
+  .cpop .sw{width:28px;height:28px;border-radius:7px;cursor:pointer;border:2px solid transparent}
+  .cpop .sw:hover{border-color:#fff}
+
+  /* MODAL */
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.62);display:none;align-items:center;justify-content:center;padding:20px;z-index:60}
+  .overlay.open{display:flex}
+  .modal{background:var(--panel);border:1px solid var(--line);border-radius:16px;width:560px;max-width:100%;padding:26px 26px 24px}
+  .modal h3{margin:0 0 18px;font-size:17px}
+  .modal label{display:block;font-size:11.5px;color:var(--mut2);margin:16px 0 6px;letter-spacing:.3px}
+  .modal input,.modal select,.modal textarea{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px 12px;font-size:14px;font-family:inherit}
+  .modal textarea{min-height:84px;resize:vertical}
+  .modal .twocol{display:flex;gap:14px}.modal .twocol>div{flex:1;min-width:0}
+  .modal .foot{display:flex;justify-content:space-between;align-items:center;margin-top:24px}
+  .datefield{display:flex;align-items:center;justify-content:space-between;background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:10px 12px;font-size:14px;cursor:pointer}
+  .datefield:hover{border-color:rgba(255,255,255,.25)}
+  .datefield .cal-ic{color:var(--mut2)}
+  .duepop{position:fixed;display:none;z-index:140;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;box-shadow:0 14px 34px rgba(0,0,0,.6);width:300px}
+  .duepop.open{display:block}
+  .duepop .dphd{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .duepop .dphd .lbl{font-weight:650;font-size:14px;text-transform:capitalize}
+  .duepop .dpnav{display:flex;gap:6px}
+  .duepop .dpnav button{width:28px;height:28px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--txt);cursor:pointer}
+  .duepop .dpnav button:hover{border-color:var(--primary)}
+  .duepop .dphdr{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px}
+  .duepop .dphdr div{text-align:center;font-size:10.5px;color:var(--mut2)}
+  .duepop .dpgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+  .duepop .dpc{height:34px;display:flex;align-items:center;justify-content:center;font-size:13px;border-radius:8px;cursor:pointer}
+  .duepop .dpc:hover{background:var(--panel2)}
+  .duepop .dpc.other{color:var(--mut2);opacity:.45}
+  .duepop .dpc.today{box-shadow:inset 0 0 0 1px var(--mut)}
+  .duepop .dpc.sel{background:#fff;color:#000;font-weight:700}
+  .duepop .dpfoot{display:flex;justify-content:space-between;margin-top:10px}
+  .duepop .dpfoot button{background:transparent;border:none;color:var(--primary2);cursor:pointer;font-size:12.5px}
+  .pill.contact{color:var(--mut);border-color:var(--line)}
+
+  /* TOOLTIP */
+  #tip{position:fixed;display:none;z-index:200;max-width:280px;background:#0d0d0d;border:1px solid var(--line);border-radius:9px;padding:9px 11px;font-size:12px;color:var(--txt);box-shadow:0 10px 26px rgba(0,0,0,.55);pointer-events:none;line-height:1.45}
+  #tip b{color:var(--primary2)}
+  .hidden{display:none}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <header class="topbar">
+    <div class="logo" id="logoSlot">
+      <svg viewBox="0 0 32 32" width="26" height="26" aria-label="Begeister">
+        <g stroke="#fff" stroke-width="2.6" stroke-linecap="round">
+          <line x1="16" y1="4.5" x2="16" y2="27.5"/>
+          <line x1="6" y1="10.25" x2="26" y2="21.75"/>
+          <line x1="6" y1="21.75" x2="26" y2="10.25"/>
+        </g>
+      </svg>
+    </div>
+    <nav class="topnav" id="nav">
+      <button data-v="taken" class="active" onclick="setView('taken')">Taken <span class="badge" id="nb-taken"></span></button>
+      <button data-v="agenda" onclick="setView('agenda')">Agenda</button>
+      <button data-v="bronnen" onclick="setView('bronnen')">Bronnen <span class="badge" id="nb-bron"></span></button>
+      <button data-v="beheer" onclick="setView('beheer')">Klanten</button>
+    </nav>
+    <div class="spacer"></div>
+    <div class="userbox">
+      <span class="av" id="userAv">J</span>
+      <select id="who" onchange="setWho()"><option>Jeroen</option><option>Marlon</option></select>
+    </div>
+  </header>
+
+  <div class="body">
+    <main class="main">
+      <div class="main-head">
+        <h1 id="viewTitle">Taken</h1>
+        <div class="spacer"></div>
+        <div id="headExtra"></div>
+      </div>
+
+      <div id="view-taken">
+        <div class="ptabs" id="ptabs"></div>
+        <div class="list" id="list"></div>
+        <div class="addrow">
+          <input id="newTitle" placeholder="Nieuw actiepunt…  (bv. 'blinderknop bouwen — Jeroen — vrijdag')" />
+          <button class="btn" onclick="addItem()">Toevoegen</button>
+        </div>
+        <section class="ingest">
+          <h2>Ingest — gooi de chaos hierin</h2>
+          <p>Plak ruwe info: een mail, appje of aantekening. De AI maakt er actiepunten van én bewaart het origineel onder Bronnen.</p>
+          <div class="channels">
+            <span class="ch live">✎ plakken — actief</span>
+            <span class="ch">✉ intake@begeister.nl</span>
+            <span class="ch">WhatsApp doorsturen</span>
+            <span class="ch">voicenotes (auto-transcriptie)</span>
+          </div>
+          <textarea id="raw" placeholder="bv. 'Idz: blinders erbij, simpele dmx knop nodig naast dj. Joep stemt af.'"></textarea>
+          <div class="actions">
+            <button class="btn ghost" onclick="parseRaw()">Verwerk met AI →</button>
+            <span class="hint" id="ingestHint">Prototype-parser. De live-versie gebruikt de beste AI + jullie context.</span>
+          </div>
+        </section>
+      </div>
+
+      <div id="view-agenda" class="hidden"></div>
+
+      <div id="view-bronnen" class="hidden">
+        <div class="intake-note">
+          Alles wat binnenkomt blijft hier <b>origineel</b> bewaard — woord voor woord, met afzender, datum, bijlagen en relevante afbeeldingen.
+          Apparatuur en leveranciers worden automatisch <b>klikbare links met uitleg</b>. In de live-versie stuur je alles naar <b>intake@begeister.nl</b>.
+        </div>
+        <div id="bronnenWrap"></div>
+      </div>
+
+      <div id="view-beheer" class="hidden">
+        <div class="intake-note">Elke <b>klant</b> heeft een <b>project</b> eronder. Hernoem, geef een kleur of verwijder. De kleur wordt overal als accent gebruikt. Wijzigingen worden <b>automatisch bewaard</b>.</div>
+        <div id="beheerWrap"></div>
+        <div class="proj-row newrow">
+          <button class="cpick" id="np_color_btn" style="background:#fbbf24" onclick="openColorPicker(event,'new')"></button>
+          <input type="text" id="np_name" placeholder="Nieuwe klant — naam" />
+          <input type="text" id="np_project" placeholder="Project / event" />
+          <span class="cnt"></span>
+          <button class="addbtn" onclick="addProject()">Toevoegen</button>
+        </div>
+      </div>
+    </main>
+
+    <aside class="rail">
+      <div class="wachter">
+        <h2>AI-wachter</h2>
+        <div class="sub" id="wachterSub"></div>
+        <ul id="wachterList"></ul>
+      </div>
+      <h3>Vandaag &amp; deze week</h3>
+      <div class="mini" id="miniAgenda"></div>
+    </aside>
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h3>Actiepunt bewerken</h3>
+    <label>Omschrijving</label>
+    <textarea id="m_t" rows="3"></textarea>
+    <div class="twocol">
+      <div><label>Eigenaar — Begeister</label><select id="m_owner"><option>Jeroen</option><option>Marlon</option></select></div>
+      <div><label>Contact — extern (optioneel)</label><select id="m_contact"></select></div>
+    </div>
+    <div class="twocol">
+      <div><label>Klant</label><select id="m_client" onchange="onClientChange()"></select></div>
+      <div><label>Project</label><select id="m_project"></select></div>
+    </div>
+    <div class="twocol">
+      <div><label>Deadline</label>
+        <div class="datefield" id="m_due_field" onclick="openDuePicker(event)"><span id="m_due_label">Geen datum</span><span class="cal-ic">▦</span></div>
+      </div>
+      <div><label>Status</label><select id="m_status"><option value="todo">te doen</option><option value="doing">bezig</option><option value="wait">wacht op</option><option value="done">klaar</option></select></div>
+    </div>
+    <div class="foot">
+      <button class="btn danger" onclick="deleteItem()">Verwijderen</button>
+      <div style="display:flex;gap:10px">
+        <button class="btn ghost" onclick="closeModal()">Annuleren</button>
+        <button class="btn" onclick="saveModal()">Opslaan</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="duepop" class="duepop"></div>
+<div id="cpop" class="cpop"></div>
+
+<script>
+// ---------- helpers ----------
+const TODAY=new Date(2026,5,25);
+function d(s){if(s instanceof Date)return new Date(s);const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(s);return m?new Date(+m[1],+m[2]-1,+m[3]):new Date(s);}
+function daysUntil(dt){if(!dt)return null;return Math.round((d(dt)-TODAY)/86400000);}
+let _id=0;function uid(p){return (p||'i')+(++_id)+Math.random().toString(36).slice(2,5);}
+function escapeHtml(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function addDays(dt,n){const x=new Date(dt);x.setDate(x.getDate()+n);return x;}
+function iso(dt){const y=dt.getFullYear(),m=String(dt.getMonth()+1).padStart(2,'0'),da=String(dt.getDate()).padStart(2,'0');return `${y}-${m}-${da}`;}
+function monday(dt){const x=new Date(dt);const wd=(x.getDay()+6)%7;return addDays(x,-wd);}
+let PROJCOL={};
+function rebuildColors(){PROJCOL={};state.projects.forEach(p=>{PROJCOL[p.id]=p.color||'#888';});}
+
+// ---------- gear / vendor auto-links (term, zoekterm, uitleg) ----------
+const GEAR=[
+  ["CLF Ares Led Wash","CLF Ares LED Wash spot","<b>CLF Ares LED Wash</b> — krachtige RGBW wash-spot van CLF Lighting voor podiumverlichting. Klik om te openen ↗"],
+  ["CLF Ares","CLF Ares LED Wash","<b>CLF Ares</b> — LED wash-spot (CLF Lighting). Klik om te openen ↗"],
+  ["stage hazer","stage hazer hazemachine","<b>Stage hazer</b> — maakt fijne nevel zodat lichtbundels zichtbaar worden. Klik om te openen ↗"],
+  ["dimmerpack","dimmerpack DMX licht","<b>Dimmerpack</b> — stuurt conventionele lampen dimbaar aan via DMX. Klik om te openen ↗"],
+  ["hobby dmx tafeltje","hobby DMX controller fader","<b>Hobby DMX-tafeltje</b> — simpele DMX-controller met faders voor handmatige bediening. Klik om te openen ↗"],
+  ["RGB par","RGB PAR LED spot","<b>RGB PAR</b> — basis LED-spot voor kleurwash. Klik om te openen ↗"],
+  ["blinders","blinder LED DMX licht","<b>Blinder</b> — felle lamp richting publiek voor knaleffecten. Klik om te openen ↗"],
+  ["DMX","DMX512 licht besturing","<b>DMX512</b> — standaard besturingsprotocol voor licht. Klik om te openen ↗"],
+  ["Euro-PA","Euro-PA licht geluid verhuur","<b>Euro-PA</b> — verhuurbedrijf voor licht en geluid. Klik om te openen ↗"],
+  ["Idz","IDZ licht geluid verhuur","<b>IDZ</b> — leverancier/verhuur van licht en geluid. Klik om te openen ↗"]
+];
+const GEAR_SORTED=[...GEAR].sort((a,b)=>b[0].length-a[0].length);
+function autolink(escaped,color){
+  color=color||'var(--primary2)';
+  const pat=GEAR_SORTED.map(g=>g[0].replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|');
+  const re=new RegExp('('+pat+')','gi');
+  return escaped.replace(re,(m)=>{
+    const hit=GEAR.find(g=>g[0].toLowerCase()===m.toLowerCase())||GEAR.find(g=>m.toLowerCase().includes(g[0].toLowerCase()));
+    const q=encodeURIComponent(hit?hit[1]:m);
+    const tip=(hit?hit[2]:('<b>'+m+'</b>')).replace(/"/g,'&quot;');
+    return `<a class="gear" style="color:${color}" data-tip="${tip}" href="https://www.google.com/search?q=${q}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${m}</a>`;
+  });
+}
+
+// ---------- bronnen (originelen) ----------
+const SRC=[
+  {id:"src_marlon",channel:"whatsapp",from:"Marlon",proj:"chi",date:"2026-06-24",kind:"chat",attach:[],images:[],
+   text:
+`Marlon (app): Woensdag 1 juli om vier uur meeting met Willem over Landjuweel. Dat event komt volgens hem te vroeg om mee te nemen in de lange lijn.
+Marlon (app): Voor Landjuweel heeft hij 5300 budget voor licht, geluid, productie en decoratie. Willem stuurt een eerste kostenraming mbt Landjuweel zodat we weten hoeveel creatieve ruimte er nog is. Waarbij ik heb aangegeven ook graag samen naar het totaalplaatje van Landjuweel te kijken.
+Marlon (app): Heb hem ook laten weten dat wij er voorstander zijn een deel van het budget van Landjuweel te gebruiken voor het doorontwikkelen van de lantaarns.
+Marlon (app): Productioneel gezien; Stavros en Len zijn bevestigd t.b.v. productie. Kyara heeft hij gecanceld in de hoop dat wij er zijn.
+Marlon (app): Voor ons heeft hij 4 bandjes gereserveerd. Die 2 overige bandjes zijn wat mij betreft voor mensen die iets bijdragen aan house of chi t.b.v. Begeister.
+Marlon (app): Tot zover de zakelijke bijpraat per app`},
+
+  {id:"src_idz",channel:"whatsapp",from:"Idz (gear / verhuur)",proj:"bbv",date:"2026-06-22",kind:"chat",attach:[],images:[],
+   text:
+`Idz (15:11): Hey jeroen je had gelijk, ik had te weinig gepland, dus ik ga lichtbestelling vergroten voor Bonbon Vivant. wordt nu: 8x RGB par, 4x CLF Ares Led Wash, 1x stage hazer en paar blinders.
+Jeroen (15:11): Top. Thnx.
+Idz (15:11): hebben ze net zoveel licht als de rebel stage bij luchtbus dat lijkt me top
+Jeroen (15:11): Geweldig.
+Jeroen (15:12): Ik hang dan die 12 lantaarns er nog bij en dan lijkt het me goed zo.
+Idz (15:12): alleen dan eigenlijk een simpele knop nodig naast dj dat ze zelf de blinders af en toe aan kunnen doen. Heb jij daar idee voor?
+Jeroen (15:12): Ik bedenk wel iets.
+Idz (15:14, bewerkt): eigenlijk soort supersimpel hobby dmx tafeltje met vier schuiven ofzo nodig. Maar die is voor mij lastig te huren bij bedrijven als Euro-PA
+Jeroen (15:15): Ik bouw wel iets als ik daar tijd voor heb maar n blinderknop is niet zo ingewikkeld. Leon heeft m'n zoon en z'n mattie ingehuurd geloof ik. Dus er is ook bezetting :)
+Idz (15:15): aaah kijk dat helpt
+Idz (15:16): worden ze betaald in bonbons
+Idz (15:22): ok dan stel ik voor dat mijn crew mijn lampen ophangt en aansluit op dmx, en leggen ze de dmx kabel bij huifkar naar binnen. Dan pakt Joep het daarvandaan op om ermee te knipperen. Of andere optie, als Joep liever zelf wil bepalen waar de lampen komen kan dat ook, dan leveren ze alleen het materiaal.
+Jeroen (15:23): Ik overleg het even maar kan me voorstellen dat ze de lampen zelf willen plaatsen.
+Idz (15:24): snap ik, dan wordt het echt hun eigen project, da's wel cool natuurlijk
+Idz (15:25): Knoop Joep anders direct aan mij, dan heb jij er ook geen last meer van`},
+
+  {id:"src_leon",channel:"whatsapp",from:"Leon Row",proj:"bbv",date:"2026-06-20",kind:"chat",
+   attach:["Timetable Stage Management Bon Bon Vivant LJ.xlsx"],
+   images:[{label:"Foto van de area — houten paviljoen in het bos (Leon, 17:07)"}],
+   text:
+`Leon (10:45): Ik hoop je gewoon erbij te hebben als licht operator and licht kunstenaar, wil ook best kijken of er iemand mee kan doen die de lichten bediend merendeels
+Leon (10:47): Maar fijn als ik het lichtplan kan overdragen naar jou. Dat is toch echt jou kunst ook. Weet niet wat je daarvoor wilt hebben?
+Leon (10:48): Krijg natuurlijk niet zoveel van Ruigoord maar wil het wel toff hebben. Zou van m'n spaarcentjes uit komen maar werk het liefst met jou. Dan weet ik dat ik het los kan laten
+Leon (10:48): Dus zeg maar waar je dit voor zou willen doen
+Jeroen (10:54): Hi Leon. Welke dagen. Van hoe laat tot hoe laat? Ik kijk even of ik mensen kan vinden voor je.
+Leon (10:56): [bestand] Timetable Stage Management Bon Bon Vivant LJ.xlsx
+Leon (10:57): Maar zou het denk je kunnen werken? Dat jij een toffe licht installatie maakt, met bijvoorbeeld je kandelaren en dergelijke en dat er nog mensen bijkomen die het licht aansturen zodat jij ook mee vrij bent?
+Leon (10:57): Of zie je dit gewoon helemaal niet zitten?
+Jeroen (10:57): Noiet voor 480
+Leon (10:58): Waar wel voor?
+Leon (10:59): Als we gewoon de huur van de spullen weg zouden laten
+Leon (11:00): Waarmee zou jij genoegen nemen om z'n verantwoordelijkheid op je te nemen?
+Jeroen (11:01): Ik ben sowieso niet van plan de verantwoordelijkheid op me te nemen. Ik ga voor je kijken of mijn zoon met zijn crew tijd heeft. Die werkten met me samen op Wildenburg en wildewijde vorig jaar.
+Leon (11:02): Oké jammer, had het graag met je gedaan. Maar is goed, ben benieuwd of hij daar zin in heeft
+Jeroen (11:08): Van hem ik ik het geleerd. Als je nou eens een getal roept wat je er voor over hebt. Amarte vult het aan met bijna 500. Ik kan je wel een bedrag geven maar dan sla je vast steil achterover dus. Wat heb je voor totaalbudget en wat moet daar voor gebeuren... ik kan met Joep kijken wie er op welke momenten staan. Misschien sluit ik wel ergens aan. Maar ik ben er sowieso niet de hele tijd. We hebben nog een andere area.
+Jeroen (11:11): [Spraakoproep · 10 min]
+Jeroen (12:25): Heb je een tekening van de area?
+Jeroen (14:41): Ik heb 2 lichtmannen voor je voor 500. Dan nemen ze de installatie van mij met dimmerpack mee.
+Jeroen (14:42): Amarte budget gebruik ik dan daarnaast voor het huren en installeren van de installatie
+Jeroen (14:42): Totaal dus 950 ex
+Jeroen (15:36): Inclusief de lantaarns dus.
+Jeroen (16:44): 500 van jou. 450 Amarte.
+Jeroen (16:45): Kijken wij wat we aan gear nog bij Idz losgepeuterd krijgen :)
+Leon (17:07): Ik heb nog geen plattegrond gemaakt maar wel deze
+Leon (17:07): [foto van de area]
+Leon (17:08): Oke sure 500 is prima, is dan cash goed?
+Jeroen (17:08): Das goed.
+Jeroen (17:08): Ik zorg voor die lantaarns.
+Jeroen (17:09): Even nog onder n voorbehoud qua beschikbaarheid maar ik geloof dat dat goed zit. Regel jij camping en eten voor ze?
+Leon (17:10): Zeker, ze komen dan als crew offcource
+Jeroen (17:10): Perfect.
+Jeroen (17:43): Ze hebben n campertje.
+Leon (20:27): Yes komt goed!`},
+
+  {id:"src_ostrica",channel:"email",from:"Ostrica — thread Marlon ↔ Hans & Noa",proj:"ost",date:"2026-06-16",kind:"email",
+   attach:["RE: Incentive Athene 2027: uitgangspunten & randvoorwaarden"],images:[],
+   text:
+`Samenvatting: Marlon legt de uitgangspunten voor incentive Athene 2027 vast. Bestemming Athene, vr–ma voorjaar/vroege zomer 2027, 25 deelnemers (max 30), budget €40k–€50k all-in, hotel goede kwaliteit (12 twin + 2 single), twee vluchten vanaf Schiphol. Reisdatum-opties: 28–31 mei of 4–7 juni 2027. Werkwijze: 2 accommodaties + ruwe programmaschets → eerste begroting → factuur startfase. Organisatorisch via Noa, inhoudelijk/financieel via Hans. Hans gaf GO. Noa pakt goodiebag, smoelenboekje + vragenlijst en fotografie op. Hans vroeg om een gedragsdisclaimer (n.a.v. Palermo). Marlon stuurt volgende week de eerste begroting + programmaopzet.`,
+   full:
+`Onderwerp: Incentive Athene 2027: uitgangspunten & randvoorwaarden
+
+Hoi Hans en Noa,
+Dank voor het gesprek van gistermiddag. Wat mij betreft een fijn weerzien en een prettige eerste kennismaking in één. Het doel van deze terugkoppeling is vast te leggen hoe ik de opdracht heb begrepen en welke kaders we als vertrekpunt hanteren.
+
+Uitgangspunten:
+- Bestemming: Athene
+- Periode: voorjaar / vroege zomer 2027. Reisduur: vrijdag t/m maandag
+- Groepsgrootte: 25 deelnemers, schaalbaar tot maximaal 30
+- Budgetkader: circa €40.000–€50.000 all-in
+- Hotelniveau: goede kwaliteit, verzorgd, niet overmatig luxe
+- Kamers: 12 kamers met aparte bedden + 2 single rooms (26 bedden)
+- Vliegreis: groep verdeeld over twee vluchten vanaf Schiphol
+- Sfeer: verzorgd, mediterraan, ontspannen, goed georganiseerd
+
+Reisdatum (twee weekenden parallel toetsen):
+- Vrijdag 28 t/m maandag 31 mei 2027
+- Vrijdag 4 t/m maandag 7 juni 2027
+
+Werkwijze: bevestiging uitgangspunten → 2 accommodaties + ruwe programmaschets → eerste begrotingsrichting → factuur startfase → reisdatum definitief → research vluchten/programma/restaurants/transfers/deelnemersomgeving. Organisatorische zaken via Noa, inhoudelijke en financiële besluiten via Hans.
+
+Benodigde input van Ostrica: voorkeur weekenden; bevestiging kamerindeling; aandachtspunten in de groep; deelnemers die eerder/later reizen; communicatie NL of EN; is de bestemming intern al bekend.
+
+— Marlon Goûtier
+
+Hans (16 juni): "Wat mij betreft is onderstaande akkoord. Kijk uit naar de verdere uitwerking." → GO.
+
+Noa (16 juni): Ideeën — goodiebag (petje met Ostrica-logo, zonnebrand, klein flesje olijfolie), smoelenboekje + leuke vragenlijst (o.a. 'match de uitspraak met de persoon'), en fotografie tijdens de trip. "Doe ik met plezier."
+
+Hans (16 juni): "Wat ik me net bedenk is een disclaimer voor het gedrag dat we hebben meegemaakt in Palermo en de mogelijke gevolgen daarvan. Graag toevoegen ergens in het proces."
+
+Marlon (antwoord): disclaimer wordt op natuurlijke maar heldere manier verwerkt in de deelnemerscommunicatie. Goodiebag wordt meegenomen in de bredere opzet. In de loop van volgende week volgt een eerste ruwe begroting + globale programmaopzet.`}
+];
+
+// ---------- projecten ----------
+const SEED={projects:[
+  {id:"chi",client:"House of Chi",project:"Landjuweel",icon:"C",color:"#a78bfa",role:"Begeister · licht & decor · budget €5.300",
+   items:[
+     {id:uid(),t:"Meeting met Willem over Landjuweel — totaalplaatje + budget",owner:"Marlon",contact:"Willem",due:"2026-07-01",status:"doing",src:"src_marlon"},
+     {id:uid(),t:"Kostenraming Landjuweel afwachten van Willem",owner:"Marlon",contact:"Willem",due:null,status:"wait",src:"src_marlon"},
+     {id:uid(),t:"Voorstel: deel Landjuweel-budget inzetten voor doorontwikkelen lantaarns",owner:"Jeroen",contact:"",due:"2026-07-01",status:"todo",src:"src_marlon"},
+     {id:uid(),t:"Lichtontwerp + decor House of Chi uitwerken",owner:"Jeroen",contact:"",due:null,status:"doing",src:null},
+     {id:uid(),t:"Bepalen wie de 2 overige festivalbandjes krijgt",owner:"Marlon",contact:"Willem",due:null,status:"todo",src:"src_marlon"},
+     {id:uid(),t:"Productie bevestigd: Stavros & Len. Kyara gecanceld",owner:"Marlon",contact:"Willem",due:null,status:"done",src:"src_marlon"}
+   ]},
+  {id:"bbv",client:"BonBonVovant",project:"Landjuweel (met Leon)",icon:"B",color:"#60a5fa",role:"Begeister × Leon · €950 ex (€500 cash + €450 Amarte), incl. lantaarns",
+   items:[
+     {id:uid(),t:"Blinderknop / simpele DMX-controller (hobby dmx tafeltje, 4 schuiven) regelen — naast DJ",owner:"Jeroen",contact:"Idz",due:null,status:"todo",src:"src_idz"},
+     {id:uid(),t:"Met Joep afstemmen: IDZ-crew hangt lampen + sluit op DMX aan, óf alleen materiaal leveren als Joep zelf plaatst",owner:"Jeroen",contact:"Joep",due:null,status:"doing",src:"src_idz"},
+     {id:uid(),t:"Beschikbaarheid 2 lichtmannen (zoon + mattie) definitief bevestigen",owner:"Jeroen",contact:"Leon",due:null,status:"wait",src:"src_leon"},
+     {id:uid(),t:"Plattegrond / tekening van de area opvragen bij Leon",owner:"Jeroen",contact:"Leon",due:null,status:"wait",src:"src_leon"},
+     {id:uid(),t:"Lantaarns (12x) regelen + ophangen",owner:"Jeroen",contact:"",due:null,status:"todo",src:"src_leon"},
+     {id:uid(),t:"Lichtinstallatie + dimmerpack klaarzetten voor de crew",owner:"Jeroen",contact:"Idz",due:null,status:"todo",src:"src_leon"},
+     {id:uid(),t:"Timetable Stage Management (BonBonVivant LJ.xlsx) doornemen",owner:"Jeroen",contact:"Leon",due:null,status:"todo",src:"src_leon"},
+     {id:uid(),t:"Lichtbestelling IDZ bevestigd: 8× RGB par, 4× CLF Ares Led Wash, 1× stage hazer, blinders",owner:"Jeroen",contact:"Idz",due:null,status:"done",src:"src_idz"},
+     {id:uid(),t:"Betaalafspraak vastleggen: €500 cash + €450 Amarte = €950 ex",owner:"Marlon",contact:"Leon",due:null,status:"todo",src:"src_leon"},
+     {id:uid(),t:"Leon regelt camping + eten voor crew (komen als crew, campertje)",owner:"Jeroen",contact:"Leon",due:null,status:"done",src:"src_leon"}
+   ]},
+  {id:"ost",client:"Ostrica",project:"incentive Athene 2027",icon:"O",color:"#34d399",role:"Begeister · incentive · €40k–€50k · 25 (max 30) pers · vr–ma 2027",
+   items:[
+     {id:uid(),t:"Eerste ruwe begroting + globale programmaopzet opstellen voor Hans & Noa",owner:"Marlon",contact:"",due:"2026-06-26",status:"doing",src:"src_ostrica"},
+     {id:uid(),t:"Twee geschikte accommodaties in Athene voorstellen",owner:"Marlon",contact:"",due:null,status:"todo",src:"src_ostrica"},
+     {id:uid(),t:"Reisdatum toetsen: 28–31 mei vs 4–7 juni 2027 (hotel, vluchten, prijs)",owner:"Marlon",contact:"",due:null,status:"todo",src:"src_ostrica"},
+     {id:uid(),t:"Gedragsdisclaimer (n.a.v. Palermo) verwerken in deelnemerscommunicatie",owner:"Marlon",contact:"Hans",due:null,status:"todo",src:"src_ostrica"},
+     {id:uid(),t:"Eerste factuur startfase sturen na akkoord",owner:"Marlon",contact:"Hans",due:null,status:"todo",src:"src_ostrica"},
+     {id:uid(),t:"Input afwachten van Ostrica: weekendvoorkeur, kamerindeling, taal, aandachtspunten",owner:"Marlon",contact:"Noa",due:null,status:"wait",src:"src_ostrica"},
+     {id:uid(),t:"Goodiebag samenstellen (petje, zonnebrand, olijfolie) — Noa coördineert",owner:"Marlon",contact:"Noa",due:null,status:"todo",src:"src_ostrica"},
+     {id:uid(),t:"Smoelenboekje + vragenlijst maken — Noa",owner:"Marlon",contact:"Noa",due:null,status:"todo",src:"src_ostrica"},
+     {id:uid(),t:"GO ontvangen van Hans op uitgangspunten",owner:"Marlon",contact:"Hans",due:null,status:"done",src:"src_ostrica"}
+   ]}
+],sources:SRC};
+
+// ---------- state ----------
+let state=load();
+function load(){try{const s=JSON.parse(localStorage.getItem('begeister_v8'));if(s&&s.projects)return s;}catch(e){}return JSON.parse(JSON.stringify(SEED));}
+function save(){localStorage.setItem('begeister_v8',JSON.stringify(state));}
+let view='taken',activeTab='all',who='Jeroen';
+let calMode='maand',calRef=iso(TODAY),selectedDay=iso(TODAY);
+
+// ---------- lookups ----------
+function projById(id){return state.projects.find(p=>p.id===id);}
+function projName(id){const p=projById(id);return p?(p.client||p.name||''):'';}
+function projProj(id){const p=projById(id);return p?(p.project||''):'';}
+function findItem(id){for(const p of state.projects){const it=p.items.find(i=>i.id===id);if(it)return{p,it};}return null;}
+function allItems(){const a=[];state.projects.forEach(p=>p.items.forEach(it=>a.push({p,it})));return a;}
+function projById_ofItem(it){for(const p of state.projects){if(p.items.includes(it))return p.id;}return 'chi';}
+function dueInfo(due){
+  if(!due)return{txt:'geen datum',cls:''};
+  const n=daysUntil(due);
+  const txt=d(due).toLocaleDateString('nl-NL',{weekday:'short',day:'numeric',month:'short'});
+  let cls='';if(n<0)cls='late';else if(n<=1)cls='risk';else if(n<=4)cls='warn';
+  const rel=n<0?`${-n}d te laat`:(n===0?'vandaag':(n===1?'morgen':`over ${n}d`));
+  return{txt:`${txt} · ${rel}`,cls};
+}
+function ownerText(it){return (it.owner||'—')+(it.contact?' ↳ '+it.contact:'');}
+function chipTip(x){const di=dueInfo(x.it.due);return (escapeHtml(x.it.t)+' — '+escapeHtml(ownerText(x.it))+' · '+escapeHtml(projName(x.p.id))+(x.it.due?' · '+escapeHtml(di.txt):'')).replace(/"/g,'&quot;');}
+
+// ---------- view switch ----------
+function setView(v){
+  view=v;
+  document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('active',b.dataset.v===v));
+  document.getElementById('view-taken').classList.toggle('hidden',v!=='taken');
+  document.getElementById('view-agenda').classList.toggle('hidden',v!=='agenda');
+  document.getElementById('view-bronnen').classList.toggle('hidden',v!=='bronnen');
+  document.getElementById('view-beheer').classList.toggle('hidden',v!=='beheer');
+  document.getElementById('viewTitle').textContent={taken:'Taken',agenda:'Agenda',bronnen:'Bronnen',beheer:'Klanten & projecten'}[v];
+  render();
+}
+function setWho(){who=document.getElementById('who').value;document.getElementById('userAv').textContent=who[0];}
+
+// ---------- render ----------
+function render(){
+  rebuildColors();
+  renderWachter();renderMini();renderBadges();
+  if(view==='taken')renderTaken();
+  if(view==='agenda')renderAgenda();
+  if(view==='bronnen')renderBronnen();
+  if(view==='beheer')renderProjecten();
+  save();
+}
+function renderBadges(){
+  document.getElementById('nb-taken').textContent=allItems().filter(x=>x.it.status!=='done').length;
+  document.getElementById('nb-bron').textContent=state.sources.length;
+}
+
+function renderTaken(){
+  const tabs=document.getElementById('ptabs');
+  const allOpen=allItems().filter(x=>x.it.status!=='done').length;
+  let html=`<div class="ptab ${activeTab==='all'?'active':''}" onclick="setTab('all')"><span class="pdot" style="background:linear-gradient(135deg,var(--chi),var(--ost))"></span>Alles <span class="badge">${allOpen}</span></div>`;
+  html+=state.projects.map(p=>{const open=p.items.filter(i=>i.status!=='done').length;
+    return `<div class="ptab ${activeTab===p.id?'active':''}" onclick="setTab('${p.id}')"><span class="pdot" style="background:${PROJCOL[p.id]}"></span>${escapeHtml(p.client)} <span class="badge">${open}</span></div>`;}).join('');
+  tabs.innerHTML=html;
+
+  let headHtml='';
+  if(activeTab!=='all'){const p=projById(activeTab);
+    headHtml=`<div class="clienthead"><h2>${escapeHtml(p.client)}</h2><div class="sub"><span class="cproj">${escapeHtml(p.project||'')}</span>${p.role?' · '+escapeHtml(p.role):''}</div></div>`;}
+
+  const rows=(activeTab==='all'?allItems():projById(activeTab).items.map(it=>({p:projById(activeTab),it})));
+  const order={doing:0,wait:1,todo:2,done:3};
+  rows.sort((a,b)=>(order[a.it.status]-order[b.it.status]));
+  document.getElementById('list').innerHTML=headHtml+rows.map(({p,it})=>{
+    const di=dueInfo(it.due);const done=it.status==='done';const col=PROJCOL[p.id];
+    const stPill=it.status==='doing'?'<span class="pill doing">bezig</span>':(it.status==='wait'?'<span class="pill wait">wacht op</span>':(it.status==='todo'?'<span class="pill">te doen</span>':''));
+    const srcPill=it.src?`<span class="pill src" onclick="event.stopPropagation();gotoSource('${it.src}')">↪ bron</span>`:'';
+    return `<div class="task ${done?'done':''}">
+      <div class="chk ${done?'on':''}" onclick="toggle('${it.id}')">✓</div>
+      <div class="picon" style="background:${col}">${escapeHtml(p.icon)}</div>
+      <div class="t-main">
+        <div class="t-title"><span class="ttext" onclick="openModal('${it.id}')">${autolink(escapeHtml(it.t),col)}</span></div>
+        <div class="t-sub">
+          <span class="pill who">${escapeHtml(it.owner||'—')}</span>${it.contact?`<span class="pill contact">↳ ${escapeHtml(it.contact)}</span>`:''}${stPill}
+          ${activeTab==='all'?`<span class="pill proj">${escapeHtml(projName(p.id))}</span><span class="projsub">${escapeHtml(projProj(p.id))}</span>`:''}
+          ${srcPill}
+        </div>
+      </div>
+      <div class="t-right">
+        <span class="due ${di.cls}">${di.txt}</span>
+        <button class="iconbtn" onclick="openModal('${it.id}')">✎</button>
+      </div>
+    </div>`;
+  }).join('')||'<div class="hint">Geen actiepunten.</div>';
+}
+function setTab(t){activeTab=t;render();}
+
+// ---------- agenda ----------
+function renderAgenda(){
+  const wrap=document.getElementById('view-agenda');
+  const seg=`<div class="cal-head">
+    <div class="seg">
+      <button class="${calMode==='lijst'?'active':''}" onclick="setCal('lijst')">Lijst</button>
+      <button class="${calMode==='week'?'active':''}" onclick="setCal('week')">Week</button>
+      <button class="${calMode==='maand'?'active':''}" onclick="setCal('maand')">Maand</button>
+    </div>
+    <div class="spacer"></div>
+    ${calMode!=='lijst'?`<button class="navbtn" onclick="calNav(-1)">‹</button>
+      <span class="label" id="calLabel"></span>
+      <button class="navbtn" onclick="calNav(1)">›</button>
+      <button class="today" onclick="calToday()">Vandaag</button>`:''}
+  </div>`;
+  if(calMode==='lijst')wrap.innerHTML=seg+agendaList();
+  else if(calMode==='week')wrap.innerHTML=seg+agendaWeek();
+  else wrap.innerHTML=seg+agendaMonth();
+}
+function setCal(m){calMode=m;render();}
+function calNav(dir){const r=d(calRef);
+  if(calMode==='week'){calRef=iso(addDays(r,7*dir));}
+  else{const nf=new Date(r.getFullYear(),r.getMonth()+dir,1);calRef=iso(nf);selectedDay=iso(nf);}
+  render();}
+function calToday(){calRef=iso(TODAY);selectedDay=iso(TODAY);render();}
+
+function agendaList(){
+  const open=allItems().filter(x=>x.it.status!=='done');
+  const g={late:[],week:[],later:[],none:[]};
+  open.forEach(x=>{const n=daysUntil(x.it.due);if(n===null)g.none.push(x);else if(n<0)g.late.push(x);else if(n<=7)g.week.push(x);else g.later.push(x);});
+  const by=(a,b)=>d(a.it.due)-d(b.it.due);g.late.sort(by);g.week.sort(by);g.later.sort(by);
+  const defs=[['late','Te laat','var(--late)'],['week','Deze week','var(--warn)'],['later','Later','var(--ok)'],['none','Zonder datum','var(--mut2)']];
+  return defs.map(([k,label,col])=>{
+    if(!g[k].length)return'';
+    const rows=g[k].map(x=>{const di=dueInfo(x.it.due);
+      return `<div class="arow" onclick="openModal('${x.it.id}')">
+        <span class="evdot" style="background:${PROJCOL[x.p.id]};margin-top:0"></span>
+        <span class="adate ${k==='none'?'':di.cls}">${k==='none'?'—':di.txt}</span>
+        <span class="atitle">${escapeHtml(x.it.t)}</span>
+        <span class="pill who">${escapeHtml(x.it.owner||'—')}</span>${x.it.contact?`<span class="pill contact">↳ ${escapeHtml(x.it.contact)}</span>`:''}
+      </div>`;}).join('');
+    return `<div class="agenda-group"><h4><span class="dotc" style="background:${col}"></span>${label} · ${g[k].length}</h4>${rows}</div>`;
+  }).join('')||'<div class="hint">Geen openstaande actiepunten.</div>';
+}
+
+function itemsOn(dayIso){return allItems().filter(x=>x.it.status!=='done'&&x.it.due===dayIso);}
+function evRow(x){const di=dueInfo(x.it.due);
+  return `<div class="evrow" onclick="openModal('${x.it.id}')">
+    <span class="evdot" style="background:${PROJCOL[x.p.id]}"></span>
+    <div class="evmain"><div class="evtitle">${escapeHtml(x.it.t)}</div>
+    <div class="evsub">${escapeHtml(projName(x.p.id))}${projProj(x.p.id)?' — '+escapeHtml(projProj(x.p.id)):''} · ${escapeHtml(ownerText(x.it))}${x.it.due?' · '+escapeHtml(di.txt):''}</div></div>
+  </div>`;}
+
+function agendaWeek(){
+  const start=monday(d(calRef));
+  const days=[...Array(7)].map((_,i)=>addDays(start,i));
+  const lbl=`${start.toLocaleDateString('nl-NL',{day:'numeric',month:'short'})} – ${addDays(start,6).toLocaleDateString('nl-NL',{day:'numeric',month:'short',year:'numeric'})}`;
+  setTimeout(()=>{const el=document.getElementById('calLabel');if(el)el.textContent=lbl;},0);
+  const names=['Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag','Zondag'];
+  let html='<div class="daylist">';
+  days.forEach((day,i)=>{
+    const di=iso(day);const today=di===iso(TODAY);const its=itemsOn(di);
+    html+=`<div class="dayblock ${today?'today':''}"><div class="dayhd">${names[i]} ${day.getDate()} ${day.toLocaleDateString('nl-NL',{month:'short'})} ${today?'<span class="todaytag">vandaag</span>':''}</div>`;
+    html+=its.length?its.map(evRow).join(''):'<div class="dayempty">—</div>';
+    html+='</div>';
+  });
+  html+='</div>';
+  const undated=allItems().filter(x=>x.it.status!=='done'&&!x.it.due).length;
+  return html+`<div class="undated-note">+ ${undated} actiepunt(en) zonder datum — zichtbaar in Lijst &amp; bij de AI-wachter.</div>`;
+}
+
+function agendaMonth(){
+  const r=d(calRef);const first=new Date(r.getFullYear(),r.getMonth(),1);
+  const gridStart=monday(first);
+  const lbl=first.toLocaleDateString('nl-NL',{month:'long',year:'numeric'});
+  setTimeout(()=>{const el=document.getElementById('calLabel');if(el)el.textContent=lbl.charAt(0).toUpperCase()+lbl.slice(1);},0);
+  const hd=['Ma','Di','Wo','Do','Vr','Za','Zo'].map(n=>`<div class="iohd">${n}</div>`).join('');
+  let cells='';
+  for(let i=0;i<42;i++){
+    const day=addDays(gridStart,i);const di=iso(day);
+    const other=day.getMonth()!==r.getMonth();const today=di===iso(TODAY);const sel=di===selectedDay;
+    const its=itemsOn(di);
+    const dots=its.slice(0,3).map(x=>`<span class="iodot" style="background:${PROJCOL[x.p.id]}"></span>`).join('');
+    cells+=`<div class="iocell ${other?'other':''} ${today?'today':''} ${sel?'sel':''}" onclick="selectDay('${di}')"><span class="ionum">${day.getDate()}</span><span class="iodots">${dots}</span></div>`;
+    if(i%7===6){const nxt=addDays(gridStart,i+1);if(nxt.getMonth()!==r.getMonth()&&i>=27)break;}
+  }
+  const its=itemsOn(selectedDay);
+  const selDate=d(selectedDay).toLocaleDateString('nl-NL',{weekday:'long',day:'numeric',month:'long'});
+  let list=`<div class="iolist"><div class="iolist-hd">${selDate}</div>`;
+  list+=its.length?its.map(evRow).join(''):'<div class="dayempty">Geen actiepunten op deze dag.</div>';
+  list+='</div>';
+  return `<div class="iomonth"><div class="iohdr">${hd}</div><div class="iogrid">${cells}</div></div>`+list;
+}
+function selectDay(di){selectedDay=di;render();}
+
+// ---------- bronnen ----------
+function renderBronnen(){
+  const wrap=document.getElementById('bronnenWrap');
+  const sorted=[...state.sources].sort((a,b)=>d(b.date)-d(a.date));
+  wrap.innerHTML=sorted.map(s=>{
+    const col=PROJCOL[s.proj]||'var(--primary2)';
+    const derived=[];state.projects.forEach(p=>p.items.forEach(it=>{if(it.src===s.id)derived.push(it);}));
+    const dateTxt=d(s.date).toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'});
+    let bodyInner='';
+    if(s.kind==='chat'){bodyInner=`<div class="chat">${renderChat(s.text,col)}</div>`;}
+    else if(s.kind==='email'){
+      bodyInner=`<div class="summary">${autolink(escapeHtml(s.text),col)}</div>`+
+        (s.full?`<button class="btn ghost" style="margin-top:12px" onclick="toggleFull('${s.id}')" id="fbtn_${s.id}">Toon volledig origineel ▾</button>
+        <div class="full-block" id="full_${s.id}">${autolink(escapeHtml(s.full),col)}</div>`:'');
+    }else{bodyInner=`<div class="summary" style="white-space:pre-wrap">${autolink(escapeHtml(s.text),col)}</div>`;}
+    const imgs=(s.images&&s.images.length)?`<div class="src-img">${s.images.map(im=>`<div class="imgph">🖼 ${escapeHtml(im.label)}</div>`).join('')}</div>`:'';
+    const att=(s.attach&&s.attach.length)?`<div class="src-attach">${s.attach.map(a=>`<span class="att">📎 ${autolink(escapeHtml(a),col)}</span>`).join('')}</div>`:'';
+    const der=derived.length?`<div class="src-derived"><div class="lbl">${derived.length} actiepunt(en) hieruit gehaald — gear is klikbaar</div>
+      ${derived.map(it=>`<div class="di"><span class="pdot" style="background:${PROJCOL[projById_ofItem(it)]};margin-top:5px"></span><span>${autolink(escapeHtml(it.t),col)}</span></div>`).join('')}</div>`:'';
+    return `<div class="src-card" id="card_${s.id}">
+      <div class="src-head" onclick="toggleSrc('${s.id}')">
+        <span class="evdot" style="background:${col};margin-top:0"></span>
+        <span class="src-chan ${s.channel}">${s.channel==='whatsapp'?'WhatsApp':(s.channel==='email'?'E-mail':'Plak')}</span>
+        <span class="src-from">${escapeHtml(s.from)}</span>
+        <span class="src-meta">${dateTxt} · ${derived.length} actiepunt(en) ▾</span>
+      </div>
+      <div class="src-body" id="body_${s.id}">${bodyInner}${imgs}${att}${der}</div>
+    </div>`;
+  }).join('');
+}
+function renderChat(text,col){
+  const lines=text.split('\n');const msgs=[];let cur=null;
+  const re=/^(\w[\w'\.\- ]*?)\s*\(([^)]*)\):\s*(.*)$/;
+  lines.forEach(line=>{const m=line.match(re);
+    if(m){cur={who:m[1].trim(),time:m[2].trim(),text:m[3]};msgs.push(cur);}
+    else if(cur){cur.text+='\n'+line;}});
+  return msgs.map(m=>{const me=/jeroen/i.test(m.who);
+    return `<div class="msg ${me?'me':'them'}"><div class="mh">${escapeHtml(m.who)} · ${escapeHtml(m.time)}</div>${autolink(escapeHtml(m.text),col)}</div>`;}).join('');
+}
+function toggleSrc(id){document.getElementById('body_'+id).classList.toggle('open');}
+function toggleFull(id){const f=document.getElementById('full_'+id);const b=document.getElementById('fbtn_'+id);f.classList.toggle('open');b.textContent=f.classList.contains('open')?'Verberg origineel ▴':'Toon volledig origineel ▾';}
+function gotoSource(sid){setView('bronnen');setTimeout(()=>{const b=document.getElementById('body_'+sid);if(b){b.classList.add('open');document.getElementById('card_'+sid).scrollIntoView({behavior:'smooth',block:'center'});}},60);}
+
+// ---------- wachter + mini ----------
+function renderWachter(){
+  const flags=[];
+  allItems().forEach(({p,it})=>{if(it.status==='done')return;const n=daysUntil(it.due);if(n!==null&&n<0)flags.push({sev:'late',msg:`<b>${escapeHtml(it.t)}</b> is ${-n}d te laat (${escapeHtml(projName(p.id))}) — ${escapeHtml(it.owner||'?')}, loopt dit nog?`});});
+  allItems().forEach(({p,it})=>{if(it.status==='done')return;const n=daysUntil(it.due);if(n!==null&&n>=0&&n<=1)flags.push({sev:'risk',msg:`<b>${escapeHtml(it.t)}</b> moet ${n===0?'vandaag':'morgen'} af (${escapeHtml(projName(p.id))}) — ${escapeHtml(it.owner||'?')}, lukt dat?`});});
+  allItems().forEach(({p,it})=>{if(it.status==='wait')flags.push({sev:'wait',msg:`<b>${escapeHtml(it.t)}</b> staat op 'wacht op' (${escapeHtml(projName(p.id))}) — wie zet de volgende stap?`});});
+  state.projects.forEach(p=>{const nd=p.items.filter(i=>i.status!=='done'&&!i.due).length;if(nd>0)flags.push({sev:'wait',msg:`${escapeHtml(projName(p.id))}: ${nd} actiepunt(en) zonder deadline — wanneer moet dit af?`});});
+  const ordv={late:0,risk:1,wait:2};flags.sort((a,b)=>ordv[a.sev]-ordv[b.sev]);
+  const ul=document.getElementById('wachterList'),sub=document.getElementById('wachterSub');
+  if(!flags.length){ul.innerHTML='<li class="empty">Alles op koers ✦</li>';sub.textContent='Kijkt mee en is kritisch.';return;}
+  const col={late:'var(--late)',risk:'var(--risk)',wait:'var(--primary2)'},lab={late:'TE LAAT',risk:'URGENT',wait:'VRAAG'},bg={late:'#3a1f1f',risk:'#3a2a1c',wait:'#23264a'};
+  sub.textContent=`${flags.length} ding${flags.length>1?'en':''} die aandacht vragen.`;
+  ul.innerHTML=flags.slice(0,7).map(f=>`<li><span class="tag" style="color:${col[f.sev]};background:${bg[f.sev]}">${lab[f.sev]}</span><span>${f.msg}</span></li>`).join('');
+}
+function renderMini(){
+  const open=allItems().filter(x=>x.it.status!=='done'&&x.it.due!==null);
+  open.sort((a,b)=>d(a.it.due)-d(b.it.due));
+  const soon=open.filter(x=>daysUntil(x.it.due)<=9);
+  document.getElementById('miniAgenda').innerHTML=soon.map(x=>{const di=dueInfo(x.it.due);
+    return `<div class="mi" onclick="openModal('${x.it.id}')">
+      <div class="mt">${escapeHtml(x.it.t)}</div>
+      <div class="md"><span class="evdot" style="background:${PROJCOL[x.p.id]};margin-top:0"></span><span class="due ${di.cls}">${di.txt}</span> · ${escapeHtml(projName(x.p.id))}</div>
+    </div>`;}).join('')||'<div class="hint">Niets met datum binnenkort.</div>';
+}
+
+// ---------- projectbeheer ----------
+function renderProjecten(){
+  document.getElementById('beheerWrap').innerHTML=state.projects.map(p=>{
+    const cnt=p.items.length,open=p.items.filter(i=>i.status!=='done').length;
+    return `<div class="proj-row">
+      <button class="cpick" style="background:${p.color}" onclick="openColorPicker(event,'proj','${p.id}')">${escapeHtml(p.icon||'')}</button>
+      <input type="text" value="${escapeHtml(p.client||'')}" placeholder="Klant" oninput="updateProject('${p.id}','client',this.value)" />
+      <input type="text" value="${escapeHtml(p.project||'')}" placeholder="Project" oninput="updateProject('${p.id}','project',this.value)" />
+      <span class="cnt">${open}/${cnt}</span>
+      <button class="del" onclick="deleteProject('${p.id}')">Verwijderen</button>
+    </div>`;
+  }).join('');
+}
+function updateProject(id,field,val){const p=projById(id);if(!p)return;p[field]=val;
+  if(field==='client'){p.icon=(val.trim()[0]||'?').toUpperCase();}
+  rebuildColors();renderBadges();save();
+  const row=(typeof event!=='undefined'&&event.target)?event.target.closest('.proj-row'):null;
+  if(row){const cp=row.querySelector('.cpick');if(cp){if(field==='color')cp.style.background=val;if(field==='client')cp.textContent=p.icon;}}
+}
+function addProject(){
+  const client=document.getElementById('np_name').value.trim();if(!client)return;
+  const project=document.getElementById('np_project').value.trim();
+  const icon=(client[0]||'?').toUpperCase();
+  state.projects.push({id:'p'+Date.now().toString(36),client,project,icon,color:npColor,role:'',items:[]});
+  document.getElementById('np_name').value='';document.getElementById('np_project').value='';
+  npColor='#fbbf24';const b=document.getElementById('np_color_btn');if(b)b.style.background=npColor;
+  render();
+}
+
+// ---------- kleurkiezer (8 kleuren, donker) ----------
+const PALETTE=['#a78bfa','#60a5fa','#34d399','#fbbf24','#fb923c','#f87171','#f472b6','#9ca3af'];
+let npColor='#fbbf24',cpopTarget=null;
+function openColorPicker(e,kind,id){e.stopPropagation();cpopTarget={kind,id};
+  const el=document.getElementById('cpop');
+  el.innerHTML=PALETTE.map(c=>`<div class="sw" style="background:${c}" onclick="pickColor('${c}')"></div>`).join('');
+  const r=e.currentTarget.getBoundingClientRect();
+  el.classList.add('open');
+  el.style.left=Math.min(r.left,window.innerWidth-180)+'px';
+  el.style.top=(r.bottom+6)+'px';
+}
+function pickColor(c){if(!cpopTarget){return;}
+  if(cpopTarget.kind==='proj'){const p=projById(cpopTarget.id);if(p){p.color=c;rebuildColors();save();}render();}
+  else{npColor=c;const b=document.getElementById('np_color_btn');if(b)b.style.background=c;}
+  document.getElementById('cpop').classList.remove('open');cpopTarget=null;
+}
+document.addEventListener('click',()=>{const el=document.getElementById('cpop');if(el)el.classList.remove('open');cpopTarget=null;});
+function deleteProject(id){const p=projById(id);if(!p)return;
+  if(p.items.length&&!confirm(`"${projName(id)}" heeft ${p.items.length} actiepunt(en). Toch verwijderen?`))return;
+  state.projects=state.projects.filter(x=>x.id!==id);
+  if(activeTab===id)activeTab='all';
+  render();
+}
+
+// ---------- acties ----------
+function toggle(id){const r=findItem(id);if(!r)return;r.it.status=r.it.status==='done'?'todo':'done';render();}
+let editingId=null,mDue=null,duePickerRef=iso(TODAY);
+const CONTACTS=['Willem','Leon','Joep','Idz','Noa','Hans','Stavros','Len'];
+function uniqueClients(){const seen=[];state.projects.forEach(p=>{if(!seen.includes(p.client))seen.push(p.client);});return seen;}
+function fillProjectSelect(client,selId){
+  const sel=document.getElementById('m_project');
+  sel.innerHTML=state.projects.filter(p=>p.client===client).map(p=>`<option value="${p.id}">${escapeHtml(p.project||'—')}</option>`).join('');
+  if(selId)sel.value=selId;
+}
+function onClientChange(){fillProjectSelect(document.getElementById('m_client').value);}
+function openModal(id){const r=findItem(id);if(!r)return;editingId=id;
+  document.getElementById('m_owner').value=(r.it.owner==='Marlon'?'Marlon':'Jeroen');
+  const cs=[...CONTACTS];if(r.it.contact&&!cs.includes(r.it.contact))cs.unshift(r.it.contact);
+  document.getElementById('m_contact').innerHTML='<option value="">— geen —</option>'+cs.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+  document.getElementById('m_contact').value=r.it.contact||'';
+  document.getElementById('m_client').innerHTML=uniqueClients().map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+  document.getElementById('m_client').value=r.p.client;
+  fillProjectSelect(r.p.client,r.p.id);
+  document.getElementById('m_t').value=r.it.t;document.getElementById('m_status').value=r.it.status;
+  mDue=r.it.due||null;duePickerRef=mDue||iso(TODAY);updateDueLabel();
+  document.getElementById('overlay').classList.add('open');}
+function updateDueLabel(){const el=document.getElementById('m_due_label');if(!el)return;
+  el.textContent=mDue?d(mDue).toLocaleDateString('nl-NL',{weekday:'short',day:'numeric',month:'long',year:'numeric'}):'Geen datum';
+  el.style.color=mDue?'var(--txt)':'var(--mut2)';}
+function closeModal(){editingId=null;document.getElementById('overlay').classList.remove('open');document.getElementById('duepop').classList.remove('open');}
+function saveModal(){const r=findItem(editingId);if(!r)return;const np=document.getElementById('m_project').value;
+  r.it.t=document.getElementById('m_t').value.trim()||r.it.t;
+  r.it.owner=document.getElementById('m_owner').value;
+  r.it.contact=document.getElementById('m_contact').value;
+  r.it.due=mDue||null;r.it.status=document.getElementById('m_status').value;
+  if(np&&np!==r.p.id){r.p.items=r.p.items.filter(i=>i.id!==r.it.id);projById(np).items.push(r.it);if(activeTab!=='all')activeTab=np;}
+  closeModal();render();}
+function deleteItem(){const r=findItem(editingId);if(!r)return;r.p.items=r.p.items.filter(i=>i.id!==r.it.id);closeModal();render();}
+document.getElementById('overlay').addEventListener('click',e=>{if(e.target.id==='overlay')closeModal();});
+
+// eigen datumkiezer
+function openDuePicker(e){e.stopPropagation();duePickerRef=mDue||iso(TODAY);renderDuePicker();
+  const el=document.getElementById('duepop');el.classList.add('open');
+  const fr=document.getElementById('m_due_field').getBoundingClientRect();
+  let top=fr.bottom+6;if(top+340>window.innerHeight)top=Math.max(8,fr.top-348);
+  el.style.left=Math.min(fr.left,window.innerWidth-320)+'px';el.style.top=top+'px';}
+function dueNav(dir){const r=d(duePickerRef);duePickerRef=iso(new Date(r.getFullYear(),r.getMonth()+dir,1));renderDuePicker();}
+function setDue(di){mDue=di;updateDueLabel();document.getElementById('duepop').classList.remove('open');}
+function clearDue(){mDue=null;updateDueLabel();document.getElementById('duepop').classList.remove('open');}
+function dueToday(){mDue=iso(TODAY);updateDueLabel();document.getElementById('duepop').classList.remove('open');}
+function renderDuePicker(){
+  const r=d(duePickerRef);const first=new Date(r.getFullYear(),r.getMonth(),1);const gs=monday(first);
+  const lbl=first.toLocaleDateString('nl-NL',{month:'long',year:'numeric'});
+  const names=['ma','di','wo','do','vr','za','zo'].map(n=>`<div>${n}</div>`).join('');
+  let cells='';
+  for(let i=0;i<42;i++){const day=addDays(gs,i);const di=iso(day);const other=day.getMonth()!==r.getMonth();const today=di===iso(TODAY);const sel=di===mDue;
+    cells+=`<div class="dpc ${other?'other':''} ${today?'today':''} ${sel?'sel':''}" onclick="setDue('${di}')">${day.getDate()}</div>`;
+    if(i%7===6){const nx=addDays(gs,i+1);if(nx.getMonth()!==r.getMonth()&&i>=27)break;}}
+  document.getElementById('duepop').innerHTML=`<div class="dphd"><span class="lbl">${lbl}</span><span class="dpnav"><button onclick="event.stopPropagation();dueNav(-1)">‹</button><button onclick="event.stopPropagation();dueNav(1)">›</button></span></div><div class="dphdr">${names}</div><div class="dpgrid">${cells}</div><div class="dpfoot"><button onclick="event.stopPropagation();clearDue()">Wissen</button><button onclick="event.stopPropagation();dueToday()">Vandaag</button></div>`;
+}
+document.addEventListener('click',e=>{const dp=document.getElementById('duepop');if(dp&&dp.classList.contains('open')){const f=document.getElementById('m_due_field');if(!dp.contains(e.target)&&!(f&&f.contains(e.target)))dp.classList.remove('open');}});
+
+function addItem(){const inp=document.getElementById('newTitle');const raw=inp.value.trim();if(!raw)return;
+  const pid=activeTab==='all'?'chi':activeTab;projById(pid).items.push(parseLine(raw));inp.value='';render();}
+document.getElementById('newTitle').addEventListener('keydown',e=>{if(e.key==='Enter')addItem();});
+function parseLine(line){let owner='',contact='',due=null,t=line;
+  const ow=line.match(/\b(Jeroen|Marlon)\b/i);owner=ow?(ow[1][0].toUpperCase()+ow[1].slice(1).toLowerCase()):who;
+  const co=line.match(/\b(Willem|Leon|Joep|Idz|Noa|Hans|Stavros|Len)\b/i);if(co)contact=co[1][0].toUpperCase()+co[1].slice(1).toLowerCase();
+  const map={vandaag:0,morgen:1,overmorgen:2,maandag:'ma',dinsdag:'di',woensdag:'wo',donderdag:'do',vrijdag:'vr',zaterdag:'za',zondag:'zo'};
+  const lo=line.toLowerCase();
+  for(const k in map){if(lo.includes(k)){if(typeof map[k]==='number'){due=iso(addDays(TODAY,map[k]));}else{const wd=['zo','ma','di','wo','do','vr','za'].indexOf(map[k]);const add=((wd-TODAY.getDay())+7)%7||7;due=iso(addDays(TODAY,add));}break;}}
+  if(line.includes('—'))t=line.split('—')[0].trim();
+  return{id:uid(),t,owner,contact,due,status:'todo',src:null};}
+function parseRaw(){const ta=document.getElementById('raw');const text=ta.value.trim();const hint=document.getElementById('ingestHint');
+  if(!text){hint.textContent='Plak eerst wat tekst.';return;}
+  function route(s){const l=s.toLowerCase();if(/chi|willem|house of chi/.test(l))return'chi';if(/bonbon|vovant|leon|idz|blinder|dmx/.test(l))return'bbv';if(/ostrica|athene|incentive|hans|noa/.test(l))return'ost';return activeTab==='all'?'bbv':activeTab;}
+  const srcId=uid('src');const mp=route(text);
+  state.sources.push({id:srcId,channel:'paste',from:'Handmatig geplakt',proj:mp,date:iso(TODAY),kind:'paste',attach:[],images:[],text});
+  const chunks=text.split(/[\n.;]+/).map(s=>s.trim()).filter(s=>s.length>6);let added=0;
+  chunks.forEach(c=>{const p=projById(route(c));const it=parseLine(c);it.src=srcId;it.t=it.t.charAt(0).toUpperCase()+it.t.slice(1);p.items.push(it);added++;});
+  ta.value='';hint.innerHTML=`<b style="color:var(--primary2)">${added} actiepunt(en)</b> toegevoegd; origineel staat onder Bronnen.`;render();}
+
+// ---------- tooltip ----------
+(function(){const tip=document.createElement('div');tip.id='tip';document.body.appendChild(tip);
+  document.addEventListener('mouseover',e=>{const t=e.target.closest&&e.target.closest('[data-tip]');if(t){tip.innerHTML=t.getAttribute('data-tip');tip.style.display='block';}});
+  document.addEventListener('mousemove',e=>{if(tip.style.display==='block'){let x=e.clientX+14,y=e.clientY+16;if(x>window.innerWidth-300)x=window.innerWidth-300;if(y>window.innerHeight-90)y=e.clientY-70;tip.style.left=x+'px';tip.style.top=y+'px';}});
+  document.addEventListener('mouseout',e=>{const t=e.target.closest&&e.target.closest('[data-tip]');if(t)tip.style.display='none';});
+})();
+
+// ---------- boot ----------
+render();
+</script>
+</body>
+</html>
