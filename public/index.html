@@ -1018,10 +1018,11 @@ render();
     <svg viewBox="0 0 32 32" width="30" height="30"><g stroke="#fff" stroke-width="2.6" stroke-linecap="round"><line x1="16" y1="4.5" x2="16" y2="27.5"/><line x1="6" y1="10.25" x2="26" y2="21.75"/><line x1="6" y1="21.75" x2="26" y2="10.25"/></g></svg>
     <span style="font-size:18px;font-weight:650">Begeister Workflow</span>
   </div>
-  <div style="color:var(--mut2);font-size:13px;max-width:320px;text-align:center">Log in met je Begeister-mailadres. Je krijgt een inloglink per mail.</div>
-  <div style="display:flex;gap:8px;width:320px;max-width:100%">
-    <input id="auth_email" type="email" placeholder="jij@begeister.nl" style="flex:1;background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px 12px;font-size:14px" />
-    <button id="auth_btn" class="btn" onclick="sbSendLink()">Inloglink</button>
+  <div style="color:var(--mut2);font-size:13px;max-width:320px;text-align:center">Log in met je Begeister-mailadres en wachtwoord.</div>
+  <div style="display:flex;flex-direction:column;gap:8px;width:320px;max-width:100%">
+    <input id="auth_email" type="email" autocomplete="username" placeholder="jij@begeister.nl" style="background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:11px 12px;font-size:16px" />
+    <input id="auth_pass" type="password" autocomplete="current-password" placeholder="wachtwoord" style="background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:11px 12px;font-size:16px" />
+    <button id="auth_btn" class="btn" onclick="sbLogin()" style="width:100%">Inloggen</button>
   </div>
   <div id="auth_msg" style="color:var(--mut2);font-size:12.5px;min-height:16px"></div>
 </div>
@@ -1126,12 +1127,14 @@ pickColor = function(c){if(!cpopTarget){return;}
 // ── auth ──
 function showLogin(){document.getElementById('authgate').style.display='flex';}
 function hideLogin(){document.getElementById('authgate').style.display='none';}
-async function sbSendLink(){
-  const email=document.getElementById('auth_email').value.trim();const msg=document.getElementById('auth_msg');
-  if(!email){msg.textContent='Vul je mailadres in.';return;}
+async function sbLogin(){
+  const email=document.getElementById('auth_email').value.trim();
+  const password=document.getElementById('auth_pass').value;
+  const msg=document.getElementById('auth_msg');
+  if(!email||!password){msg.textContent='Vul je mailadres en wachtwoord in.';return;}
   msg.textContent='Bezig…';
-  const {error}=await sb.auth.signInWithOtp({email,options:{emailRedirectTo:location.origin}});
-  msg.textContent = error ? ('Fout: '+error.message) : 'Check je mail — klik op de inloglink. Je mag dit tabblad open laten.';
+  const {error}=await sb.auth.signInWithPassword({email,password});
+  msg.textContent = error ? 'Onjuist mailadres of wachtwoord.' : '';
 }
 async function startApp(session){
   hideLogin();
@@ -1142,7 +1145,7 @@ async function startApp(session){
 }
 sb.auth.getSession().then(({data})=>{ if(data.session) startApp(data.session); else showLogin(); });
 sb.auth.onAuthStateChange((_e,session)=>{ if(session) startApp(session); else showLogin(); });
-document.getElementById('auth_email').addEventListener('keydown',e=>{if(e.key==='Enter')sbSendLink();});
+['auth_email','auth_pass'].forEach(id=>document.getElementById(id).addEventListener('keydown',e=>{if(e.key==='Enter')sbLogin();}));
 </script>
 </body>
 </html>

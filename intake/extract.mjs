@@ -1,7 +1,7 @@
 // Haalt met Claude gestructureerde actiepunten uit een binnengekomen bericht.
 import Anthropic from "@anthropic-ai/sdk";
 
-const KEY = process.env.ANTHROPIC_API_KEY;
+const KEY = (process.env.ANTHROPIC_API_KEY || "").trim();
 const anthropic = KEY ? new Anthropic({ apiKey: KEY }) : null;
 const MODEL = "claude-sonnet-4-6";
 
