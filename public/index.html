@@ -353,6 +353,11 @@
   #homeIntro{display:flex;flex-direction:column;align-items:center;max-width:560px}
   .home-star{width:78px;height:78px;margin-bottom:20px;filter:drop-shadow(0 0 22px rgba(120,220,160,.30))}
   .home-compliment{font-size:24px;line-height:1.3;font-weight:650;max-width:18ch;margin:0 0 24px;color:var(--txt)}
+  /* intro-animatie: sterretje gecentreerd → schuift omhoog + verkleint, tekst fadet in (met inertia) */
+  @keyframes starRise{0%{transform:translateY(52px) scale(1.18)}100%{transform:translateY(0) scale(1)}}
+  @keyframes textReveal{0%{opacity:0;transform:translateY(16px);max-height:0;margin-bottom:0}100%{opacity:1;transform:translateY(0);max-height:280px;margin-bottom:24px}}
+  .welcome-overlay.show .home-star{animation:starRise .9s cubic-bezier(.16,1,.3,1) both}
+  .welcome-overlay.show .home-compliment{overflow:hidden;animation:textReveal .8s cubic-bezier(.16,1,.3,1) .5s both}
   .home-pills{display:flex;gap:9px;flex-wrap:wrap;justify-content:center}
   .home-pill{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--txt);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:9px 14px;cursor:pointer}
   .home-pill:hover{background:var(--panel2)}
@@ -1342,27 +1347,24 @@ function localSpark(me,other,busy){
   ];
   return pool[Math.floor(Math.random()*pool.length)];
 }
+let _quoteCache=null;
 async function renderCompliment(){
   const el=document.getElementById('compliment'); if(!el) return;
   const me=who||'Jeroen', other=(me==='Jeroen')?'Marlon':'Jeroen';
-  const all=(typeof allItems==='function')?allItems():[];
-  const openCount=all.filter(x=>x.it.status!=='done').length;
-  const partnerOpen=all.filter(x=>x.it.status!=='done'&&x.it.owner===other).length;
-  const partnerDone=all.filter(x=>x.it.status==='done'&&x.it.owner===other).map(x=>x.it.t).slice(0,4);
-  const busy=openCount>20?'erg druk':(openCount>10?'aardig druk':'lekker behapbaar');
-  const token=++_complimentTok;          // alleen de nieuwste mag schrijven
-  let aiText='';
+  el.textContent = _quoteCache || localSpark(me,other);   // meteen tonen → animeert met tekst, geen geflits
   try{
+    const all=(typeof allItems==='function')?allItems():[];
+    const openCount=all.filter(x=>x.it.status!=='done').length;
+    const partnerOpen=all.filter(x=>x.it.status!=='done'&&x.it.owner===other).length;
+    const partnerDone=all.filter(x=>x.it.status==='done'&&x.it.owner===other).map(x=>x.it.t).slice(0,4);
+    const busy=openCount>20?'erg druk':(openCount>10?'aardig druk':'lekker behapbaar');
     const projects=state.projects.filter(p=>p.id!=='__inbox__').map(p=>({client:p.client,project:p.project||''}));
     const r=await fetch('/api/spark?cb='+Date.now(),{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({who:me,partner:other,busy,openCount,partnerOpen,partnerDone,projects,day:TODAY.toLocaleDateString('nl-NL',{weekday:'long'})})});
+      body:JSON.stringify({who:me,partner:other,busy,openCount,partnerOpen,partnerDone,projects})});
     const d=await r.json();
-    if(d&&d.text) aiText=d.text;
+    if(d&&d.text) _quoteCache=d.text;   // verse AI-quote voor de volgende keer
   }catch(_){}
-  if(token!==_complimentTok) return;     // er kwam alweer een nieuwere aanvraag
-  el.textContent = aiText || localSpark(me,other,busy);   // één keer zetten, geen geflits
 }
-let _complimentTok=0;
 
 // ---------- chat ----------
 function addMsg(role,text){const t=document.getElementById('chatThread');if(!t)return;const dv=document.createElement('div');dv.className='msg '+(role==='me'?'me':'ai');dv.textContent=text;t.appendChild(dv);t.scrollTop=t.scrollHeight;dv.scrollIntoView&&dv.scrollIntoView({block:'nearest'});}
