@@ -329,9 +329,9 @@
   .ci-send:hover{background:#e6e6e6}
   .msg.typing{opacity:.6;letter-spacing:3px}
   .chat-thread{display:flex;flex-direction:column;gap:8px;padding:10px 0}
-  .msg{padding:10px 13px;border-radius:14px;font-size:14px;line-height:1.45;max-width:92%;white-space:pre-wrap}
+  .msg{padding:10px 13px;border-radius:14px;font-size:14px;line-height:1.45;max-width:92%;white-space:pre-wrap;text-align:left}
   .msg.ai{background:var(--panel);align-self:flex-start;border:1px solid var(--line);color:var(--txt)}
-  .msg.me{background:#2a2d52;align-self:flex-end;color:#eef}
+  .msg.me{background:#fff;align-self:flex-end;color:#111}
 
   .homeview{display:flex;flex-direction:column;align-items:center;text-align:center;justify-content:center;min-height:calc(100dvh - 200px)}
   #homeIntro{display:flex;flex-direction:column;align-items:center;transition:transform .35s ease,opacity .3s ease,max-height .4s ease;max-height:700px;overflow:hidden}
@@ -349,6 +349,14 @@
     .rail{display:none}
     #chatDock{position:fixed;left:0;right:0;bottom:0;z-index:55;border-top:1px solid var(--line);box-shadow:0 -10px 26px rgba(0,0,0,.4);padding-bottom:env(safe-area-inset-bottom)}
     .main{padding-bottom:172px}
+    .src-head{flex-wrap:wrap;row-gap:7px}
+    .src-meta{order:3;margin-left:auto;font-size:11.5px}
+    .src-from{order:4;flex:1 1 100%;font-size:14.5px}
+    .proj-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:12px 4px}
+    .proj-row .cpick{flex:0 0 42px;height:42px}
+    .proj-row input[type=text]{flex:1 1 140px;min-width:0}
+    .proj-row .cnt{flex:0 0 auto;margin-left:4px}
+    .proj-row .del,.proj-row .addbtn{flex:0 0 auto}
     .chatrow{margin:8px 11px 10px}
     .home-compliment{font-size:23px}
   }
@@ -1339,9 +1347,10 @@ async function assignChatProject(pid){const ids=_pendingIds.slice();if(!pid||!id
 let chatHistory=[];
 function addTyping(){const t=document.getElementById('chatThread');if(!t)return null;const d=document.createElement('div');d.className='msg ai typing';d.textContent='…';t.appendChild(d);d.scrollIntoView&&d.scrollIntoView({block:'nearest'});return d;}
 function knownIds(){return new Set(state.projects.filter(p=>p.id!=='__inbox__').map(p=>p.id));}
-async function createItemsFromAI(items,srcText){
+async function createItemsFromAI(items){
   const ok=knownIds();
-  const {data:src}=await sb.from('sources').insert({channel:'chat',sender:who||'Chat',body:srcText,processed:true}).select().single();
+  const transcript=chatHistory.filter(m=>m.role==='user').map(m=>m.content).join('\n');
+  const {data:src}=await sb.from('sources').insert({channel:'chat',sender:who||'Chat',body:transcript||'(chat)',processed:true}).select().single();
   const rows=items.filter(it=>it&&it.title).map(it=>({
     project_id:(it.project_id&&ok.has(it.project_id))?it.project_id:null,
     source_id:src?src.id:null, title:String(it.title).trim(),
@@ -1369,22 +1378,10 @@ async function chatSend(){
     data=await r.json();
   }catch(_){}
   if(typing)typing.remove();
-  if(!data||data.error||data.noai){ chatHistory.pop(); return chatSendLocal(text); }
+  if(!data||data.error||data.noai){ chatHistory.pop(); addMsg('ai','Sorry, ik ben er even niet bij — de AI is niet bereikbaar. Probeer het zo nog eens.'); const t=document.getElementById('chatInput'); if(t){t.value=text;t.dispatchEvent(new Event('input'));} return; }
   const reply=data.reply||'';
   if(reply){addMsg('ai',reply);chatHistory.push({role:'assistant',content:reply});}
-  if(data.items&&data.items.length){ await createItemsFromAI(data.items,text); }
-}
-// Fallback zonder AI: lokale parser + klant-chips
-async function chatSendLocal(text){
-  const ctx=(view!=='home'&&activeTab!=='all'&&activeTab!=='__inbox__'&&state.projects.find(p=>p.id===activeTab&&p.id!=='__inbox__'))?activeTab:null;
-  const {data:src}=await sb.from('sources').insert({channel:'chat',sender:who||'Chat',body:text,project_id:ctx,processed:true}).select().single();
-  const chunks=text.split(/[\n.;]+/).map(x=>x.trim()).filter(x=>x.length>4);
-  const rows=(chunks.length?chunks:[text]).map(c=>{const it=parseLine(c);return {project_id:ctx,source_id:src?src.id:null,title:it.t.charAt(0).toUpperCase()+it.t.slice(1),owner:it.owner||null,contact:it.contact||null,due:it.due||null,status:'todo'};});
-  const {data:ins}=await sb.from('items').insert(rows).select('id');
-  await refresh();
-  const ids=(ins||[]).map(r=>r.id);
-  if(ctx){addMsg('ai','Genoteerd bij '+projName(ctx)+': '+rows.length+' actiepunt(en).');}
-  else{addMsg('ai','Genoteerd: '+rows.length+' actiepunt(en). Bij welke klant hoort dit?');renderClientChips(ids);}
+  if(data.items&&data.items.length){ await createItemsFromAI(data.items); }
 }
 let _greeted=false;
 function chatGreet(){
