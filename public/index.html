@@ -1238,7 +1238,9 @@ async function refresh(){ await sbLoad(); render(); }
 
 // ── mutaties (overschrijven de lokale versies) ──
 toggle = async function(id){const r=findItem(id);if(!r)return;const ns=r.it.status==='done'?'todo':'done';
-  await sb.from('items').update({status:ns}).eq('id',id); await refresh();};
+  await sb.from('items').update({status:ns}).eq('id',id);
+  notifyPartner((who||'Iemand')+' '+(ns==='done'?'rondde af':'heropende')+': '+r.it.t);
+  await refresh();};
 
 saveModal = async function(){const r=findItem(editingId);if(!r)return;
   const patch={title:document.getElementById('m_t').value.trim()||r.it.t,
@@ -1248,10 +1250,13 @@ saveModal = async function(){const r=findItem(editingId);if(!r)return;
     project_id:document.getElementById('m_project').value};
   await sb.from('items').update(patch).eq('id',editingId);
   if(patch.project_id && patch.project_id!==r.p.id && activeTab!=='all') activeTab=patch.project_id;
+  notifyPartner((who||'Iemand')+' paste een taak aan: '+(patch.title||r.it.t));
   closeModal(); await refresh();};
 
 deleteItem = async function(){const r=findItem(editingId);if(!r)return;
-  await sb.from('items').delete().eq('id',editingId); closeModal(); await refresh();};
+  await sb.from('items').delete().eq('id',editingId);
+  notifyPartner((who||'Iemand')+' verwijderde: '+r.it.t);
+  closeModal(); await refresh();};
 
 function firstRealId(){const p=state.projects.find(x=>x.id!=='__inbox__');return p&&p.id;}
 addItem = async function(){const inp=document.getElementById('newTitle');const raw=inp.value.trim();if(!raw)return;
@@ -1434,6 +1439,8 @@ async function assignChatProject(pid){const ids=_pendingIds.slice();if(!pid||!id
 let chatHistory=[];
 function addTyping(){const t=document.getElementById('chatThread');if(!t)return null;const d=document.createElement('div');d.className='msg ai typing';d.textContent='…';t.appendChild(d);d.scrollIntoView&&d.scrollIntoView({block:'nearest'});return d;}
 function knownIds(){return new Set(state.projects.filter(p=>p.id!=='__inbox__').map(p=>p.id));}
+// melding naar de partner (niet naar jezelf) — zo houden Marlon en Jeroen elkaar op de hoogte
+function notifyPartner(body){ if(!body)return; try{ fetch('/api/notify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({actor:who||'',body})}); }catch(_){ } }
 // AI-first: voorstel tonen (samenvatting + af-vinkbare, bewerkbare lijst) en
 // pas op "Opslaan" wegzetten. pendingSourceId = bron van een foto/bijlage.
 let proposal={items:[],updates:[],removes:[]}, proposalCard=null, pendingSourceId=null;
@@ -1496,6 +1503,8 @@ async function saveProposal(){
     const r=await sb.from('items').insert(rows).select('id,project_id'); ins=r.data||[];
   }
   lastAddedIds=[...ins.map(r=>r.id), ...ups.map(u=>u.id)];   // nieuw + verplaatst bovenaan
+  const _np=[]; if(news.length)_np.push('voegde '+news.length+' actiepunt(en) toe'); if(ups.length)_np.push('paste '+ups.length+' taak/taken aan'); if(rems.length)_np.push('verwijderde '+rems.length+' taak/taken');
+  if(_np.length) notifyPartner((who||'Iemand')+' '+_np.join(', ')+'.');
   if(proposalCard){proposalCard.classList.add('saved');}
   const pids=[...new Set(ins.map(r=>r.project_id))];
   const orphan=ins.some(r=>!r.project_id);
