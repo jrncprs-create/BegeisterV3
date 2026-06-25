@@ -313,6 +313,7 @@
   .chat-chip.ghost{color:var(--mut2)}
   #chatDock{background:var(--side);position:relative}
   .plusmenu{position:absolute;left:14px;bottom:62px;background:#1b1b1b;border:1px solid var(--line);border-radius:12px;padding:6px;display:flex;flex-direction:column;gap:2px;box-shadow:0 14px 32px rgba(0,0,0,.55);z-index:60;min-width:160px}
+  .plusmenu.hidden{display:none}
   .plusmenu button{background:transparent;border:none;color:var(--txt);text-align:left;padding:11px 13px;border-radius:9px;font-size:14.5px;cursor:pointer;display:flex;align-items:center;gap:10px}
   .plusmenu button:hover{background:var(--panel2)}
   .plusmenu svg{width:16px;height:16px;opacity:.85}
@@ -1284,8 +1285,20 @@ function renderClientChips(ids){_pendingIds=ids||[];
   box.innerHTML=uniqueClients().map(c=>`<button class="chat-chip" data-c="${escapeHtml(c)}" onclick="assignChat(this.dataset.c)">${escapeHtml(c)}</button>`).join('')
     +`<button class="chat-chip ghost" onclick="clearChips()">Laat in Inbox</button>`;
 }
-async function assignChat(client){const ids=_pendingIds.slice();const pid=clientFirstProject(client);if(!pid||!ids.length){clearChips();return;}
-  await sb.from('items').update({project_id:pid}).in('id',ids);clearChips();addMsg('ai','Top — bij '+client+' gezet.');await refresh();}
+function clientProjects(client){return state.projects.filter(p=>p.id!=='__inbox__'&&p.client===client);}
+async function assignChat(client){const ids=_pendingIds.slice();if(!ids.length){clearChips();return;}
+  const projs=clientProjects(client);
+  if(projs.length>1){ addMsg('me',client); addMsg('ai','En onder welk project bij '+client+'?'); renderProjectChips(ids,projs); return; }
+  const pid=projs[0]&&projs[0].id; if(!pid){clearChips();return;}
+  await sb.from('items').update({project_id:pid}).in('id',ids);clearChips();addMsg('me',client);addMsg('ai','Top — bij '+client+' gezet. Nog iets?');await refresh();}
+function renderProjectChips(ids,projs){_pendingIds=ids||[];
+  const box=document.getElementById('chatChips');if(!box)return;
+  box.innerHTML=projs.map(p=>`<button class="chat-chip" data-p="${p.id}" onclick="assignChatProject(this.dataset.p)">${escapeHtml(p.project||p.client)}</button>`).join('')
+    +`<button class="chat-chip ghost" onclick="clearChips()">Laat in Inbox</button>`;
+}
+async function assignChatProject(pid){const ids=_pendingIds.slice();if(!pid||!ids.length){clearChips();return;}
+  const p=projById(pid);
+  await sb.from('items').update({project_id:pid}).in('id',ids);clearChips();addMsg('me',p?(p.project||p.client):'');addMsg('ai','Top — bij '+(p?p.client+(p.project?' · '+p.project:''):'')+' gezet. Nog iets?');await refresh();}
 async function chatSend(){
   const ta=document.getElementById('chatInput');const text=(ta.value||'').trim();if(!text)return;
   if(isMobile()&&view!=='home')setView('home');
