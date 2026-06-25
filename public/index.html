@@ -434,10 +434,6 @@
       <div id="view-agenda" class="hidden"></div>
 
       <div id="view-bronnen" class="hidden">
-        <div class="intake-note">
-          Alles wat binnenkomt blijft hier <b>origineel</b> bewaard — woord voor woord, met afzender, datum, bijlagen en relevante afbeeldingen.
-          Apparatuur en leveranciers worden automatisch <b>klikbare links met uitleg</b>. In de live-versie stuur je alles naar <b>intake@begeister.nl</b>.
-        </div>
         <div id="bronnenWrap"></div>
       </div>
 
@@ -782,6 +778,21 @@ function renderBadges(){
   document.getElementById('nb-bron').textContent=state.sources.length;
 }
 
+let lastAddedIds=[];   // net opgeslagen taken → tijdelijk bovenaan
+function urgencyRank(it){
+  if(it.status==='done') return 100;
+  const n = it.due!=null ? daysUntil(it.due) : null;
+  let r;
+  if(n===null) r=50;          // geen datum
+  else if(n<0) r=0;           // te laat
+  else if(n===0) r=1;         // vandaag
+  else if(n===1) r=2;         // morgen
+  else if(n<=3) r=3;
+  else if(n<=7) r=4;
+  else r=5;
+  if(it.status==='doing') r-=0.5;   // waar al aan gewerkt wordt iets hoger
+  return r;
+}
 function renderTaken(){
   const tabs=document.getElementById('ptabs');
   const allOpen=allItems().filter(x=>x.it.status!=='done').length;
@@ -795,8 +806,19 @@ function renderTaken(){
     headHtml=`<div class="clienthead"><h2>${escapeHtml(p.client)}</h2><div class="sub"><span class="cproj">${escapeHtml(p.project||'')}</span>${p.role?' · '+escapeHtml(p.role):''}</div></div>`;}
 
   const rows=(activeTab==='all'?allItems():projById(activeTab).items.map(it=>({p:projById(activeTab),it})));
-  const order={doing:0,wait:1,todo:2,done:3};
-  rows.sort((a,b)=>(order[a.it.status]-order[b.it.status]));
+  rows.sort((a,b)=>{
+    const A=a.it,B=b.it;
+    // net toegevoegd: bovenaan, in toegevoegde volgorde
+    const ap=lastAddedIds.indexOf(A.id), bp=lastAddedIds.indexOf(B.id);
+    if(ap!==-1||bp!==-1){ if(ap===-1)return 1; if(bp===-1)return -1; return ap-bp; }
+    const ar=urgencyRank(A), br=urgencyRank(B);
+    if(ar!==br) return ar-br;
+    const ad=A.due?d(A.due).getTime():null, bd=B.due?d(B.due).getTime():null;
+    if(ad!=null&&bd!=null && ad!==bd) return ad-bd;   // dichtste deadline eerst
+    if(ad!=null&&bd==null) return -1;
+    if(ad==null&&bd!=null) return 1;
+    return (B.created||0)-(A.created||0);             // anders nieuwste eerst
+  });
   document.getElementById('list').innerHTML=headHtml+rows.map(({p,it})=>{
     const di=dueInfo(it.due);const done=it.status==='done';const col=PROJCOL[p.id];
     const stPill=it.status==='doing'?'<span class="pill doing">bezig</span>':(it.status==='wait'?'<span class="pill wait">wacht op</span>':(it.status==='todo'?'<span class="pill">te doen</span>':''));
@@ -938,7 +960,7 @@ function renderBronnen(){
     return `<div class="src-card" id="card_${s.id}">
       <div class="src-head" onclick="toggleSrc('${s.id}')">
         <span class="evdot" style="background:${col};margin-top:0"></span>
-        <span class="src-chan ${s.channel}">${s.channel==='whatsapp'?'WhatsApp':(s.channel==='email'?'E-mail':'Plak')}</span>
+        <span class="src-chan ${s.channel}">${s.channel==='whatsapp'?'WhatsApp':(s.channel==='email'?'E-mail':(s.channel==='chat'?'Chat':(s.channel==='camera'?'Foto':'Plak')))}</span>
         <span class="src-from">${escapeHtml(s.from)}</span>
         <span class="src-meta">${dateTxt} · ${derived.length} actiepunt(en) ▾</span>
       </div>
@@ -1162,7 +1184,7 @@ const sb = supabase.createClient(SB_URL, SB_KEY);
 save = function(){};
 
 // ── data laden uit Supabase ──
-function _mapItem(i){return {id:i.id,t:i.title,owner:i.owner||'',contact:i.contact||'',due:i.due,status:i.status,src:i.source_id};}
+function _mapItem(i){return {id:i.id,t:i.title,owner:i.owner||'',contact:i.contact||'',due:i.due,status:i.status,src:i.source_id,created:i.created_at?new Date(i.created_at).getTime():0};}
 function _mapSource(s,atts){
   const kind = s.channel==='whatsapp'?'chat':(s.channel==='email'?'email':'paste');
   const text = s.channel==='email' ? (s.summary||s.body||'') : (s.body||'');
@@ -1406,6 +1428,7 @@ async function saveProposal(){
   const rows=chosen.map(p=>({project_id:p.project_id||null,source_id:srcId,title:p.title.trim(),
     owner:p.owner||null,contact:p.contact||null,due:p.due||null,status:'todo'}));
   const {data:ins}=await sb.from('items').insert(rows).select('id,project_id');
+  lastAddedIds=(ins||[]).map(r=>r.id);   // net toegevoegd → bovenaan
   if(proposalCard){proposalCard.classList.add('saved');}
   // bepaal waar het landde → daarheen navigeren
   const pids=[...new Set((ins||[]).map(r=>r.project_id))];
@@ -1451,6 +1474,13 @@ function chatGreet(){
     addMsg('ai','Er staan '+inbox.items.length+' binnengekomen ding(en) die ik nog niet kon plaatsen. Bij welke klant horen ze?');
     inbox.items.slice(0,6).forEach(i=>addMsg('ai','• '+i.t));
     renderClientChips(ids);
+  }
+  // herinnering: taken die al een tijdje zonder datum blijven staan
+  const now=Date.now();
+  const stale=allItems().filter(x=>x.p.id!=='__inbox__'&&x.it.status!=='done'&&!x.it.due&&(now-(x.it.created||now))>2*864e5);
+  if(stale.length){
+    addMsg('ai','Trouwens — '+stale.length+' taak/taken staat al een tijdje zónder datum. Zullen we er deadlines bij zetten? Bijvoorbeeld:');
+    stale.slice(0,5).forEach(x=>addMsg('ai','• '+x.it.t+' ('+projName(x.p.id)+')'));
   }
 }
 
