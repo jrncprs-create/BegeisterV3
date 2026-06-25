@@ -52,10 +52,11 @@
     .main{padding:14px 13px 44px}
     .main-head h1{font-size:17px}
     .ptabs{gap:6px}
-    .task{display:flex;align-items:flex-start;gap:11px;padding:12px}
-    .task .picon{width:34px;height:34px;font-size:14px}
-    .task .t-main{flex:1;min-width:0}
-    .t-right{gap:6px;align-items:flex-end}
+    .task{display:grid;grid-template-columns:22px 34px 1fr;column-gap:11px;row-gap:8px;align-items:start;padding:13px 14px}
+    .task .chk{grid-column:1;grid-row:1}
+    .task .picon{grid-column:2;grid-row:1;width:34px;height:34px;font-size:14px}
+    .task .t-main{grid-column:3;grid-row:1;min-width:0}
+    .task .t-right{grid-column:3;grid-row:2;flex-direction:row;justify-content:flex-start;align-items:center;gap:14px}
     .iomonth,.iolist,.daylist,.intake-note,.clienthead{max-width:100%}
     .iohd{font-size:11px}
     .iocell{height:54px;padding-top:5px}
@@ -205,7 +206,7 @@
   /* RAIL */
   .rail{background:var(--side);border-left:1px solid var(--line);padding:18px 18px;overflow:auto}
   .wachter{background:linear-gradient(180deg,#1f1f1f,#161616);border:1px solid var(--line);border-radius:var(--r);padding:15px 16px;position:relative;overflow:hidden;margin-bottom:18px}
-  .wachter::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--primary)}
+  .wachter::before{content:none}
   .wachter h2{margin:0 0 2px;font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:var(--primary2)}
   .wachter .sub{color:var(--mut2);font-size:11.5px;margin-bottom:11px}
   .wachter ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px}
@@ -308,7 +309,7 @@
     <div class="spacer"></div>
     <div class="userbox">
       <span class="av" id="userAv">J</span>
-      <select id="who" onchange="setWho()"><option>Jeroen</option><option>Marlon</option></select>
+      <span id="who" style="font-size:13.5px;font-weight:600">Jeroen</span>
     </div>
   </header>
 
@@ -1117,7 +1118,7 @@ async function startApp(session){
   hideLogin();
   const email=(session&&session.user&&session.user.email)||'';
   who = /jeroen/i.test(email)?'Jeroen':(/marlon/i.test(email)?'Marlon':'Jeroen');
-  const sel=document.getElementById('who'); if(sel){sel.value=who;} const av=document.getElementById('userAv'); if(av)av.textContent=who[0];
+  const el=document.getElementById('who'); if(el){el.textContent=who;} const av=document.getElementById('userAv'); if(av)av.textContent=who[0];
   await refresh();
 }
 sb.auth.getSession().then(({data})=>{ if(data.session) startApp(data.session); else showLogin(); });
