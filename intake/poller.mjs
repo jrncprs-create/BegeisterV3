@@ -9,6 +9,7 @@ import { ImapFlow } from "imapflow";
 import { simpleParser } from "mailparser";
 import { createClient } from "@supabase/supabase-js";
 import { extractItems } from "./extract.mjs";
+import { sendToAll } from "../lib/push.mjs";
 
 const BUCKET = "intake";
 
@@ -116,6 +117,21 @@ export async function run() {
     lock.release();
     await client.logout();
   }
+
+  // push: nieuw binnengekomen + ochtend-digest (deadlines)
+  try {
+    if (result.items > 0) {
+      await sendToAll(db, { title: "Begeister — nieuw binnen", body: `${result.items} nieuw actiepunt(en) uit de mail.`, url: "/" });
+    }
+    const today = new Date().toISOString().slice(0, 10);
+    const { data: its } = await db.from("items").select("due,status").neq("status", "done");
+    const todo = (its || []).filter(i => i.due === today).length;
+    const late = (its || []).filter(i => i.due && i.due < today).length;
+    if (todo + late > 0) {
+      await sendToAll(db, { title: "Begeister — vandaag", body: `${todo} voor vandaag${late ? `, ${late} te laat` : ""}.`, url: "/" });
+    }
+  } catch (e) { console.error("push-fout:", e.message); }
+
   return result;
 }
 

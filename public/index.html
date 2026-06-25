@@ -6,6 +6,10 @@
 <title>Begeister — Workflow</title>
 <link rel="icon" href="/favicon-32.png" type="image/png" />
 <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<link rel="manifest" href="/manifest.webmanifest" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="Begeister" />
 <meta name="theme-color" content="#0d0d0d" />
 <style>
@@ -410,6 +414,7 @@
       <button data-v="wachter" onclick="setView('wachter')">In afwachting <span class="badge" id="nb-wachter"></span></button>
       <button data-v="bronnen" onclick="setView('bronnen')">Bronnen <span class="badge" id="nb-bron"></span></button>
       <button data-v="beheer" onclick="setView('beheer')">Klanten</button>
+      <button id="pushBtn" onclick="enablePush()" title="Meldingen aanzetten">Meldingen</button>
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
@@ -1574,6 +1579,35 @@ function voiceMode(){
   _rec.start();
 }
 function createImage(){if(isMobile()&&view!=='home')setView('home');addMsg('ai','Beeld genereren zit er nog niet in — dat zet ik er als volgende stap in.');}
+
+// ── PWA + push-notificaties ──
+const VAPID_PUBLIC="BFD467bSbNKmU9lhok7tTlkRMt_QpM-d-_Nn4_R1Z86-F5I5NkvB3Bj0xSBMz-HkHFYHdupnActbSp4_3J7uJlg";
+if('serviceWorker' in navigator){ navigator.serviceWorker.register('/sw.js').catch(()=>{}); }
+function isStandalone(){ return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone===true; }
+function urlB64ToUint8(b){const pad='='.repeat((4-b.length%4)%4);const s=(b+pad).replace(/-/g,'+').replace(/_/g,'/');const raw=atob(s);return Uint8Array.from([...raw].map(c=>c.charCodeAt(0)));}
+async function enablePush(){
+  document.getElementById('nav').classList.remove('open');
+  const iOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  if(!('serviceWorker' in navigator)||!('PushManager' in window)||typeof Notification==='undefined'){
+    alert(iOS?'Zet de app eerst op je beginscherm (deel-icoon → "Zet op beginscherm"), open ’m daar en zet dan meldingen aan.':'Meldingen worden in deze browser niet ondersteund.');
+    return;
+  }
+  if(iOS && !isStandalone()){
+    alert('Op de iPhone werkt dit alleen vanuit de app op je beginscherm. Tik op het deel-icoon → "Zet op beginscherm", open Begeister daar, en zet meldingen aan.');
+    return;
+  }
+  try{
+    const perm=await Notification.requestPermission();
+    if(perm!=='granted'){ alert('Meldingen zijn geblokkeerd. Je kunt dit aanzetten via de instellingen.'); return; }
+    const reg=await navigator.serviceWorker.ready;
+    let sub=await reg.pushManager.getSubscription();
+    if(!sub){ sub=await reg.pushManager.subscribe({userVisibleOnly:true, applicationServerKey:urlB64ToUint8(VAPID_PUBLIC)}); }
+    const j=sub.toJSON();
+    await sb.from('push_subs').upsert({endpoint:j.endpoint,p256dh:j.keys.p256dh,auth:j.keys.auth,who:(who||'')},{onConflict:'endpoint'});
+    try{reg.showNotification('Begeister',{body:'Meldingen staan aan op dit apparaat ✓',icon:'/icon-192.png'});}catch(_){}
+    alert('Gelukt — meldingen staan aan op dit apparaat.');
+  }catch(e){ console.warn('push',e); alert('Meldingen aanzetten lukte niet: '+(e&&e.message||e)); }
+}
 
 // ── auth ──
 function showLogin(){document.getElementById('authgate').style.display='flex';}
