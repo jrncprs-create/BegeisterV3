@@ -451,7 +451,14 @@
   .welcome-overlay #chatThread{flex:1 1 auto;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:10px;width:100%;padding:2px;margin:0}
   .welcome-overlay #chatThread:empty{display:none}
   .welcome-overlay #chatDock{position:static;width:100%;border:none;background:transparent;box-shadow:none}
-  .welcome-overlay .chatrow{background:rgba(22,22,22,.82);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.16);margin:0}
+  .welcome-overlay .chatrow{background:rgba(22,22,22,.55);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.16);margin:0}
+  .welcome-overlay .msg{backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+  .welcome-overlay .msg.ai{background:rgba(26,26,26,.42);border:1px solid rgba(255,255,255,.12);color:#fff}
+  .welcome-overlay .msg.me{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.22);color:#fff}
+  .welcome-overlay .msg.proposal{background:rgba(20,20,20,.42);border:1px solid rgba(255,255,255,.12)}
+  /* quote/asterisk faden weg zodra je typt of chat hebt */
+  #homeIntro{transition:opacity .45s ease,max-height .5s ease,margin .5s ease}
+  .welcome-overlay.chatting #homeIntro{opacity:0;max-height:0;margin:0;overflow:hidden;pointer-events:none}
   .welcome-close:hover{border-color:#fff;color:#fff}
   .welcome-overlay.playing .welcome-close{animation:fadeUp 1.7s ease 2.2s both}
   /* intro-animatie: elegant & traag — sterretje gecentreerd → schuift zacht omhoog + verkleint, tekst fadet rustig in */
@@ -516,13 +523,14 @@
     .main.workspace .cal-head .navbtn{width:26px;height:26px;font-size:13px}
     .main.workspace .cal-head .today{padding:5px 9px;font-size:11.5px;white-space:nowrap}
     /* + knop rechtsboven in een kolom (afspraak / taak) */
-    .agenda-add,.col-add{position:absolute;top:-6px;right:0;width:28px;height:28px;border-radius:50%;border:1px solid rgba(255,255,255,.6);background:transparent;color:rgba(255,255,255,.6);font-size:18px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:3;transition:color .15s,border-color .15s}
-    .agenda-add:hover,.col-add:hover{color:#fff;border-color:#fff}
+    .agenda-add,.col-add{position:absolute;top:-8px;right:0;width:26px;height:26px;border:none;background:transparent;color:rgba(255,255,255,.6);font-size:24px;font-weight:300;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:3;transition:color .15s}
+    .agenda-add:hover,.col-add:hover{color:#fff}
     /* toevoegen speelt zich af binnen de betreffende kolom */
     .overlay.incol{background:transparent;align-items:flex-start;justify-content:stretch;padding:0;overflow-y:auto;right:auto}
     .overlay.incol .modal{width:100%;max-width:none;border-radius:0;border:none;border-left:1px solid var(--line);min-height:100%;box-shadow:none;padding:24px 24px 32px}
     #apptOverlay.incol{left:66.666vw;width:33.334vw}
     #overlay.incol{left:33.333vw;width:33.333vw}
+    #overlay.incol.incol-left{left:0}
   }
 </style>
 </head>
@@ -988,6 +996,9 @@ function sortRows(rows){
     const A=a.it,B=b.it;
     const ap=lastAddedIds.indexOf(A.id), bp=lastAddedIds.indexOf(B.id);
     if(ap!==-1||bp!==-1){ if(ap===-1)return 1; if(bp===-1)return -1; return ap-bp; }
+    // handmatige sleep-volgorde heeft voorrang op auto-sortering
+    const ao=(A.id in _taskOrd)?_taskOrd[A.id]:null, bo=(B.id in _taskOrd)?_taskOrd[B.id]:null;
+    if(ao!==null||bo!==null){ if(ao===null)return 1; if(bo===null)return -1; if(ao!==bo)return ao-bo; }
     const ar=urgencyRank(A), br=urgencyRank(B);
     if(ar!==br) return ar-br;
     const ad=A.due?d(A.due).getTime():null, bd=B.due?d(B.due).getTime():null;
@@ -1054,8 +1065,15 @@ function renderTaken(){
 function setTab(t){if(t==='__manage__'){setView('beheer');return;}activeTab=t;_animateNext=true;render();}
 
 // ---------- agenda ----------
+let agendaCol='agenda';   // 'agenda' (kalender) of 'afspraken' (lijst) in de rechterkolom
+function toggleAgendaCol(){ agendaCol = (agendaCol==='afspraken'?'agenda':'afspraken'); renderAgenda(); }
 function renderAgenda(){
   const wrap=document.getElementById('view-agenda');
+  const showAppts = isDesk3() && agendaCol==='afspraken';
+  wrap.classList.toggle('afsprakenmode', showAppts);
+  const toggleBtn = isDesk3() ? `<button class="agenda-toggle" onclick="toggleAgendaCol()">${showAppts?'Agenda':'Afspraken'}</button>` : '';
+  const addBtn2 = isDesk3() ? '<button class="agenda-add" onclick="openApptModal()" title="Nieuwe afspraak" aria-label="Nieuwe afspraak">+</button>' : '';
+  if(showAppts){ wrap.innerHTML=toggleBtn+addBtn2+afsprakenGroupsHTML(); return; }
   const seg=`<div class="cal-head">
     <div class="seg">
       <button class="${calMode==='lijst'?'active':''}" onclick="setCal('lijst')">Lijst</button>
@@ -1171,6 +1189,12 @@ function apptRow(a){
 function renderAfspraken(){
   const wrap=document.getElementById('view-afspraken');
   const ti=iso(TODAY);
+  const past=(state.appointments||[]).filter(a=>a.date<ti).length;
+  const head=`<div class="appt-head"><button class="btn newappt" onclick="openApptModal()">+ Nieuwe afspraak</button>${past?`<span class="appt-past">${past} geweest</span>`:''}</div>`;
+  wrap.innerHTML=head+afsprakenGroupsHTML();
+}
+function afsprakenGroupsHTML(){
+  const ti=iso(TODAY);
   const up=(state.appointments||[]).filter(a=>a.date>=ti).slice();
   up.sort((a,b)=> a.date<b.date?-1:a.date>b.date?1:((a.start||'~')<(b.start||'~')?-1:1));
   const g={today:[],week:[],later:[]};
@@ -1178,10 +1202,8 @@ function renderAfspraken(){
   const defs=[['today','Vandaag','var(--warn)'],['week','Deze week','var(--primary2)'],['later','Later','var(--mut)']];
   let body=defs.map(([k,label,col])=>{ if(!g[k].length)return'';
     return `<div class="agenda-group"><h4><span class="dotc" style="background:${col}"></span>${label} · ${g[k].length}</h4><div class="daylist-flat">${g[k].map(apptRow).join('')}</div></div>`;}).join('');
-  if(!body)body=`<div class="hint">Nog geen afspraken gepland. Maak er een aan met de knop hierboven.</div>`;
-  const past=(state.appointments||[]).filter(a=>a.date<ti).length;
-  const head=`<div class="appt-head"><button class="btn newappt" onclick="openApptModal()">+ Nieuwe afspraak</button>${past?`<span class="appt-past">${past} geweest</span>`:''}</div>`;
-  wrap.innerHTML=head+body;
+  if(!body)body=`<div class="hint">Nog geen afspraken gepland.</div>`;
+  return body;
 }
 
 // afspraken-modal + opslag
@@ -1374,6 +1396,7 @@ async function rejectWait(id){
 }
 // taken handmatig herschikken (sleep) — eigen volgorde overschrijft auto-sortering
 let _dragEl=null,_ph=null;
+let _taskOrd=(()=>{try{return JSON.parse(localStorage.getItem('task_ord')||'{}')}catch(_){return {};}})();
 function wireTaskDrag(){
   const list=document.getElementById('list'); if(!list) return;
   list.querySelectorAll('.task.tdrag').forEach(card=>{
@@ -1384,12 +1407,20 @@ function wireTaskDrag(){
       setTimeout(()=>{ if(card.parentNode){ card.parentNode.insertBefore(_ph,card); card.style.display='none'; } },0);
     });
     card.addEventListener('dragend',cleanupDrag);
-    card.addEventListener('dragover',e=>{ e.preventDefault(); if(!_ph||card===_dragEl) return; const r=card.getBoundingClientRect(); const before=e.clientY < r.top+r.height/2; card.parentNode.insertBefore(_ph, before?card:card.nextSibling); });
-    card.addEventListener('drop',e=>{ e.preventDefault(); doDrop(); });
   });
+  if(!list._dragWired){
+    list._dragWired=true;
+    list.addEventListener('dragover',e=>{
+      if(!_ph) return; e.preventDefault();
+      const after=[...list.querySelectorAll('.task.tdrag')].find(c=>c!==_dragEl&&(e.clientY < c.getBoundingClientRect().top + c.offsetHeight/2));
+      if(after) list.insertBefore(_ph,after); else list.appendChild(_ph);
+    });
+    list.addEventListener('drop',e=>{ e.preventDefault(); doDrop(); });
+  }
 }
-function doDrop(){ if(_dragEl&&_ph&&_ph.parentNode){ _ph.parentNode.insertBefore(_dragEl,_ph); _dragEl.style.display=''; const el=_dragEl; el.classList.add('justlanded'); setTimeout(()=>el.classList.remove('justlanded'),900);} cleanupDrag(); }
+function doDrop(){ if(_dragEl&&_ph&&_ph.parentNode){ _ph.parentNode.insertBefore(_dragEl,_ph); _dragEl.style.display=''; const el=_dragEl; el.classList.add('justlanded'); setTimeout(()=>el.classList.remove('justlanded'),900); persistTaskOrder(); } cleanupDrag(); }
 function cleanupDrag(){ if(_dragEl){ _dragEl.classList.remove('dragging'); _dragEl.style.display=''; } if(_ph&&_ph.parentNode) _ph.parentNode.removeChild(_ph); _ph=null; _dragEl=null; }
+function persistTaskOrder(){ const ids=[...document.querySelectorAll('#list .task')].map(c=>c.dataset.id); ids.forEach((id,i)=>{_taskOrd[id]=i;}); try{localStorage.setItem('task_ord',JSON.stringify(_taskOrd));}catch(_){} }
 
 // ---------- projectbeheer ----------
 function renderProjecten(){
@@ -1477,12 +1508,13 @@ function openModal(id){
   const ov=document.getElementById('overlay');
   const incol=isDesk3()&&(view==='taken'||view==='agenda');
   ov.classList.toggle('incol',incol);
+  ov.classList.toggle('incol-left', incol && !isNew && r && r.it.status==='wait');   // wacht-items: bewerk in de linkerkolom
   if(incol){const tb=document.querySelector('.topbar');ov.style.top=(tb?Math.round(tb.getBoundingClientRect().height):0)+'px';} else ov.style.top='';
   ov.classList.add('open');}
 function updateDueLabel(){const el=document.getElementById('m_due_label');if(!el)return;
   el.textContent=mDue?d(mDue).toLocaleDateString('nl-NL',{weekday:'short',day:'numeric',month:'long',year:'numeric'}):'Deadline';
   el.classList.toggle('ph',!mDue);}
-function closeModal(){editingId=null;const ov=document.getElementById('overlay');ov.classList.remove('open');ov.classList.remove('incol');ov.style.top='';document.getElementById('duepop').classList.remove('open');}
+function closeModal(){editingId=null;const ov=document.getElementById('overlay');ov.classList.remove('open');ov.classList.remove('incol');ov.classList.remove('incol-left');ov.style.top='';document.getElementById('duepop').classList.remove('open');}
 function saveModal(){const r=findItem(editingId);if(!r)return;const np=document.getElementById('m_project').value;
   r.it.t=document.getElementById('m_t').value.trim()||r.it.t;
   r.it.owner=document.getElementById('m_owner').value;
@@ -1721,10 +1753,11 @@ async function loadWelcomeImage(){
     if(url) setWelcomeBg(url);
   }catch(_){}
 }
-function showWelcome(){const o=document.getElementById('welcomeOverlay');if(!o)return;o.classList.remove('dismissed');renderCompliment();loadWelcomeImage();o.classList.remove('playing');void o.offsetWidth;o.classList.add('playing');}
+function showWelcome(){const o=document.getElementById('welcomeOverlay');if(!o)return;o.classList.remove('dismissed');renderCompliment();loadWelcomeImage();o.classList.remove('playing');void o.offsetWidth;o.classList.add('playing');updateIntroFade();}
 function hideWelcome(){const o=document.getElementById('welcomeOverlay');if(o){o.classList.add('dismissed');o.classList.remove('playing');}const bg=document.getElementById('welcomeBg');if(bg)bg.classList.remove('on');}
 function overlayBackdrop(e){if(e.target.id==='welcomeOverlay')dismissWelcome();}
 function composeMode(on){}
+function updateIntroFade(){const o=document.getElementById('welcomeOverlay');if(!o)return;const ta=document.getElementById('chatInput');const th=document.getElementById('chatThread');const active=(ta&&ta.value.trim())||(th&&th.children.length>0);o.classList.toggle('chatting',!!active);}
 function goHome(){ showWelcome(); }
 function dismissWelcome(){ hideWelcome(); _animateNext=true; render(); }
 function togglePlus(e){if(e)e.stopPropagation();const m=document.getElementById('plusMenu');const open=m.classList.contains('hidden');m.classList.toggle('hidden');if(open)composeMode(true);}
@@ -1736,7 +1769,7 @@ async function pasteClip(){closePlus();composeMode(true);const ta=document.getEl
 }
 (function(){const ta=document.getElementById('chatInput'); if(!ta)return;
   const grow=()=>{ta.style.height='auto';ta.style.height=Math.min(ta.scrollHeight,140)+'px';};
-  ta.addEventListener('input',()=>{grow();if(ta.value.trim())composeMode(true);});
+  ta.addEventListener('input',()=>{grow();updateIntroFade();});
   ta.addEventListener('focus',()=>composeMode(true));
   ta.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();chatSend();}});
 })();
@@ -1812,7 +1845,7 @@ function renderCompliment(){
 }
 
 // ---------- chat ----------
-function addMsg(role,text){const t=document.getElementById('chatThread');if(!t)return;const dv=document.createElement('div');dv.className='msg '+(role==='me'?'me':'ai');dv.textContent=text;t.appendChild(dv);t.scrollTop=t.scrollHeight;dv.scrollIntoView&&dv.scrollIntoView({block:'nearest'});}
+function addMsg(role,text){const t=document.getElementById('chatThread');if(!t)return;const dv=document.createElement('div');dv.className='msg '+(role==='me'?'me':'ai');dv.textContent=text;t.appendChild(dv);t.scrollTop=t.scrollHeight;dv.scrollIntoView&&dv.scrollIntoView({block:'nearest'});updateIntroFade();}
 let _pendingIds=[];
 function clearChips(){_pendingIds=[];const b=document.getElementById('chatChips');if(b)b.innerHTML='';}
 function clientFirstProject(client){const p=state.projects.find(x=>x.id!=='__inbox__'&&x.client===client);return p&&p.id;}
@@ -1844,7 +1877,7 @@ function notifyPartner(body){ if(!body)return; try{ fetch('/api/notify',{method:
 // pas op "Opslaan" wegzetten. pendingSourceId = bron van een foto/bijlage.
 let proposal={items:[],updates:[],removes:[],appointments:[]}, proposalCard=null, pendingSourceId=null;
 function resetConversation(){ chatHistory=[]; proposal={items:[],updates:[],removes:[],appointments:[]}; proposalCard=null; pendingSourceId=null;
-  const t=document.getElementById('chatThread'); if(t)t.innerHTML=''; clearChips(); }
+  const t=document.getElementById('chatThread'); if(t)t.innerHTML=''; clearChips(); updateIntroFade(); }
 function cleanPatch(u){const p={};const ok=knownIds();
   if(typeof u.title==='string'&&u.title.trim())p.title=u.title.trim();
   if(u.owner==='Jeroen'||u.owner==='Marlon')p.owner=u.owner; else if(u.owner==='')p.owner=null;
