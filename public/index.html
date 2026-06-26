@@ -511,6 +511,8 @@
   #welcomeChat{position:relative;z-index:2;width:min(640px,92vw);display:flex;flex-direction:column;gap:12px;margin-top:26px;max-height:min(58vh,540px)}
   .welcome-overlay #chatThread{flex:1 1 auto;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:10px;width:100%;padding:2px;margin:0}
   .welcome-overlay #chatThread:empty{display:none}
+  /* berichten onderaan verankeren en omhoog laten groeien (scrollt normaal zodra vol) */
+  .welcome-overlay #chatThread > :first-child{margin-top:auto}
   .welcome-overlay #chatDock{position:static;width:100%;border:none;background:transparent;box-shadow:none}
   .welcome-overlay .chatrow{background:rgba(22,22,22,.55);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.16);margin:0}
   .welcome-overlay .msg{backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);white-space:pre-line}
@@ -2339,7 +2341,13 @@ function renderCompliment(){
 
 // ---------- chat ----------
 function _scrollThreadBottom(){const t=document.getElementById('chatThread');if(!t)return;t.scrollTop=t.scrollHeight;requestAnimationFrame(()=>{t.scrollTop=t.scrollHeight;});setTimeout(()=>{t.scrollTop=t.scrollHeight;},120);}
-function addMsg(role,text){const t=document.getElementById('chatThread');if(!t)return;const dv=document.createElement('div');dv.className='msg '+(role==='me'?'me':'ai');dv.textContent=text;t.appendChild(dv);updateIntroFade();_scrollThreadBottom();}
+function mdLite(s){s=String(s==null?'':s);
+  s=s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  s=s.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');
+  s=s.replace(/^#{1,6}\s+(.*)$/gm,'<strong>$1</strong>');
+  s=s.replace(/^[\t ]*[-*]\s+/gm,'• ');
+  return s;}
+function addMsg(role,text){const t=document.getElementById('chatThread');if(!t)return;const dv=document.createElement('div');dv.className='msg '+(role==='me'?'me':'ai');dv.innerHTML=mdLite(text);t.appendChild(dv);updateIntroFade();_scrollThreadBottom();}
 let _pendingIds=[];
 function clearChips(){_pendingIds=[];const b=document.getElementById('chatChips');if(b)b.innerHTML='';}
 function clientFirstProject(client){const p=state.projects.find(x=>x.id!=='__inbox__'&&x.client===client);return p&&p.id;}
