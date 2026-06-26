@@ -123,7 +123,7 @@
   .picon{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#0c0d10;font-size:14px;flex:0 0 auto}
   .t-proj{flex:1;min-width:0;font-size:13.5px;font-weight:600;color:var(--ccol,var(--mut));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .t-projsub{color:var(--mut2);font-weight:400;margin-left:7px}
-  .chk{width:23px;height:23px;border:2px solid var(--mut2);border-radius:50%;cursor:pointer;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:12px;color:transparent}
+  .chk{width:23px;height:23px;border:1.8px solid var(--mut2);border-radius:50%;cursor:pointer;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:12px;color:transparent}
   .chk.on{background:var(--ok);border-color:var(--ok);color:#0c0c0c}
   .t-due{font-size:13px;font-variant-numeric:tabular-nums;color:var(--mut);margin-top:11px}
   .t-due.warn{color:var(--warn)} .t-due.risk{color:var(--risk)} .t-due.late{color:var(--late);font-weight:600}
@@ -141,15 +141,14 @@
   /* In afwachting: goedkeuren / afwijzen */
   .wact{display:flex;gap:4px;margin-left:auto;flex:0 0 auto}
   .wbtn{background:transparent;border:none;cursor:pointer;padding:3px;display:flex;align-items:center;justify-content:center;border-radius:50%;line-height:0;transition:transform .12s,background .12s}
-  .wbtn.ok{color:#34d399}
-  .wbtn.no{color:var(--late)}
-  .wbtn:hover{background:rgba(255,255,255,.07);transform:scale(1.08)}
+  .wbtn.ok{color:#fff}
+  .wbtn.no{color:#fff}
+  .wbtn:hover{background:rgba(255,255,255,.1);transform:scale(1.08)}
   .wbtn:active{transform:scale(.92)}
   /* sleepbaar in Taken */
   .task.tdrag{cursor:grab}
-  .task.tdrag.dragging{opacity:.45;cursor:grabbing}
-  .task.drop-above{box-shadow:0 -2px 0 0 var(--primary2)}
-  .task.drop-below{box-shadow:0 2px 0 0 var(--primary2)}
+  .task.tdrag.dragging{cursor:grabbing;background:#0e0e0e;border-color:#3a3a3a;box-shadow:0 16px 40px rgba(0,0,0,.6)}
+  .task-ph{border:1px dashed #3a3a3a;border-radius:16px;background:rgba(255,255,255,.03);margin:0}
   .task.justlanded{animation:justLanded 1.2s ease}
   @keyframes justLanded{0%{box-shadow:0 0 0 2px var(--primary2)}100%{box-shadow:0 0 0 0 transparent}}
   /* goedkeuren weg-animatie (links) */
@@ -497,23 +496,31 @@
     .rail{width:33.333vw;flex:0 0 33.333vw}
     #chatDock{width:33.333vw}
     .rail #wachterDrop{display:none}
-    .main.workspace{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0;align-items:start}
-    .main.workspace #view-taken{display:block;border-right:1px solid var(--line);padding-right:26px}
-    .main.workspace #view-agenda{display:block;padding-left:26px;position:relative}
+    .main.workspace{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0;align-items:start;height:calc(100dvh - var(--tbh,52px));overflow:hidden}
+    .main.workspace #view-taken{display:block;border-right:1px solid var(--line);padding-right:26px;position:relative;height:100%;overflow-y:auto;padding-bottom:40px}
+    .main.workspace #view-agenda{display:block;padding-left:26px;position:relative;height:100%;overflow-y:auto;padding-bottom:40px}
     .main.workspace #view-taken::before,.main.workspace #view-agenda::before{display:block;font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut2);margin:0 0 14px}
     .main.workspace #view-taken::before{content:"Taken"}
     .main.workspace #view-agenda::before{content:"Agenda"}
     /* klanten als dropdown i.p.v. chips in de middenkolom */
     .main.workspace .ptabs .ptab{display:none}
     .main.workspace .ptabs .clientdrop{display:block}
-    /* agenda-kop mag wrappen zodat 'Vandaag' niet wegvalt */
-    .main.workspace .cal-head{flex-wrap:wrap;row-gap:8px}
-    /* + knop voor nieuwe afspraak, rechtsboven in de agendakolom */
-    .agenda-add{position:absolute;top:-6px;right:0;width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--txt);font-size:19px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2}
-    .agenda-add:hover{background:rgba(255,255,255,.06)}
-    /* afspraak-toevoegen speelt zich af in de rechterkolom */
-    #apptOverlay.incol{left:66.666vw;background:transparent;align-items:flex-start;justify-content:stretch;padding:0;overflow-y:auto}
-    #apptOverlay.incol .modal{width:100%;max-width:none;border-radius:0;border:none;border-left:1px solid var(--line);min-height:100%;box-shadow:none;padding:24px 24px 32px}
+    /* agenda-kop compact op één regel */
+    .main.workspace .cal-head{flex-wrap:nowrap;gap:6px;align-items:center}
+    .main.workspace .cal-head .seg{padding:3px;gap:2px}
+    .main.workspace .cal-head .seg button{padding:5px 9px;font-size:12px}
+    .main.workspace .cal-head .label{font-size:13px;white-space:nowrap}
+    .main.workspace .cal-head .navbtn{width:26px;height:26px;font-size:13px}
+    .main.workspace .cal-head .today{padding:5px 9px;font-size:11.5px;white-space:nowrap}
+    /* + knop rechtsboven in een kolom (afspraak / taak) */
+    .agenda-add,.col-add{position:absolute;top:-6px;right:0;width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--txt);font-size:19px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:3}
+    .col-add{right:0}
+    .agenda-add:hover,.col-add:hover{background:rgba(255,255,255,.06)}
+    /* toevoegen speelt zich af binnen de betreffende kolom */
+    .overlay.incol{background:transparent;align-items:flex-start;justify-content:stretch;padding:0;overflow-y:auto;right:auto}
+    .overlay.incol .modal{width:100%;max-width:none;border-radius:0;border:none;border-left:1px solid var(--line);min-height:100%;box-shadow:none;padding:24px 24px 32px}
+    #apptOverlay.incol{left:66.666vw;width:33.334vw}
+    #overlay.incol{left:33.333vw;width:33.333vw}
   }
 </style>
 </head>
@@ -637,7 +644,7 @@
 <div class="overlay" id="overlay">
   <div class="modal">
     <button class="modal-close" onclick="closeModal()" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
-    <h3>Actiepunt bewerken</h3>
+    <h3 id="editModalTitle">Actiepunt bewerken</h3>
     <textarea id="m_t" rows="3" placeholder="Omschrijving"></textarea>
     <div class="twocol">
       <div><select id="m_owner"><option value="">Wie van Begeister</option><option>Jeroen</option><option>Marlon</option></select></div>
@@ -988,8 +995,8 @@ function sortRows(rows){
   });
   return rows;
 }
-const _SVG_OK='<svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.2"/><path d="M8 12.4l2.6 2.6L16 9.2"/></svg>';
-const _SVG_NO='<svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.2"/><path d="M9 9l6 6M15 9l-6 6"/></svg>';
+const _SVG_OK='<svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10.4"/><path d="M8 12.4l2.6 2.6L16 9.2"/></svg>';
+const _SVG_NO='<svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10.4"/><path d="M9 9l6 6M15 9l-6 6"/></svg>';
 function taskCard(p,it,idx,mode){
   const di=dueInfo(it.due);const done=it.status==='done';const col=PROJCOL[p.id]||'#888';
   const stPill=it.status==='doing'?'<span class="pill doing">bezig</span>':(it.status==='wait'?'<span class="pill wait">wacht op</span>':(it.status==='todo'?'<span class="pill">te doen</span>':'<span class="pill">klaar</span>'));
@@ -1020,10 +1027,14 @@ function clientDropdown(active,handler,countFn){
   h+=`<option value="all" ${active==='all'?'selected':''}>Alle klanten (${allOpen})</option>`;
   h+=state.projects.filter(p=>p.id!=='__inbox__').map(p=>{const c=countFn?countFn(p):p.items.filter(i=>i.status!=='done').length;
     return `<option value="${p.id}" ${active===p.id?'selected':''}>${escapeHtml(p.client)} (${c})</option>`;}).join('');
+  h+='<option value="__manage__">+ Klant toevoegen / wijzigen</option>';
   h+='</select>';
   return h;
 }
 function renderTaken(){
+  const va=document.getElementById('view-taken');
+  if(isDesk3()){ if(va&&!va.querySelector('.col-add')){ const b=document.createElement('button'); b.className='col-add'; b.title='Nieuwe taak'; b.setAttribute('aria-label','Nieuwe taak'); b.textContent='+'; b.onclick=newTask; va.insertBefore(b,va.firstChild); } }
+  else { const b=va&&va.querySelector('.col-add'); if(b)b.remove(); }
   const tabs=document.getElementById('ptabs');
   const allOpen=allItems().filter(x=>x.it.status!=='done').length;
   let html=clientDropdown(activeTab,'setTab');
@@ -1037,7 +1048,7 @@ function renderTaken(){
   document.getElementById('list').innerHTML=rows.map(({p,it},i)=>taskCard(p,it,i,'taken')).join('')||'<div class="hint">Geen actiepunten.</div>';
   if(typeof wireTaskDrag==='function') wireTaskDrag();
 }
-function setTab(t){activeTab=t;_animateNext=true;render();}
+function setTab(t){if(t==='__manage__'){setView('beheer');return;}activeTab=t;_animateNext=true;render();}
 
 // ---------- agenda ----------
 function renderAgenda(){
@@ -1359,25 +1370,23 @@ async function rejectWait(id){
   await refresh();
 }
 // taken handmatig herschikken (sleep) — eigen volgorde overschrijft auto-sortering
-let _dragId=null;
+let _dragEl=null,_ph=null;
 function wireTaskDrag(){
   const list=document.getElementById('list'); if(!list) return;
   list.querySelectorAll('.task.tdrag').forEach(card=>{
-    card.addEventListener('dragstart',e=>{_dragId=card.dataset.id;card.classList.add('dragging');e.dataTransfer.effectAllowed='move';});
-    card.addEventListener('dragend',()=>{card.classList.remove('dragging');list.querySelectorAll('.task').forEach(c=>c.classList.remove('drop-above','drop-below'));});
-    card.addEventListener('dragover',e=>{e.preventDefault();const before=(e.clientY < card.getBoundingClientRect().top+card.offsetHeight/2);card.classList.toggle('drop-above',before);card.classList.toggle('drop-below',!before);});
-    card.addEventListener('dragleave',()=>{card.classList.remove('drop-above','drop-below');});
-    card.addEventListener('drop',e=>{e.preventDefault();const target=card.dataset.id;card.classList.remove('drop-above','drop-below');if(!_dragId||_dragId===target)return;const before=(e.clientY < card.getBoundingClientRect().top+card.offsetHeight/2);applyManualOrder(_dragId,target,before);});
+    card.addEventListener('dragstart',e=>{
+      _dragEl=card; card.classList.add('dragging');           // synchroon: zo is het sleep-beeld leesbaar/donker
+      e.dataTransfer.effectAllowed='move'; try{e.dataTransfer.setData('text/plain',card.dataset.id);}catch(_){}
+      _ph=document.createElement('div'); _ph.className='task-ph'; _ph.style.height=card.offsetHeight+'px';
+      setTimeout(()=>{ if(card.parentNode){ card.parentNode.insertBefore(_ph,card); card.style.display='none'; } },0);
+    });
+    card.addEventListener('dragend',cleanupDrag);
+    card.addEventListener('dragover',e=>{ e.preventDefault(); if(!_ph||card===_dragEl) return; const r=card.getBoundingClientRect(); const before=e.clientY < r.top+r.height/2; card.parentNode.insertBefore(_ph, before?card:card.nextSibling); });
+    card.addEventListener('drop',e=>{ e.preventDefault(); doDrop(); });
   });
 }
-function applyManualOrder(dragId,targetId,before){
-  const list=document.getElementById('list'); if(!list) return;
-  const dragEl=list.querySelector('.task[data-id="'+dragId+'"]');
-  const targetEl=list.querySelector('.task[data-id="'+targetId+'"]');
-  if(!dragEl||!targetEl||dragEl===targetEl) return;
-  list.insertBefore(dragEl, before?targetEl:targetEl.nextSibling);
-  dragEl.classList.add('justlanded'); setTimeout(()=>dragEl.classList.remove('justlanded'),900);
-}
+function doDrop(){ if(_dragEl&&_ph&&_ph.parentNode){ _ph.parentNode.insertBefore(_dragEl,_ph); _dragEl.style.display=''; const el=_dragEl; el.classList.add('justlanded'); setTimeout(()=>el.classList.remove('justlanded'),900);} cleanupDrag(); }
+function cleanupDrag(){ if(_dragEl){ _dragEl.classList.remove('dragging'); _dragEl.style.display=''; } if(_ph&&_ph.parentNode) _ph.parentNode.removeChild(_ph); _ph=null; _dragEl=null; }
 
 // ---------- projectbeheer ----------
 function renderProjecten(){
@@ -1445,23 +1454,32 @@ function fillProjectSelect(client,selId){
   if(selId)sel.value=selId;
 }
 function onClientChange(){fillProjectSelect(document.getElementById('m_client').value);}
-function openModal(id){const r=findItem(id);if(!r)return;editingId=id;
-  document.getElementById('m_owner').value=(r.it.owner==='Marlon'?'Marlon':'Jeroen');
-  const cs=[...CONTACTS];if(r.it.contact&&!cs.includes(r.it.contact))cs.unshift(r.it.contact);
+function newTask(){ openModal(null); }
+function openModal(id){
+  const isNew=!id; const r=isNew?null:findItem(id); if(!isNew&&!r)return; editingId=isNew?null:id;
+  document.getElementById('m_owner').value=isNew?(who||'Jeroen'):(r.it.owner==='Marlon'?'Marlon':'Jeroen');
+  const cur=isNew?'':(r.it.contact||'');
+  const cs=[...CONTACTS];if(cur&&!cs.includes(cur))cs.unshift(cur);
   document.getElementById('m_contact').innerHTML='<option value="">Contact</option>'+cs.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
-  document.getElementById('m_contact').value=r.it.contact||'';
+  document.getElementById('m_contact').value=cur;
   document.getElementById('m_client').innerHTML=uniqueClients().map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
-  const isInbox=r.p.id==='__inbox__';
-  const clientVal=isInbox?(uniqueClients()[0]||''):r.p.client;
+  const clientVal=isNew?((activeTab!=='all'&&projById(activeTab))?projById(activeTab).client:(uniqueClients()[0]||'')):(r.p.id==='__inbox__'?(uniqueClients()[0]||''):r.p.client);
   document.getElementById('m_client').value=clientVal;
-  fillProjectSelect(clientVal,isInbox?null:r.p.id);
-  document.getElementById('m_t').value=r.it.t;document.getElementById('m_status').value=r.it.status;
-  mDue=r.it.due||null;duePickerRef=mDue||iso(TODAY);updateDueLabel();
-  document.getElementById('overlay').classList.add('open');}
+  fillProjectSelect(clientVal,isNew?null:(r.p.id==='__inbox__'?null:r.p.id));
+  document.getElementById('m_t').value=isNew?'':r.it.t;
+  document.getElementById('m_status').value=isNew?'todo':r.it.status;
+  mDue=isNew?null:(r.it.due||null);duePickerRef=mDue||iso(TODAY);updateDueLabel();
+  const t=document.getElementById('editModalTitle');if(t)t.textContent=isNew?'Nieuwe taak':'Actiepunt bewerken';
+  const delBtn=document.querySelector('#overlay .iconbtn.del');if(delBtn)delBtn.style.display=isNew?'none':'';
+  const ov=document.getElementById('overlay');
+  const incol=isDesk3()&&(view==='taken'||view==='agenda');
+  ov.classList.toggle('incol',incol);
+  if(incol){const tb=document.querySelector('.topbar');ov.style.top=(tb?Math.round(tb.getBoundingClientRect().height):0)+'px';} else ov.style.top='';
+  ov.classList.add('open');}
 function updateDueLabel(){const el=document.getElementById('m_due_label');if(!el)return;
   el.textContent=mDue?d(mDue).toLocaleDateString('nl-NL',{weekday:'short',day:'numeric',month:'long',year:'numeric'}):'Deadline';
   el.classList.toggle('ph',!mDue);}
-function closeModal(){editingId=null;document.getElementById('overlay').classList.remove('open');document.getElementById('duepop').classList.remove('open');}
+function closeModal(){editingId=null;const ov=document.getElementById('overlay');ov.classList.remove('open');ov.classList.remove('incol');ov.style.top='';document.getElementById('duepop').classList.remove('open');}
 function saveModal(){const r=findItem(editingId);if(!r)return;const np=document.getElementById('m_project').value;
   r.it.t=document.getElementById('m_t').value.trim()||r.it.t;
   r.it.owner=document.getElementById('m_owner').value;
@@ -1590,7 +1608,20 @@ toggle = async function(id){const r=findItem(id);if(!r)return;const ns=r.it.stat
   notifyPartner((who||'Iemand')+' '+(ns==='done'?'rondde af':'heropende')+': '+r.it.t);
   await refresh();};
 
-saveModal = async function(){const r=findItem(editingId);if(!r)return;
+saveModal = async function(){
+  if(!editingId){   // nieuwe taak
+    const title=document.getElementById('m_t').value.trim();
+    if(!title){alert('Vul een omschrijving in.');return;}
+    const rec={project_id:document.getElementById('m_project').value||null,title,
+      owner:document.getElementById('m_owner').value||null,contact:document.getElementById('m_contact').value||null,
+      due:mDue||null,status:document.getElementById('m_status').value||'todo'};
+    const ins=await sb.from('items').insert(rec).select('id').single();
+    if(ins&&ins.data) lastAddedIds=[ins.data.id];
+    if(rec.project_id && activeTab!=='all') activeTab=rec.project_id;
+    notifyPartner((who||'Iemand')+' voegde een taak toe: '+title);
+    _animateNext=true; closeModal(); await refresh(); return;
+  }
+  const r=findItem(editingId);if(!r)return;
   const patch={title:document.getElementById('m_t').value.trim()||r.it.t,
     owner:document.getElementById('m_owner').value||null,
     contact:document.getElementById('m_contact').value||null,
@@ -1672,7 +1703,9 @@ function applyLayout(){
   _lastMob=mob;
 }
 let _lastD3=isDesk3();
-window.addEventListener('resize',()=>{ if(isMobile()!==_lastMob) applyLayout(); if(isDesk3()!==_lastD3){ _lastD3=isDesk3(); if(view==='taken'||view==='agenda') setView(view); } });
+function setTbh(){const tb=document.querySelector('.topbar');if(tb)document.documentElement.style.setProperty('--tbh',Math.round(tb.getBoundingClientRect().height)+'px');}
+setTbh(); window.addEventListener('load',setTbh);
+window.addEventListener('resize',()=>{ setTbh(); if(isMobile()!==_lastMob) applyLayout(); if(isDesk3()!==_lastD3){ _lastD3=isDesk3(); if(view==='taken'||view==='agenda') setView(view); } });
 const UNSPLASH_KEY="zSttsMB9D_sKDPLNBZp4M7VUB4kgPMXZQzD52xOAiHU";
 const ART_QUERIES=["dark monochrome abstract","grayscale abstract texture","dark digital abstract","3d render dark abstract","generative art dark","dark geometric minimal","wireframe dark abstract","dark concrete texture","liquid ink monochrome","dark smoke grayscale","glitch dark abstract","brutalist dark texture"];
 function setWelcomeBg(url){const bg=document.getElementById('welcomeBg');if(!bg||!url)return;const im=new Image();im.onload=()=>{bg.style.backgroundImage="url("+url+")";bg.classList.add('on');};im.src=url;}
