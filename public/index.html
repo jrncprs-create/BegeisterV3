@@ -256,7 +256,7 @@
   .src-derived .di{font-size:12.5px;padding:6px 0;border-bottom:1px dashed var(--line);display:flex;gap:8px;align-items:flex-start}
 
   /* RAIL */
-  .rail{background:var(--side);border-right:1px solid var(--line);width:360px;flex:0 0 360px;position:sticky;top:0;height:100dvh;align-self:flex-start;overflow-y:auto;overflow-x:hidden;padding-bottom:150px}
+  .rail{background:var(--bg);border-right:1px solid var(--line);width:360px;flex:0 0 360px;position:sticky;top:0;height:100dvh;align-self:flex-start;overflow-y:auto;overflow-x:hidden;padding-bottom:150px}
   #wachterBlock{padding:18px 16px 4px}
   .rail #chatThread{padding:6px 14px}
   .wachter{background:linear-gradient(180deg,#1f1f1f,#161616);border:1px solid var(--line);border-radius:var(--r);padding:15px 16px;position:relative;overflow:hidden;margin-bottom:18px}
@@ -395,7 +395,7 @@
   .hidden{display:none!important}
 
   /* ---------- CHAT + HOME ---------- */
-  #chatDock{background:var(--side)}
+  #chatDock{background:var(--bg)}
   .chat-chips{display:flex;gap:7px;flex-wrap:wrap;padding:0 12px 8px}
   .chat-chip{font-size:12.5px;padding:8px 13px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--txt);cursor:pointer}
   .chat-chip:hover{background:rgba(255,255,255,.05)}
@@ -492,14 +492,28 @@
     .rail #wachterBlock::before{content:"In afwachting";display:block;font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut2);margin:2px 0 12px}
     .rail #chatThread:empty{display:none}
   }
-  /* desktop-werkblad: Taken (midden) + Agenda (rechts) naast elkaar */
+  /* desktop-werkblad: 3 gelijke kolommen — In afwachting | Taken | Agenda */
   @media(min-width:1001px){
+    .rail{width:33.333vw;flex:0 0 33.333vw}
+    #chatDock{width:33.333vw}
+    .rail #wachterDrop{display:none}
     .main.workspace{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0;align-items:start}
     .main.workspace #view-taken{display:block;border-right:1px solid var(--line);padding-right:26px}
-    .main.workspace #view-agenda{display:block;padding-left:26px}
+    .main.workspace #view-agenda{display:block;padding-left:26px;position:relative}
     .main.workspace #view-taken::before,.main.workspace #view-agenda::before{display:block;font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut2);margin:0 0 14px}
     .main.workspace #view-taken::before{content:"Taken"}
     .main.workspace #view-agenda::before{content:"Agenda"}
+    /* klanten als dropdown i.p.v. chips in de middenkolom */
+    .main.workspace .ptabs .ptab{display:none}
+    .main.workspace .ptabs .clientdrop{display:block}
+    /* agenda-kop mag wrappen zodat 'Vandaag' niet wegvalt */
+    .main.workspace .cal-head{flex-wrap:wrap;row-gap:8px}
+    /* + knop voor nieuwe afspraak, rechtsboven in de agendakolom */
+    .agenda-add{position:absolute;top:-6px;right:0;width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--txt);font-size:19px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2}
+    .agenda-add:hover{background:rgba(255,255,255,.06)}
+    /* afspraak-toevoegen speelt zich af in de rechterkolom */
+    #apptOverlay.incol{left:66.666vw;background:transparent;align-items:flex-start;justify-content:stretch;padding:0;overflow-y:auto}
+    #apptOverlay.incol .modal{width:100%;max-width:none;border-radius:0;border:none;border-left:1px solid var(--line);min-height:100%;box-shadow:none;padding:24px 24px 32px}
   }
 </style>
 </head>
@@ -908,7 +922,7 @@ function setView(v){
   document.getElementById('view-beheer').classList.toggle('hidden',v!=='beheer');
   document.getElementById('viewTitle').textContent={home:'',taken:'Taken',agenda:'Agenda',afspraken:'Afspraken',wachter:'In afwachting',bronnen:'Bronnen',beheer:'Klanten & projecten'}[v];
   // desktop-werkblad: Taken (midden) + Agenda (rechts) tegelijk zichtbaar
-  const ws = !isMobile() && (v==='taken'||v==='agenda');
+  const ws = isDesk3() && (v==='taken'||v==='agenda');
   const main=document.querySelector('.main'); if(main) main.classList.toggle('workspace',ws);
   if(ws){ document.getElementById('view-taken').classList.remove('hidden'); document.getElementById('view-agenda').classList.remove('hidden'); }
   const mh=document.querySelector('.main-head'); if(mh) mh.style.display = (v==='home'||ws) ? 'none' : 'flex';
@@ -927,7 +941,7 @@ function setWho(){who=document.getElementById('who').value;document.getElementBy
 function render(){
   rebuildColors();
   renderRail();renderBadges();
-  const ws = !isMobile() && (view==='taken'||view==='agenda');   // desktop-werkblad: Taken + Agenda samen
+  const ws = isDesk3() && (view==='taken'||view==='agenda');   // desktop-werkblad: Taken + Agenda samen
   if(view==='taken'||ws)renderTaken();
   if(view==='agenda'||ws)renderAgenda();
   if(view==='afspraken')renderAfspraken();
@@ -1040,9 +1054,10 @@ function renderAgenda(){
       <button class="navbtn" onclick="calNav(1)">›</button>
       <button class="today" onclick="calToday()">Vandaag</button>`:''}
   </div>`;
-  if(calMode==='lijst')wrap.innerHTML=seg+agendaList();
-  else if(calMode==='week')wrap.innerHTML=seg+agendaWeek();
-  else wrap.innerHTML=seg+agendaMonth();
+  const addBtn = isDesk3() ? '<button class="agenda-add" onclick="openApptModal()" title="Nieuwe afspraak" aria-label="Nieuwe afspraak">+</button>' : '';
+  if(calMode==='lijst')wrap.innerHTML=addBtn+seg+agendaList();
+  else if(calMode==='week')wrap.innerHTML=addBtn+seg+agendaWeek();
+  else wrap.innerHTML=addBtn+seg+agendaMonth();
 }
 function setCal(m){calMode=m;render();}
 function calNav(dir){const r=d(calRef);
@@ -1174,9 +1189,14 @@ function openApptModal(id){
   cs.value=a&&a.projectId?a.projectId:'';
   document.getElementById('a_del').style.display=apptEditId?'':'none';
   document.getElementById('apptModalTitle').textContent=apptEditId?'Afspraak bewerken':'Nieuwe afspraak';
-  document.getElementById('apptOverlay').classList.add('open');
+  const ov=document.getElementById('apptOverlay');
+  const incol = isDesk3() && (view==='taken'||view==='agenda');
+  ov.classList.toggle('incol', incol);   // desktop-werkblad: in de rechterkolom
+  if(incol){ const tb=document.querySelector('.topbar'); ov.style.top=(tb?Math.round(tb.getBoundingClientRect().height):0)+'px'; }
+  else { ov.style.top=''; }
+  ov.classList.add('open');
 }
-function closeApptModal(){document.getElementById('apptOverlay').classList.remove('open');apptEditId=null;}
+function closeApptModal(){const ov=document.getElementById('apptOverlay');ov.classList.remove('open');ov.classList.remove('incol');ov.style.top='';apptEditId=null;}
 function _apptWhen(rec){const dt=rec.date?d(rec.date).toLocaleDateString('nl-NL',{weekday:'short',day:'numeric',month:'short'}):'';return dt?(' — '+dt+(rec.start_time?' '+rec.start_time:'')):'';}
 async function saveAppt(){
   const rec={
@@ -1635,6 +1655,7 @@ pickColor = function(c){if(!cpopTarget){return;}
 
 // ---------- layout: kolom links (desktop) / chat vast onderaan (mobiel) ----------
 function isMobile(){return window.matchMedia('(max-width:600px)').matches;}
+function isDesk3(){return window.matchMedia('(min-width:1001px)').matches;}   // 3-koloms werkblad
 let _lastMob=null;
 function applyLayout(){
   const mob=isMobile();
@@ -1650,7 +1671,8 @@ function applyLayout(){
   document.body.appendChild(cd);
   _lastMob=mob;
 }
-window.addEventListener('resize',()=>{ if(isMobile()!==_lastMob) applyLayout(); });
+let _lastD3=isDesk3();
+window.addEventListener('resize',()=>{ if(isMobile()!==_lastMob) applyLayout(); if(isDesk3()!==_lastD3){ _lastD3=isDesk3(); if(view==='taken'||view==='agenda') setView(view); } });
 const UNSPLASH_KEY="zSttsMB9D_sKDPLNBZp4M7VUB4kgPMXZQzD52xOAiHU";
 const ART_QUERIES=["dark monochrome abstract","grayscale abstract texture","dark digital abstract","3d render dark abstract","generative art dark","dark geometric minimal","wireframe dark abstract","dark concrete texture","liquid ink monochrome","dark smoke grayscale","glitch dark abstract","brutalist dark texture"];
 function setWelcomeBg(url){const bg=document.getElementById('welcomeBg');if(!bg||!url)return;const im=new Image();im.onload=()=>{bg.style.backgroundImage="url("+url+")";bg.classList.add('on');};im.src=url;}
