@@ -457,7 +457,7 @@
   .welcome-overlay.playing .home-author{animation:fadeUp 1.4s ease 3.5s both}
   .welcome-close{position:absolute;top:calc(env(safe-area-inset-top) + 16px);right:20px;z-index:4;width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.6);background:rgba(0,0,0,.2);color:rgba(255,255,255,.6);font-size:22px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:border-color .15s,color .15s}
   #welcomeChat{position:relative;z-index:2;width:min(640px,92vw);display:flex;flex-direction:column;gap:12px;margin-top:26px;max-height:min(58vh,540px)}
-  .welcome-overlay #chatThread{flex:1 1 auto;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:10px;width:100%;padding:2px;margin:0}
+  .welcome-overlay #chatThread{flex:1 1 auto;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:10px;width:100%;padding:2px;margin:0;-webkit-mask-image:linear-gradient(to bottom, transparent 0, #000 34px);mask-image:linear-gradient(to bottom, transparent 0, #000 34px)}
   .welcome-overlay #chatThread:empty{display:none}
   .welcome-overlay #chatDock{position:static;width:100%;border:none;background:transparent;box-shadow:none}
   .welcome-overlay .chatrow{background:rgba(22,22,22,.55);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.16);margin:0}
@@ -469,7 +469,7 @@
   #homeIntro{transition:transform 2s cubic-bezier(.22,1,.36,1)}
   .welcome-overlay.chatting{justify-content:flex-end}
   .welcome-overlay.chatting #homeIntro{transform:translateY(-90vh);pointer-events:none}
-  .welcome-overlay.chatting #welcomeChat{transform:none}
+  .welcome-overlay.chatting #welcomeChat{transform:none;max-height:calc(100dvh - 150px)}
   .welcome-close:hover{border-color:#fff;color:#fff}
   .welcome-overlay.playing .welcome-close{animation:fadeUp 1.7s ease 2.2s both}
   /* intro-animatie: elegant & traag — sterretje gecentreerd → schuift zacht omhoog + verkleint, tekst fadet rustig in */
