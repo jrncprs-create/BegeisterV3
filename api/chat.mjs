@@ -37,21 +37,28 @@ NIEUW vs. AANPASSEN vs. VERWIJDEREN:
 - "removes" = id's van taken die weg mogen ([{"id":"…","title":"…"}] of gewoon ["id"]).
 - Laat alle drie leeg zolang je alleen een vraag stelt.
 
+AFSPRAKEN (bel- of fysieke ontmoetingen met DATUM én TIJD):
+- Een AFSPRAAK is iets anders dan een taak: het is een moment in de agenda — een belafspraak of fysieke ontmoeting op een concrete datum en tijd ("bel Hans dinsdag om 14:00", "meeting met BonBon vrijdag 10u op locatie", "lunch met Noa morgen 12:30").
+- Zet zulke dingen in "appointments" (NIET in items). Een taak ("lichtplan afmaken") blijft een item.
+- Elk appointment-object: {"title":"…","date":"YYYY-MM-DD","start_time":"HH:MM","end_time":"HH:MM of leeg","kind":"bel" of "fysiek","contact":"met wie (extern)","location":"adres/online/telefonisch","owner":"Jeroen|Marlon of leeg","project_id":"uit catalogus of null"}.
+- kind = "bel" bij telefonisch/videocall, anders "fysiek". Gebruik de DATUMTABEL voor de datum. Ontbreekt de begintijd, vraag er kort naar en laat appointments dan leeg.
+- Vermijd dubbele afspraken: staat een afspraak al in BESTAANDE AFSPRAKEN, maak 'm niet opnieuw.
+
 APP-ACTIES (navigeren):
-- Vraagt de gebruiker om iets te OPENEN, TONEN of ergens NAARTOE te gaan ("open die in taken", "laat de taken van House of Chi zien", "ga naar de agenda", "open in afwachting", "naar bronnen/klanten"),
+- Vraagt de gebruiker om iets te OPENEN, TONEN of ergens NAARTOE te gaan ("open die in taken", "laat de taken van House of Chi zien", "ga naar de agenda", "open mijn afspraken", "open in afwachting", "naar bronnen/klanten"),
   geef dan een "action" terug en hoef je geen items te maken.
-- action.view = een van: "taken" | "agenda" | "wachter" (= In afwachting) | "bronnen" | "klanten".
+- action.view = een van: "taken" | "agenda" | "afspraken" | "wachter" (= In afwachting) | "bronnen" | "klanten".
 - action.client = de exacte klantnaam uit de catalogus om op te filteren (alleen bij "taken"/"wachter"), of laat leeg voor alles.
 - Zet "reply" dan kort bevestigend ("Ik open je taken." / "Hier zijn de taken van House of Chi.").
 - Geen action? Laat 'm weg of op null.
 
 Antwoord ALTIJD met geldige JSON en niets eromheen:
-{"reply":"je bericht aan de gebruiker","done":false,"items":[...],"updates":[...],"removes":[],"action":{"view":"taken","client":""}}`;
+{"reply":"je bericht aan de gebruiker","done":false,"items":[...],"updates":[...],"removes":[],"appointments":[],"action":{"view":"taken","client":""}}`;
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "method not allowed" });
   try {
-    const { history = [], catalog = [], existing = [], today, dates = "", who } = req.body || {};
+    const { history = [], catalog = [], existing = [], appts = [], today, dates = "", who } = req.body || {};
     if (!anthropic) {
       return res.status(200).json({ reply: "(AI staat nog uit — ik heb je input genoteerd.)", items: [], updates: [], removes: [], done: false, noai: true });
     }
@@ -59,7 +66,10 @@ export default async function handler(req, res) {
     const ex = (existing || []).slice(0, 90)
       .map(t => `- id:${t.id} | ${t.title} [${t.client || "?"}${t.project ? " · " + t.project : ""}] ${t.owner ? "@" + t.owner : ""}${t.due ? " due " + t.due : ""}`)
       .join("\n") || "(nog geen openstaande taken)";
-    const sys = `${SYSTEM}\n\nVANDAAG: ${today || ""}\nGEBRUIKER: ${who || ""}\n\nDATUMTABEL (gebruik deze voor alle relatieve dagen):\n${dates}\n\nCATALOGUS (project_id → klant · project):\n${cat}\n\nBESTAANDE OPENSTAANDE TAKEN (met id; voor dubbele-check, werkdruk, en updates/removes):\n${ex}`;
+    const ap = (appts || []).slice(0, 40)
+      .map(a => `- ${a.date}${a.start ? " " + a.start : ""} | ${a.title} (${a.kind === "bel" ? "bel" : "fysiek"})${a.contact ? " met " + a.contact : ""}${a.client ? " [" + a.client + "]" : ""}`)
+      .join("\n") || "(nog geen afspraken gepland)";
+    const sys = `${SYSTEM}\n\nVANDAAG: ${today || ""}\nGEBRUIKER: ${who || ""}\n\nDATUMTABEL (gebruik deze voor alle relatieve dagen):\n${dates}\n\nCATALOGUS (project_id → klant · project):\n${cat}\n\nBESTAANDE OPENSTAANDE TAKEN (met id; voor dubbele-check, werkdruk, en updates/removes):\n${ex}\n\nBESTAANDE AFSPRAKEN (komende; voor dubbele-check):\n${ap}`;
     const messages = (history || []).slice(-24).map(m => ({
       role: m.role === "assistant" ? "assistant" : "user",
       content: String(m.content || ""),
@@ -79,6 +89,7 @@ export default async function handler(req, res) {
       items: Array.isArray(parsed.items) ? parsed.items : [],
       updates: Array.isArray(parsed.updates) ? parsed.updates : [],
       removes: Array.isArray(parsed.removes) ? parsed.removes : [],
+      appointments: Array.isArray(parsed.appointments) ? parsed.appointments : [],
       action: (parsed.action && typeof parsed.action === "object") ? parsed.action : null,
       done: !!parsed.done,
     });

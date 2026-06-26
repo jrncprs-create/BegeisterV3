@@ -169,8 +169,20 @@
   .evrow{display:flex;gap:12px;align-items:flex-start;padding:11px 4px;border-bottom:1px solid var(--line);cursor:pointer}
   .evrow:hover{background:var(--panel)}
   .evdot{width:9px;height:9px;border-radius:50%;margin-top:5px;flex:none}
-  .evtitle{font-size:14px}
+  .evtitle{font-size:14px;display:flex;align-items:center;gap:6px}
+  .evtitle .kindic{color:var(--mut);flex:none}
   .evsub{font-size:12px;color:var(--mut2);margin-top:3px}
+  /* afspraken */
+  .appt-head{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+  .btn.newappt{background:var(--panel2);color:var(--txt);border:1px solid var(--line);border-radius:11px;padding:9px 15px;font-size:13.5px;font-weight:600}
+  .btn.newappt:hover{background:var(--panel);border-color:#3a3a3a}
+  .appt-past{font-size:12px;color:var(--mut2)}
+  .evrow.appt .apptime{flex:none;width:46px;font-size:13.5px;font-weight:650;color:var(--txt);font-variant-numeric:tabular-nums;display:flex;flex-direction:column;line-height:1.25;margin-top:1px}
+  .evrow.appt .apptend{font-size:11px;font-weight:500;color:var(--mut2)}
+  .evrow.appt .apptnotime{color:var(--mut2);font-weight:500}
+  .evrow.appt .evdot{margin-top:6px}
+  .modal .opt{color:var(--mut2);font-weight:400;letter-spacing:0}
+  .modal input[type=date],.modal input[type=time]{appearance:none;-webkit-appearance:none}
   /* maand = iOS-stijl */
   .iomonth{max-width:680px}
   .iohdr{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:6px}
@@ -438,8 +450,9 @@
     <button class="hamburger" id="hbtn" onclick="toggleNav(event)" aria-label="Menu">☰</button>
     <nav class="topnav" id="nav">
       <button data-v="home" onclick="goHome()">AI</button>
-      <button data-v="taken" class="active" onclick="setView('taken')">Taken <span class="badge" id="nb-taken"></span></button>
       <button data-v="agenda" onclick="setView('agenda')">Agenda</button>
+      <button data-v="afspraken" onclick="setView('afspraken')">Afspraken <span class="badge" id="nb-afspraken"></span></button>
+      <button data-v="taken" class="active" onclick="setView('taken')">Taken <span class="badge" id="nb-taken"></span></button>
       <button data-v="wachter" onclick="setView('wachter')">In afwachting <span class="badge" id="nb-wachter"></span></button>
       <button data-v="bronnen" onclick="setView('bronnen')">Bronnen <span class="badge" id="nb-bron"></span></button>
       <button data-v="beheer" onclick="setView('beheer')">Klanten</button>
@@ -477,6 +490,8 @@
       </div>
 
       <div id="view-agenda" class="hidden"></div>
+
+      <div id="view-afspraken" class="hidden"></div>
 
       <div id="view-bronnen" class="hidden">
         <div id="bronnenWrap"></div>
@@ -568,6 +583,40 @@
       <div style="display:flex;gap:10px">
         <button class="btn ghost" onclick="closeModal()">Annuleren</button>
         <button class="btn" onclick="saveModal()">Opslaan</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- AFSPRAAK MODAL -->
+<div class="overlay" id="apptOverlay">
+  <div class="modal">
+    <h3 id="apptModalTitle">Nieuwe afspraak</h3>
+    <label>Omschrijving</label>
+    <input id="a_t" placeholder="bv. Belafspraak met Hans" />
+    <div class="twocol">
+      <div><label>Datum</label><input id="a_date" type="date" /></div>
+      <div><label>Type</label><select id="a_kind"><option value="fysiek">Fysiek</option><option value="bel">Telefonisch</option></select></div>
+    </div>
+    <div class="twocol">
+      <div><label>Begintijd</label><input id="a_start" type="time" /></div>
+      <div><label>Eindtijd <span class="opt">(optioneel)</span></label><input id="a_end" type="time" /></div>
+    </div>
+    <div class="twocol">
+      <div><label>Met wie</label><input id="a_contact" placeholder="Contactpersoon" /></div>
+      <div><label>Locatie</label><input id="a_location" placeholder="Adres, link of telefonisch" /></div>
+    </div>
+    <div class="twocol">
+      <div><label>Klant / project</label><select id="a_client"></select></div>
+      <div><label>Begeister</label><select id="a_owner"><option>Jeroen</option><option>Marlon</option></select></div>
+    </div>
+    <label>Notitie <span class="opt">(optioneel)</span></label>
+    <textarea id="a_note" rows="2" placeholder="Extra context…"></textarea>
+    <div class="foot">
+      <button class="btn danger" id="a_del" onclick="deleteAppt()">Verwijderen</button>
+      <div style="display:flex;gap:10px">
+        <button class="btn ghost" onclick="closeApptModal()">Annuleren</button>
+        <button class="btn" onclick="saveAppt()">Opslaan</button>
       </div>
     </div>
   </div>
@@ -761,6 +810,7 @@ const SEED={projects:[
 
 // ---------- state ----------
 let state=load();
+if(!Array.isArray(state.appointments))state.appointments=[];
 function load(){try{const s=JSON.parse(localStorage.getItem('begeister_v8'));if(s&&s.projects)return s;}catch(e){}return JSON.parse(JSON.stringify(SEED));}
 function save(){localStorage.setItem('begeister_v8',JSON.stringify(state));}
 let view='taken',activeTab='all',who='Jeroen';
@@ -791,10 +841,11 @@ function setView(v){
   document.getElementById('view-home').classList.toggle('hidden',v!=='home');
   document.getElementById('view-taken').classList.toggle('hidden',v!=='taken');
   document.getElementById('view-agenda').classList.toggle('hidden',v!=='agenda');
+  document.getElementById('view-afspraken').classList.toggle('hidden',v!=='afspraken');
   document.getElementById('view-wachter').classList.toggle('hidden',v!=='wachter');
   document.getElementById('view-bronnen').classList.toggle('hidden',v!=='bronnen');
   document.getElementById('view-beheer').classList.toggle('hidden',v!=='beheer');
-  document.getElementById('viewTitle').textContent={home:'',taken:'Taken',agenda:'Agenda',wachter:'In afwachting',bronnen:'Bronnen',beheer:'Klanten & projecten'}[v];
+  document.getElementById('viewTitle').textContent={home:'',taken:'Taken',agenda:'Agenda',afspraken:'Afspraken',wachter:'In afwachting',bronnen:'Bronnen',beheer:'Klanten & projecten'}[v];
   const mh=document.querySelector('.main-head'); if(mh) mh.style.display = v==='home' ? 'none' : 'flex';
   if(typeof closePlus==='function') closePlus();
   if(typeof hideWelcome==='function') hideWelcome();
@@ -813,6 +864,7 @@ function render(){
   renderRail();renderBadges();
   if(view==='taken')renderTaken();
   if(view==='agenda')renderAgenda();
+  if(view==='afspraken')renderAfspraken();
   if(view==='bronnen')renderBronnen();
   if(view==='beheer')renderProjecten();
   save();
@@ -821,6 +873,8 @@ function render(){
 function renderBadges(){
   document.getElementById('nb-taken').textContent=allItems().filter(x=>x.it.status!=='done').length;
   document.getElementById('nb-bron').textContent=state.sources.length;
+  const ab=document.getElementById('nb-afspraken');
+  if(ab){const ti=iso(TODAY);ab.textContent=(state.appointments||[]).filter(a=>a.date>=ti).length;}
 }
 
 let lastAddedIds=[];   // net opgeslagen taken → tijdelijk bovenaan
@@ -924,16 +978,23 @@ function calNav(dir){const r=d(calRef);
 function calToday(){calRef=iso(TODAY);selectedDay=iso(TODAY);render();}
 
 function agendaList(){
-  const open=allItems().filter(x=>x.it.status!=='done'&&x.it.due);   // alleen items MET een datum
+  // taken (met datum) + afspraken samen, gesorteerd op datum en tijd
+  const entries=[];
+  allItems().filter(x=>x.it.status!=='done'&&x.it.due).forEach(x=>entries.push({date:x.it.due,time:'~',html:evRow(x)}));
+  const _ti=iso(TODAY);
+  (state.appointments||[]).filter(a=>a.date>=_ti).forEach(a=>entries.push({date:a.date,time:a.start||'~',html:apptRow(a)}));
   const g={late:[],week:[],later:[]};
-  open.forEach(x=>{const n=daysUntil(x.it.due);if(n<0)g.late.push(x);else if(n<=7)g.week.push(x);else g.later.push(x);});
-  const by=(a,b)=>d(a.it.due)-d(b.it.due);g.late.sort(by);g.week.sort(by);g.later.sort(by);
+  entries.forEach(e=>{const n=daysUntil(e.date);if(n<0)g.late.push(e);else if(n<=7)g.week.push(e);else g.later.push(e);});
+  const by=(a,b)=> a.date<b.date?-1:a.date>b.date?1:(a.time<b.time?-1:a.time>b.time?1:0);
+  g.late.sort(by);g.week.sort(by);g.later.sort(by);
   const defs=[['late','Te laat','var(--late)'],['week','Deze week','var(--warn)'],['later','Later','var(--mut)']];
   return defs.map(([k,label,col])=>{
     if(!g[k].length)return'';
-    return `<div class="agenda-group"><h4><span class="dotc" style="background:${col}"></span>${label} · ${g[k].length}</h4><div class="daylist-flat">${g[k].map(evRow).join('')}</div></div>`;
-  }).join('')||'<div class="hint">Geen geplande actiepunten — items zonder datum staan bij Taken en In afwachting.</div>';
+    return `<div class="agenda-group"><h4><span class="dotc" style="background:${col}"></span>${label} · ${g[k].length}</h4><div class="daylist-flat">${g[k].map(e=>e.html).join('')}</div></div>`;
+  }).join('')||'<div class="hint">Geen geplande actiepunten of afspraken — items zonder datum staan bij Taken en In afwachting.</div>';
 }
+// gecombineerde dagrijen: eerst afspraken (op tijd), dan taken
+function dayRows(di){return apptsOn(di).map(apptRow).join('')+itemsOn(di).map(evRow).join('');}
 
 function itemsOn(dayIso){return allItems().filter(x=>x.it.status!=='done'&&x.it.due===dayIso);}
 function evRow(x){const di=dueInfo(x.it.due);
@@ -951,9 +1012,9 @@ function agendaWeek(){
   const names=['Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag','Zondag'];
   let html='<div class="daylist">';
   days.forEach((day,i)=>{
-    const di=iso(day);const today=di===iso(TODAY);const its=itemsOn(di);
+    const di=iso(day);const today=di===iso(TODAY);const rows=dayRows(di);
     html+=`<div class="dayblock ${today?'today':''}"><div class="dayhd">${names[i]} ${day.getDate()} ${day.toLocaleDateString('nl-NL',{month:'short'})} ${today?'<span class="todaytag">vandaag</span>':''}</div>`;
-    html+=its.length?its.map(evRow).join(''):'<div class="dayempty">—</div>';
+    html+=rows||'<div class="dayempty">—</div>';
     html+='</div>';
   });
   html+='</div>';
@@ -971,19 +1032,108 @@ function agendaMonth(){
   for(let i=0;i<42;i++){
     const day=addDays(gridStart,i);const di=iso(day);
     const other=day.getMonth()!==r.getMonth();const today=di===iso(TODAY);const sel=di===selectedDay;
-    const its=itemsOn(di);
-    const dots=its.slice(0,3).map(x=>`<span class="iodot" style="background:${PROJCOL[x.p.id]}"></span>`).join('');
+    const dotcols=[...apptsOn(di).map(apptColor),...itemsOn(di).map(x=>PROJCOL[x.p.id])];
+    const dots=dotcols.slice(0,3).map(c=>`<span class="iodot" style="background:${c}"></span>`).join('');
     cells+=`<div class="iocell ${other?'other':''} ${today?'today':''} ${sel?'sel':''}" onclick="selectDay('${di}')"><span class="ionum">${day.getDate()}</span><span class="iodots">${dots}</span></div>`;
     if(i%7===6){const nxt=addDays(gridStart,i+1);if(nxt.getMonth()!==r.getMonth()&&i>=27)break;}
   }
-  const its=itemsOn(selectedDay);
+  const rows=dayRows(selectedDay);
   const selDate=d(selectedDay).toLocaleDateString('nl-NL',{weekday:'long',day:'numeric',month:'long'});
   let list=`<div class="iolist"><div class="iolist-hd">${selDate}</div>`;
-  list+=its.length?its.map(evRow).join(''):'<div class="dayempty">Geen actiepunten op deze dag.</div>';
+  list+=rows||'<div class="dayempty">Niets op deze dag.</div>';
   list+='</div>';
   return `<div class="iomonth"><div class="iohdr">${hd}</div><div class="iogrid">${cells}</div></div>`+list;
 }
 function selectDay(di){selectedDay=di;render();}
+
+// ---------- afspraken ----------
+function apptColor(a){return (a.projectId&&PROJCOL[a.projectId])||'var(--primary2)';}
+function apptKindIcon(kind){
+  if(kind==='bel')return `<svg class="kindic" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`;
+  return `<svg class="kindic" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`;
+}
+function apptsOn(di){return (state.appointments||[]).filter(a=>a.date===di).sort((a,b)=>(a.start||'~')<(b.start||'~')?-1:1);}
+function apptRow(a){
+  const col=apptColor(a);
+  const proj=a.projectId?projName(a.projectId):'';
+  const sub=[a.kind==='bel'?'Telefonisch':'Fysiek',a.contact,a.location,proj].filter(Boolean).join(' · ');
+  const time=a.start?`${escapeHtml(a.start)}${a.end?`<span class="apptend">${escapeHtml(a.end)}</span>`:''}`:'<span class="apptnotime">—</span>';
+  return `<div class="evrow appt" onclick="openApptModal('${a.id}')">
+    <div class="apptime">${time}</div>
+    <span class="evdot" style="background:${col}"></span>
+    <div class="evmain"><div class="evtitle">${apptKindIcon(a.kind)}<span>${escapeHtml(a.t)}</span></div>
+    <div class="evsub">${escapeHtml(sub)}</div></div>
+  </div>`;
+}
+function renderAfspraken(){
+  const wrap=document.getElementById('view-afspraken');
+  const ti=iso(TODAY);
+  const up=(state.appointments||[]).filter(a=>a.date>=ti).slice();
+  up.sort((a,b)=> a.date<b.date?-1:a.date>b.date?1:((a.start||'~')<(b.start||'~')?-1:1));
+  const g={today:[],week:[],later:[]};
+  up.forEach(a=>{const n=daysUntil(a.date);if(n<=0)g.today.push(a);else if(n<=7)g.week.push(a);else g.later.push(a);});
+  const defs=[['today','Vandaag','var(--warn)'],['week','Deze week','var(--primary2)'],['later','Later','var(--mut)']];
+  let body=defs.map(([k,label,col])=>{ if(!g[k].length)return'';
+    return `<div class="agenda-group"><h4><span class="dotc" style="background:${col}"></span>${label} · ${g[k].length}</h4><div class="daylist-flat">${g[k].map(apptRow).join('')}</div></div>`;}).join('');
+  if(!body)body=`<div class="hint">Nog geen afspraken gepland. Maak er een aan met de knop hierboven.</div>`;
+  const past=(state.appointments||[]).filter(a=>a.date<ti).length;
+  const head=`<div class="appt-head"><button class="btn newappt" onclick="openApptModal()">+ Nieuwe afspraak</button>${past?`<span class="appt-past">${past} geweest</span>`:''}</div>`;
+  wrap.innerHTML=head+body;
+}
+
+// afspraken-modal + opslag
+let apptEditId=null;
+function openApptModal(id){
+  const a = id ? (state.appointments||[]).find(x=>x.id===id) : null;
+  apptEditId = a?a.id:null;
+  document.getElementById('a_t').value=a?a.t:'';
+  document.getElementById('a_date').value=a?a.date:iso(TODAY);
+  document.getElementById('a_start').value=a?a.start:'';
+  document.getElementById('a_end').value=a?a.end:'';
+  document.getElementById('a_kind').value=a?a.kind:'fysiek';
+  document.getElementById('a_contact').value=a?a.contact:'';
+  document.getElementById('a_location').value=a?a.location:'';
+  document.getElementById('a_owner').value=a?(a.owner||who||'Jeroen'):(who||'Jeroen');
+  document.getElementById('a_note').value=a?a.note:'';
+  const cs=document.getElementById('a_client');
+  cs.innerHTML='<option value="">— geen klant —</option>'+state.projects.filter(p=>p.id!=='__inbox__').map(p=>`<option value="${p.id}">${escapeHtml(p.client)}${p.project?' · '+escapeHtml(p.project):''}</option>`).join('');
+  cs.value=a&&a.projectId?a.projectId:'';
+  document.getElementById('a_del').style.display=apptEditId?'':'none';
+  document.getElementById('apptModalTitle').textContent=apptEditId?'Afspraak bewerken':'Nieuwe afspraak';
+  document.getElementById('apptOverlay').classList.add('open');
+}
+function closeApptModal(){document.getElementById('apptOverlay').classList.remove('open');apptEditId=null;}
+function _apptWhen(rec){const dt=rec.date?d(rec.date).toLocaleDateString('nl-NL',{weekday:'short',day:'numeric',month:'short'}):'';return dt?(' — '+dt+(rec.start_time?' '+rec.start_time:'')):'';}
+async function saveAppt(){
+  const rec={
+    title:document.getElementById('a_t').value.trim(),
+    date:document.getElementById('a_date').value||null,
+    start_time:document.getElementById('a_start').value||null,
+    end_time:document.getElementById('a_end').value||null,
+    kind:document.getElementById('a_kind').value||'fysiek',
+    contact:document.getElementById('a_contact').value.trim()||null,
+    location:document.getElementById('a_location').value.trim()||null,
+    owner:document.getElementById('a_owner').value||null,
+    project_id:document.getElementById('a_client').value||null,
+    note:document.getElementById('a_note').value.trim()||null,
+  };
+  if(!rec.title||!rec.date){alert('Vul minimaal een titel en datum in.');return;}
+  if(apptEditId){
+    await sb.from('appointments').update(rec).eq('id',apptEditId);
+    notifyPartner((who||'Iemand')+' wijzigde afspraak: '+rec.title+_apptWhen(rec));
+  }else{
+    await sb.from('appointments').insert(rec);
+    notifyPartner((who||'Iemand')+' plande afspraak: '+rec.title+_apptWhen(rec));
+  }
+  closeApptModal();await refresh();
+}
+async function deleteAppt(){
+  if(!apptEditId)return;
+  const a=(state.appointments||[]).find(x=>x.id===apptEditId);
+  await sb.from('appointments').delete().eq('id',apptEditId);
+  notifyPartner((who||'Iemand')+' verwijderde afspraak: '+(a?a.t:''));
+  closeApptModal();await refresh();
+}
 
 // ---------- bronnen ----------
 function renderBronnen(){
@@ -1238,6 +1388,7 @@ save = function(){};
 
 // ── data laden uit Supabase ──
 function _mapItem(i){return {id:i.id,t:i.title,owner:i.owner||'',contact:i.contact||'',due:i.due,status:i.status,src:i.source_id,created:i.created_at?new Date(i.created_at).getTime():0};}
+function _mapAppt(a){return {id:a.id,projectId:a.project_id||null,t:a.title,owner:a.owner||'',contact:a.contact||'',kind:a.kind||'fysiek',location:a.location||'',date:a.date,start:(a.start_time||'').slice(0,5),end:(a.end_time||'').slice(0,5),note:a.note||'',created:a.created_at?new Date(a.created_at).getTime():0};}
 function _mapSource(s,atts){
   const kind = s.channel==='whatsapp'?'chat':(s.channel==='email'?'email':'paste');
   const text = s.channel==='email' ? (s.summary||s.body||'') : (s.body||'');
@@ -1246,13 +1397,15 @@ function _mapSource(s,atts){
           kind,text,summary:s.summary||'',full,attach:atts.filter(a=>a.source_id===s.id).map(a=>a.filename||'bijlage'),images:[]};
 }
 async function sbLoad(){
-  const [p,i,s,a] = await Promise.all([
+  const [p,i,s,a,ap] = await Promise.all([
     sb.from('projects').select('*').order('sort'),
     sb.from('items').select('*').order('created_at'),
     sb.from('sources').select('*').order('received_at',{ascending:false}),
     sb.from('attachments').select('*'),
+    sb.from('appointments').select('*').order('date'),
   ]);
   const projects=p.data||[], items=i.data||[], sources=s.data||[], atts=a.data||[];
+  state.appointments = (ap && ap.data ? ap.data : []).map(_mapAppt);
   state.projects = projects.map(pr=>({id:pr.id,client:pr.client,project:pr.project,color:pr.color,icon:pr.icon,role:pr.role,
     items: items.filter(x=>x.project_id===pr.id).map(_mapItem)}));
   // Items zonder (bekende) klant → Inbox, zodat nieuwe intake nooit verdwijnt
@@ -1488,8 +1641,8 @@ function knownIds(){return new Set(state.projects.filter(p=>p.id!=='__inbox__').
 function notifyPartner(body){ if(!body)return; try{ fetch('/api/notify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({actor:who||'',body})}); }catch(_){ } }
 // AI-first: voorstel tonen (samenvatting + af-vinkbare, bewerkbare lijst) en
 // pas op "Opslaan" wegzetten. pendingSourceId = bron van een foto/bijlage.
-let proposal={items:[],updates:[],removes:[]}, proposalCard=null, pendingSourceId=null;
-function resetConversation(){ chatHistory=[]; proposal={items:[],updates:[],removes:[]}; proposalCard=null; pendingSourceId=null;
+let proposal={items:[],updates:[],removes:[],appointments:[]}, proposalCard=null, pendingSourceId=null;
+function resetConversation(){ chatHistory=[]; proposal={items:[],updates:[],removes:[],appointments:[]}; proposalCard=null; pendingSourceId=null;
   const t=document.getElementById('chatThread'); if(t)t.innerHTML=''; clearChips(); }
 function cleanPatch(u){const p={};const ok=knownIds();
   if(typeof u.title==='string'&&u.title.trim())p.title=u.title.trim();
@@ -1507,9 +1660,13 @@ function renderProposal(data){
       owner:(it.owner==='Jeroen'||it.owner==='Marlon')?it.owner:'', contact:it.contact||'', due:it.due||null,
       project_id:(it.project_id&&ok.has(it.project_id))?it.project_id:null, checked:true})),
     updates:(data.updates||[]).filter(u=>u&&u.id).map(u=>({id:u.id, title:(u.title||itemTitleById(u.id)||'taak'), patch:cleanPatch(u), checked:true})),
-    removes:(data.removes||[]).map(r=>({id:(typeof r==='string'?r:r.id), title:(typeof r==='object'&&r.title)?r.title:itemTitleById(typeof r==='string'?r:r.id), checked:true})).filter(r=>r.id)
+    removes:(data.removes||[]).map(r=>({id:(typeof r==='string'?r:r.id), title:(typeof r==='object'&&r.title)?r.title:itemTitleById(typeof r==='string'?r:r.id), checked:true})).filter(r=>r.id),
+    appointments:(data.appointments||[]).filter(a=>a&&a.title&&a.date).map(a=>({
+      title:String(a.title).trim(), date:a.date, start:a.start_time||a.start||'', end:a.end_time||a.end||'',
+      kind:(a.kind==='bel'?'bel':'fysiek'), contact:a.contact||'', location:a.location||'',
+      owner:(a.owner==='Jeroen'||a.owner==='Marlon')?a.owner:'', project_id:(a.project_id&&ok.has(a.project_id))?a.project_id:null, checked:true}))
   };
-  if(!proposal.items.length&&!proposal.updates.length&&!proposal.removes.length) return;
+  if(!proposal.items.length&&!proposal.updates.length&&!proposal.removes.length&&!proposal.appointments.length) return;
   if(proposalCard&&proposalCard.parentNode) proposalCard.remove();
   const t=document.getElementById('chatThread'); if(!t)return;
   const card=document.createElement('div'); card.className='msg ai proposal';
@@ -1525,6 +1682,10 @@ function renderProposal(data){
       +(m.length?'<span class="prop-meta">'+escapeHtml(m.join(' · '))+'</span>':'')+'</div>';}).join('');
   html+=proposal.removes.map((r,i)=>'<div class="prop-row"><input type="checkbox" checked onchange="proposal.removes['+i+'].checked=this.checked">'
       +'<span class="prop-title" style="opacity:.8;text-decoration:line-through">✕ '+escapeHtml(r.title||'taak')+'</span></div>').join('');
+  html+=proposal.appointments.map((a,i)=>{const m=[a.date?dStr(a.date):'',a.start||'',a.kind==='bel'?'bel':'fysiek',a.contact,projName(a.project_id)].filter(Boolean).join(' · ');
+    return '<div class="prop-row"><input type="checkbox" checked onchange="proposal.appointments['+i+'].checked=this.checked">'
+      +'<span class="prop-title" style="opacity:.95">📅 '+escapeHtml(a.title)+'</span>'
+      +(m?'<span class="prop-meta">'+escapeHtml(m)+'</span>':'')+'</div>';}).join('');
   html+='<div class="prop-foot"><button class="prop-save" onclick="saveProposal()">Opslaan</button></div>';
   card.innerHTML=html;
   t.appendChild(card); proposalCard=card; card.scrollIntoView&&card.scrollIntoView({block:'nearest'});
@@ -1534,10 +1695,17 @@ async function saveProposal(){
   const news=proposal.items.filter(p=>p.checked&&p.title.trim());
   const ups=proposal.updates.filter(u=>u.checked&&Object.keys(u.patch).length);
   const rems=proposal.removes.filter(r=>r.checked&&r.id);
-  if(!news.length&&!ups.length&&!rems.length){ addMsg('ai','Niets aangevinkt — ik bewaar niets.'); return; }
+  const appts=(proposal.appointments||[]).filter(a=>a.checked&&a.title.trim()&&a.date);
+  if(!news.length&&!ups.length&&!rems.length&&!appts.length){ addMsg('ai','Niets aangevinkt — ik bewaar niets.'); return; }
   // wijzigingen + verwijderingen op bestaande taken
   for(const u of ups){ await sb.from('items').update(u.patch).eq('id',u.id); }
   if(rems.length){ await sb.from('items').delete().in('id',rems.map(r=>r.id)); }
+  // nieuwe afspraken
+  if(appts.length){
+    const arows=appts.map(a=>({project_id:a.project_id||null,title:a.title.trim(),owner:a.owner||null,contact:a.contact||null,
+      kind:a.kind||'fysiek',location:a.location||null,date:a.date,start_time:a.start||null,end_time:a.end||null,note:null}));
+    await sb.from('appointments').insert(arows);
+  }
   // nieuwe taken
   let ins=[];
   if(news.length){
@@ -1548,16 +1716,17 @@ async function saveProposal(){
     const r=await sb.from('items').insert(rows).select('id,project_id'); ins=r.data||[];
   }
   lastAddedIds=[...ins.map(r=>r.id), ...ups.map(u=>u.id)];   // nieuw + verplaatst bovenaan
-  const _np=[]; if(news.length)_np.push('voegde '+news.length+' actiepunt(en) toe'); if(ups.length)_np.push('paste '+ups.length+' taak/taken aan'); if(rems.length)_np.push('verwijderde '+rems.length+' taak/taken');
+  const _np=[]; if(news.length)_np.push('voegde '+news.length+' actiepunt(en) toe'); if(ups.length)_np.push('paste '+ups.length+' taak/taken aan'); if(rems.length)_np.push('verwijderde '+rems.length+' taak/taken'); if(appts.length)_np.push('plande '+appts.length+' afspra'+(appts.length===1?'ak':'ken'));
   if(_np.length) notifyPartner((who||'Iemand')+' '+_np.join(', ')+'.');
   if(proposalCard){proposalCard.classList.add('saved');}
   const pids=[...new Set(ins.map(r=>r.project_id))];
   const orphan=ins.some(r=>!r.project_id);
+  const onlyAppts = appts.length && !news.length && !ups.length && !rems.length;
   resetConversation();
   await refresh();
   if(news.length){ activeTab = orphan ? '__inbox__' : (pids.length===1&&pids[0] ? pids[0] : 'all'); }
   else { activeTab='all'; }   // alleen wijzigingen/verwijderingen → overzicht
-  setView('taken');
+  setView(onlyAppts ? 'afspraken' : 'taken');
 }
 function dateTable(){
   const days=['zondag','maandag','dinsdag','woensdag','donderdag','vrijdag','zaterdag'];
@@ -1574,8 +1743,10 @@ async function chatTurn(){
   try{
     const catalog=state.projects.filter(p=>p.id!=='__inbox__').map(p=>({project_id:p.id,client:p.client,project:p.project||''}));
     const existing=allItems().filter(x=>x.it.status!=='done').slice(0,90).map(x=>({id:x.it.id,title:x.it.t,owner:x.it.owner||'',due:x.it.due||null,client:x.p.client,project:x.p.project||''}));
+    const ti=iso(TODAY);
+    const appts=(state.appointments||[]).filter(a=>a.date>=ti).slice(0,40).map(a=>({title:a.t,date:a.date,start:a.start||'',kind:a.kind,contact:a.contact||'',client:a.projectId?projName(a.projectId):''}));
     const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({history:chatHistory,catalog,existing,today:iso(TODAY),dates:dateTable(),who})});
+      body:JSON.stringify({history:chatHistory,catalog,existing,appts,today:iso(TODAY),dates:dateTable(),who})});
     data=await r.json();
   }catch(_){}
   if(typing)typing.remove();
@@ -1591,11 +1762,11 @@ async function chatSend(){
   if(!data||data.error||data.noai){ chatHistory.pop(); addMsg('ai','Sorry, ik ben er even niet bij — de AI is niet bereikbaar. Probeer het zo nog eens.'); const t=document.getElementById('chatInput'); if(t){t.value=text;t.dispatchEvent(new Event('input'));} return; }
   const reply=data.reply||'';
   if(reply){addMsg('ai',reply);chatHistory.push({role:'assistant',content:reply});}
-  if((data.items&&data.items.length)||(data.updates&&data.updates.length)||(data.removes&&data.removes.length)){ renderProposal(data); }
+  if((data.items&&data.items.length)||(data.updates&&data.updates.length)||(data.removes&&data.removes.length)||(data.appointments&&data.appointments.length)){ renderProposal(data); }
   if(data.action&&data.action.view){ doChatAction(data.action); }
 }
 function doChatAction(a){
-  const map={taken:'taken',agenda:'agenda',wachter:'wachter',bronnen:'bronnen',klanten:'beheer'};
+  const map={taken:'taken',agenda:'agenda',afspraken:'afspraken',afspraak:'afspraken',wachter:'wachter',bronnen:'bronnen',klanten:'beheer'};
   const v=map[String(a.view||'').toLowerCase()]; if(!v) return;
   if(a.client){
     const p=state.projects.find(x=>x.id!=='__inbox__'&&x.client&&x.client.toLowerCase()===String(a.client).toLowerCase());
