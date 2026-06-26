@@ -531,6 +531,8 @@
     .main.workspace #view-taken::before{content:"Taken"}
     .main.workspace #view-agenda::before{content:"Agenda"}
     .main.workspace #view-agenda.afsprakenmode::before{content:"Afspraken"}
+    /* Bronnen & Klanten: één kolom breed i.p.v. volle breedte */
+    #view-bronnen,#view-beheer{max-width:34vw}
     /* AFSPRAKEN-knop: tekstknop links naast de +-knop, op kophoogte */
     .agenda-toggle{position:absolute;top:0;right:34px;height:26px;display:flex;align-items:center;border:none;background:transparent;color:var(--mut2);font-size:12px;letter-spacing:1.2px;text-transform:uppercase;cursor:pointer;padding:0;z-index:3;transition:color .15s}
     .agenda-toggle:hover{color:#fff}
@@ -690,7 +692,7 @@
     </div>
     <div class="twocol">
       <div><select id="m_client" onchange="onClientChange()"></select></div>
-      <div><select id="m_project"></select></div>
+      <div><select id="m_project" onchange="onProjectChange()"></select></div>
     </div>
     <div class="twocol">
       <div><div class="datefield" id="m_due_field" onclick="openDuePicker(event)"><span id="m_due_label" class="ph">Deadline</span><span class="cal-ic">▦</span></div></div>
@@ -728,7 +730,7 @@
       <div><input id="a_location" placeholder="Locatie" /></div>
     </div>
     <div class="twocol">
-      <div><select id="a_client"></select></div>
+      <div><select id="a_client" onchange="onApptClientChange()"></select></div>
       <div><select id="a_owner"><option value="">Wie van Begeister</option><option>Jeroen</option><option>Marlon</option></select></div>
     </div>
     <textarea id="a_note" rows="2" placeholder="Notitie"></textarea>
@@ -1069,7 +1071,8 @@ function clientDropdown(active,handler,countFn){
   h+=`<option value="all" ${active==='all'?'selected':''}>Alle klanten (${allOpen})</option>`;
   h+=state.projects.filter(p=>p.id!=='__inbox__').map(p=>{const c=countFn?countFn(p):p.items.filter(i=>i.status!=='done').length;
     return `<option value="${p.id}" ${active===p.id?'selected':''}>${escapeHtml(p.client)} (${c})</option>`;}).join('');
-  h+='<option value="__manage__">+ Klant toevoegen / wijzigen</option>';
+  h+='<option value="__new__">+ Nieuwe klant…</option>';
+  h+='<option value="__manage__">Klanten beheren…</option>';
   h+='</select>';
   return h;
 }
@@ -1090,7 +1093,7 @@ function renderTaken(){
   document.getElementById('list').innerHTML=rows.map(({p,it},i)=>taskCard(p,it,i,'taken')).join('')||'<div class="hint">Geen actiepunten.</div>';
   if(typeof wireTaskDrag==='function') wireTaskDrag();
 }
-function setTab(t){if(t==='__manage__'){setView('beheer');return;}activeTab=t;_animateNext=true;render();}
+async function setTab(t){if(t==='__new__'){const r=await _newClientPrompt();if(r&&r.id)activeTab=r.id;render();return;}if(t==='__manage__'){setView('beheer');return;}activeTab=t;_animateNext=true;render();}
 
 // ---------- agenda ----------
 let agendaCol='agenda';   // 'agenda' (kalender) of 'afspraken' (lijst) in de rechterkolom
@@ -1253,8 +1256,7 @@ function openApptModal(id){
   document.getElementById('a_owner').value=a?(a.owner||''):'';
   document.getElementById('a_note').value=a?a.note:'';
   const cs=document.getElementById('a_client');
-  cs.innerHTML='<option value="">Klant / project</option>'+state.projects.filter(p=>p.id!=='__inbox__').map(p=>`<option value="${p.id}">${escapeHtml(p.client)}${p.project?' · '+escapeHtml(p.project):''}</option>`).join('');
-  cs.value=a&&a.projectId?a.projectId:'';
+  _fillApptClientSelect(cs, a&&a.projectId?a.projectId:'');
   document.getElementById('a_del').style.display=apptEditId?'':'none';
   document.getElementById('apptModalTitle').textContent=apptEditId?'Afspraak bewerken':'Nieuwe afspraak';
   const ov=document.getElementById('apptOverlay');
@@ -1370,7 +1372,7 @@ function gotoSource(sid){setView('bronnen');setTimeout(()=>{const b=document.get
 
 // ---------- In afwachting ----------
 let wachterTab='all';
-function setWachterTab(t){wachterTab=t;_animateNext=true;render();}
+async function setWachterTab(t){if(t==='__new__'){const r=await _newClientPrompt();if(r&&r.id)wachterTab=r.id;render();return;}wachterTab=t;_animateNext=true;render();}
 function renderRail(){
   const flags=[];
   allItems().forEach(({p,it})=>{
@@ -1396,7 +1398,7 @@ function renderRail(){
     let h='<select class="clientdrop" onchange="setWachterTab(this.value)">';
     h+=`<option value="all" ${wachterTab==='all'?'selected':''}>Alle klanten (${flags.length})</option>`;
     h+=state.projects.filter(p=>p.id!=='__inbox__'&&counts[p.id]).map(p=>`<option value="${p.id}" ${wachterTab===p.id?'selected':''}>${escapeHtml(p.client)} (${counts[p.id]})</option>`).join('');
-    drop.innerHTML=h+'</select>';
+    drop.innerHTML=h+'<option value="__new__">+ Nieuwe klant…</option></select>';
   }
   const shown=flags.filter(f=>wachterTab==='all'||f.p.id===wachterTab);
   const list=document.getElementById('wachterList');
@@ -1517,11 +1519,45 @@ const CONTACTS=['Willem','Leon','Joep','Idz','Noa','Hans','Stavros','Len'];
 function uniqueClients(){const seen=[];state.projects.forEach(p=>{if(p.id==='__inbox__')return;if(!seen.includes(p.client))seen.push(p.client);});return seen;}
 function fillProjectSelect(client,selId){
   const sel=document.getElementById('m_project');
-  if(client==='__none__'){ sel.innerHTML='<option value="">— geen opdracht —</option>'; sel.value=''; return; }
-  sel.innerHTML=state.projects.filter(p=>p.client===client&&p.id!=='__inbox__').map(p=>`<option value="${p.id}">${escapeHtml(p.project||'—')}</option>`).join('');
+  if(client==='__none__'||client==='__new__'){ sel.innerHTML='<option value="">— geen project —</option>'; sel.value=''; return; }
+  sel.innerHTML=state.projects.filter(p=>p.client===client&&p.id!=='__inbox__').map(p=>`<option value="${p.id}">${escapeHtml(p.project||'—')}</option>`).join('')+'<option value="__new__">+ Nieuw project…</option>';
   if(selId)sel.value=selId;
 }
-function onClientChange(){fillProjectSelect(document.getElementById('m_client').value);}
+function _fillClientSelect(sel,selected){
+  sel.innerHTML='<option value="__none__">— Geen klant —</option>'+uniqueClients().map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('')+'<option value="__new__">+ Nieuwe klant…</option>';
+  if(selected!=null) sel.value=selected;
+}
+function _fillApptClientSelect(sel,selected){
+  sel.innerHTML='<option value="">Klant / project</option>'+state.projects.filter(p=>p.id!=='__inbox__').map(p=>`<option value="${p.id}">${escapeHtml(p.client)}${p.project?' · '+escapeHtml(p.project):''}</option>`).join('')+'<option value="__new__">+ Nieuwe klant…</option>';
+  if(selected!=null) sel.value=selected;
+}
+async function _newClientPrompt(){
+  const name=(prompt('Naam nieuwe klant:')||'').trim(); if(!name)return null;
+  const icon=(name[0]||'?').toUpperCase();
+  const ins=await sb.from('projects').insert({client:name,project:'',color:npColor||'#fbbf24',icon,sort:state.projects.length+1}).select('id').single();
+  await refresh(); return {client:name,id:ins&&ins.data?ins.data.id:null};
+}
+async function _newProjectPrompt(client){
+  const name=(prompt('Naam nieuw project:')||'').trim(); if(!name)return null;
+  const icon=(client[0]||'?').toUpperCase();
+  const ins=await sb.from('projects').insert({client,project:name,color:npColor||'#fbbf24',icon,sort:state.projects.length+1}).select('id').single();
+  await refresh(); return {id:ins&&ins.data?ins.data.id:null};
+}
+async function onClientChange(){
+  const sel=document.getElementById('m_client'); const v=sel.value;
+  if(v==='__new__'){ const r=await _newClientPrompt(); const cv=r?r.client:'__none__'; _fillClientSelect(sel,cv); fillProjectSelect(cv); return; }
+  fillProjectSelect(v);
+}
+async function onProjectChange(){
+  const sel=document.getElementById('m_project'); if(sel.value!=='__new__')return;
+  const client=document.getElementById('m_client').value;
+  if(client==='__none__'||client==='__new__'){ alert('Kies of maak eerst een klant.'); fillProjectSelect('__none__'); return; }
+  const r=await _newProjectPrompt(client); fillProjectSelect(client, r?r.id:null);
+}
+async function onApptClientChange(){
+  const sel=document.getElementById('a_client'); if(sel.value!=='__new__')return;
+  const r=await _newClientPrompt(); _fillApptClientSelect(sel, r?r.id:'');
+}
 function newTask(){ openModal(null); }
 function openModal(id, src){
   const isNew=!id; const r=isNew?null:findItem(id); if(!isNew&&!r)return; editingId=isNew?null:id;
@@ -1530,10 +1566,9 @@ function openModal(id, src){
   const cs=[...CONTACTS];if(cur&&!cs.includes(cur))cs.unshift(cur);
   document.getElementById('m_contact').innerHTML='<option value="">Contact</option>'+cs.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
   document.getElementById('m_contact').value=cur;
-  document.getElementById('m_client').innerHTML='<option value="__none__">— Geen opdrachtgever —</option>'+uniqueClients().map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
   const inInbox = !isNew && r.p.id==='__inbox__';
-  const clientVal = isNew ? '__none__' : (inInbox ? '__none__' : r.p.client);
-  document.getElementById('m_client').value=clientVal;
+  const clientVal = (isNew||inInbox) ? '__none__' : r.p.client;
+  _fillClientSelect(document.getElementById('m_client'), clientVal);
   fillProjectSelect(clientVal,(isNew||inInbox)?null:r.p.id);
   document.getElementById('m_t').value=isNew?'':r.it.t;
   document.getElementById('m_status').value=isNew?'todo':r.it.status;
@@ -1664,7 +1699,7 @@ async function sbLoad(){
   const known=new Set(projects.map(pr=>pr.id));
   const orphans=items.filter(x=>!x.project_id || !known.has(x.project_id));
   if(orphans.length){
-    state.projects.push({id:'__inbox__',client:'Geen opdrachtgever',project:'',color:'#9ca3af',icon:'📥',role:'nieuw binnengekomen — koppel aan een opdrachtgever',
+    state.projects.push({id:'__inbox__',client:'Geen klant',project:'',color:'#9ca3af',icon:'📥',role:'nieuw binnengekomen — koppel aan een klant',
       items:orphans.map(_mapItem)});
   }
   state.sources = sources.map(src=>_mapSource(src,atts));
