@@ -481,9 +481,9 @@
   .plusmenu button:hover{background:var(--panel2)}
   .plusmenu svg{width:16px;height:16px;opacity:.85}
   .chatrow{display:flex;align-items:center;gap:9px;background:var(--panel2);border:1px solid var(--line);border-radius:24px;padding:8px 10px 8px 14px;margin:10px 12px 12px}
-  #chatInput{flex:1;background:transparent;border:0;outline:none;box-shadow:none;-webkit-appearance:none;appearance:none;color:var(--txt);font-size:16px;resize:none;max-height:160px;min-height:30px;font-family:inherit;line-height:1.5;padding:9px 2px}
+  #chatInput{flex:1;min-width:0;background:transparent;border:0;outline:none;box-shadow:none;-webkit-appearance:none;appearance:none;color:var(--txt);font-size:16px;max-height:160px;min-height:30px;overflow-y:auto;font-family:inherit;line-height:1.5;padding:9px 2px;white-space:pre-wrap;word-break:break-word}
   #chatInput:focus{outline:none;box-shadow:none;border:0}
-  #chatInput::placeholder{color:var(--mut2)}
+  #chatInput:empty:before{content:attr(data-ph);color:var(--mut2);pointer-events:none}
   .ci-btn{background:transparent;border:none;color:var(--mut);cursor:pointer;padding:5px;display:flex;align-items:center;justify-content:center;line-height:1}
   .ci-btn:hover{color:var(--txt)}
   .ci-plus{font-size:27px;width:38px;height:38px;border-radius:50%}
@@ -782,7 +782,7 @@
   </div>
   <div class="chatrow">
     <button class="ci-btn ci-plus" onclick="togglePlus(event)" title="Meer" aria-label="Meer">+</button>
-    <textarea id="chatInput" rows="1" placeholder="Kom maar door…"></textarea>
+    <div id="chatInput" contenteditable="true" role="textbox" aria-label="Bericht" data-ph="Kom maar door…"></div>
     <button class="ci-btn ci-mic" onclick="voiceMode()" title="Spreek in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
     <button class="ci-send" onclick="chatSend()" title="Stuur" aria-label="Stuur">↑</button>
   </div>
@@ -2373,10 +2373,12 @@ async function pasteClip(){closePlus();composeMode(true);const ta=document.getEl
   catch(_){ta.focus();addMsg('ai','Plakken lukte niet automatisch — houd je vinger op het veld en kies Plakken.');}
 }
 (function(){const ta=document.getElementById('chatInput'); if(!ta)return;
-  const grow=()=>{ta.style.height='auto';ta.style.height=Math.min(ta.scrollHeight,140)+'px';};
-  ta.addEventListener('input',()=>{grow();updateIntroFade();});
+  // contenteditable div met .value-shim — zo blijft alle bestaande code werken en toont iOS geen form-balk boven het toetsenbord
+  Object.defineProperty(ta,'value',{configurable:true,get(){return (this.innerText||'').replace(/ /g,' ');},set(v){this.textContent=v||'';}});
+  ta.addEventListener('input',()=>{if(!ta.innerText.trim())ta.innerHTML='';updateIntroFade();});
   ta.addEventListener('focus',()=>{composeMode(true);const o=document.getElementById('welcomeOverlay');if(o&&!o.classList.contains('dismissed'))o.classList.add('chatting');});
   ta.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();chatSend();}});
+  ta.addEventListener('paste',e=>{e.preventDefault();const t=((e.clipboardData||window.clipboardData).getData('text')||'');document.execCommand('insertText',false,t);});
 })();
 
 // ---------- dagelijks complimentje ----------
