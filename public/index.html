@@ -24,7 +24,7 @@
   }
   *{box-sizing:border-box}
   html,body{margin:0;background:var(--bg);color:var(--txt);
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     font-size:14.5px;line-height:1.5;-webkit-font-smoothing:antialiased}
   a{color:inherit}
   input,textarea,select,button,option,optgroup{font-family:inherit}
@@ -247,7 +247,7 @@
   .src-body{border-top:1px solid var(--line);padding:15px 16px;display:none}
   .src-body.open{display:block}
   .chat{display:flex;flex-direction:column;gap:6px;max-height:340px;overflow:auto;padding:4px 2px}
-  .msg{max-width:78%;padding:8px 11px;border-radius:12px;font-size:13px;line-height:1.45}
+  .msg{max-width:78%;padding:8px 11px;border-radius:12px;font-size:13px;line-height:1.45;white-space:pre-line}
   .msg .mh{font-size:10.5px;color:var(--mut2);margin-bottom:2px}
   .msg.them{align-self:flex-start;background:#262626;border-bottom-left-radius:4px}
   .msg.me{align-self:flex-end;background:#0f3b2e;border-bottom-right-radius:4px}
@@ -294,7 +294,8 @@
   .srow-derived{margin-top:8px;font-size:11.5px;color:var(--mut2)}
 
   /* RAIL */
-  .rail{background:var(--bg);border-right:1px solid var(--line);width:360px;flex:0 0 360px;position:sticky;top:0;height:100dvh;align-self:flex-start;overflow-y:auto;overflow-x:hidden;padding-bottom:150px}
+  .rail{background:var(--bg);border-right:1px solid var(--line);width:360px;flex:0 0 360px;position:sticky;top:0;height:100dvh;align-self:flex-start;overflow-y:auto;overflow-x:hidden;padding-bottom:150px;scrollbar-width:none;-ms-overflow-style:none}
+  .rail::-webkit-scrollbar{display:none}
   #wachterBlock{padding:18px 16px 4px}
   .rail #chatThread{padding:6px 14px}
   .wachter{background:linear-gradient(180deg,#1f1f1f,#161616);border:1px solid var(--line);border-radius:var(--r);padding:15px 16px;position:relative;overflow:hidden;margin-bottom:18px}
@@ -338,7 +339,7 @@
   .kmain{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
   .kname{background:transparent;border:none;color:var(--txt);font-size:15px;font-weight:600;padding:3px 0;width:100%;border-bottom:1px solid transparent}
   .ksub{background:transparent;border:none;color:var(--mut2);font-size:12.5px;padding:2px 0;width:100%;border-bottom:1px solid transparent}
-  .kname:focus,.ksub:focus{outline:none;border-bottom-color:var(--line)}
+  .kname:focus,.ksub:focus,.kclient .kname:focus{outline:none;background:transparent;border:none;border-bottom:1px solid var(--line);box-shadow:none}
   .kname::placeholder,.ksub::placeholder{color:var(--mut2)}
   .kcnt{font-size:12.5px;color:var(--mut2);flex:0 0 auto;font-variant-numeric:tabular-nums;min-width:18px;text-align:right}
   .kicon{background:transparent;border:none;color:var(--mut2);cursor:pointer;padding:7px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;border-radius:8px}
@@ -508,11 +509,11 @@
   .welcome-overlay.playing .home-author{animation:fadeUp 1.4s ease 3.5s both}
   .welcome-close{position:absolute;top:calc(env(safe-area-inset-top) + 16px);right:20px;z-index:4;width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.6);background:rgba(0,0,0,.2);color:rgba(255,255,255,.6);font-size:22px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:border-color .15s,color .15s}
   #welcomeChat{position:relative;z-index:2;width:min(640px,92vw);display:flex;flex-direction:column;gap:12px;margin-top:26px;max-height:min(58vh,540px)}
-  .welcome-overlay #chatThread{flex:1 1 auto;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:10px;width:100%;padding:2px;margin:0;-webkit-mask-image:linear-gradient(to bottom, transparent 0, #000 34px);mask-image:linear-gradient(to bottom, transparent 0, #000 34px)}
+  .welcome-overlay #chatThread{flex:1 1 auto;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:10px;width:100%;padding:2px;margin:0}
   .welcome-overlay #chatThread:empty{display:none}
   .welcome-overlay #chatDock{position:static;width:100%;border:none;background:transparent;box-shadow:none}
   .welcome-overlay .chatrow{background:rgba(22,22,22,.55);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.16);margin:0}
-  .welcome-overlay .msg{backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+  .welcome-overlay .msg{backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);white-space:pre-line}
   .welcome-overlay .msg.ai{background:rgba(26,26,26,.42);border:1px solid rgba(255,255,255,.12);color:#fff}
   .welcome-overlay .msg.me{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.22);color:#fff}
   .welcome-overlay .msg.proposal{background:rgba(20,20,20,.42);border:1px solid rgba(255,255,255,.12)}
@@ -579,19 +580,25 @@
     .rail #chatThread:empty{display:none}
     /* welkomstscherm-chat vult in gesprek het hele scherm (tot bovenaan) */
     .welcome-overlay.chatting #chatDock{margin-top:auto}
-    .welcome-overlay.chatting #welcomeChat{position:absolute;left:50%;transform:translateX(-50%);top:58px;bottom:22px;width:min(680px,92vw);max-height:none;margin:0}
+    .welcome-overlay.chatting #welcomeChat{position:absolute;left:50%;transform:translateX(-50%);top:14px;bottom:22px;width:min(680px,92vw);max-height:none;margin:0}
   }
   /* desktop-werkblad: 3 gelijke kolommen — In afwachting | Taken | Agenda */
   @media(min-width:1001px){
     /* topnav uitgekleed: alleen Bronnen, Klanten, Contacten, Meldingen */
     #nav button[data-v="agenda"],#nav button[data-v="afspraken"],#nav button[data-v="taken"]{display:none}
     .rail{width:33.333vw;flex:0 0 33.333vw}
+    /* kop "In afwachting" van kolom 1 blijft bovenaan staan bij scrollen */
+    .rail #wachterBlock::before{position:sticky;top:0;z-index:4;background:var(--bg)}
     #chatDock{width:33.333vw}
     .rail #wachterDrop{display:none}
     .main.workspace{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0;align-items:start;height:calc(100dvh - var(--tbh,52px));overflow:hidden}
-    .main.workspace #view-taken{display:block;border-right:1px solid var(--line);padding-right:26px;position:relative;height:100%;overflow-y:auto;padding-bottom:40px}
-    .main.workspace #view-agenda{display:block;padding-left:26px;position:relative;height:100%;overflow-y:auto;padding-bottom:40px}
-    .main.workspace #view-taken::before,.main.workspace #view-agenda::before{display:flex;align-items:center;height:26px;font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut2);margin:0 0 12px}
+    .main.workspace #view-taken{display:block;border-right:1px solid var(--line);padding-right:26px;position:relative;height:100%;overflow-y:auto;padding-bottom:40px;scrollbar-width:none;-ms-overflow-style:none}
+    .main.workspace #view-agenda{display:block;padding-left:26px;position:relative;height:100%;overflow-y:auto;padding-bottom:40px;scrollbar-width:none;-ms-overflow-style:none}
+    .main.workspace #view-taken::-webkit-scrollbar,.main.workspace #view-agenda::-webkit-scrollbar{display:none}
+    .main.workspace #view-taken::before,.main.workspace #view-agenda::before{position:sticky;top:0;z-index:4;background:var(--bg);display:flex;align-items:center;height:26px;font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut2);margin:0 0 12px}
+    /* knoppen in de kolomkop blijven bovenaan meeplakken bij scrollen */
+    .main.workspace #view-taken .col-add,.main.workspace #view-taken .col-close,
+    .main.workspace #view-agenda .agenda-add,.main.workspace #view-agenda .agenda-toggle,.main.workspace #view-agenda .col-close{position:sticky;float:right;margin-top:-26px;z-index:5}
     .main.workspace #view-taken::before{content:"Taken"}
     .main.workspace #view-agenda::before{content:"Agenda"}
     .main.workspace #view-agenda.afsprakenmode::before{content:"Afspraken"}
@@ -1435,11 +1442,32 @@ function _fileGlyph(filename){
     +`<text x="12" y="20" font-size="6" text-anchor="middle" fill="currentColor" stroke="none" style="font-family:inherit;font-weight:700;letter-spacing:.2px">${escapeHtml(label)}</text>`
     +'</svg>';
 }
+function _clip(str,n){str=String(str||'').replace(/\s+/g,' ').trim();return str.length>n?str.slice(0,n-1).trimEnd()+'…':str;}
 function _srcTitle(s){
-  if(s.subject) return s.subject;
+  // korte AI-samenvatting indien aanwezig, anders onderwerp/eerste regel — altijd kort
+  if(s.summary) return _clip(s.summary,60);
+  if(s.subject) return _clip(s.subject,60);
   const first=(s.text||'').split('\n').map(x=>x.trim()).find(x=>x.length);
-  if(s.from && first) return s.from+': '+first;
-  return s.from || first || 'Bericht';
+  if(s.from && first) return _clip(s.from+': '+first,60);
+  return _clip(s.from || first || 'Bericht',60);
+}
+// herkent bronnen die in feite alleen een geplakte afbeelding/screenshot zijn
+function _isImageSource(s){
+  if(s.channel==='camera') return true;
+  const imgRe=/\.(png|jpe?g|gif|webp|heic|heif|bmp|tiff?|svg)$/i;
+  const hasText=String(s.summary||s.text||s.full||'').trim().length>0;
+  const atts=(s.attachFull&&s.attachFull.length)?s.attachFull:[];
+  const onlyImgAtts=atts.length>0 && atts.every(a=>imgRe.test(a.filename||'')||/^image\//i.test(a.mime||''));
+  // alleen een afbeelding-bijlage en verder geen tekst → beeldbron
+  if(onlyImgAtts && !hasText) return true;
+  // titel/onderwerp is een afbeeldingsbestandsnaam
+  if(!hasText && imgRe.test(String(s.subject||s.from||'').trim())) return true;
+  return false;
+}
+// inhouds-sleutel voor ontdubbelen
+function _srcDedupeKey(s){
+  const body=String(s.summary||s.text||s.full||'').replace(/\s+/g,' ').trim().slice(0,120).toLowerCase();
+  return [String(s.from||'').trim().toLowerCase(),String(s.subject||'').trim().toLowerCase(),String(s.date||''),body].join('|');
 }
 function _srcChanLabel(ch){return ch==='whatsapp'?'WhatsApp':(ch==='email'?'E-mail':(ch==='chat'?'Chat':(ch==='camera'?'Foto':'Geplakt')));}
 function _srcRowHTML(s){
@@ -1447,8 +1475,11 @@ function _srcRowHTML(s){
   const derived=[];state.projects.forEach(p=>p.items.forEach(it=>{if(it.src===s.id)derived.push(it);}));
   const dateTxt=s.date?d(s.date).toLocaleDateString('nl-NL',{day:'numeric',month:'short'}):'';
   const title=_srcTitle(s);
-  const atts=(s.attachFull&&s.attachFull.length)?s.attachFull:((s.attach||[]).map(f=>({filename:f,storage_path:'',mime:''})));
-  const attHTML=atts.map((a,i)=>`<div class="srow-att" onclick="openAttachment('${s.id}',${i})"><span class="file-ic">${_fileGlyph(a.filename)}</span><span class="fname">${escapeHtml(a.filename)}</span></div>`).join('');
+  const imgRe=/\.(png|jpe?g|gif|webp|heic|heif|bmp|tiff?|svg)$/i;
+  const allAtts=(s.attachFull&&s.attachFull.length)?s.attachFull:((s.attach||[]).map(f=>({filename:f,storage_path:'',mime:''})));
+  // afbeelding-bijlagen weglaten — schone tekst-bronnenlijst, geen thumbnails
+  const atts=allAtts.filter(a=>!(imgRe.test(a.filename||'')||/^image\//i.test(a.mime||'')));
+  const attHTML=atts.map((a)=>{const gi=allAtts.indexOf(a);return `<div class="srow-att" onclick="openAttachment('${s.id}',${gi})"><span class="file-ic">${_fileGlyph(a.filename)}</span><span class="fname">${escapeHtml(a.filename)}</span></div>`;}).join('');
   const derHTML=derived.length?`<div class="srow-derived">${derived.length} actiepunt(en) hieruit gehaald</div>`:'';
   return `<div class="srow" id="card_${s.id}">
     <div class="srow-head" onclick="toggleSrc('${s.id}')">
@@ -1458,14 +1489,6 @@ function _srcRowHTML(s){
         <span class="srow-sub">${_srcChanLabel(s.channel)}${atts.length?' · '+atts.length+' bijlage(n)':''}</span>
       </span>
       <span class="srow-date">${dateTxt}</span>
-      <span class="srow-menu">
-        <button class="srow-dots" onclick="event.stopPropagation();toggleSrcMenu('${s.id}')" aria-label="Meer">⋯</button>
-        <div class="srow-pop" id="pop_${s.id}">
-          <button onclick="event.stopPropagation();srcPreview('${s.id}')">Preview</button>
-          <button onclick="event.stopPropagation();srcFullscreen('${s.id}')">Volledig scherm</button>
-          <button class="danger" onclick="event.stopPropagation();srcDelete('${s.id}')">Verwijderen</button>
-        </div>
-      </span>
     </div>
     <div class="srow-body" id="body_${s.id}">
       <div class="srow-text">${autolink(escapeHtml(s.full||s.text||s.summary||''),col)}</div>
@@ -1475,18 +1498,27 @@ function _srcRowHTML(s){
 }
 function renderBronnen(){
   const wrap=document.getElementById('bronnenWrap'); if(!wrap)return;
-  const sorted=[...state.sources].sort((a,b)=>d(b.date)-d(a.date));
+  // beeldbronnen weglaten + ontdubbelen op inhouds-sleutel
+  const seen=new Set();
+  const clean=state.sources.filter(s=>{
+    if(_isImageSource(s)) return false;
+    const k=_srcDedupeKey(s);
+    if(seen.has(k)) return false;
+    seen.add(k); return true;
+  });
+  const sorted=[...clean].sort((a,b)=>d(b.date)-d(a.date));
   let html='';
   // Recent: de nieuwste ~6
   const recent=sorted.slice(0,6);
   if(recent.length){
     html+='<div class="src-group"><div class="src-group-h">Recent</div>'+recent.map(_srcRowHTML).join('')+'</div>';
   }
-  // Daaronder: gegroepeerd per klant/opdracht
-  const groups={}, order=[];
-  sorted.forEach(s=>{ const name=s.proj?(projName(s.proj)||'Geen klant'):'Geen klant'; if(!groups[name]){groups[name]=[];order.push(name);} groups[name].push(s); });
-  order.sort((a,b)=> a==='Geen klant'?1:(b==='Geen klant'?-1:a.localeCompare(b)));
-  html+=order.map(name=>`<div class="src-group"><div class="src-group-h">${escapeHtml(name)}</div>${groups[name].map(_srcRowHTML).join('')}</div>`).join('');
+  // Daaronder: gegroepeerd per klant/opdracht (kop in klantkleur)
+  const groups={}, order={}, list=[];
+  sorted.forEach(s=>{ const name=s.proj?(projName(s.proj)||'Geen klant'):'Geen klant'; if(!groups[name]){groups[name]=[];order[name]=s.proj||null;list.push(name);} groups[name].push(s); });
+  list.sort((a,b)=> a==='Geen klant'?1:(b==='Geen klant'?-1:a.localeCompare(b)));
+  html+=list.map(name=>{const col=(order[name]&&PROJCOL[order[name]])||'var(--mut2)';
+    return `<div class="src-group"><div class="src-group-h" style="color:${col}">${escapeHtml(name)}</div>${groups[name].map(_srcRowHTML).join('')}</div>`;}).join('');
   wrap.innerHTML=html||'<div class="hint">Nog geen bronnen.</div>';
 }
 function toggleSrcMenu(id){
@@ -2453,16 +2485,18 @@ function chatGreet(){
   const inbox=state.projects.find(p=>p.id==='__inbox__');
   if(inbox&&inbox.items.length){
     const ids=inbox.items.map(i=>i.id);
-    addMsg('ai','Er staan '+inbox.items.length+' binnengekomen ding(en) die ik nog niet kon plaatsen. Bij welke klant horen ze?');
-    inbox.items.slice(0,6).forEach(i=>addMsg('ai','• '+i.t));
+    const n=inbox.items.length;
+    const bullets=inbox.items.slice(0,6).map(i=>'• '+i.t).join('\n');
+    const more=n>6?('\n• … en nog '+(n-6)):'';
+    addMsg('ai','Er staan '+n+' binnengekomen die ik nog niet kon plaatsen. Bij welke klant horen ze?\n\n'+bullets+more);
     renderClientChips(ids);
   }
   // herinnering: taken die al een tijdje zonder datum blijven staan
   const now=Date.now();
   const stale=allItems().filter(x=>x.p.id!=='__inbox__'&&x.it.status!=='done'&&!x.it.due&&(now-(x.it.created||now))>2*864e5);
   if(stale.length){
-    addMsg('ai','Trouwens — '+stale.length+' taak/taken staat al een tijdje zónder datum. Zullen we er deadlines bij zetten? Bijvoorbeeld:');
-    stale.slice(0,5).forEach(x=>addMsg('ai','• '+x.it.t+' ('+projName(x.p.id)+')'));
+    const sb2=stale.slice(0,5).map(x=>'• '+x.it.t+' ('+projName(x.p.id)+')').join('\n');
+    addMsg('ai','Trouwens — '+stale.length+' taak/taken staat al een tijdje zónder datum. Zullen we er deadlines bij zetten? Bijvoorbeeld:\n\n'+sb2);
   }
 }
 

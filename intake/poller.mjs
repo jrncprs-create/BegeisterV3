@@ -149,7 +149,11 @@ export async function run() {
         await db.from("sources").update({ processed: true, summary: summary || null }).eq("id", source.id);
 
         // 1 melding per binnengekomen bericht — korte AI-samenvatting
-        try { await sendToAll(db, { title: "Begeister", body: "In afwachting: " + (summary || mail.subject || "nieuw bericht"), url: "/" }); } catch (e) { console.error("push-fout:", e.message); }
+        try {
+          const raw = (summary || mail.subject || "nieuw bericht").trim();
+          const pushBody = raw.length > 70 ? raw.slice(0, 69).trimEnd() + "…" : raw;
+          await sendToAll(db, { title: "In afwachting", body: pushBody, url: "/" });
+        } catch (e) { console.error("push-fout:", e.message); }
 
         await client.messageFlagsAdd(uid, ["\\Seen"]);
         result.processed++; result.items += items.length;
