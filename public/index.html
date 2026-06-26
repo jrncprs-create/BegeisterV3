@@ -476,6 +476,11 @@
   .ci-send{background:#fff;color:#0c0c0c;border:none;border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;flex:0 0 auto}
   .ci-send:hover{background:#e6e6e6}
   .msg.typing{opacity:.6;letter-spacing:3px}
+  /* AI-loader: merk-ster animatie + wisselende statustekst (i.p.v. puntjes-wolkje) */
+  .msg.thinking{display:flex;align-items:center;gap:10px;padding:4px 2px}
+  .think-anim{width:30px;height:30px;flex:0 0 auto;display:block}
+  .think-txt{font-size:13px;color:rgba(255,255,255,.72);transition:opacity .25s ease}
+  .welcome-overlay .msg.ai.thinking{background:transparent;border:none;backdrop-filter:none;-webkit-backdrop-filter:none;max-width:none}
   .chat-thread{display:flex;flex-direction:column;gap:15px;padding:32px 4px 22px}
   .msg{padding:12px 15px;border-radius:15px;font-size:14.5px;line-height:1.5;max-width:92%;white-space:pre-wrap;text-align:left}
   .msg.ai{background:var(--panel);align-self:flex-start;border:1px solid var(--line);color:var(--txt)}
@@ -2371,7 +2376,14 @@ async function assignChatProject(pid){const ids=_pendingIds.slice();if(!pid||!id
   const p=projById(pid);
   await sb.from('items').update({project_id:pid}).in('id',ids);clearChips();addMsg('me',p?(p.project||p.client):'');addMsg('ai','Top — bij '+(p?p.client+(p.project?' · '+p.project:''):'')+' gezet. Nog iets?');await refresh();}
 let chatHistory=[];
-function addTyping(){const t=document.getElementById('chatThread');if(!t)return null;const d=document.createElement('div');d.className='msg ai typing';d.textContent='…';t.appendChild(d);d.scrollIntoView&&d.scrollIntoView({block:'nearest'});return d;}
+function addTyping(opts){const t=document.getElementById('chatThread');if(!t)return null;
+  const phrases=(opts&&opts.phrases&&opts.phrases.length)?opts.phrases:['Aan het nadenken…','Even online kijken…','Informatie verzamelen…','Bijna klaar…'];
+  const d=document.createElement('div');d.className='msg ai thinking';
+  const img=document.createElement('img');img.className='think-anim';img.src='/thinking.webp';img.alt='';img.setAttribute('aria-hidden','true');
+  const sp=document.createElement('span');sp.className='think-txt';sp.textContent=phrases[0];
+  d.appendChild(img);d.appendChild(sp);t.appendChild(d);
+  let i=0;const iv=setInterval(()=>{if(!document.body.contains(d)){clearInterval(iv);return;}i=(i+1)%phrases.length;sp.style.opacity=0;setTimeout(()=>{sp.textContent=phrases[i];sp.style.opacity=1;},220);},2000);
+  d.scrollIntoView&&d.scrollIntoView({block:'nearest'});if(typeof _scrollThreadBottom==='function')_scrollThreadBottom();return d;}
 function knownIds(){return new Set(state.projects.filter(p=>p.id!=='__inbox__').map(p=>p.id));}
 // melding naar de partner (niet naar jezelf) — zo houden Marlon en Jeroen elkaar op de hoogte
 function notifyPartner(body){ if(!body)return; try{ fetch('/api/notify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({actor:who||'',body})}); }catch(_){ } }
@@ -2550,7 +2562,7 @@ async function handlePhoto(e){
     if(!up.error&&src){await sb.from('attachments').insert({source_id:src.id,filename:f.name,storage_path:path,mime:f.type,size:f.size});}
   }catch(_){}
   // AI-first: foto laten samenvatten + actiepunten voorstellen
-  const typing=addTyping(); let data=null;
+  const typing=addTyping({phrases:['Afbeelding bekijken…','Tekst herkennen…','Actiepunten eruit halen…','Bijna klaar…']}); let data=null;
   try{
     const b64=await fileToB64(f);
     const catalog=state.projects.filter(p=>p.id!=='__inbox__').map(p=>({project_id:p.id,client:p.client,project:p.project||''}));
