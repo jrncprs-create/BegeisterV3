@@ -378,17 +378,25 @@
   .caddrow{display:flex;flex-wrap:wrap;gap:8px;margin:2px 0 18px;align-items:center}
   .caddrow input{flex:1 1 140px;min-width:0;background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:9px 11px;font-size:14px}
   .caddrow input::placeholder{color:var(--mut2)}
-  .csearchrow{display:flex;gap:8px;margin:2px 0 14px;align-items:center}
-  .csearchrow input{flex:1 1 auto;min-width:0;background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:9px 12px;font-size:14px}
+  .chdr{display:flex;align-items:center;gap:6px;margin:0 0 18px}
+  .chdr-t{font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut2);font-weight:600}
+  .chdr-add{background:transparent;border:none;color:var(--mut);font-size:21px;line-height:1;cursor:pointer;padding:0 2px;display:flex;align-items:center}
+  .chdr-add:hover{color:#fff}
+  .csearchrow{display:flex;gap:8px;margin:0 0 22px;align-items:center}
+  .csearchrow input{flex:1 1 auto;min-width:0;background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:10px;padding:11px 13px;font-size:14px}
   .csearchrow input::placeholder{color:var(--mut2)}
-  .cdup{display:block;width:100%;text-align:left;background:transparent;border:1px solid var(--line);color:var(--mut2);border-radius:9px;padding:8px 11px;font-size:12.5px;cursor:pointer;margin:0 0 14px}
+  .cdup{display:block;width:100%;text-align:left;background:transparent;border:1px solid var(--line);color:var(--mut2);border-radius:9px;padding:9px 12px;font-size:12.5px;cursor:pointer;margin:0 0 20px}
   .cdup:hover{color:var(--txt);border-color:var(--mut2)}
-  .cli{cursor:pointer}
-  .cli:hover{background:rgba(255,255,255,.03)}
-  .cli .cquick{display:flex;gap:6px;flex:0 0 auto}
-  .cli .cquick a{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;color:var(--mut);border:1px solid var(--line);text-decoration:none}
-  .cli .cquick a:hover{color:var(--txt);border-color:var(--mut2)}
-  .c-role{display:inline-block;font-size:11px;color:var(--mut2);border:1px solid var(--line);border-radius:6px;padding:1px 7px;margin-left:7px;vertical-align:1px}
+  .cli{display:flex;align-items:center;gap:14px;padding:17px 2px;border-bottom:1px solid var(--line);cursor:pointer}
+  .cli:hover{background:rgba(255,255,255,.025)}
+  .cli .cmain{flex:1;min-width:0}
+  .cli .cname{font-size:15px;font-weight:650;color:var(--txt)}
+  .cli .crole{font-size:12.5px;color:var(--mut2);margin-top:5px}
+  .cli .cquick{display:flex;gap:12px;flex:0 0 auto}
+  .cli .cquick a{display:flex;align-items:center;justify-content:center;width:36px;height:36px;color:var(--mut);text-decoration:none}
+  .cli .cquick a:hover{color:#fff}
+  .cgroup{margin-bottom:30px}
+  .cgroup-h{font-size:11.5px;letter-spacing:1px;text-transform:uppercase;color:var(--mut2);margin:0 0 14px;font-weight:600}
   .c-linked{margin-top:6px;border-top:1px solid var(--line);padding-top:12px}
   .c-linked h4{font-size:11.5px;letter-spacing:1px;text-transform:uppercase;color:var(--mut2);margin:0 0 8px;font-weight:600}
   .c-linked .cl-item{font-size:13px;color:var(--mut);padding:6px 0;cursor:pointer;border-bottom:1px solid var(--line)}
@@ -1655,8 +1663,8 @@ let _contactSearch='';
 function renderContacten(){
   const wrap=document.getElementById('contactenWrap'); if(!wrap)return;
   const contacts=(state.contacts||[]);
-  const addSvg='<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg>';
-  let html='<div class="csearchrow"><input id="c_search" placeholder="Zoek contact…" autocomplete="off" oninput="_filterContacts(this.value)" /><button class="kicon kadd" onclick="openContactModal()" title="Nieuw contact" aria-label="Nieuw contact">'+addSvg+'</button></div>';
+  let html='<div class="chdr"><span class="chdr-t">Contacten</span><button class="chdr-add" onclick="openContactModal()" title="Nieuw contact" aria-label="Nieuw contact">+</button></div>';
+  html+='<div class="csearchrow"><input id="c_search" placeholder="Zoek contact…" autocomplete="off" oninput="_filterContacts(this.value)" /></div>';
   const dup=_countDupContacts();
   if(dup>0) html+='<button class="cdup" onclick="mergeDupContacts()">'+dup+' mogelijk dubbel — samenvoegen</button>';
   const groups={}, order=[];
@@ -1669,11 +1677,10 @@ function renderContacten(){
     const mailSvg='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M4 7l8 6 8-6"/></svg>';
     html+=order.map(g=>{
       const rows=groups[g].map(c=>{
-        const meta=[c.email,c.phone].filter(Boolean).map(escapeHtml).join(' · ');
         const s=escapeHtml(((c.name||'')+' '+(c.email||'')+' '+(c.phone||'')+' '+(c.company||'')+' '+(c.role||'')).toLowerCase());
         const tel=(c.phone||'').replace(/[^+\d]/g,'');
         const quick=(c.phone?`<a href="tel:${tel}" onclick="event.stopPropagation()" title="Bellen">${phoneSvg}</a>`:'')+(c.email?`<a href="mailto:${escapeHtml(c.email)}" onclick="event.stopPropagation()" title="Mailen">${mailSvg}</a>`:'');
-        return `<div class="cli" data-s="${s}" onclick="openContactModal('${c.id}')"><div class="cmain"><div class="cname">${escapeHtml(c.name||'')}${c.role?` <span class="c-role">${escapeHtml(c.role)}</span>`:''}</div>${meta?`<div class="cmeta">${meta}</div>`:''}</div><div class="cquick">${quick}</div></div>`;
+        return `<div class="cli" data-s="${s}" onclick="openContactModal('${c.id}')"><div class="cmain"><div class="cname">${escapeHtml(c.name||'')}</div>${c.role?`<div class="crole">${escapeHtml(c.role)}</div>`:''}</div><div class="cquick">${quick}</div></div>`;
       }).join('');
       return `<div class="cgroup"><div class="cgroup-h">${escapeHtml(g)}</div>${rows}</div>`;
     }).join('');
@@ -2326,14 +2333,15 @@ function applyLayout(){
 // sluitkruis + kop in elke rail-view (Bronnen/Klanten/Contacten) op desktop; weg op mobiel
 function _ensureRailCloses(){
   const _xIc='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
-  const spec=[['view-bronnen','Bronnen'],['view-beheer','Klanten & projecten'],['view-contacten','Contacten']];
+  const spec=[['view-bronnen','Bronnen'],['view-beheer','Klanten & projecten'],['view-contacten','']];
   const d3=isDesk3();
   spec.forEach(([vid,label])=>{
     const v=document.getElementById(vid); if(!v)return;
     let cl=v.querySelector(':scope > .rail-close'); let tt=v.querySelector(':scope > .rail-coltitle');
     if(d3){
       if(!cl){ cl=document.createElement('button'); cl.className='rail-close'; cl.title='Sluiten'; cl.setAttribute('aria-label','Sluiten'); cl.innerHTML=_xIc; cl.onclick=()=>setView('taken'); v.insertBefore(cl,v.firstChild); }
-      if(!tt){ tt=document.createElement('div'); tt.className='rail-coltitle'; tt.textContent=label; v.insertBefore(tt, cl.nextSibling); }
+      if(label && !tt){ tt=document.createElement('div'); tt.className='rail-coltitle'; tt.textContent=label; v.insertBefore(tt, cl.nextSibling); }
+      else if(!label && tt){ tt.remove(); }
     }else{
       if(cl)cl.remove(); if(tt)tt.remove();
     }
