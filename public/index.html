@@ -1440,7 +1440,7 @@ async function approveWait(id){
 // afwijzen: definitief verwijderen (met animatie)
 async function rejectWait(id){
   const r=findItem(id); if(!r) return;
-  if(!confirm('Dit actiepunt definitief verwijderen?')) return;
+  if(!(await uiConfirm('Dit actiepunt definitief verwijderen?'))) return;
   const card=document.querySelector('#wachterList .task[data-id="'+id+'"]');
   if(card){ card.classList.add('rejecting'); await new Promise(res=>setTimeout(res,340)); }
   await sb.from('items').delete().eq('id',id);
@@ -1511,7 +1511,7 @@ async function renameClient(oldName,newVal){
 async function addProjectTo(client){
   const name=((await uiPrompt('Naam nieuw project voor '+client+':'))||'').trim(); if(!name)return;
   const icon=((client||'?')[0]||'?').toUpperCase();
-  await sb.from('projects').insert({client,project:name,color:npColor||'#fbbf24',icon,sort:state.projects.length+1});
+  await sb.from('projects').insert({client,project:name,color:_clientColor(client),icon,sort:state.projects.length+1});
   await refresh();
 }
 function updateProject(id,field,val){const p=projById(id);if(!p)return;p[field]=val;
@@ -1595,16 +1595,35 @@ function _fillApptClientSelect(sel,selected){
   sel.innerHTML='<option value="">Klant / project</option>'+state.projects.filter(p=>p.id!=='__inbox__').map(p=>`<option value="${p.id}">${escapeHtml(p.client)}${p.project?' · '+escapeHtml(p.project):''}</option>`).join('')+'<option value="__new__">+ Nieuwe klant…</option>';
   if(selected!=null) sel.value=selected;
 }
+function uiConfirm(title){
+  return new Promise(resolve=>{
+    const ov=document.createElement('div'); ov.className='overlay';
+    ov.innerHTML='<div class="modal" style="width:420px;max-width:92vw;padding:24px 22px">'
+      +'<h3 style="margin:0 0 18px">'+escapeHtml(title)+'</h3>'
+      +'<div class="foot" style="display:flex;justify-content:flex-end;gap:10px;margin-top:8px">'
+      +'<button class="btn ghost uic-cancel">Annuleren</button>'
+      +'<button class="btn danger uic-ok" style="color:#f87171">Verwijderen</button></div></div>';
+    document.body.appendChild(ov);
+    requestAnimationFrame(()=>ov.classList.add('open'));
+    const done=v=>{ ov.classList.remove('open'); setTimeout(()=>ov.remove(),320); resolve(v); };
+    ov.querySelector('.uic-ok').onclick=()=>done(true);
+    ov.querySelector('.uic-cancel').onclick=()=>done(false);
+    ov.addEventListener('click',e=>{ if(e.target===ov) done(false); });
+  });
+}
+// kleur per klant: nieuwe klanten krijgen automatisch een volgende paletkleur
+function _nextClientColor(){ const cs=new Set(); state.projects.forEach(p=>{ if(p.id!=='__inbox__'&&p.client) cs.add(p.client); }); return PALETTE[cs.size % PALETTE.length]; }
+function _clientColor(client){ const p=state.projects.find(x=>x.id!=='__inbox__'&&x.client===client&&x.color); return p?p.color:_nextClientColor(); }
 async function _newClientPrompt(){
   const name=((await uiPrompt('Naam nieuwe klant:'))||'').trim(); if(!name)return null;
   const icon=(name[0]||'?').toUpperCase();
-  const ins=await sb.from('projects').insert({client:name,project:'',color:npColor||'#fbbf24',icon,sort:state.projects.length+1}).select('id').single();
+  const ins=await sb.from('projects').insert({client:name,project:'',color:_nextClientColor(),icon,sort:state.projects.length+1}).select('id').single();
   await refresh(); return {client:name,id:ins&&ins.data?ins.data.id:null};
 }
 async function _newProjectPrompt(client){
   const name=((await uiPrompt('Naam nieuw project:'))||'').trim(); if(!name)return null;
   const icon=(client[0]||'?').toUpperCase();
-  const ins=await sb.from('projects').insert({client,project:name,color:npColor||'#fbbf24',icon,sort:state.projects.length+1}).select('id').single();
+  const ins=await sb.from('projects').insert({client,project:name,color:_clientColor(client),icon,sort:state.projects.length+1}).select('id').single();
   await refresh(); return {id:ins&&ins.data?ins.data.id:null};
 }
 async function onClientChange(){
@@ -1832,7 +1851,7 @@ addProject = async function(){const client=document.getElementById('np_name').va
   await refresh();};
 
 deleteProject = async function(id){const p=projById(id);if(!p)return;
-  if(p.items.length&&!confirm('"'+projName(id)+'" heeft '+p.items.length+' actiepunt(en). Toch verwijderen?'))return;
+  if(p.items.length&&!(await uiConfirm('"'+projName(id)+'" heeft '+p.items.length+' actiepunt(en). Toch verwijderen?')))return;
   await sb.from('projects').delete().eq('id',id); if(activeTab===id)activeTab='all'; await refresh();};
 
 // projectvelden: lokaal direct bijwerken, naar DB met lichte debounce
@@ -1981,7 +2000,8 @@ function renderCompliment(){
 }
 
 // ---------- chat ----------
-function addMsg(role,text){const t=document.getElementById('chatThread');if(!t)return;const dv=document.createElement('div');dv.className='msg '+(role==='me'?'me':'ai');dv.textContent=text;t.appendChild(dv);t.scrollTop=t.scrollHeight;dv.scrollIntoView&&dv.scrollIntoView({block:'nearest'});updateIntroFade();}
+function _scrollThreadBottom(){const t=document.getElementById('chatThread');if(!t)return;t.scrollTop=t.scrollHeight;requestAnimationFrame(()=>{t.scrollTop=t.scrollHeight;});setTimeout(()=>{t.scrollTop=t.scrollHeight;},120);}
+function addMsg(role,text){const t=document.getElementById('chatThread');if(!t)return;const dv=document.createElement('div');dv.className='msg '+(role==='me'?'me':'ai');dv.textContent=text;t.appendChild(dv);updateIntroFade();_scrollThreadBottom();}
 let _pendingIds=[];
 function clearChips(){_pendingIds=[];const b=document.getElementById('chatChips');if(b)b.innerHTML='';}
 function clientFirstProject(client){const p=state.projects.find(x=>x.id!=='__inbox__'&&x.client===client);return p&&p.id;}
