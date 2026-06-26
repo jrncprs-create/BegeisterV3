@@ -1,4 +1,4 @@
-// Begeister service worker — push-notificaties + altijd verse app (v3).
+// Begeister service worker — push-notificaties + altijd verse app (v4).
 self.addEventListener('install', (e) => self.skipWaiting());
 self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()));
 
