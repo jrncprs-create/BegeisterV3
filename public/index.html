@@ -340,6 +340,22 @@
   .duepop .dpc.sel{background:#fff;color:#000;font-weight:700}
   .duepop .dpfoot{display:flex;justify-content:space-between;margin-top:10px}
   .duepop .dpfoot button{background:transparent;border:none;color:var(--primary2);cursor:pointer;font-size:12.5px}
+  /* tijdkiezer */
+  .time-overlay{position:fixed;inset:0;z-index:150;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:20px}
+  .time-overlay.open{display:flex}
+  .timepop{background:var(--panel);border:1px solid var(--line);border-radius:16px;width:280px;max-width:100%;padding:16px;box-shadow:0 24px 60px rgba(0,0,0,.55)}
+  .timepop .tphd{font-size:13px;color:var(--mut2);letter-spacing:.5px;margin-bottom:12px;text-align:center}
+  .timepop .tpcols{display:flex;gap:10px}
+  .timepop .tpcol{flex:1;min-width:0}
+  .timepop .tpcol h5{margin:0 0 6px;font-size:10.5px;letter-spacing:.8px;text-transform:uppercase;color:var(--mut2);text-align:center}
+  .timepop .tplist{height:184px;overflow-y:auto;border:1px solid var(--line);border-radius:11px;background:var(--panel2);padding:5px;scrollbar-width:thin}
+  .timepop .tpv{height:38px;display:flex;align-items:center;justify-content:center;font-size:15px;border-radius:9px;cursor:pointer;font-variant-numeric:tabular-nums;color:var(--txt)}
+  .timepop .tpv:hover{background:var(--panel)}
+  .timepop .tpv.sel{background:#fff;color:#000;font-weight:700}
+  .timepop .tpfoot{display:flex;justify-content:space-between;align-items:center;margin-top:14px}
+  .timepop .tpfoot .tpclear{background:transparent;border:none;color:var(--mut);cursor:pointer;font-size:12.5px}
+  .timepop .tpfoot .tpok{background:var(--primary2);color:#161616;border:none;border-radius:10px;padding:9px 18px;font-size:13.5px;font-weight:650;cursor:pointer}
+  .timepop .tpfoot .tpok:hover{background:#fff}
   .pill.contact{color:var(--mut);border-color:var(--line)}
 
   /* TOOLTIP */
@@ -603,8 +619,14 @@
       <div><label>Type</label><select id="a_kind"><option value="fysiek">Fysiek</option><option value="bel">Telefonisch</option></select></div>
     </div>
     <div class="twocol">
-      <div><label>Begintijd</label><input id="a_start" type="time" /></div>
-      <div><label>Eindtijd <span class="opt">(optioneel)</span></label><input id="a_end" type="time" /></div>
+      <div><label>Begintijd</label>
+        <input type="hidden" id="a_start" />
+        <div class="datefield" id="a_start_f" onclick="openTimePop('a_start')"><span id="a_start_lbl">--:--</span><span class="cal-ic">◷</span></div>
+      </div>
+      <div><label>Eindtijd <span class="opt">(optioneel)</span></label>
+        <input type="hidden" id="a_end" />
+        <div class="datefield" id="a_end_f" onclick="openTimePop('a_end')"><span id="a_end_lbl">--:--</span><span class="cal-ic">◷</span></div>
+      </div>
     </div>
     <div class="twocol">
       <div><label>Met wie</label><input id="a_contact" placeholder="Contactpersoon" /></div>
@@ -627,6 +649,9 @@
 </div>
 
 <div id="duepop" class="duepop"></div>
+<div id="timeOverlay" class="time-overlay" onclick="if(event.target.id==='timeOverlay')closeTimePop()">
+  <div class="timepop" id="timepop"></div>
+</div>
 <div id="cpop" class="cpop"></div>
 
 <script>
@@ -1092,8 +1117,8 @@ function openApptModal(id){
   apptEditId = a?a.id:null;
   document.getElementById('a_t').value=a?a.t:'';
   document.getElementById('a_date').value=a?a.date:iso(TODAY);
-  document.getElementById('a_start').value=a?a.start:'';
-  document.getElementById('a_end').value=a?a.end:'';
+  setTimeField('a_start',a?a.start:'');
+  setTimeField('a_end',a?a.end:'');
   document.getElementById('a_kind').value=a?a.kind:'fysiek';
   document.getElementById('a_contact').value=a?a.contact:'';
   document.getElementById('a_location').value=a?a.location:'';
@@ -1138,6 +1163,36 @@ async function deleteAppt(){
   notifyPartner((who||'Iemand')+' verwijderde afspraak: '+(a?a.t:''));
   closeApptModal();await refresh();
 }
+// eigen tijdkiezer (donker, geen iOS-wiel)
+function setTimeField(id,val){const h=document.getElementById(id);if(h)h.value=val||'';const lbl=document.getElementById(id+'_lbl');if(lbl)lbl.textContent=val||'--:--';}
+let _timeTarget=null,_tH='',_tM='';
+function openTimePop(target){
+  _timeTarget=target;
+  const cur=(document.getElementById(target).value||'');
+  const m=/^(\d{2}):(\d{2})$/.exec(cur);
+  _tH=m?m[1]:''; _tM=m?String(Math.round(parseInt(m[2],10)/5)*5%60).padStart(2,'0'):'';
+  renderTimePop();
+  document.getElementById('timeOverlay').classList.add('open');
+}
+function closeTimePop(){document.getElementById('timeOverlay').classList.remove('open');_timeTarget=null;}
+function renderTimePop(){
+  const hours=[...Array(24)].map((_,i)=>String(i).padStart(2,'0'));
+  const mins=[...Array(12)].map((_,i)=>String(i*5).padStart(2,'0'));
+  const hcol=hours.map(h=>`<div class="tpv ${h===_tH?'sel':''}" onclick="pickH('${h}')">${h}</div>`).join('');
+  const mcol=mins.map(mm=>`<div class="tpv ${mm===_tM?'sel':''}" onclick="pickM('${mm}')">${mm}</div>`).join('');
+  document.getElementById('timepop').innerHTML=
+    `<div class="tphd">${_timeTarget==='a_end'?'Eindtijd':'Begintijd'}</div>
+     <div class="tpcols">
+       <div class="tpcol"><h5>Uur</h5><div class="tplist" id="tpl_h">${hcol}</div></div>
+       <div class="tpcol"><h5>Min</h5><div class="tplist" id="tpl_m">${mcol}</div></div>
+     </div>
+     <div class="tpfoot"><button class="tpclear" onclick="timeClear()">Wissen</button><button class="tpok" onclick="timeOk()">Klaar</button></div>`;
+  setTimeout(()=>{['tpl_h','tpl_m'].forEach(cid=>{const c=document.getElementById(cid);const s=c&&c.querySelector('.sel');if(s)s.scrollIntoView({block:'center'});});},0);
+}
+function pickH(h){_tH=h;if(!_tM)_tM='00';renderTimePop();}
+function pickM(m){_tM=m;if(!_tH)_tH='09';renderTimePop();}
+function timeClear(){if(_timeTarget)setTimeField(_timeTarget,'');closeTimePop();}
+function timeOk(){if(_timeTarget){const v=(_tH&&_tM)?`${_tH}:${_tM}`:'';setTimeField(_timeTarget,v);}closeTimePop();}
 
 // ---------- bronnen ----------
 function renderBronnen(){
