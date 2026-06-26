@@ -17,18 +17,19 @@ Regels:
 - due = ISO-datum (YYYY-MM-DD) alleen als er een concrete datum/deadline genoemd is, anders null.
 - status = todo | doing | wait | done. "wait" als er op iemand gewacht wordt.
 - project_id = ALLEEN invullen als de klant of het project expliciet en eenduidig in het bericht genoemd wordt en exact matcht met de catalogus. Bij enige twijfel: null (de gebruiker koppelt het dan zelf).
+- contacts = externe personen die EXPLICIET in het bericht voorkomen, met hun gegevens. Wees conservatief: alleen contacten die echt in het bericht staan. Verzin geen e-mailadressen of telefoonnummers. Lege velden laat je leeg (""). Neem GEEN interne Begeister-mensen (Jeroen, Marlon) op.
 - Geef ALLEEN geldige JSON terug, geen uitleg eromheen.`;
 
 /**
  * @param {{text:string, sender?:string, subject?:string, today:string,
  *          catalog:Array<{project_id:string, client:string, project:string}>}} input
- * @returns {Promise<{items:Array, summary:string}>}
+ * @returns {Promise<{items:Array, summary:string, contacts:Array}>}
  */
 export async function extractItems({ text, sender = "", subject = "", today, catalog }) {
   // Geen AI-key? Val terug op één concept-actiepunt zodat intake blijft werken.
   if (!anthropic) {
     const firstLine = (subject || (text || "").split("\n").find(l => l.trim()) || "Nieuw bericht").trim().slice(0, 120);
-    return { items: [{ title: firstLine, owner: "", contact: "", due: null, status: "todo", project_id: null }], summary: firstLine };
+    return { items: [{ title: firstLine, owner: "", contact: "", due: null, status: "todo", project_id: null }], summary: firstLine, contacts: [] };
   }
   const user = `VANDAAG: ${today}
 AFZENDER: ${sender}
@@ -47,6 +48,9 @@ Geef JSON in exact dit formaat:
   "summary": "korte samenvatting van het bericht in 1 zin",
   "items": [
     { "title": "...", "owner": "Jeroen|Marlon|", "contact": "", "due": null, "status": "todo", "project_id": null }
+  ],
+  "contacts": [
+    { "name": "...", "email": "", "phone": "", "company": "", "role": "" }
   ]
 }`;
 
@@ -61,9 +65,13 @@ Geef JSON in exact dit formaat:
   const json = raw.slice(raw.indexOf("{"), raw.lastIndexOf("}") + 1);
   try {
     const parsed = JSON.parse(json);
-    return { items: Array.isArray(parsed.items) ? parsed.items : [], summary: parsed.summary || "" };
+    return {
+      items: Array.isArray(parsed.items) ? parsed.items : [],
+      summary: parsed.summary || "",
+      contacts: Array.isArray(parsed.contacts) ? parsed.contacts : [],
+    };
   } catch (e) {
     console.error("Kon Claude-antwoord niet als JSON lezen:", raw);
-    return { items: [], summary: "" };
+    return { items: [], summary: "", contacts: [] };
   }
 }

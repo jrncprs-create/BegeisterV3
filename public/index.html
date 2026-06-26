@@ -254,6 +254,36 @@
   .src-derived .lbl{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--mut2);margin-bottom:7px}
   .src-derived .di{font-size:12.5px;padding:6px 0;border-bottom:1px dashed var(--line);display:flex;gap:8px;align-items:flex-start}
 
+  /* BRONNEN — strakke icoon-lijst (monochroom, donker) */
+  .src-group{margin-bottom:18px}
+  .src-group-h{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut2);margin:0 0 8px;font-weight:600}
+  .srow{border-bottom:1px solid var(--line)}
+  .srow-head{display:flex;align-items:center;gap:11px;padding:11px 2px;cursor:pointer}
+  .srow-head:hover{background:rgba(255,255,255,.025)}
+  .doc-ic{flex:0 0 auto;width:30px;height:36px;position:relative;color:var(--mut)}
+  .doc-ic svg{width:30px;height:36px;display:block}
+  .srow-main{flex:1;min-width:0}
+  .srow-title{font-size:13.5px;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .srow-sub{font-size:11.5px;color:var(--mut2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .srow-date{font-size:11.5px;color:var(--mut2);flex:0 0 auto;white-space:nowrap;font-variant-numeric:tabular-nums}
+  .srow-menu{position:relative;flex:0 0 auto}
+  .srow-dots{background:transparent;border:none;color:var(--mut);cursor:pointer;font-size:18px;line-height:1;padding:4px 6px;border-radius:7px}
+  .srow-dots:hover{color:var(--txt);background:var(--panel2)}
+  .srow-pop{position:absolute;top:100%;right:0;z-index:30;background:#161616;border:1px solid var(--line);border-radius:10px;padding:5px;display:none;flex-direction:column;min-width:170px;box-shadow:0 12px 30px rgba(0,0,0,.6)}
+  .srow-pop.open{display:flex}
+  .srow-pop button{background:transparent;border:none;color:var(--txt);text-align:left;padding:9px 11px;border-radius:8px;font-size:13.5px;cursor:pointer;white-space:nowrap}
+  .srow-pop button:hover{background:var(--panel2)}
+  .srow-pop button.danger{color:var(--late)}
+  .srow-body{display:none;padding:4px 2px 14px 41px}
+  .srow-body.open{display:block}
+  .srow-text{font-size:12.5px;color:var(--mut);white-space:pre-wrap;line-height:1.55;max-height:320px;overflow:auto}
+  .srow-att{display:flex;align-items:center;gap:9px;padding:7px 0;border-top:1px solid var(--line);cursor:pointer}
+  .srow-att:hover{color:var(--txt)}
+  .file-ic{flex:0 0 auto;width:24px;height:28px;color:var(--mut)}
+  .file-ic svg{width:24px;height:28px;display:block}
+  .srow-att .fname{font-size:12.5px;color:var(--mut)}
+  .srow-derived{margin-top:8px;font-size:11.5px;color:var(--mut2)}
+
   /* RAIL */
   .rail{background:var(--bg);border-right:1px solid var(--line);width:360px;flex:0 0 360px;position:sticky;top:0;height:100dvh;align-self:flex-start;overflow-y:auto;overflow-x:hidden;padding-bottom:150px}
   #wachterBlock{padding:18px 16px 4px}
@@ -326,6 +356,18 @@
   .cpop.open{display:grid}
   .cpop .sw{width:28px;height:28px;border-radius:7px;cursor:pointer;border:2px solid transparent}
   .cpop .sw:hover{border-color:#fff}
+
+  /* CONTACTEN */
+  .cgroup{margin-bottom:18px}
+  .cgroup-h{font-size:11.5px;letter-spacing:1px;text-transform:uppercase;color:var(--mut2);margin:0 0 6px;font-weight:600}
+  .cli{display:flex;align-items:flex-start;gap:12px;padding:11px 2px;border-bottom:1px solid var(--line)}
+  .cli .cmain{flex:1;min-width:0}
+  .cli .cname{font-size:14.5px;font-weight:650;color:var(--txt)}
+  .cli .cmeta{font-size:12.5px;color:var(--mut2);margin-top:2px;word-break:break-word}
+  .cli .kicon{margin-top:1px}
+  .caddrow{display:flex;flex-wrap:wrap;gap:8px;margin:2px 0 18px;align-items:center}
+  .caddrow input{flex:1 1 140px;min-width:0;background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:9px 11px;font-size:14px}
+  .caddrow input::placeholder{color:var(--mut2)}
 
   /* MODAL */
   .overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:20px;z-index:60;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .35s ease,visibility 0s linear .55s}
@@ -532,6 +574,8 @@
   }
   /* desktop-werkblad: 3 gelijke kolommen — In afwachting | Taken | Agenda */
   @media(min-width:1001px){
+    /* topnav uitgekleed: alleen Bronnen, Klanten, Contacten, Meldingen */
+    #nav button[data-v="agenda"],#nav button[data-v="afspraken"],#nav button[data-v="taken"]{display:none}
     .rail{width:33.333vw;flex:0 0 33.333vw}
     #chatDock{width:33.333vw}
     .rail #wachterDrop{display:none}
@@ -543,7 +587,14 @@
     .main.workspace #view-agenda::before{content:"Agenda"}
     .main.workspace #view-agenda.afsprakenmode::before{content:"Afspraken"}
     /* Bronnen & Klanten: één kolom breed i.p.v. volle breedte */
-    #view-bronnen,#view-beheer{max-width:34vw}
+    #view-bronnen,#view-beheer,#view-contacten{max-width:34vw}
+    /* Bronnen / Klanten / Contacten wonen in de eerste kolom (#rail) met eigen scroll */
+    .rail #view-bronnen,.rail #view-beheer,.rail #view-contacten{display:block;max-width:none;position:relative;padding:18px 16px 60px}
+    .rail #view-bronnen.hidden,.rail #view-beheer.hidden,.rail #view-contacten.hidden{display:none!important}
+    /* sluitkruis rechtsboven in een rail-kolom */
+    .rail .rail-close{position:absolute;top:14px;right:12px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;background:transparent;border:none;color:rgba(255,255,255,.6);cursor:pointer;padding:0;z-index:5;transition:color .15s}
+    .rail .rail-close:hover{color:#fff}
+    .rail .rail-coltitle{font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut2);margin:0 0 14px;padding-right:34px}
     /* AFSPRAKEN-knop: tekstknop links naast de +-knop, op kophoogte */
     .agenda-toggle{position:absolute;top:0;right:34px;height:26px;display:flex;align-items:center;border:none;background:transparent;color:var(--mut2);font-size:12px;letter-spacing:1.2px;text-transform:uppercase;cursor:pointer;padding:0;z-index:3;transition:color .15s}
     .agenda-toggle:hover{color:#fff}
@@ -588,6 +639,7 @@
       <button data-v="wachter" onclick="setView('wachter')">In afwachting <span class="badge" id="nb-wachter"></span></button>
       <button data-v="bronnen" onclick="setView('bronnen')">Bronnen <span class="badge" id="nb-bron"></span></button>
       <button data-v="beheer" onclick="setView('beheer')">Klanten</button>
+      <button data-v="contacten" onclick="setView('contacten')">Contacten</button>
       <button id="pushBtn" onclick="enablePush()" title="Meldingen aanzetten">Meldingen</button>
     </nav>
     <div class="spacer"></div>
@@ -639,6 +691,9 @@
           </div>
           <button class="kicon kadd" onclick="addProject()" title="Toevoegen"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg></button>
         </div>
+      </div>
+      <div id="view-contacten" class="hidden">
+        <div id="contactenWrap"></div>
       </div>
       <div id="view-wachter" class="hidden">
         <div id="wachterBlock">
@@ -944,6 +999,7 @@ const SEED={projects:[
 // ---------- state ----------
 let state=load();
 if(!Array.isArray(state.appointments))state.appointments=[];
+if(!Array.isArray(state.contacts))state.contacts=[];
 function load(){try{const s=JSON.parse(localStorage.getItem('begeister_v8'));if(s&&s.projects)return s;}catch(e){}return JSON.parse(JSON.stringify(SEED));}
 function save(){localStorage.setItem('begeister_v8',JSON.stringify(state));}
 let view='taken',activeTab='all',who='Jeroen';
@@ -968,19 +1024,28 @@ function ownerText(it){return (it.owner||'—')+(it.contact?' ↳ '+it.contact:'
 function chipTip(x){const di=dueInfo(x.it.due);return (escapeHtml(x.it.t)+' — '+escapeHtml(ownerText(x.it))+' · '+escapeHtml(projName(x.p.id))+(x.it.due?' · '+escapeHtml(di.txt):'')).replace(/"/g,'&quot;');}
 
 // ---------- view switch ----------
+// welke views horen op desktop in de eerste kolom (#rail)
+const RAILVIEWS=['bronnen','beheer','contacten'];
 function setView(v){
   view=v;
   document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('active',b.dataset.v===v));
+  const d3=isDesk3();
+  // desktop: Taken (midden) + Agenda (rechts) staan ALTIJD; eerste kolom wisselt In afwachting ↔ rail-view
+  const railView = d3 && RAILVIEWS.includes(v);     // Bronnen/Klanten/Contacten in de eerste kolom
   document.getElementById('view-home').classList.toggle('hidden',v!=='home');
-  document.getElementById('view-taken').classList.toggle('hidden',v!=='taken');
-  document.getElementById('view-agenda').classList.toggle('hidden',v!=='agenda');
+  document.getElementById('view-taken').classList.toggle('hidden', d3 ? false : v!=='taken');
+  document.getElementById('view-agenda').classList.toggle('hidden', d3 ? false : v!=='agenda');
   document.getElementById('view-afspraken').classList.toggle('hidden',v!=='afspraken');
-  document.getElementById('view-wachter').classList.toggle('hidden',v!=='wachter');
-  document.getElementById('view-bronnen').classList.toggle('hidden',v!=='bronnen');
-  document.getElementById('view-beheer').classList.toggle('hidden',v!=='beheer');
-  document.getElementById('viewTitle').textContent={home:'',taken:'Taken',agenda:'Agenda',afspraken:'Afspraken',wachter:'In afwachting',bronnen:'Bronnen',beheer:'Klanten & projecten'}[v];
-  // desktop-werkblad: Taken (midden) + Agenda (rechts) tegelijk zichtbaar
-  const ws = isDesk3() && (v==='taken'||v==='agenda');
+  document.getElementById('view-wachter').classList.toggle('hidden', d3 ? true : v!=='wachter');
+  document.getElementById('view-bronnen').classList.toggle('hidden', d3 ? (v!=='bronnen') : v!=='bronnen');
+  document.getElementById('view-beheer').classList.toggle('hidden', d3 ? (v!=='beheer') : v!=='beheer');
+  document.getElementById('view-contacten').classList.toggle('hidden', d3 ? (v!=='contacten') : v!=='contacten');
+  // eerste kolom (#wachterBlock) verbergen wanneer er een rail-view getoond wordt
+  const wb=document.getElementById('wachterBlock'); if(wb) wb.classList.toggle('hidden', d3 && railView);
+  if(typeof _ensureRailCloses==='function') _ensureRailCloses();
+  document.getElementById('viewTitle').textContent={home:'',taken:'Taken',agenda:'Agenda',afspraken:'Afspraken',wachter:'In afwachting',bronnen:'Bronnen',beheer:'Klanten & projecten',contacten:'Contacten'}[v];
+  // desktop-werkblad: Taken (midden) + Agenda (rechts) tegelijk zichtbaar — op desktop ALTIJD aan
+  const ws = d3;
   const main=document.querySelector('.main'); if(main) main.classList.toggle('workspace',ws);
   if(ws){ document.getElementById('view-taken').classList.remove('hidden'); document.getElementById('view-agenda').classList.remove('hidden'); }
   const mh=document.querySelector('.main-head'); if(mh) mh.style.display = (v==='home'||ws) ? 'none' : 'flex';
@@ -999,12 +1064,13 @@ function setWho(){who=document.getElementById('who').value;document.getElementBy
 function render(){
   rebuildColors();
   renderRail();renderBadges();
-  const ws = isDesk3() && (view==='taken'||view==='agenda');   // desktop-werkblad: Taken + Agenda samen
+  const ws = isDesk3();   // desktop-werkblad: Taken + Agenda staan altijd
   if(view==='taken'||ws)renderTaken();
   if(view==='agenda'||ws)renderAgenda();
   if(view==='afspraken')renderAfspraken();
-  if(view==='bronnen')renderBronnen();
-  if(view==='beheer')renderProjecten();
+  if(view==='bronnen'||ws)renderBronnen();
+  if(view==='beheer'||ws)renderProjecten();
+  if(view==='contacten'||ws)renderContacten();
   save();
   _animateNext=false;
 }
@@ -1344,35 +1410,115 @@ function pickM(m){_tM=m;if(!_tH)_tH='09';renderTimePop();}
 function timeClear(){if(_timeTarget)setTimeField(_timeTarget,'');closeTimePop();}
 function timeOk(){if(_timeTarget){const v=(_tH&&_tM)?`${_tH}:${_tM}`:'';setTimeField(_timeTarget,v);}closeTimePop();}
 
-// ---------- bronnen ----------
+// ---------- bronnen (strakke icoon-lijst) ----------
+// SVG-glyphs voor bestand-types (klein, monochroom)
+function _docGlyph(){
+  return '<svg viewBox="0 0 24 30" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M4 1.5h11l5 5V28a.5.5 0 0 1-.5.5H4A.5.5 0 0 1 3.5 28V2a.5.5 0 0 1 .5-.5Z"/><path d="M15 1.5V6.5h5"/><path d="M7 13h10M7 17h10M7 21h6"/></svg>';
+}
+function _fileGlyph(filename){
+  const ext=((filename||'').split('.').pop()||'').toLowerCase();
+  let label = (['jpg','jpeg','png','gif','webp','heic'].includes(ext)?'IMG':(ext?ext.toUpperCase():'•')).slice(0,4);
+  return '<svg viewBox="0 0 24 28" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round">'
+    +'<path d="M4 1.5h10l6 6V26a.5.5 0 0 1-.5.5H4A.5.5 0 0 1 3.5 26V2a.5.5 0 0 1 .5-.5Z"/>'
+    +'<path d="M14 1.5V7.5h6"/>'
+    +`<text x="12" y="20" font-size="6" text-anchor="middle" fill="currentColor" stroke="none" style="font-family:inherit;font-weight:700;letter-spacing:.2px">${escapeHtml(label)}</text>`
+    +'</svg>';
+}
+function _srcTitle(s){
+  if(s.subject) return s.subject;
+  const first=(s.text||'').split('\n').map(x=>x.trim()).find(x=>x.length);
+  if(s.from && first) return s.from+': '+first;
+  return s.from || first || 'Bericht';
+}
+function _srcChanLabel(ch){return ch==='whatsapp'?'WhatsApp':(ch==='email'?'E-mail':(ch==='chat'?'Chat':(ch==='camera'?'Foto':'Geplakt')));}
+function _srcRowHTML(s){
+  const col=PROJCOL[s.proj]||'var(--primary2)';
+  const derived=[];state.projects.forEach(p=>p.items.forEach(it=>{if(it.src===s.id)derived.push(it);}));
+  const dateTxt=s.date?d(s.date).toLocaleDateString('nl-NL',{day:'numeric',month:'short'}):'';
+  const title=_srcTitle(s);
+  const atts=(s.attachFull&&s.attachFull.length)?s.attachFull:((s.attach||[]).map(f=>({filename:f,storage_path:'',mime:''})));
+  const attHTML=atts.map((a,i)=>`<div class="srow-att" onclick="openAttachment('${s.id}',${i})"><span class="file-ic">${_fileGlyph(a.filename)}</span><span class="fname">${escapeHtml(a.filename)}</span></div>`).join('');
+  const derHTML=derived.length?`<div class="srow-derived">${derived.length} actiepunt(en) hieruit gehaald</div>`:'';
+  return `<div class="srow" id="card_${s.id}">
+    <div class="srow-head" onclick="toggleSrc('${s.id}')">
+      <span class="doc-ic">${_docGlyph()}</span>
+      <span class="srow-main">
+        <span class="srow-title">${escapeHtml(title)}</span>
+        <span class="srow-sub">${_srcChanLabel(s.channel)}${atts.length?' · '+atts.length+' bijlage(n)':''}</span>
+      </span>
+      <span class="srow-date">${dateTxt}</span>
+      <span class="srow-menu">
+        <button class="srow-dots" onclick="event.stopPropagation();toggleSrcMenu('${s.id}')" aria-label="Meer">⋯</button>
+        <div class="srow-pop" id="pop_${s.id}">
+          <button onclick="event.stopPropagation();srcPreview('${s.id}')">Preview</button>
+          <button onclick="event.stopPropagation();srcFullscreen('${s.id}')">Volledig scherm</button>
+          <button class="danger" onclick="event.stopPropagation();srcDelete('${s.id}')">Verwijderen</button>
+        </div>
+      </span>
+    </div>
+    <div class="srow-body" id="body_${s.id}">
+      <div class="srow-text">${autolink(escapeHtml(s.full||s.text||s.summary||''),col)}</div>
+      ${attHTML}${derHTML}
+    </div>
+  </div>`;
+}
 function renderBronnen(){
-  const wrap=document.getElementById('bronnenWrap');
+  const wrap=document.getElementById('bronnenWrap'); if(!wrap)return;
   const sorted=[...state.sources].sort((a,b)=>d(b.date)-d(a.date));
-  wrap.innerHTML=sorted.map(s=>{
-    const col=PROJCOL[s.proj]||'var(--primary2)';
-    const derived=[];state.projects.forEach(p=>p.items.forEach(it=>{if(it.src===s.id)derived.push(it);}));
-    const dateTxt=d(s.date).toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'});
-    let bodyInner='';
-    if(s.kind==='chat'){bodyInner=`<div class="chat">${renderChat(s.text,col)}</div>`;}
-    else if(s.kind==='email'){
-      bodyInner=`<div class="summary">${autolink(escapeHtml(s.text),col)}</div>`+
-        (s.full?`<button class="btn ghost" style="margin-top:12px" onclick="toggleFull('${s.id}')" id="fbtn_${s.id}">Toon volledig origineel ▾</button>
-        <div class="full-block" id="full_${s.id}">${autolink(escapeHtml(s.full),col)}</div>`:'');
-    }else{bodyInner=`<div class="summary" style="white-space:pre-wrap">${autolink(escapeHtml(s.text),col)}</div>`;}
-    const imgs=(s.images&&s.images.length)?`<div class="src-img">${s.images.map(im=>`<div class="imgph">🖼 ${escapeHtml(im.label)}</div>`).join('')}</div>`:'';
-    const att=(s.attach&&s.attach.length)?`<div class="src-attach">${s.attach.map(a=>`<span class="att">📎 ${autolink(escapeHtml(a),col)}</span>`).join('')}</div>`:'';
-    const der=derived.length?`<div class="src-derived"><div class="lbl">${derived.length} actiepunt(en) hieruit gehaald — gear is klikbaar</div>
-      ${derived.map(it=>`<div class="di"><span class="pdot" style="background:${PROJCOL[projById_ofItem(it)]};margin-top:5px"></span><span>${autolink(escapeHtml(it.t),col)}</span></div>`).join('')}</div>`:'';
-    return `<div class="src-card" id="card_${s.id}">
-      <div class="src-head" onclick="toggleSrc('${s.id}')">
-        <span class="evdot" style="background:${col};margin-top:0"></span>
-        <span class="src-chan ${s.channel}">${s.channel==='whatsapp'?'WhatsApp':(s.channel==='email'?'E-mail':(s.channel==='chat'?'Chat':(s.channel==='camera'?'Foto':'Plak')))}</span>
-        <span class="src-from">${escapeHtml(s.from)}</span>
-        <span class="src-meta">${dateTxt} · ${derived.length} actiepunt(en) ▾</span>
-      </div>
-      <div class="src-body" id="body_${s.id}">${bodyInner}${imgs}${att}${der}</div>
-    </div>`;
-  }).join('');
+  let html='';
+  // Recent: de nieuwste ~6
+  const recent=sorted.slice(0,6);
+  if(recent.length){
+    html+='<div class="src-group"><div class="src-group-h">Recent</div>'+recent.map(_srcRowHTML).join('')+'</div>';
+  }
+  // Daaronder: gegroepeerd per klant/opdracht
+  const groups={}, order=[];
+  sorted.forEach(s=>{ const name=s.proj?(projName(s.proj)||'Geen klant'):'Geen klant'; if(!groups[name]){groups[name]=[];order.push(name);} groups[name].push(s); });
+  order.sort((a,b)=> a==='Geen klant'?1:(b==='Geen klant'?-1:a.localeCompare(b)));
+  html+=order.map(name=>`<div class="src-group"><div class="src-group-h">${escapeHtml(name)}</div>${groups[name].map(_srcRowHTML).join('')}</div>`).join('');
+  wrap.innerHTML=html||'<div class="hint">Nog geen bronnen.</div>';
+}
+function toggleSrcMenu(id){
+  document.querySelectorAll('.srow-pop.open').forEach(p=>{if(p.id!=='pop_'+id)p.classList.remove('open');});
+  const p=document.getElementById('pop_'+id); if(p)p.classList.toggle('open');
+}
+document.addEventListener('click',e=>{ if(!e.target.closest('.srow-menu')) document.querySelectorAll('.srow-pop.open').forEach(p=>p.classList.remove('open')); });
+function srcPreview(id){toggleSrcMenu(id);const b=document.getElementById('body_'+id);if(b)b.classList.add('open');}
+async function srcFullscreen(id){
+  toggleSrcMenu(id);
+  const s=state.sources.find(x=>x.id===id); if(!s)return;
+  const atts=(s.attachFull&&s.attachFull.length)?s.attachFull:[];
+  if(atts.length && atts[0].storage_path){ await openAttachment(id,0); return; }
+  // tekst: glas-overlay met de volledige tekst
+  const col=PROJCOL[s.proj]||'var(--primary2)';
+  const ov=document.createElement('div'); ov.className='overlay';
+  ov.innerHTML='<div class="modal" style="width:680px;max-width:94vw;max-height:86vh;overflow:auto">'
+    +'<button class="modal-close" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>'
+    +'<h3>'+escapeHtml(_srcTitle(s))+'</h3>'
+    +'<div style="font-size:13.5px;color:var(--mut);white-space:pre-wrap;line-height:1.6">'+autolink(escapeHtml(s.full||s.text||s.summary||''),col)+'</div></div>';
+  document.body.appendChild(ov);
+  requestAnimationFrame(()=>ov.classList.add('open'));
+  const close=()=>{ov.classList.remove('open');setTimeout(()=>ov.remove(),320);};
+  ov.querySelector('.modal-close').onclick=close;
+  ov.addEventListener('click',e=>{if(e.target===ov)close();});
+}
+async function openAttachment(id,i){
+  const s=state.sources.find(x=>x.id===id); if(!s)return;
+  const atts=(s.attachFull&&s.attachFull.length)?s.attachFull:[];
+  const a=atts[i]; if(!a||!a.storage_path){ return; }
+  let url='';
+  try{
+    const pub=sb.storage.from('intake').getPublicUrl(a.storage_path);
+    url=pub&&pub.data?pub.data.publicUrl:'';
+    if(!url){ const signed=await sb.storage.from('intake').createSignedUrl(a.storage_path,3600); url=signed&&signed.data?signed.data.signedUrl:''; }
+  }catch(_){}
+  if(url) window.open(url,'_blank','noopener');
+}
+async function srcDelete(id){
+  toggleSrcMenu(id);
+  if(!(await uiConfirm('Deze bron definitief verwijderen?')))return;
+  await sb.from('sources').delete().eq('id',id);
+  await refresh();
 }
 function renderChat(text,col){
   const lines=text.split('\n');const msgs=[];let cur=null;
@@ -1386,6 +1532,50 @@ function renderChat(text,col){
 function toggleSrc(id){document.getElementById('body_'+id).classList.toggle('open');}
 function toggleFull(id){const f=document.getElementById('full_'+id);const b=document.getElementById('fbtn_'+id);f.classList.toggle('open');b.textContent=f.classList.contains('open')?'Verberg origineel ▴':'Toon volledig origineel ▾';}
 function gotoSource(sid){setView('bronnen');setTimeout(()=>{const b=document.getElementById('body_'+sid);if(b){b.classList.add('open');document.getElementById('card_'+sid).scrollIntoView({behavior:'smooth',block:'center'});}},60);}
+
+// ---------- contacten ----------
+function renderContacten(){
+  const wrap=document.getElementById('contactenWrap'); if(!wrap)return;
+  const contacts=(state.contacts||[]);
+  // toevoeg-rij bovenaan
+  let html='<div class="caddrow">'
+    +'<input id="cnew_name" placeholder="Naam" autocomplete="off" />'
+    +'<input id="cnew_email" type="email" placeholder="E-mail" autocomplete="off" />'
+    +'<input id="cnew_company" placeholder="Bedrijf / klant" autocomplete="off" />'
+    +'<button class="kicon kadd" onclick="addContact()" title="Toevoegen" aria-label="Toevoegen"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg></button>'
+    +'</div>';
+  // groeperen per bedrijf/klant
+  const groups={}, order=[];
+  contacts.forEach(c=>{ const g=(c.company||'').trim()||'Overig'; if(!groups[g]){groups[g]=[];order.push(g);} groups[g].push(c); });
+  order.sort((a,b)=> a==='Overig'?1:(b==='Overig'?-1:a.localeCompare(b)));
+  if(!contacts.length){
+    html+='<div class="hint">Nog geen contacten. Ze verschijnen hier automatisch uit binnengekomen berichten, of voeg ze handmatig toe.</div>';
+  }else{
+    html+=order.map(g=>{
+      const rows=groups[g].map(c=>{
+        const meta=[c.email,c.phone,c.role].filter(Boolean).map(escapeHtml).join(' · ');
+        return `<div class="cli"><div class="cmain"><div class="cname">${escapeHtml(c.name||'')}</div>`
+          +(meta?`<div class="cmeta">${meta}</div>`:'')+`</div>`
+          +`<button class="kicon" onclick="deleteContact('${c.id}')" title="Verwijderen" aria-label="Verwijderen"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M5 7h14M9 7V5h6v2M7 7l1 13h8l1-13"/></svg></button></div>`;
+      }).join('');
+      return `<div class="cgroup"><div class="cgroup-h">${escapeHtml(g)}</div>${rows}</div>`;
+    }).join('');
+  }
+  wrap.innerHTML=html;
+}
+async function addContact(){
+  const name=(document.getElementById('cnew_name').value||'').trim(); if(!name){alert('Vul een naam in.');return;}
+  const email=(document.getElementById('cnew_email').value||'').trim();
+  const company=(document.getElementById('cnew_company').value||'').trim();
+  await sb.from('contacts').insert({name,email:email||null,company:company||null});
+  document.getElementById('cnew_name').value='';document.getElementById('cnew_email').value='';document.getElementById('cnew_company').value='';
+  await refresh();
+}
+async function deleteContact(id){
+  if(!(await uiConfirm('Dit contact verwijderen?')))return;
+  await sb.from('contacts').delete().eq('id',id);
+  await refresh();
+}
 
 // ---------- In afwachting ----------
 let wachterTab='all';
@@ -1438,7 +1628,7 @@ async function approveWait(id){
   await sb.from('items').update({status:'todo'}).eq('id',id);
   notifyPartner((who||'Iemand')+' keurde goed: '+r.it.t);
   lastAddedIds=[id]; _animateNext=true;
-  await refresh();
+  await refreshRail();
   setTimeout(()=>{const el=document.querySelector('#list .task[data-id="'+id+'"]');if(el){el.classList.add('justlanded');el.scrollIntoView&&el.scrollIntoView({block:'center',behavior:'smooth'});setTimeout(()=>el.classList.remove('justlanded'),1400);}},120);
 }
 // afwijzen: definitief verwijderen (met animatie)
@@ -1449,7 +1639,7 @@ async function rejectWait(id){
   if(card){ card.classList.add('rejecting'); await new Promise(res=>setTimeout(res,340)); }
   await sb.from('items').delete().eq('id',id);
   notifyPartner((who||'Iemand')+' verwijderde: '+r.it.t);
-  await refresh();
+  await refreshRail();
 }
 // taken handmatig herschikken (sleep) — eigen volgorde overschrijft auto-sortering
 let _dragEl=null,_ph=null;
@@ -1770,18 +1960,24 @@ function _mapSource(s,atts){
   const kind = s.channel==='whatsapp'?'chat':(s.channel==='email'?'email':'paste');
   const text = s.channel==='email' ? (s.summary||s.body||'') : (s.body||'');
   const full = (s.channel==='email' && s.summary && s.body) ? s.body : null;
-  return {id:s.id,channel:s.channel,from:s.sender||'',proj:s.project_id,date:(s.received_at||'').slice(0,10),
-          kind,text,summary:s.summary||'',full,attach:atts.filter(a=>a.source_id===s.id).map(a=>a.filename||'bijlage'),images:[]};
+  const myAtts=atts.filter(a=>a.source_id===s.id);
+  return {id:s.id,channel:s.channel,from:s.sender||'',subject:s.subject||'',proj:s.project_id,date:(s.received_at||'').slice(0,10),
+          kind,text,summary:s.summary||'',full,
+          attach:myAtts.map(a=>a.filename||'bijlage'),
+          attachFull:myAtts.map(a=>({filename:a.filename||'bijlage',storage_path:a.storage_path||'',mime:a.mime||''})),
+          images:[]};
 }
 async function sbLoad(){
-  const [p,i,s,a,ap] = await Promise.all([
+  const [p,i,s,a,ap,c] = await Promise.all([
     sb.from('projects').select('*').order('sort'),
     sb.from('items').select('*').order('created_at'),
     sb.from('sources').select('*').order('received_at',{ascending:false}),
     sb.from('attachments').select('*'),
     sb.from('appointments').select('*').order('date'),
+    sb.from('contacts').select('*').order('name'),
   ]);
   const projects=p.data||[], items=i.data||[], sources=s.data||[], atts=a.data||[];
+  state.contacts = (c && c.data) ? c.data : [];
   state.appointments = (ap && ap.data ? ap.data : []).map(_mapAppt);
   state.projects = projects.map(pr=>({id:pr.id,client:pr.client,project:pr.project,color:pr.color,icon:pr.icon,role:pr.role,
     items: items.filter(x=>x.project_id===pr.id).map(_mapItem)}));
@@ -1796,12 +1992,17 @@ async function sbLoad(){
   if(activeTab!=='all' && !state.projects.find(x=>x.id===activeTab)) activeTab='all';
 }
 async function refresh(){ await sbLoad(); render(); }
+// Gerichte verversingen: laad data opnieuw, maar herteken alleen de relevante kolom(men).
+// Zo verlies je geen scrollpositie in de andere kolommen.
+async function refreshTaken(){ await sbLoad(); rebuildColors(); renderTaken(); renderRail(); renderBadges(); save(); _animateNext=false; }
+async function refreshRail(){ await sbLoad(); rebuildColors(); renderRail(); renderBadges(); if(isDesk3())renderTaken(); save(); _animateNext=false; }
+async function refreshAgenda(){ await sbLoad(); rebuildColors(); renderAgenda(); renderBadges(); save(); _animateNext=false; }
 
 // ── mutaties (overschrijven de lokale versies) ──
 toggle = async function(id){const r=findItem(id);if(!r)return;const ns=r.it.status==='done'?'todo':'done';
   await sb.from('items').update({status:ns}).eq('id',id);
   notifyPartner((who||'Iemand')+' '+(ns==='done'?'rondde af':'heropende')+': '+r.it.t);
-  await refresh();};
+  await refreshTaken();};
 
 saveModal = async function(){
   if(!editingId){   // nieuwe taak
@@ -1814,7 +2015,7 @@ saveModal = async function(){
     if(ins&&ins.data) lastAddedIds=[ins.data.id];
     if(rec.project_id && activeTab!=='all') activeTab=rec.project_id;
     notifyPartner((who||'Iemand')+' voegde een taak toe: '+title);
-    _animateNext=true; closeModal(); await refresh(); return;
+    _animateNext=true; closeModal(); await refreshTaken(); return;
   }
   const r=findItem(editingId);if(!r)return;
   const patch={title:document.getElementById('m_t').value.trim()||r.it.t,
@@ -1825,19 +2026,19 @@ saveModal = async function(){
   await sb.from('items').update(patch).eq('id',editingId);
   if(patch.project_id && patch.project_id!==r.p.id && activeTab!=='all') activeTab=patch.project_id;
   notifyPartner((who||'Iemand')+' paste een taak aan: '+(patch.title||r.it.t));
-  closeModal(); await refresh();};
+  closeModal(); await refreshTaken();};
 
 deleteItem = async function(){const r=findItem(editingId);if(!r)return;
   await sb.from('items').delete().eq('id',editingId);
   notifyPartner((who||'Iemand')+' verwijderde: '+r.it.t);
-  closeModal(); await refresh();};
+  closeModal(); await refreshTaken();};
 
 function firstRealId(){const p=state.projects.find(x=>x.id!=='__inbox__');return p&&p.id;}
 addItem = async function(){const inp=document.getElementById('newTitle');const raw=inp.value.trim();if(!raw)return;
   let pid=(activeTab==='all'||activeTab==='__inbox__')?firstRealId():activeTab; if(!pid)return;
   const it=parseLine(raw);
   await sb.from('items').insert({project_id:pid,title:it.t,owner:it.owner||null,contact:it.contact||null,due:it.due||null,status:'todo'});
-  inp.value=''; await refresh();};
+  inp.value=''; await refreshTaken();};
 
 parseRaw = async function(){const ta=document.getElementById('raw');const text=ta.value.trim();const hint=document.getElementById('ingestHint');
   if(!text){hint.textContent='Plak eerst wat tekst.';return;}
@@ -1892,14 +2093,40 @@ function applyLayout(){
   const wview=document.getElementById('view-wachter');
   const wchat=document.getElementById('welcomeChat');
   if(wchat){ wchat.appendChild(ct); wchat.appendChild(cd); }   // chat woont in de beginscherm-overlay
+  const d3=isDesk3();
+  const main=document.querySelector('.main');
+  const vBron=document.getElementById('view-bronnen');
+  const vBeh=document.getElementById('view-beheer');
+  const vCon=document.getElementById('view-contacten');
   if(mob){ wview.appendChild(wb); }
-  else { rail.appendChild(wb); if(view==='home'||view==='wachter') setView('taken'); }
+  else { rail.appendChild(wb); }
+  // Bronnen/Klanten/Contacten: desktop → eerste kolom (#rail), mobiel → terug in #main
+  if(d3){ if(vBron)rail.appendChild(vBron); if(vBeh)rail.appendChild(vBeh); if(vCon)rail.appendChild(vCon); }
+  else if(main){ if(vBron)main.appendChild(vBron); if(vBeh)main.appendChild(vBeh); if(vCon)main.appendChild(vCon); }
+  if(!mob && (view==='home')) setView('taken');
+  _ensureRailCloses();
   _lastMob=mob;
+}
+// sluitkruis + kop in elke rail-view (Bronnen/Klanten/Contacten) op desktop; weg op mobiel
+function _ensureRailCloses(){
+  const _xIc='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+  const spec=[['view-bronnen','Bronnen'],['view-beheer','Klanten & projecten'],['view-contacten','Contacten']];
+  const d3=isDesk3();
+  spec.forEach(([vid,label])=>{
+    const v=document.getElementById(vid); if(!v)return;
+    let cl=v.querySelector(':scope > .rail-close'); let tt=v.querySelector(':scope > .rail-coltitle');
+    if(d3){
+      if(!cl){ cl=document.createElement('button'); cl.className='rail-close'; cl.title='Sluiten'; cl.setAttribute('aria-label','Sluiten'); cl.innerHTML=_xIc; cl.onclick=()=>setView('taken'); v.insertBefore(cl,v.firstChild); }
+      if(!tt){ tt=document.createElement('div'); tt.className='rail-coltitle'; tt.textContent=label; v.insertBefore(tt, cl.nextSibling); }
+    }else{
+      if(cl)cl.remove(); if(tt)tt.remove();
+    }
+  });
 }
 let _lastD3=isDesk3();
 function setTbh(){const tb=document.querySelector('.topbar');if(tb)document.documentElement.style.setProperty('--tbh',Math.round(tb.getBoundingClientRect().height)+'px');}
 setTbh(); window.addEventListener('load',setTbh);
-window.addEventListener('resize',()=>{ setTbh(); if(isMobile()!==_lastMob) applyLayout(); if(isDesk3()!==_lastD3){ _lastD3=isDesk3(); if(view==='taken'||view==='agenda') setView(view); } });
+window.addEventListener('resize',()=>{ setTbh(); if(isMobile()!==_lastMob) applyLayout(); if(isDesk3()!==_lastD3){ _lastD3=isDesk3(); applyLayout(); setView(view); } });
 // "Net binnen"-items laten na een uur vanzelf naar hun normale plek zakken
 setInterval(()=>{ try{ if(document.querySelector('.overlay.open'))return; if(document.querySelector('.task.dragging'))return; if(typeof allItems==='function' && allItems().some(x=>(Date.now()-(x.it.created||0))<3900000)) render(); }catch(_){ } }, 60000);
 const UNSPLASH_KEY="zSttsMB9D_sKDPLNBZp4M7VUB4kgPMXZQzD52xOAiHU";

@@ -32,6 +32,32 @@ async function loadCatalog(db) {
   }));
 }
 
+// Gevonden contacten opslaan. Dedupe: op e-mail indien aanwezig (upsert),
+// anders alleen inserten als er nog geen contact met dezelfde (lower) naam is.
+async function saveContacts(db, contacts, sourceId, projectId) {
+  for (const c of (contacts || [])) {
+    const name = (c.name || "").trim();
+    if (!name) continue;
+    const email = (c.email || "").trim().toLowerCase();
+    const row = {
+      name,
+      email: email || null,
+      phone: (c.phone || "").trim() || null,
+      company: (c.company || "").trim() || null,
+      role: (c.role || "").trim() || null,
+      source_id: sourceId || null,
+      project_id: projectId || null,
+    };
+    if (email) {
+      await db.from("contacts").upsert(row, { onConflict: "email" });
+    } else {
+      const { data: existing } = await db
+        .from("contacts").select("id").ilike("name", name).maybeSingle();
+      if (!existing) await db.from("contacts").insert(row);
+    }
+  }
+}
+
 // Eén IMAP-sessie: verwerk alle ongelezen berichten.
 export async function run() {
   const db = supa();
@@ -94,8 +120,8 @@ export async function run() {
           }
         }
 
-        // 3) Claude haalt actiepunten eruit
-        const { items, summary } = await extractItems({
+        // 3) Claude haalt actiepunten (en contacten) eruit
+        const { items, summary, contacts } = await extractItems({
           text: body, sender, subject: mail.subject || "", today, catalog,
         });
         if (items.length) {
@@ -109,6 +135,14 @@ export async function run() {
             status: ["todo", "doing", "wait", "done"].includes(it.status) ? it.status : "todo",
           })));
         }
+
+        // 3b) gevonden contacten opslaan (dedupe op e-mail; anders op naam)
+        try {
+          // project_id van dit bericht: het eerste item dat een eenduidig project kreeg
+          const msgProject = (items.find(it => it.project_id) || {}).project_id || null;
+          await saveContacts(db, contacts, source.id, msgProject);
+        } catch (e) { console.error("contact-fout:", e.message); }
+
         await db.from("sources").update({ processed: true, summary: summary || null }).eq("id", source.id);
 
         // 1 melding per binnengekomen bericht — korte AI-samenvatting
