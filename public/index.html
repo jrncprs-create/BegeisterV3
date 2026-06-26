@@ -1373,7 +1373,8 @@ function renderRail(){
     if(it.status==='done')return;
     const n=daysUntil(it.due);
     let sev=null;
-    if(n!==null&&n<0)sev=0;
+    if(p.id==='__inbox__')sev=-1;             // niet-toegewezen → bovenaan In afwachting
+    else if(n!==null&&n<0)sev=0;
     else if(n!==null&&n<=1)sev=1;
     else if(it.status==='wait')sev=2;
     else if(n!==null&&n<=9)sev=3;
@@ -1512,7 +1513,8 @@ const CONTACTS=['Willem','Leon','Joep','Idz','Noa','Hans','Stavros','Len'];
 function uniqueClients(){const seen=[];state.projects.forEach(p=>{if(p.id==='__inbox__')return;if(!seen.includes(p.client))seen.push(p.client);});return seen;}
 function fillProjectSelect(client,selId){
   const sel=document.getElementById('m_project');
-  sel.innerHTML=state.projects.filter(p=>p.client===client).map(p=>`<option value="${p.id}">${escapeHtml(p.project||'—')}</option>`).join('');
+  if(client==='__none__'){ sel.innerHTML='<option value="">— geen opdracht —</option>'; sel.value=''; return; }
+  sel.innerHTML=state.projects.filter(p=>p.client===client&&p.id!=='__inbox__').map(p=>`<option value="${p.id}">${escapeHtml(p.project||'—')}</option>`).join('');
   if(selId)sel.value=selId;
 }
 function onClientChange(){fillProjectSelect(document.getElementById('m_client').value);}
@@ -1524,10 +1526,11 @@ function openModal(id, src){
   const cs=[...CONTACTS];if(cur&&!cs.includes(cur))cs.unshift(cur);
   document.getElementById('m_contact').innerHTML='<option value="">Contact</option>'+cs.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
   document.getElementById('m_contact').value=cur;
-  document.getElementById('m_client').innerHTML=uniqueClients().map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
-  const clientVal=isNew?((activeTab!=='all'&&projById(activeTab))?projById(activeTab).client:(uniqueClients()[0]||'')):(r.p.id==='__inbox__'?(uniqueClients()[0]||''):r.p.client);
+  document.getElementById('m_client').innerHTML='<option value="__none__">— Geen opdrachtgever —</option>'+uniqueClients().map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+  const inInbox = !isNew && r.p.id==='__inbox__';
+  const clientVal = isNew ? '__none__' : (inInbox ? '__none__' : r.p.client);
   document.getElementById('m_client').value=clientVal;
-  fillProjectSelect(clientVal,isNew?null:(r.p.id==='__inbox__'?null:r.p.id));
+  fillProjectSelect(clientVal,(isNew||inInbox)?null:r.p.id);
   document.getElementById('m_t').value=isNew?'':r.it.t;
   document.getElementById('m_status').value=isNew?'todo':r.it.status;
   mDue=isNew?null:(r.it.due||null);duePickerRef=mDue||iso(TODAY);updateDueLabel();
@@ -1657,7 +1660,7 @@ async function sbLoad(){
   const known=new Set(projects.map(pr=>pr.id));
   const orphans=items.filter(x=>!x.project_id || !known.has(x.project_id));
   if(orphans.length){
-    state.projects.push({id:'__inbox__',client:'Inbox',project:'nog te sorteren',color:'#9ca3af',icon:'📥',role:'nieuw binnengekomen — koppel aan een klant',
+    state.projects.push({id:'__inbox__',client:'Geen opdrachtgever',project:'',color:'#9ca3af',icon:'📥',role:'nieuw binnengekomen — koppel aan een opdrachtgever',
       items:orphans.map(_mapItem)});
   }
   state.sources = sources.map(src=>_mapSource(src,atts));
@@ -1689,7 +1692,7 @@ saveModal = async function(){
     owner:document.getElementById('m_owner').value||null,
     contact:document.getElementById('m_contact').value||null,
     due:mDue||null,status:document.getElementById('m_status').value,
-    project_id:document.getElementById('m_project').value};
+    project_id:document.getElementById('m_project').value||null};
   await sb.from('items').update(patch).eq('id',editingId);
   if(patch.project_id && patch.project_id!==r.p.id && activeTab!=='all') activeTab=patch.project_id;
   notifyPartner((who||'Iemand')+' paste een taak aan: '+(patch.title||r.it.t));
