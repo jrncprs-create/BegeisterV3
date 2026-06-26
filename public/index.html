@@ -456,9 +456,11 @@
   .welcome-overlay .msg.ai{background:rgba(26,26,26,.42);border:1px solid rgba(255,255,255,.12);color:#fff}
   .welcome-overlay .msg.me{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.22);color:#fff}
   .welcome-overlay .msg.proposal{background:rgba(20,20,20,.42);border:1px solid rgba(255,255,255,.12)}
-  /* quote/asterisk faden weg zodra je typt of chat hebt */
-  #homeIntro{transition:opacity .45s ease,max-height .5s ease,margin .5s ease}
-  .welcome-overlay.chatting #homeIntro{opacity:0;max-height:0;margin:0;overflow:hidden;pointer-events:none}
+  /* quote/asterisk schuiven langzaam omhoog het venster uit zodra je typt; chat zakt met dezelfde inertia mee naar onder */
+  #homeIntro{transition:transform 1.2s cubic-bezier(.22,1,.36,1)}
+  #welcomeChat{transition:transform 1.2s cubic-bezier(.22,1,.36,1)}
+  .welcome-overlay.chatting #homeIntro{transform:translateY(-82vh);pointer-events:none}
+  .welcome-overlay.chatting #welcomeChat{transform:translateY(14vh)}
   .welcome-close:hover{border-color:#fff;color:#fff}
   .welcome-overlay.playing .welcome-close{animation:fadeUp 1.7s ease 2.2s both}
   /* intro-animatie: elegant & traag — sterretje gecentreerd → schuift zacht omhoog + verkleint, tekst fadet rustig in */
