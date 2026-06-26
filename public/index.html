@@ -422,6 +422,22 @@
   .ctx-intro{font-size:12.5px;color:var(--mut2);margin:0 0 6px;line-height:1.5}
   .ctx-label{font-size:11.5px;letter-spacing:.6px;text-transform:uppercase;color:var(--mut2);margin:16px 0 7px;font-weight:600}
   #ctxOverlay .modal textarea{min-height:96px;line-height:1.5}
+  .dbx-tools{display:flex;gap:8px;align-items:center;margin:0 0 10px}
+  .dbx-back{flex:0 0 auto;width:38px;height:38px;display:flex;align-items:center;justify-content:center;background:transparent;border:1px solid var(--line);border-radius:10px;color:var(--mut);cursor:pointer}
+  .dbx-back:hover{color:#fff;border-color:var(--mut2)}
+  .dbx-tools input{flex:1;min-width:0;background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:10px;padding:10px 13px;font-size:14px}
+  .dbx-tools input::placeholder{color:var(--mut2)}
+  .dbx-crumb{font-size:12px;color:var(--mut2);margin:0 0 10px;word-break:break-all}
+  .dbx-list{max-height:52vh;overflow:auto;scrollbar-width:none}
+  .dbx-list::-webkit-scrollbar{display:none}
+  .dbx-row{display:flex;align-items:center;gap:11px;padding:11px 4px;border-bottom:1px solid var(--line);cursor:pointer}
+  .dbx-row:hover{background:rgba(255,255,255,.03)}
+  .dbx-ic{flex:0 0 auto;font-size:16px;width:20px;text-align:center}
+  .dbx-name{flex:1;min-width:0;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .dbx-chev{flex:0 0 auto;color:var(--mut2)}
+  .dbx-empty{font-size:13px;color:var(--mut2);padding:18px 4px;text-align:center}
+  .dbx-connect{text-align:center;padding:22px 8px}
+  .dbx-connect p{font-size:13.5px;color:var(--mut);margin:0 0 14px;line-height:1.5}
 
   /* MODAL */
   .overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:20px;z-index:60;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .35s ease,visibility 0s linear .55s}
@@ -921,13 +937,25 @@
   </div>
 </div>
 
+<!-- DROPBOX-BROWSER MODAL -->
+<div class="overlay" id="dbxOverlay">
+  <div class="modal">
+    <button class="modal-close" onclick="closeDbxBrowser()" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <h3>Dropbox-bestand koppelen</h3>
+    <div class="dbx-tools">
+      <button class="dbx-back" onclick="dbxUp()" title="Omhoog" aria-label="Omhoog"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+      <input id="dbx_search" placeholder="Zoeken in je Dropbox…" autocomplete="off" oninput="dbxSearchDebounced(this.value)" />
+    </div>
+    <div class="dbx-crumb" id="dbx_crumb"></div>
+    <div class="dbx-list" id="dbx_list"></div>
+  </div>
+</div>
+
 <div id="duepop" class="duepop"></div>
 <div id="timeOverlay" class="time-overlay" onclick="if(event.target.id==='timeOverlay')closeTimePop()">
   <div class="timepop" id="timepop"></div>
 </div>
 <div id="cpop" class="cpop"></div>
-<script type="text/javascript" src="https://www.dropbox.com/static/api/2/dropins.js" id="dropboxjs" data-app-key="dy4x2fynsdg7fa9"></script>
-
 <script>
 // ---------- helpers ----------
 const TODAY=(()=>{const n=new Date();return new Date(n.getFullYear(),n.getMonth(),n.getDate());})();
@@ -1818,12 +1846,39 @@ function _filesHTML(type,id){
   const list=_filesFor(type,id).map(_fileRow).join('');
   return `<div class="kfiles"><div class="kfiles-h"><span>Bestanden</span><button class="kfiles-add" onclick="event.stopPropagation();dropboxPick('${type}','${id}')" title="Koppel Dropbox-bestand"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg> Dropbox</button></div>${list}</div>`;
 }
-function dropboxPick(type,id){
-  if(!(window.Dropbox&&Dropbox.choose)){ uiConfirm('Dropbox is nog aan het laden — probeer het zo nog eens.'); return; }
-  Dropbox.choose({linkType:'preview',multiselect:true,success:async(files)=>{
-    const rows=(files||[]).map(fl=>({owner_type:type,owner_id:String(id),name:fl.name,link:fl.link,icon:fl.icon||null,bytes:fl.bytes||null}));
-    if(rows.length){ try{ await sb.from('files').insert(rows); }catch(_){} await refresh(); }
-  }});
+let _dbxOwner=null,_dbxPath='',_dbxBusy=false,_dbxSearchT=null;
+function dropboxPick(type,id){ openDbxBrowser(type,id); }
+function openDbxBrowser(type,id){ _dbxOwner={type,id}; _dbxPath=''; const s=document.getElementById('dbx_search'); if(s)s.value=''; const ov=document.getElementById('dbxOverlay'); if(!ov)return; ov.style.top=''; ov.classList.add('open'); dbxLoad(''); }
+function closeDbxBrowser(){ const ov=document.getElementById('dbxOverlay'); if(ov)ov.classList.remove('open'); }
+async function dbxLoad(path){
+  _dbxPath=path||''; const list=document.getElementById('dbx_list'); const crumb=document.getElementById('dbx_crumb');
+  if(crumb)crumb.textContent=_dbxPath?('📁 '+_dbxPath):'📁 /';
+  if(list)list.innerHTML='<div class="dbx-empty">Laden…</div>';
+  let d; try{ d=await fetch('/api/dropbox/list',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'list',path:_dbxPath})}).then(r=>r.json()); }catch(_){ if(list)list.innerHTML='<div class="dbx-empty">Kon Dropbox niet bereiken.</div>'; return; }
+  if(d.connected===false){ if(list)list.innerHTML='<div class="dbx-connect"><p>Begeister is nog niet aan Dropbox gekoppeld.</p><button class="prop-save" onclick="location.href=\'/api/dropbox/connect\'">Verbind Dropbox</button></div>'; return; }
+  if(d.error){ if(list)list.innerHTML='<div class="dbx-empty">Dropbox-fout: '+escapeHtml(d.error)+'</div>'; return; }
+  dbxRender(d.entries||[]);
+}
+function dbxRender(entries){
+  const list=document.getElementById('dbx_list'); if(!list)return;
+  if(!entries.length){ list.innerHTML='<div class="dbx-empty">Niets gevonden.</div>'; return; }
+  list.innerHTML=entries.map(e=>{
+    const folder=e.type==='folder'; const p=(e.path||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'"); const nm=(e.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    const onclick= folder? `dbxLoad('${p}')` : `dbxPickFile('${p}','${nm}')`;
+    return `<div class="dbx-row" onclick="${onclick}"><span class="dbx-ic">${folder?'📁':'📄'}</span><span class="dbx-name">${escapeHtml(e.name)}</span>${folder?'<span class="dbx-chev">›</span>':''}</div>`;
+  }).join('');
+}
+function dbxUp(){ if(!_dbxPath)return; const p=_dbxPath.split('/'); p.pop(); dbxLoad(p.join('/')); }
+function dbxSearchDebounced(q){ clearTimeout(_dbxSearchT); _dbxSearchT=setTimeout(()=>dbxSearch(q),350); }
+async function dbxSearch(q){ q=(q||'').trim(); if(!q){ dbxLoad(_dbxPath); return; } const list=document.getElementById('dbx_list'); if(list)list.innerHTML='<div class="dbx-empty">Zoeken…</div>'; let d; try{ d=await fetch('/api/dropbox/list',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'search',query:q})}).then(r=>r.json()); }catch(_){ return; } if(!d||d.connected===false){ dbxLoad(''); return; } dbxRender((d.entries||[]).filter(e=>e.type!=='folder')); }
+async function dbxPickFile(path,name){
+  if(_dbxBusy)return; _dbxBusy=true; const list=document.getElementById('dbx_list'); const prev=list?list.innerHTML:''; if(list)list.innerHTML='<div class="dbx-empty">Koppelen…</div>';
+  try{
+    const l=await fetch('/api/dropbox/list',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'link',dropbox_path:path})}).then(r=>r.json());
+    const link=l&&l.link; if(!link){ if(list)list.innerHTML=prev; _dbxBusy=false; await uiConfirm('Kon geen deel-link maken voor dit bestand.'); return; }
+    await sb.from('files').insert([{owner_type:_dbxOwner.type,owner_id:String(_dbxOwner.id),name:name,link:link,icon:null}]);
+    _dbxBusy=false; closeDbxBrowser(); await refresh();
+  }catch(e){ if(list)list.innerHTML=prev; _dbxBusy=false; }
 }
 async function deleteFile(fid){ if(!(await uiConfirm('Bestand ontkoppelen?')))return; await sb.from('files').delete().eq('id',fid); await refresh(); }
 async function summarizeFile(fid){
@@ -3012,7 +3067,8 @@ async function startApp(session){
   await refresh();
   loadUsage();
   applyLayout();
-  if(!_booted){_booted=true; setView(isMobile()?'wachter':'taken'); showWelcome(); chatGreet();}
+  if(!_booted){_booted=true; setView(isMobile()?'wachter':'taken'); showWelcome(); chatGreet();
+    if(/[?&]dropbox=ok/.test(location.search)){ try{history.replaceState({},'',location.pathname);}catch(_){ } setTimeout(()=>{try{uiConfirm('✅ Dropbox is gekoppeld. Je kunt nu bestanden koppelen aan projecten en taken.');}catch(_){}} ,400); } }
 }
 sb.auth.getSession().then(({data})=>{ if(data.session) startApp(data.session); else showLogin(); });
 sb.auth.onAuthStateChange((_e,session)=>{ if(session) startApp(session); else showLogin(); });
