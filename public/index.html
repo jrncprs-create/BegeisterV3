@@ -1523,6 +1523,28 @@ function fillProjectSelect(client,selId){
   sel.innerHTML=state.projects.filter(p=>p.client===client&&p.id!=='__inbox__').map(p=>`<option value="${p.id}">${escapeHtml(p.project||'—')}</option>`).join('')+'<option value="__new__">+ Nieuw project…</option>';
   if(selId)sel.value=selId;
 }
+function uiPrompt(title, value=''){
+  return new Promise(resolve=>{
+    const ov=document.createElement('div'); ov.className='overlay';
+    ov.innerHTML='<div class="modal" style="width:420px;max-width:92vw;padding:24px 22px">'
+      +'<button class="modal-close" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>'
+      +'<h3 style="margin:0 0 16px">'+escapeHtml(title)+'</h3>'
+      +'<input type="text" class="uip-input" autocomplete="off" />'
+      +'<div class="foot" style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px">'
+      +'<button class="btn ghost uip-cancel">Annuleren</button>'
+      +'<button class="btn uip-ok">OK</button></div></div>';
+    document.body.appendChild(ov);
+    const inp=ov.querySelector('.uip-input'); inp.value=value;
+    requestAnimationFrame(()=>ov.classList.add('open'));
+    const done=(val)=>{ ov.classList.remove('open'); setTimeout(()=>ov.remove(),320); resolve(val); };
+    ov.querySelector('.uip-ok').onclick=()=>done(inp.value.trim());
+    ov.querySelector('.uip-cancel').onclick=()=>done(null);
+    ov.querySelector('.modal-close').onclick=()=>done(null);
+    ov.addEventListener('click',e=>{ if(e.target===ov) done(null); });
+    inp.addEventListener('keydown',e=>{ if(e.key==='Enter'){e.preventDefault();done(inp.value.trim());} else if(e.key==='Escape'){done(null);} });
+    setTimeout(()=>inp.focus(),70);
+  });
+}
 function _fillClientSelect(sel,selected){
   sel.innerHTML='<option value="__none__">— Geen klant —</option>'+uniqueClients().map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('')+'<option value="__new__">+ Nieuwe klant…</option>';
   if(selected!=null) sel.value=selected;
@@ -1532,13 +1554,13 @@ function _fillApptClientSelect(sel,selected){
   if(selected!=null) sel.value=selected;
 }
 async function _newClientPrompt(){
-  const name=(prompt('Naam nieuwe klant:')||'').trim(); if(!name)return null;
+  const name=((await uiPrompt('Naam nieuwe klant:'))||'').trim(); if(!name)return null;
   const icon=(name[0]||'?').toUpperCase();
   const ins=await sb.from('projects').insert({client:name,project:'',color:npColor||'#fbbf24',icon,sort:state.projects.length+1}).select('id').single();
   await refresh(); return {client:name,id:ins&&ins.data?ins.data.id:null};
 }
 async function _newProjectPrompt(client){
-  const name=(prompt('Naam nieuw project:')||'').trim(); if(!name)return null;
+  const name=((await uiPrompt('Naam nieuw project:'))||'').trim(); if(!name)return null;
   const icon=(client[0]||'?').toUpperCase();
   const ins=await sb.from('projects').insert({client,project:name,color:npColor||'#fbbf24',icon,sort:state.projects.length+1}).select('id').single();
   await refresh(); return {id:ins&&ins.data?ins.data.id:null};
