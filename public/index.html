@@ -123,7 +123,8 @@
   .picon{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#0c0d10;font-size:14px;flex:0 0 auto}
   .t-proj{flex:1;min-width:0;font-size:13.5px;font-weight:600;color:var(--ccol,var(--mut));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .t-projsub{color:var(--mut2);font-weight:400;margin-left:7px}
-  .chk{width:23px;height:23px;border:1.8px solid var(--mut2);border-radius:50%;cursor:pointer;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:12px;color:transparent}
+  .chk{width:22px;height:22px;border:1.5px solid rgba(255,255,255,.6);border-radius:50%;cursor:pointer;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:12px;color:transparent;transition:border-color .12s}
+  .chk:hover{border-color:#fff}
   .chk.on{background:var(--ok);border-color:var(--ok);color:#0c0c0c}
   .t-due{font-size:13px;font-variant-numeric:tabular-nums;color:var(--mut);margin-top:11px}
   .t-due.warn{color:var(--warn)} .t-due.risk{color:var(--risk)} .t-due.late{color:var(--late);font-weight:600}
@@ -140,10 +141,8 @@
   .due.warn{color:var(--warn)} .due.risk{color:var(--risk)} .due.late{color:var(--late);font-weight:600}
   /* In afwachting: goedkeuren / afwijzen */
   .wact{display:flex;gap:4px;margin-left:auto;flex:0 0 auto}
-  .wbtn{background:transparent;border:none;cursor:pointer;padding:3px;display:flex;align-items:center;justify-content:center;border-radius:50%;line-height:0;transition:transform .12s,background .12s}
-  .wbtn.ok{color:#fff}
-  .wbtn.no{color:#fff}
-  .wbtn:hover{background:rgba(255,255,255,.1);transform:scale(1.08)}
+  .wbtn{background:transparent;border:none;cursor:pointer;padding:3px;display:flex;align-items:center;justify-content:center;border-radius:50%;line-height:0;color:rgba(255,255,255,.6);transition:transform .12s,color .12s}
+  .wbtn:hover{color:#fff;transform:scale(1.08)}
   .wbtn:active{transform:scale(.92)}
   /* sleepbaar in Taken */
   .task.tdrag{cursor:grab}
@@ -325,12 +324,11 @@
   .overlay.open{display:flex}
   .modal{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:20px;width:520px;max-width:100%;padding:30px 28px 24px;box-shadow:0 28px 64px rgba(0,0,0,.55)}
   .modal h3{margin:0 0 22px;font-size:18px;font-weight:650;letter-spacing:.2px;padding-right:34px}
-  .modal-close{position:absolute;top:20px;right:22px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;background:transparent;border:none;color:var(--mut);cursor:pointer;padding:0}
-  .modal-close:hover{color:var(--txt)}
-  .iconbtn{background:transparent;border:none;cursor:pointer;padding:6px;display:flex;align-items:center;justify-content:center;border-radius:11px;transition:background .15s,opacity .15s}
-  .iconbtn.save{color:#fff;margin-left:auto}
-  .iconbtn.del{color:var(--late)}
-  .iconbtn:hover{background:var(--panel2)}
+  .modal-close{position:absolute;top:20px;right:22px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;background:transparent;border:none;color:rgba(255,255,255,.6);cursor:pointer;padding:0;transition:color .15s}
+  .modal-close:hover{color:#fff}
+  .iconbtn{background:transparent;border:none;cursor:pointer;padding:6px;display:flex;align-items:center;justify-content:center;border-radius:11px;color:rgba(255,255,255,.6);transition:color .15s,transform .12s}
+  .iconbtn.save{margin-left:auto}
+  .iconbtn:hover{color:#fff;transform:scale(1.06)}
   .iconbtn:active{opacity:.7}
   .modal input,.modal select,.modal textarea,.datefield{width:100%;background:transparent;border:1px solid var(--line);color:var(--txt);border-radius:13px;padding:14px 15px;font-size:14px;font-family:inherit;transition:border-color .15s,background .15s}
   /* labels weg: ruimte komt van de velden zelf */
@@ -448,8 +446,13 @@
   .home-author{font-size:13px;color:rgba(255,255,255,.8);letter-spacing:.3px;margin-bottom:20px}
   @keyframes fadeUp{0%{opacity:0;transform:translateY(8px)}100%{opacity:1;transform:translateY(0)}}
   .welcome-overlay.playing .home-author{animation:fadeUp 1.4s ease 3.5s both}
-  .welcome-close{margin-top:32px;width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.55);background:transparent;color:#fff;font-size:25px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;align-self:center;transition:border-color .15s,background .15s}
-  .welcome-close:hover{border-color:#fff;background:rgba(255,255,255,.08)}
+  .welcome-close{position:absolute;top:calc(env(safe-area-inset-top) + 16px);right:20px;z-index:4;width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.6);background:rgba(0,0,0,.2);color:rgba(255,255,255,.6);font-size:22px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:border-color .15s,color .15s}
+  #welcomeChat{position:relative;z-index:2;width:min(640px,92vw);display:flex;flex-direction:column;gap:12px;margin-top:26px;max-height:min(58vh,540px)}
+  .welcome-overlay #chatThread{flex:1 1 auto;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:10px;width:100%;padding:2px;margin:0}
+  .welcome-overlay #chatThread:empty{display:none}
+  .welcome-overlay #chatDock{position:static;width:100%;border:none;background:transparent;box-shadow:none}
+  .welcome-overlay .chatrow{background:rgba(22,22,22,.82);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.16);margin:0}
+  .welcome-close:hover{border-color:#fff;color:#fff}
   .welcome-overlay.playing .welcome-close{animation:fadeUp 1.7s ease 2.2s both}
   /* intro-animatie: elegant & traag — sterretje gecentreerd → schuift zacht omhoog + verkleint, tekst fadet rustig in */
   @keyframes starRise{0%{opacity:0;transform:translateY(64px) scale(1.22)}30%{opacity:1}100%{opacity:1;transform:translateY(0) scale(1)}}
@@ -513,9 +516,8 @@
     .main.workspace .cal-head .navbtn{width:26px;height:26px;font-size:13px}
     .main.workspace .cal-head .today{padding:5px 9px;font-size:11.5px;white-space:nowrap}
     /* + knop rechtsboven in een kolom (afspraak / taak) */
-    .agenda-add,.col-add{position:absolute;top:-6px;right:0;width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--txt);font-size:19px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:3}
-    .col-add{right:0}
-    .agenda-add:hover,.col-add:hover{background:rgba(255,255,255,.06)}
+    .agenda-add,.col-add{position:absolute;top:-6px;right:0;width:28px;height:28px;border-radius:50%;border:1px solid rgba(255,255,255,.6);background:transparent;color:rgba(255,255,255,.6);font-size:18px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:3;transition:color .15s,border-color .15s}
+    .agenda-add:hover,.col-add:hover{color:#fff;border-color:#fff}
     /* toevoegen speelt zich af binnen de betreffende kolom */
     .overlay.incol{background:transparent;align-items:flex-start;justify-content:stretch;padding:0;overflow-y:auto;right:auto}
     .overlay.incol .modal{width:100%;max-width:none;border-radius:0;border:none;border-left:1px solid var(--line);min-height:100%;box-shadow:none;padding:24px 24px 32px}
@@ -602,9 +604,10 @@
 </div>
 
 <!-- WELKOMST-OVERLAY: schuift over alles behalve de chat-input -->
-<div id="welcomeOverlay" class="welcome-overlay" onclick="overlayBackdrop(event)">
+<div id="welcomeOverlay" class="welcome-overlay">
   <div id="welcomeBg"></div>
   <div class="welcome-scrim"></div>
+  <button class="welcome-close" onclick="dismissWelcome()" aria-label="Sluiten">×</button>
   <div id="homeIntro">
     <svg class="home-star" viewBox="0 0 64 64" aria-label="Begeister">
       <g stroke="#fff" stroke-width="4.6" stroke-linecap="butt">
@@ -615,8 +618,8 @@
     </svg>
     <h2 class="home-compliment" id="compliment"></h2>
     <div class="home-author" id="complimentAuthor"></div>
-    <button class="welcome-close" onclick="dismissWelcome()" aria-label="Sluiten">×</button>
   </div>
+  <div id="welcomeChat"></div>
 </div>
 
 <!-- CHAT THREAD (verplaatst per layout) -->
@@ -643,7 +646,7 @@
 <!-- EDIT MODAL -->
 <div class="overlay" id="overlay">
   <div class="modal">
-    <button class="modal-close" onclick="closeModal()" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <button class="modal-close" onclick="closeModal()" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     <h3 id="editModalTitle">Actiepunt bewerken</h3>
     <textarea id="m_t" rows="3" placeholder="Omschrijving"></textarea>
     <div class="twocol">
@@ -659,8 +662,8 @@
       <div><select id="m_status"><option value="todo">te doen</option><option value="doing">bezig</option><option value="wait">wacht op</option><option value="done">klaar</option></select></div>
     </div>
     <div class="foot">
-      <button class="iconbtn del" onclick="deleteItem()" aria-label="Verwijderen"><svg viewBox="0 0 24 24" width="27" height="27" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.2"/><path d="M9 9l6 6M15 9l-6 6"/></svg></button>
-      <button class="iconbtn save" onclick="saveModal()" aria-label="Opslaan"><svg viewBox="0 0 24 24" width="27" height="27" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.2"/><path d="M8 12.4l2.6 2.6L16 9.2"/></svg></button>
+      <button class="iconbtn del" onclick="deleteItem()" aria-label="Verwijderen"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10.4"/><path d="M9 9l6 6M15 9l-6 6"/></svg></button>
+      <button class="iconbtn save" onclick="saveModal()" aria-label="Opslaan"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10.4"/><path d="M8 12.4l2.6 2.6L16 9.2"/></svg></button>
     </div>
   </div>
 </div>
@@ -668,7 +671,7 @@
 <!-- AFSPRAAK MODAL -->
 <div class="overlay" id="apptOverlay">
   <div class="modal">
-    <button class="modal-close" onclick="closeApptModal()" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <button class="modal-close" onclick="closeApptModal()" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     <h3 id="apptModalTitle">Nieuwe afspraak</h3>
     <input id="a_t" placeholder="Omschrijving" />
     <div class="twocol">
@@ -695,8 +698,8 @@
     </div>
     <textarea id="a_note" rows="2" placeholder="Notitie"></textarea>
     <div class="foot">
-      <button class="iconbtn del" id="a_del" onclick="deleteAppt()" aria-label="Verwijderen"><svg viewBox="0 0 24 24" width="27" height="27" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.2"/><path d="M9 9l6 6M15 9l-6 6"/></svg></button>
-      <button class="iconbtn save" onclick="saveAppt()" aria-label="Opslaan"><svg viewBox="0 0 24 24" width="27" height="27" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.2"/><path d="M8 12.4l2.6 2.6L16 9.2"/></svg></button>
+      <button class="iconbtn del" id="a_del" onclick="deleteAppt()" aria-label="Verwijderen"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10.4"/><path d="M9 9l6 6M15 9l-6 6"/></svg></button>
+      <button class="iconbtn save" onclick="saveAppt()" aria-label="Opslaan"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10.4"/><path d="M8 12.4l2.6 2.6L16 9.2"/></svg></button>
     </div>
   </div>
 </div>
@@ -995,8 +998,8 @@ function sortRows(rows){
   });
   return rows;
 }
-const _SVG_OK='<svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10.4"/><path d="M8 12.4l2.6 2.6L16 9.2"/></svg>';
-const _SVG_NO='<svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10.4"/><path d="M9 9l6 6M15 9l-6 6"/></svg>';
+const _SVG_OK='<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10.4"/><path d="M8 12.4l2.6 2.6L16 9.2"/></svg>';
+const _SVG_NO='<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10.4"/><path d="M9 9l6 6M15 9l-6 6"/></svg>';
 function taskCard(p,it,idx,mode){
   const di=dueInfo(it.due);const done=it.status==='done';const col=PROJCOL[p.id]||'#888';
   const stPill=it.status==='doing'?'<span class="pill doing">bezig</span>':(it.status==='wait'?'<span class="pill wait">wacht op</span>':(it.status==='todo'?'<span class="pill">te doen</span>':'<span class="pill">klaar</span>'));
@@ -1694,12 +1697,11 @@ function applyLayout(){
   const wb=document.getElementById('wachterBlock');
   const ct=document.getElementById('chatThread');
   const cd=document.getElementById('chatDock');
-  const hi=document.getElementById('homeIntro');
-  const home=document.getElementById('view-home');
   const wview=document.getElementById('view-wachter');
-  if(mob){ wview.appendChild(wb); home.appendChild(ct); }
-  else { rail.appendChild(wb); rail.appendChild(ct); if(view==='home'||view==='wachter') setView('taken'); }
-  document.body.appendChild(cd);
+  const wchat=document.getElementById('welcomeChat');
+  if(wchat){ wchat.appendChild(ct); wchat.appendChild(cd); }   // chat woont in de beginscherm-overlay
+  if(mob){ wview.appendChild(wb); }
+  else { rail.appendChild(wb); if(view==='home'||view==='wachter') setView('taken'); }
   _lastMob=mob;
 }
 let _lastD3=isDesk3();
@@ -1722,7 +1724,7 @@ async function loadWelcomeImage(){
 function showWelcome(){const o=document.getElementById('welcomeOverlay');if(!o)return;o.classList.remove('dismissed');renderCompliment();loadWelcomeImage();o.classList.remove('playing');void o.offsetWidth;o.classList.add('playing');}
 function hideWelcome(){const o=document.getElementById('welcomeOverlay');if(o){o.classList.add('dismissed');o.classList.remove('playing');}const bg=document.getElementById('welcomeBg');if(bg)bg.classList.remove('on');}
 function overlayBackdrop(e){if(e.target.id==='welcomeOverlay')dismissWelcome();}
-function composeMode(on){if(on)hideWelcome();}
+function composeMode(on){}
 function goHome(){ showWelcome(); }
 function dismissWelcome(){ hideWelcome(); _animateNext=true; render(); }
 function togglePlus(e){if(e)e.stopPropagation();const m=document.getElementById('plusMenu');const open=m.classList.contains('hidden');m.classList.toggle('hidden');if(open)composeMode(true);}
@@ -1953,8 +1955,7 @@ async function chatTurn(){
 }
 async function chatSend(){
   const ta=document.getElementById('chatInput');const text=(ta.value||'').trim();if(!text)return;
-  if(isMobile()&&view!=='home')setView('home');
-  composeMode(true);
+    composeMode(true);
   addMsg('me',text);ta.value='';ta.style.height='auto';clearChips();closePlus();
   chatHistory.push({role:'user',content:text});
   const data=await chatTurn();
@@ -1999,8 +2000,7 @@ function chatAttach(){closePlus();if(isMobile()&&view!=='home')setView('home');c
 function fileToB64(f){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>{const s=String(r.result);res(s.slice(s.indexOf(',')+1));};r.onerror=rej;r.readAsDataURL(f);});}
 async function handlePhoto(e){
   const f=e.target.files&&e.target.files[0];if(!f)return;e.target.value='';
-  if(isMobile()&&view!=='home')setView('home');
-  composeMode(true);
+    composeMode(true);
   addMsg('me','Foto: '+f.name);
   chatHistory.push({role:'user',content:'(afbeelding toegevoegd: '+f.name+')'});
   // origineel bewaren onder Bronnen
