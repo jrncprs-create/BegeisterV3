@@ -3,7 +3,8 @@
 //
 // Draaien:
 //   node intake/poller.mjs --once      (eenmalig, bv. lokaal testen)
-//   wordt op Vercel elke 5 min aangeroepen via /api/intake (zie vercel.json)
+//   in productie: externe cron (cron-job.org, ~elke 2 min) roept /api/intake aan,
+//   plus 1x/dag de Vercel-cron als vangnet (zie vercel.json)
 
 import { ImapFlow } from "imapflow";
 import { simpleParser } from "mailparser";

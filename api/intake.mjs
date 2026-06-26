@@ -1,5 +1,6 @@
-// Vercel cron-endpoint. Wordt elke 5 min aangeroepen (zie vercel.json).
-// Beveiligd met CRON_SECRET zodat alleen Vercel 'm kan triggeren.
+// Intake-endpoint. Wordt frequent aangeroepen door een externe cron
+// (cron-job.org, ~elke 2 min) en daarnaast 1x/dag door de Vercel-cron als
+// vangnet (zie vercel.json). Beveiligd met CRON_SECRET in de Authorization-header.
 import { run } from "../intake/poller.mjs";
 
 export default async function handler(req, res) {
