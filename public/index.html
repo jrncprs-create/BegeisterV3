@@ -512,6 +512,10 @@
     .main.workspace #view-taken::before,.main.workspace #view-agenda::before{display:block;font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut2);margin:0 0 14px}
     .main.workspace #view-taken::before{content:"Taken"}
     .main.workspace #view-agenda::before{content:"Agenda"}
+    .main.workspace #view-agenda.afsprakenmode::before{content:"Afspraken"}
+    /* AGENDA/AFSPRAKEN-toggle: tekstknop links naast de +-knop */
+    .agenda-toggle{position:absolute;top:-6px;right:34px;border:none;background:transparent;color:var(--mut2);font-size:12px;letter-spacing:1.2px;text-transform:uppercase;cursor:pointer;padding:2px 0;z-index:3;transition:color .15s}
+    .agenda-toggle:hover{color:#fff}
     /* klanten als dropdown i.p.v. chips in de middenkolom */
     .main.workspace .ptabs .ptab{display:none}
     .main.workspace .ptabs .clientdrop{display:block}
@@ -1087,9 +1091,9 @@ function renderAgenda(){
       <button class="today" onclick="calToday()">Vandaag</button>`:''}
   </div>`;
   const addBtn = isDesk3() ? '<button class="agenda-add" onclick="openApptModal()" title="Nieuwe afspraak" aria-label="Nieuwe afspraak">+</button>' : '';
-  if(calMode==='lijst')wrap.innerHTML=addBtn+seg+agendaList();
-  else if(calMode==='week')wrap.innerHTML=addBtn+seg+agendaWeek();
-  else wrap.innerHTML=addBtn+seg+agendaMonth();
+  if(calMode==='lijst')wrap.innerHTML=toggleBtn+addBtn+seg+agendaList();
+  else if(calMode==='week')wrap.innerHTML=toggleBtn+addBtn+seg+agendaWeek();
+  else wrap.innerHTML=toggleBtn+addBtn+seg+agendaMonth();
 }
 function setCal(m){calMode=m;render();}
 function calNav(dir){const r=d(calRef);
