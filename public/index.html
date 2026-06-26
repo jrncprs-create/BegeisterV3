@@ -378,6 +378,22 @@
   .caddrow{display:flex;flex-wrap:wrap;gap:8px;margin:2px 0 18px;align-items:center}
   .caddrow input{flex:1 1 140px;min-width:0;background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:9px 11px;font-size:14px}
   .caddrow input::placeholder{color:var(--mut2)}
+  .csearchrow{display:flex;gap:8px;margin:2px 0 14px;align-items:center}
+  .csearchrow input{flex:1 1 auto;min-width:0;background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:9px 12px;font-size:14px}
+  .csearchrow input::placeholder{color:var(--mut2)}
+  .cdup{display:block;width:100%;text-align:left;background:transparent;border:1px solid var(--line);color:var(--mut2);border-radius:9px;padding:8px 11px;font-size:12.5px;cursor:pointer;margin:0 0 14px}
+  .cdup:hover{color:var(--txt);border-color:var(--mut2)}
+  .cli{cursor:pointer}
+  .cli:hover{background:rgba(255,255,255,.03)}
+  .cli .cquick{display:flex;gap:6px;flex:0 0 auto}
+  .cli .cquick a{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;color:var(--mut);border:1px solid var(--line);text-decoration:none}
+  .cli .cquick a:hover{color:var(--txt);border-color:var(--mut2)}
+  .c-role{display:inline-block;font-size:11px;color:var(--mut2);border:1px solid var(--line);border-radius:6px;padding:1px 7px;margin-left:7px;vertical-align:1px}
+  .c-linked{margin-top:6px;border-top:1px solid var(--line);padding-top:12px}
+  .c-linked h4{font-size:11.5px;letter-spacing:1px;text-transform:uppercase;color:var(--mut2);margin:0 0 8px;font-weight:600}
+  .c-linked .cl-item{font-size:13px;color:var(--mut);padding:6px 0;cursor:pointer;border-bottom:1px solid var(--line)}
+  .c-linked .cl-item:hover{color:var(--txt)}
+  .c-linked .cl-empty{font-size:12.5px;color:var(--mut2)}
 
   /* MODAL */
   .overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:20px;z-index:60;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .35s ease,visibility 0s linear .55s}
@@ -608,7 +624,7 @@
     .main.workspace #view-taken::before,.main.workspace #view-agenda::before{position:sticky;top:0;z-index:4;background:var(--bg);display:flex;align-items:center;height:26px;font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut2);margin:0 0 16px}
     /* knoppen in de kolomkop blijven bovenaan meeplakken bij scrollen */
     .main.workspace #view-taken .col-add,.main.workspace #view-taken .col-close,
-    .main.workspace #view-agenda .agenda-add,.main.workspace #view-agenda .agenda-toggle,.main.workspace #view-agenda .col-close{position:sticky;float:right;margin-top:-26px;z-index:5}
+    .main.workspace #view-agenda .agenda-add,.main.workspace #view-agenda .agenda-toggle,.main.workspace #view-agenda .col-close{position:sticky;float:right;margin-top:-42px;z-index:5}
     .main.workspace #view-taken::before{content:"Taken"}
     .main.workspace #view-agenda::before{content:"Agenda"}
     .main.workspace #view-agenda.afsprakenmode::before{content:"Afspraken"}
@@ -831,6 +847,31 @@
     <div class="foot">
       <button class="iconbtn del" id="a_del" onclick="deleteAppt()" aria-label="Verwijderen"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10.4"/><path d="M9 9l6 6M15 9l-6 6"/></svg></button>
       <button class="iconbtn save" onclick="saveAppt()" aria-label="Opslaan"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10.4"/><path d="M8 12.4l2.6 2.6L16 9.2"/></svg></button>
+    </div>
+  </div>
+</div>
+
+<!-- CONTACT MODAL -->
+<div class="overlay" id="cOverlay">
+  <div class="modal">
+    <button class="modal-close" onclick="closeContactModal()" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <h3 id="contactModalTitle">Contact bewerken</h3>
+    <div class="twocol">
+      <div><input id="c_first" placeholder="Voornaam" autocomplete="off" /></div>
+      <div><input id="c_last" placeholder="Achternaam" autocomplete="off" /></div>
+    </div>
+    <div class="twocol">
+      <div><input id="c_email" type="email" placeholder="E-mail" autocomplete="off" /></div>
+      <div><input id="c_phone" type="tel" placeholder="Telefoon" autocomplete="off" /></div>
+    </div>
+    <div class="twocol">
+      <div><select id="c_client"></select></div>
+      <div><select id="c_role"><option value="">Rol / type</option><option>Opdrachtgever</option><option>Leverancier</option><option>Techniek</option><option>Locatie</option><option>Artiest</option><option>Overig</option></select></div>
+    </div>
+    <div id="c_linked" class="c-linked"></div>
+    <div class="foot">
+      <button class="iconbtn del" id="c_del" onclick="deleteContactModal()" aria-label="Verwijderen"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10.4"/><path d="M9 9l6 6M15 9l-6 6"/></svg></button>
+      <button class="iconbtn save" onclick="saveContactModal()" aria-label="Opslaan"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10.4"/><path d="M8 12.4l2.6 2.6L16 9.2"/></svg></button>
     </div>
   </div>
 </div>
@@ -1228,8 +1269,7 @@ function renderAgenda(){
     <div class="spacer"></div>
     ${calMode!=='lijst'?`<button class="navbtn" onclick="calNav(-1)">‹</button>
       <span class="label" id="calLabel"></span>
-      <button class="navbtn" onclick="calNav(1)">›</button>
-      <button class="today" onclick="calToday()">Vandaag</button>`:''}
+      <button class="navbtn" onclick="calNav(1)">›</button>`:''}
   </div>`;
   const addBtn = isDesk3() ? '<button class="agenda-add" onclick="openApptModal()" title="Nieuwe afspraak" aria-label="Nieuwe afspraak">+</button>' : '';
   if(calMode==='lijst')wrap.innerHTML=openBtn+addBtn+seg+agendaList();
@@ -1611,46 +1651,111 @@ function toggleFull(id){const f=document.getElementById('full_'+id);const b=docu
 function gotoSource(sid){setView('bronnen');setTimeout(()=>{const b=document.getElementById('body_'+sid);if(b){b.classList.add('open');document.getElementById('card_'+sid).scrollIntoView({behavior:'smooth',block:'center'});}},60);}
 
 // ---------- contacten ----------
+let _contactSearch='';
 function renderContacten(){
   const wrap=document.getElementById('contactenWrap'); if(!wrap)return;
   const contacts=(state.contacts||[]);
-  // toevoeg-rij bovenaan
-  let html='<div class="caddrow">'
-    +'<input id="cnew_name" placeholder="Naam" autocomplete="off" />'
-    +'<input id="cnew_email" type="email" placeholder="E-mail" autocomplete="off" />'
-    +'<input id="cnew_company" placeholder="Bedrijf / klant" autocomplete="off" />'
-    +'<button class="kicon kadd" onclick="addContact()" title="Toevoegen" aria-label="Toevoegen"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg></button>'
-    +'</div>';
-  // groeperen per bedrijf/klant
+  const addSvg='<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg>';
+  let html='<div class="csearchrow"><input id="c_search" placeholder="Zoek contact…" autocomplete="off" oninput="_filterContacts(this.value)" /><button class="kicon kadd" onclick="openContactModal()" title="Nieuw contact" aria-label="Nieuw contact">'+addSvg+'</button></div>';
+  const dup=_countDupContacts();
+  if(dup>0) html+='<button class="cdup" onclick="mergeDupContacts()">'+dup+' mogelijk dubbel — samenvoegen</button>';
   const groups={}, order=[];
   contacts.forEach(c=>{ const g=(c.company||'').trim()||'Overig'; if(!groups[g]){groups[g]=[];order.push(g);} groups[g].push(c); });
   order.sort((a,b)=> a==='Overig'?1:(b==='Overig'?-1:a.localeCompare(b)));
   if(!contacts.length){
-    html+='<div class="hint">Nog geen contacten. Ze verschijnen hier automatisch uit binnengekomen berichten, of voeg ze handmatig toe.</div>';
+    html+='<div class="hint">Nog geen contacten. Ze verschijnen hier automatisch uit binnengekomen berichten, of voeg ze handmatig toe met +.</div>';
   }else{
+    const phoneSvg='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h3l1.5 4-2 1.5a11 11 0 0 0 5 5l1.5-2 4 1.5V19a2 2 0 0 1-2 2A16 16 0 0 1 4 6a2 2 0 0 1 1-2Z"/></svg>';
+    const mailSvg='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M4 7l8 6 8-6"/></svg>';
     html+=order.map(g=>{
       const rows=groups[g].map(c=>{
-        const meta=[c.email,c.phone,c.role].filter(Boolean).map(escapeHtml).join(' · ');
-        return `<div class="cli"><div class="cmain"><div class="cname">${escapeHtml(c.name||'')}</div>`
-          +(meta?`<div class="cmeta">${meta}</div>`:'')+`</div>`
-          +`<button class="kicon" onclick="deleteContact('${c.id}')" title="Verwijderen" aria-label="Verwijderen"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M5 7h14M9 7V5h6v2M7 7l1 13h8l1-13"/></svg></button></div>`;
+        const meta=[c.email,c.phone].filter(Boolean).map(escapeHtml).join(' · ');
+        const s=escapeHtml(((c.name||'')+' '+(c.email||'')+' '+(c.phone||'')+' '+(c.company||'')+' '+(c.role||'')).toLowerCase());
+        const tel=(c.phone||'').replace(/[^+\d]/g,'');
+        const quick=(c.phone?`<a href="tel:${tel}" onclick="event.stopPropagation()" title="Bellen">${phoneSvg}</a>`:'')+(c.email?`<a href="mailto:${escapeHtml(c.email)}" onclick="event.stopPropagation()" title="Mailen">${mailSvg}</a>`:'');
+        return `<div class="cli" data-s="${s}" onclick="openContactModal('${c.id}')"><div class="cmain"><div class="cname">${escapeHtml(c.name||'')}${c.role?` <span class="c-role">${escapeHtml(c.role)}</span>`:''}</div>${meta?`<div class="cmeta">${meta}</div>`:''}</div><div class="cquick">${quick}</div></div>`;
       }).join('');
       return `<div class="cgroup"><div class="cgroup-h">${escapeHtml(g)}</div>${rows}</div>`;
     }).join('');
   }
   wrap.innerHTML=html;
+  if(_contactSearch){ const si=document.getElementById('c_search'); if(si)si.value=_contactSearch; _filterContacts(_contactSearch); }
 }
-async function addContact(){
-  const name=(document.getElementById('cnew_name').value||'').trim(); if(!name){alert('Vul een naam in.');return;}
-  const email=(document.getElementById('cnew_email').value||'').trim();
-  const company=(document.getElementById('cnew_company').value||'').trim();
-  await sb.from('contacts').insert({name,email:email||null,company:company||null});
-  document.getElementById('cnew_name').value='';document.getElementById('cnew_email').value='';document.getElementById('cnew_company').value='';
-  await refresh();
+function _filterContacts(q){
+  _contactSearch=q; const qq=(q||'').toLowerCase().trim();
+  document.querySelectorAll('#contactenWrap .cli').forEach(el=>{ el.style.display=(!qq||(el.dataset.s||'').includes(qq))?'':'none'; });
+  document.querySelectorAll('#contactenWrap .cgroup').forEach(g=>{ const any=[...g.querySelectorAll('.cli')].some(x=>x.style.display!=='none'); g.style.display=any?'':'none'; });
 }
-async function deleteContact(id){
+function _fillContactClient(sel,selected){
+  const cur=selected||''; const cs=uniqueClients();
+  sel.innerHTML='<option value="">— Geen klant —</option>'+cs.map(c=>`<option value="${escapeHtml(c)}"${c===cur?' selected':''}>${escapeHtml(c)}</option>`).join('')+((cur&&!cs.includes(cur))?`<option value="${escapeHtml(cur)}" selected>${escapeHtml(cur)}</option>`:'');
+}
+function _contactLinkedHTML(c){
+  if(!c) return '';
+  const nm=(c.name||'').toLowerCase().trim(); const first=nm.split(' ')[0]||''; const em=(c.email||'').toLowerCase().trim();
+  const tasks=[]; state.projects.forEach(p=>p.items.forEach(it=>{ const ct=(it.contact||'').toLowerCase(); if(ct&&first&&ct.includes(first)) tasks.push(it); }));
+  const srcs=(state.sources||[]).filter(s=>{ const blob=((s.from||'')+' '+(s.sender||'')+' '+(s.subject||'')).toLowerCase(); return (em&&blob.includes(em))||(first&&first.length>2&&blob.includes(first)); });
+  let h='<h4>Gekoppeld</h4>';
+  if(!tasks.length && !srcs.length) return h+'<div class="cl-empty">Nog geen gekoppelde taken of berichten.</div>';
+  h+=tasks.slice(0,6).map(it=>`<div class="cl-item" onclick="closeContactModal();setTimeout(()=>openModal('${it.id}'),140)">✓ ${escapeHtml(it.t||'')}</div>`).join('');
+  h+=srcs.slice(0,6).map(s=>`<div class="cl-item" onclick="closeContactModal();gotoSource('${s.id}')">✉ ${escapeHtml(_srcTitle(s))}</div>`).join('');
+  return h;
+}
+let contactEditId=null;
+function openContactModal(id){
+  const c=id?(state.contacts||[]).find(x=>x.id===id):null;
+  contactEditId=c?c.id:null;
+  const full=((c&&c.name)||'').trim(); const sp=full.indexOf(' ');
+  document.getElementById('c_first').value= c? (sp<0?full:full.slice(0,sp)) : '';
+  document.getElementById('c_last').value = c? (sp<0?'':full.slice(sp+1)) : '';
+  document.getElementById('c_email').value=c?(c.email||''):'';
+  document.getElementById('c_phone').value=c?(c.phone||''):'';
+  _fillContactClient(document.getElementById('c_client'), c?(c.company||''):'');
+  document.getElementById('c_role').value=c?(c.role||''):'';
+  document.getElementById('c_del').style.display=contactEditId?'':'none';
+  document.getElementById('contactModalTitle').textContent=contactEditId?'Contact bewerken':'Nieuw contact';
+  document.getElementById('c_linked').innerHTML=_contactLinkedHTML(c);
+  const ov=document.getElementById('cOverlay'); ov.style.top=''; ov.classList.add('open');
+}
+function closeContactModal(){const ov=document.getElementById('cOverlay');ov.classList.remove('open');setTimeout(()=>{if(!ov.classList.contains('open')){contactEditId=null;}},560);}
+async function saveContactModal(){
+  const first=(document.getElementById('c_first').value||'').trim();
+  const last=(document.getElementById('c_last').value||'').trim();
+  const name=(first+' '+last).trim();
+  if(!name){ document.getElementById('c_first').focus(); return; }
+  const row={name,
+    email:(document.getElementById('c_email').value||'').trim()||null,
+    phone:(document.getElementById('c_phone').value||'').trim()||null,
+    company:(document.getElementById('c_client').value||'').trim()||null,
+    role:(document.getElementById('c_role').value||'').trim()||null};
+  if(contactEditId) await sb.from('contacts').update(row).eq('id',contactEditId);
+  else await sb.from('contacts').insert(row);
+  closeContactModal(); await refresh();
+}
+async function deleteContactModal(){
+  if(!contactEditId)return;
   if(!(await uiConfirm('Dit contact verwijderen?')))return;
-  await sb.from('contacts').delete().eq('id',id);
+  await sb.from('contacts').delete().eq('id',contactEditId);
+  closeContactModal(); await refresh();
+}
+function _completeness(c){return [c.name,c.email,c.phone,c.company,c.role].filter(Boolean).length;}
+function _dupGroups(){
+  const map={};
+  (state.contacts||[]).forEach(c=>{ const key=(c.email||'').toLowerCase().trim() || ('n:'+(c.name||'').toLowerCase().trim()); if(key&&key!=='n:')(map[key]=map[key]||[]).push(c); });
+  return Object.values(map).filter(g=>g.length>1);
+}
+function _countDupContacts(){ return _dupGroups().reduce((n,g)=>n+g.length-1,0); }
+async function mergeDupContacts(){
+  const groups=_dupGroups(); const removable=groups.reduce((n,g)=>n+g.length-1,0);
+  if(!removable)return;
+  if(!(await uiConfirm(removable+' mogelijk dubbele contact(en) samenvoegen?')))return;
+  for(const g of groups){
+    g.sort((a,b)=>_completeness(b)-_completeness(a));
+    const keep=g[0]; const merged={name:keep.name,email:keep.email,phone:keep.phone,company:keep.company,role:keep.role};
+    g.slice(1).forEach(o=>['name','email','phone','company','role'].forEach(f=>{ if(!merged[f]&&o[f])merged[f]=o[f]; }));
+    await sb.from('contacts').update(merged).eq('id',keep.id);
+    const delIds=g.slice(1).map(o=>o.id); if(delIds.length) await sb.from('contacts').delete().in('id',delIds);
+  }
   await refresh();
 }
 
@@ -2270,7 +2375,7 @@ async function pasteClip(){closePlus();composeMode(true);const ta=document.getEl
 (function(){const ta=document.getElementById('chatInput'); if(!ta)return;
   const grow=()=>{ta.style.height='auto';ta.style.height=Math.min(ta.scrollHeight,140)+'px';};
   ta.addEventListener('input',()=>{grow();updateIntroFade();});
-  ta.addEventListener('focus',()=>composeMode(true));
+  ta.addEventListener('focus',()=>{composeMode(true);const o=document.getElementById('welcomeOverlay');if(o&&!o.classList.contains('dismissed'))o.classList.add('chatting');});
   ta.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();chatSend();}});
 })();
 
