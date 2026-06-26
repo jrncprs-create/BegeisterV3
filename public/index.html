@@ -271,9 +271,9 @@
   .srow-head:hover{background:rgba(255,255,255,.025)}
   .doc-ic{flex:0 0 auto;width:22px;height:22px;position:relative;color:var(--mut)}
   .doc-ic svg{width:22px;height:22px;display:block}
-  .srow-main{flex:1;min-width:0}
-  .srow-title{font-size:13.5px;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .srow-sub{font-size:11.5px;color:var(--mut2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .srow-main{flex:1;min-width:0;display:flex;flex-direction:column}
+  .srow-title{display:block;max-width:100%;font-size:13.5px;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .srow-sub{display:block;max-width:100%;font-size:11.5px;color:var(--mut2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .srow-date{font-size:11.5px;color:var(--mut2);flex:0 0 auto;white-space:nowrap;font-variant-numeric:tabular-nums}
   .srow-menu{position:relative;flex:0 0 auto}
   .srow-dots{background:transparent;border:none;color:var(--mut);cursor:pointer;font-size:18px;line-height:1;padding:4px 6px;border-radius:7px}
@@ -1451,7 +1451,6 @@ function _fileBadge(label){
     ? '<path d="M7.5 7h7M7.5 9.4h7"/>'
     : '<path d="M7.5 7h7M7.5 9.4h7M7.5 11.8h4.5"/>';
   return '<svg viewBox="0 0 22 22" fill="none">'
-    +'<rect x="0.5" y="0.5" width="21" height="21" rx="5" fill="#2a2a2a" stroke="#3a3a3a"/>'
     +'<g stroke="#cfcfcf" stroke-width="1" stroke-linejoin="round" stroke-linecap="round">'
     +'<path d="M6 4.5h6l3.5 3.5V17a.5.5 0 0 1-.5.5H6a.5.5 0 0 1-.5-.5V5a.5.5 0 0 1 .5-.5Z"/>'
     +'<path d="M12 4.5V8h3.5"/>'
@@ -1479,12 +1478,12 @@ function _fileGlyph(filename){
 }
 function _clip(str,n){str=String(str||'').replace(/\s+/g,' ').trim();return str.length>n?str.slice(0,n-1).trimEnd()+'…':str;}
 function _srcTitle(s){
-  // korte AI-samenvatting indien aanwezig, anders onderwerp/eerste regel — altijd kort
-  if(s.summary) return _clip(s.summary,60);
-  if(s.subject) return _clip(s.subject,60);
+  // mail-onderwerp eerst, anders korte AI-samenvatting/eerste regel — kort houden
+  if(s.subject) return _clip(s.subject,52);
+  if(s.summary) return _clip(s.summary,52);
   const first=(s.text||'').split('\n').map(x=>x.trim()).find(x=>x.length);
-  if(s.from && first) return _clip(s.from+': '+first,60);
-  return _clip(s.from || first || 'Bericht',60);
+  if(s.from && first) return _clip(s.from+': '+first,52);
+  return _clip(s.from || first || 'Bericht',52);
 }
 // herkent bronnen die in feite alleen een geplakte afbeelding/screenshot zijn
 function _isImageSource(s){
