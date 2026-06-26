@@ -402,6 +402,23 @@
   .c-linked .cl-item{font-size:13px;color:var(--mut);padding:6px 0;cursor:pointer;border-bottom:1px solid var(--line)}
   .c-linked .cl-item:hover{color:var(--txt)}
   .c-linked .cl-empty{font-size:12.5px;color:var(--mut2)}
+  .kfiles{margin-top:12px}
+  .kfiles-h{display:flex;align-items:center;justify-content:space-between;margin:0 0 8px}
+  .kfiles-h span{font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:var(--mut2)}
+  .kfiles-add{display:flex;align-items:center;gap:5px;background:transparent;border:1px solid var(--line);color:var(--mut);border-radius:8px;padding:5px 9px;font-size:12px;cursor:pointer}
+  .kfiles-add:hover{color:#fff;border-color:var(--mut2)}
+  .kfiles-hint{font-size:12px;color:var(--mut2);margin-top:8px}
+  .kfile{display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px solid var(--line);flex-wrap:wrap}
+  .kfile-main{display:flex;align-items:center;gap:9px;flex:1;min-width:0;color:var(--txt);text-decoration:none}
+  .kfile-main:hover .kfile-name{color:#fff}
+  .kfile-ic{flex:0 0 auto;width:16px;height:16px;display:flex}
+  .kfile-ic svg,.kfile-ic img{width:16px;height:16px;border-radius:3px}
+  .kfile-name{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .kfile-ai,.kfile-del{flex:0 0 auto;background:transparent;border:none;color:var(--mut2);cursor:pointer;font-size:15px;line-height:1;padding:2px 4px}
+  .kfile-ai:hover{color:var(--primary2)}
+  .kfile-del:hover{color:var(--late)}
+  .kfile-sum{flex:1 1 100%;font-size:12.5px;color:var(--mut);line-height:1.5;margin:2px 0 2px 25px;white-space:pre-wrap;display:none}
+  .kfile-sum.on{display:block}
 
   /* MODAL */
   .overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:20px;z-index:60;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .35s ease,visibility 0s linear .55s}
@@ -816,6 +833,7 @@
       <div><div class="datefield" id="m_due_field" onclick="openDuePicker(event)"><span id="m_due_label" class="ph">Deadline</span><span class="cal-ic">▦</span></div></div>
       <div><select id="m_status"><option value="todo">te doen</option><option value="doing">bezig</option><option value="wait">wacht op</option><option value="done">klaar</option></select></div>
     </div>
+    <div id="m_files"></div>
     <div class="foot">
       <button class="iconbtn del" onclick="deleteItem()" aria-label="Verwijderen"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10.4"/><path d="M9 9l6 6M15 9l-6 6"/></svg></button>
       <button class="iconbtn save" onclick="saveModal()" aria-label="Opslaan"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10.4"/><path d="M8 12.4l2.6 2.6L16 9.2"/></svg></button>
@@ -889,6 +907,7 @@
   <div class="timepop" id="timepop"></div>
 </div>
 <div id="cpop" class="cpop"></div>
+<script type="text/javascript" src="https://www.dropbox.com/static/api/2/dropins.js" id="dropboxjs" data-app-key="dy4x2fynsdg7fa9"></script>
 
 <script>
 // ---------- helpers ----------
@@ -1766,6 +1785,39 @@ async function mergeDupContacts(){
   await refresh();
 }
 
+// ---------- Dropbox-bestanden (per project / taak) ----------
+function _filesFor(type,id){return (state.files||[]).filter(f=>f.owner_type===type && String(f.owner_id)===String(id));}
+function _fileRow(f){
+  const ic=f.icon?`<img src="${escapeHtml(f.icon)}" width="16" height="16" alt="">`:_docGlyph();
+  return `<div class="kfile"><a class="kfile-main" href="${escapeHtml(f.link)}" target="_blank" rel="noopener" onclick="event.stopPropagation()"><span class="kfile-ic">${ic}</span><span class="kfile-name">${escapeHtml(f.name||'bestand')}</span></a>`
+    +`<button class="kfile-ai" title="AI: samenvatten" onclick="event.stopPropagation();summarizeFile('${f.id}')">✦</button>`
+    +`<button class="kfile-del" title="Ontkoppelen" onclick="event.stopPropagation();deleteFile('${f.id}')">×</button>`
+    +`<div class="kfile-sum" id="fsum_${f.id}"></div></div>`;
+}
+function _filesHTML(type,id){
+  if(!id) return '<div class="kfiles-hint">Sla eerst op om bestanden te koppelen.</div>';
+  const list=_filesFor(type,id).map(_fileRow).join('');
+  return `<div class="kfiles"><div class="kfiles-h"><span>Bestanden</span><button class="kfiles-add" onclick="event.stopPropagation();dropboxPick('${type}','${id}')" title="Koppel Dropbox-bestand"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg> Dropbox</button></div>${list}</div>`;
+}
+function dropboxPick(type,id){
+  if(!(window.Dropbox&&Dropbox.choose)){ uiConfirm('Dropbox is nog aan het laden — probeer het zo nog eens.'); return; }
+  Dropbox.choose({linkType:'preview',multiselect:true,success:async(files)=>{
+    const rows=(files||[]).map(fl=>({owner_type:type,owner_id:String(id),name:fl.name,link:fl.link,icon:fl.icon||null,bytes:fl.bytes||null}));
+    if(rows.length){ try{ await sb.from('files').insert(rows); }catch(_){} await refresh(); }
+  }});
+}
+async function deleteFile(fid){ if(!(await uiConfirm('Bestand ontkoppelen?')))return; await sb.from('files').delete().eq('id',fid); await refresh(); }
+async function summarizeFile(fid){
+  const f=(state.files||[]).find(x=>x.id===fid); if(!f)return;
+  const el=document.getElementById('fsum_'+fid); if(el){el.classList.add('on');el.textContent='Even lezen…';}
+  try{
+    const r=await fetch('/api/readfile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({link:f.link,name:f.name})});
+    const d=await r.json();
+    if(el) el.textContent = d&&d.summary ? d.summary : (d&&d.error ? ('Lukt niet: '+d.error) : 'Kon het bestand niet lezen.');
+    if(typeof loadUsage==='function') loadUsage();
+  }catch(e){ if(el)el.textContent='Kon het bestand niet lezen.'; }
+}
+
 // ---------- In afwachting ----------
 let wachterTab='all';
 async function setWachterTab(t){if(t==='__new__'){const r=await _newClientPrompt();if(r&&r.id)wachterTab=r.id;render();return;}wachterTab=t;_animateNext=true;render();}
@@ -1876,7 +1928,7 @@ function renderProjecten(){
         <input class="ksub" value="${escapeHtml(p.project||'')}" placeholder="Project / event" onchange="updateProject('${p.id}','project',this.value)" />
         <span class="kcnt">${open}</span>
         <button class="kicon" onclick="deleteProject('${p.id}')" title="Verwijderen"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/></svg></button>
-      </div>`;}).join('');
+      </div>${_filesHTML('project',p.id)}`;}).join('');
     return `<div class="kgroup">${head}${items}</div>`;
   }).join('');
   document.getElementById('beheerWrap').innerHTML=html||'<div class="hint">Nog geen klanten.</div>';
@@ -2044,6 +2096,7 @@ function openModal(id, src){
   ov.classList.toggle('incol',incol);
   ov.classList.toggle('incol-left', incol && src==='wachter');   // In-afwachting-item: bewerk in de linkerkolom
   if(incol){const tb=document.querySelector('.topbar');ov.style.top=(tb?Math.round(tb.getBoundingClientRect().height):0)+'px';} else ov.style.top='';
+  const mf=document.getElementById('m_files');if(mf)mf.innerHTML=_filesHTML('task', editingId);
   ov.classList.add('open');}
 function updateDueLabel(){const el=document.getElementById('m_due_label');if(!el)return;
   el.textContent=mDue?d(mDue).toLocaleDateString('nl-NL',{weekday:'short',day:'numeric',month:'long',year:'numeric'}):'Deadline';
@@ -2155,16 +2208,18 @@ function _mapSource(s,atts){
           images:[]};
 }
 async function sbLoad(){
-  const [p,i,s,a,ap,c] = await Promise.all([
+  const [p,i,s,a,ap,c,f] = await Promise.all([
     sb.from('projects').select('*').order('sort'),
     sb.from('items').select('*').order('created_at'),
     sb.from('sources').select('*').order('received_at',{ascending:false}),
     sb.from('attachments').select('*'),
     sb.from('appointments').select('*').order('date'),
     sb.from('contacts').select('*').order('name'),
+    sb.from('files').select('*').order('created_at',{ascending:false}),
   ]);
   const projects=p.data||[], items=i.data||[], sources=s.data||[], atts=a.data||[];
   state.contacts = (c && c.data) ? c.data : [];
+  state.files = (f && f.data) ? f.data : [];
   state.appointments = (ap && ap.data ? ap.data : []).map(_mapAppt);
   state.projects = projects.map(pr=>({id:pr.id,client:pr.client,project:pr.project,color:pr.color,icon:pr.icon,role:pr.role,
     items: items.filter(x=>x.project_id===pr.id).map(_mapItem)}));
