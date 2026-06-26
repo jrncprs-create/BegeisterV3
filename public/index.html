@@ -304,25 +304,29 @@
   /* MODAL */
   .overlay{position:fixed;inset:0;background:rgba(0,0,0,.62);display:none;align-items:center;justify-content:center;padding:20px;z-index:60}
   .overlay.open{display:flex}
-  .modal{background:var(--panel);border:1px solid var(--line);border-radius:18px;width:500px;max-width:100%;padding:24px 24px 20px;box-shadow:0 28px 64px rgba(0,0,0,.55)}
-  .modal h3{margin:0 0 2px;font-size:18px;font-weight:650;letter-spacing:.2px}
-  .modal label{display:block;font-size:11px;color:var(--mut2);margin:0 0 7px;letter-spacing:.5px}
-  .modal>label{margin-top:18px}
-  .modal input,.modal select,.modal textarea,.datefield{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:11px;padding:11px 13px;font-size:14px;font-family:inherit;transition:border-color .15s,background .15s}
-  .modal input:focus,.modal select:focus,.modal textarea:focus{outline:none;border-color:#4a4a4a;background:#262626}
+  .modal{background:var(--panel);border:1px solid var(--line);border-radius:20px;width:520px;max-width:100%;padding:30px 28px 24px;box-shadow:0 28px 64px rgba(0,0,0,.55)}
+  .modal h3{margin:0 0 22px;font-size:18px;font-weight:650;letter-spacing:.2px}
+  .modal input,.modal select,.modal textarea,.datefield{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:13px;padding:14px 15px;font-size:14px;font-family:inherit;transition:border-color .15s,background .15s}
+  /* labels weg: ruimte komt van de velden zelf */
+  .modal>input,.modal>select,.modal>textarea,.modal>.datefield,.modal .twocol{margin-top:18px}
+  .modal h3+input,.modal h3+select,.modal h3+textarea,.modal h3+.datefield,.modal h3+.twocol{margin-top:0}
+  .modal input:focus,.modal select:focus,.modal textarea:focus{outline:none;border-color:#5a5a5a;background:#262626}
+  .modal ::placeholder{color:var(--mut2);opacity:1}
   .modal textarea{min-height:80px;resize:vertical;line-height:1.45}
-  .modal select{appearance:none;-webkit-appearance:none;cursor:pointer;padding-right:34px;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238a8a8a' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 13px center}
-  .modal .twocol{display:flex;gap:14px;margin-top:18px}.modal .twocol>div{flex:1;min-width:0}
-  .modal .twocol label{margin-top:0}
-  .modal .foot{display:flex;justify-content:space-between;align-items:center;margin-top:26px;gap:10px}
-  .modal .foot .btn{border-radius:11px;padding:10px 18px;font-size:13.5px}
+  .modal select{appearance:none;-webkit-appearance:none;cursor:pointer;padding-right:36px;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ececec' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 14px center}
+  .modal select:has(option[value=""]:checked){color:var(--mut2)}
+  .modal .twocol{display:flex;gap:14px}.modal .twocol>div{flex:1;min-width:0}
+  .modal .foot{display:flex;justify-content:space-between;align-items:center;margin-top:30px;gap:10px}
+  .modal .foot .btn{border-radius:12px;padding:11px 20px;font-size:13.5px}
   .modal .foot .btn:not(.ghost):not(.danger){background:var(--primary2);color:#161616}
   .modal .foot .btn:not(.ghost):not(.danger):hover{background:#fff}
   .modal .foot .btn.ghost:hover{background:var(--panel2);color:var(--txt)}
   .modal .foot .btn.danger:hover{background:#241818}
   .datefield{display:flex;align-items:center;justify-content:space-between;cursor:pointer}
   .datefield:hover{border-color:rgba(255,255,255,.25)}
-  .datefield .cal-ic{color:var(--mut2)}
+  .datefield .cal-ic{color:var(--txt)}
+  .datefield .ph{color:var(--mut2)}
+  .modal input[type=date]::-webkit-calendar-picker-indicator{filter:invert(1);opacity:.92;cursor:pointer}
   .duepop{position:fixed;display:none;z-index:140;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;box-shadow:0 14px 34px rgba(0,0,0,.6);width:300px}
   .duepop.open{display:block}
   .duepop .dphd{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
@@ -582,21 +586,18 @@
 <div class="overlay" id="overlay">
   <div class="modal">
     <h3>Actiepunt bewerken</h3>
-    <label>Omschrijving</label>
-    <textarea id="m_t" rows="3"></textarea>
+    <textarea id="m_t" rows="3" placeholder="Omschrijving"></textarea>
     <div class="twocol">
-      <div><label>Begeister</label><select id="m_owner"><option>Jeroen</option><option>Marlon</option></select></div>
-      <div><label>Contact</label><select id="m_contact"></select></div>
+      <div><select id="m_owner"><option value="">Wie van Begeister</option><option>Jeroen</option><option>Marlon</option></select></div>
+      <div><select id="m_contact"></select></div>
     </div>
     <div class="twocol">
-      <div><label>Klant</label><select id="m_client" onchange="onClientChange()"></select></div>
-      <div><label>Project</label><select id="m_project"></select></div>
+      <div><select id="m_client" onchange="onClientChange()"></select></div>
+      <div><select id="m_project"></select></div>
     </div>
     <div class="twocol">
-      <div><label>Deadline</label>
-        <div class="datefield" id="m_due_field" onclick="openDuePicker(event)"><span id="m_due_label">Geen datum</span><span class="cal-ic">▦</span></div>
-      </div>
-      <div><label>Status</label><select id="m_status"><option value="todo">te doen</option><option value="doing">bezig</option><option value="wait">wacht op</option><option value="done">klaar</option></select></div>
+      <div><div class="datefield" id="m_due_field" onclick="openDuePicker(event)"><span id="m_due_label" class="ph">Deadline</span><span class="cal-ic">▦</span></div></div>
+      <div><select id="m_status"><option value="todo">te doen</option><option value="doing">bezig</option><option value="wait">wacht op</option><option value="done">klaar</option></select></div>
     </div>
     <div class="foot">
       <button class="btn danger" onclick="deleteItem()">Verwijderen</button>
@@ -612,32 +613,30 @@
 <div class="overlay" id="apptOverlay">
   <div class="modal">
     <h3 id="apptModalTitle">Nieuwe afspraak</h3>
-    <label>Omschrijving</label>
-    <input id="a_t" placeholder="bv. Belafspraak met Hans" />
+    <input id="a_t" placeholder="Omschrijving" />
     <div class="twocol">
-      <div><label>Datum</label><input id="a_date" type="date" /></div>
-      <div><label>Type</label><select id="a_kind"><option value="fysiek">Fysiek</option><option value="bel">Telefonisch</option></select></div>
+      <div><input id="a_date" type="date" /></div>
+      <div><select id="a_kind"><option value="">Type</option><option value="fysiek">Fysiek</option><option value="bel">Telefonisch</option></select></div>
     </div>
     <div class="twocol">
-      <div><label>Begintijd</label>
+      <div>
         <input type="hidden" id="a_start" />
-        <div class="datefield" id="a_start_f" onclick="openTimePop('a_start')"><span id="a_start_lbl">--:--</span><span class="cal-ic">◷</span></div>
+        <div class="datefield" id="a_start_f" onclick="openTimePop('a_start')"><span id="a_start_lbl" class="ph">Begintijd</span><span class="cal-ic">◷</span></div>
       </div>
-      <div><label>Eindtijd <span class="opt">(optioneel)</span></label>
+      <div>
         <input type="hidden" id="a_end" />
-        <div class="datefield" id="a_end_f" onclick="openTimePop('a_end')"><span id="a_end_lbl">--:--</span><span class="cal-ic">◷</span></div>
+        <div class="datefield" id="a_end_f" onclick="openTimePop('a_end')"><span id="a_end_lbl" class="ph">Eindtijd</span><span class="cal-ic">◷</span></div>
       </div>
     </div>
     <div class="twocol">
-      <div><label>Met wie</label><input id="a_contact" placeholder="Contactpersoon" /></div>
-      <div><label>Locatie</label><input id="a_location" placeholder="Adres, link of telefonisch" /></div>
+      <div><input id="a_contact" placeholder="Met wie" /></div>
+      <div><input id="a_location" placeholder="Locatie" /></div>
     </div>
     <div class="twocol">
-      <div><label>Klant / project</label><select id="a_client"></select></div>
-      <div><label>Begeister</label><select id="a_owner"><option>Jeroen</option><option>Marlon</option></select></div>
+      <div><select id="a_client"></select></div>
+      <div><select id="a_owner"><option value="">Wie van Begeister</option><option>Jeroen</option><option>Marlon</option></select></div>
     </div>
-    <label>Notitie <span class="opt">(optioneel)</span></label>
-    <textarea id="a_note" rows="2" placeholder="Extra context…"></textarea>
+    <textarea id="a_note" rows="2" placeholder="Notitie"></textarea>
     <div class="foot">
       <button class="btn danger" id="a_del" onclick="deleteAppt()">Verwijderen</button>
       <div style="display:flex;gap:10px">
@@ -1119,13 +1118,13 @@ function openApptModal(id){
   document.getElementById('a_date').value=a?a.date:iso(TODAY);
   setTimeField('a_start',a?a.start:'');
   setTimeField('a_end',a?a.end:'');
-  document.getElementById('a_kind').value=a?a.kind:'fysiek';
+  document.getElementById('a_kind').value=a?a.kind:'';
   document.getElementById('a_contact').value=a?a.contact:'';
   document.getElementById('a_location').value=a?a.location:'';
-  document.getElementById('a_owner').value=a?(a.owner||who||'Jeroen'):(who||'Jeroen');
+  document.getElementById('a_owner').value=a?(a.owner||''):'';
   document.getElementById('a_note').value=a?a.note:'';
   const cs=document.getElementById('a_client');
-  cs.innerHTML='<option value="">— geen klant —</option>'+state.projects.filter(p=>p.id!=='__inbox__').map(p=>`<option value="${p.id}">${escapeHtml(p.client)}${p.project?' · '+escapeHtml(p.project):''}</option>`).join('');
+  cs.innerHTML='<option value="">Klant / project</option>'+state.projects.filter(p=>p.id!=='__inbox__').map(p=>`<option value="${p.id}">${escapeHtml(p.client)}${p.project?' · '+escapeHtml(p.project):''}</option>`).join('');
   cs.value=a&&a.projectId?a.projectId:'';
   document.getElementById('a_del').style.display=apptEditId?'':'none';
   document.getElementById('apptModalTitle').textContent=apptEditId?'Afspraak bewerken':'Nieuwe afspraak';
@@ -1164,7 +1163,7 @@ async function deleteAppt(){
   closeApptModal();await refresh();
 }
 // eigen tijdkiezer (donker, geen iOS-wiel)
-function setTimeField(id,val){const h=document.getElementById(id);if(h)h.value=val||'';const lbl=document.getElementById(id+'_lbl');if(lbl)lbl.textContent=val||'--:--';}
+function setTimeField(id,val){const h=document.getElementById(id);if(h)h.value=val||'';const lbl=document.getElementById(id+'_lbl');if(lbl){const ph=id==='a_end'?'Eindtijd':'Begintijd';lbl.textContent=val||ph;lbl.classList.toggle('ph',!val);}}
 let _timeTarget=null,_tH='',_tM='';
 function openTimePop(target){
   _timeTarget=target;
@@ -1343,7 +1342,7 @@ function onClientChange(){fillProjectSelect(document.getElementById('m_client').
 function openModal(id){const r=findItem(id);if(!r)return;editingId=id;
   document.getElementById('m_owner').value=(r.it.owner==='Marlon'?'Marlon':'Jeroen');
   const cs=[...CONTACTS];if(r.it.contact&&!cs.includes(r.it.contact))cs.unshift(r.it.contact);
-  document.getElementById('m_contact').innerHTML='<option value="">— geen —</option>'+cs.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+  document.getElementById('m_contact').innerHTML='<option value="">Contact</option>'+cs.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
   document.getElementById('m_contact').value=r.it.contact||'';
   document.getElementById('m_client').innerHTML=uniqueClients().map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
   const isInbox=r.p.id==='__inbox__';
@@ -1354,8 +1353,8 @@ function openModal(id){const r=findItem(id);if(!r)return;editingId=id;
   mDue=r.it.due||null;duePickerRef=mDue||iso(TODAY);updateDueLabel();
   document.getElementById('overlay').classList.add('open');}
 function updateDueLabel(){const el=document.getElementById('m_due_label');if(!el)return;
-  el.textContent=mDue?d(mDue).toLocaleDateString('nl-NL',{weekday:'short',day:'numeric',month:'long',year:'numeric'}):'Geen datum';
-  el.style.color=mDue?'var(--txt)':'var(--mut2)';}
+  el.textContent=mDue?d(mDue).toLocaleDateString('nl-NL',{weekday:'short',day:'numeric',month:'long',year:'numeric'}):'Deadline';
+  el.classList.toggle('ph',!mDue);}
 function closeModal(){editingId=null;document.getElementById('overlay').classList.remove('open');document.getElementById('duepop').classList.remove('open');}
 function saveModal(){const r=findItem(editingId);if(!r)return;const np=document.getElementById('m_project').value;
   r.it.t=document.getElementById('m_t').value.trim()||r.it.t;
