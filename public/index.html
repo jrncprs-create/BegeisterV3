@@ -183,6 +183,10 @@
   .evrow.appt .evdot{margin-top:6px}
   .modal .opt{color:var(--mut2);font-weight:400;letter-spacing:0}
   .modal input[type=date],.modal input[type=time]{appearance:none;-webkit-appearance:none}
+  /* iOS zoomt in op velden < 16px; forceer 16px op mobiel ná de basisregels zodat dit wint */
+  @media(max-width:600px){
+    .modal input,.modal select,.modal textarea{font-size:16px}
+  }
   /* maand = iOS-stijl */
   .iomonth{max-width:680px}
   .iohdr{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:6px}
