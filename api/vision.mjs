@@ -1,5 +1,6 @@
 // Vision-endpoint: bekijkt een toegevoegde foto, vat 'm samen en stelt actiepunten voor.
 import Anthropic from "@anthropic-ai/sdk";
+import { logUsage } from "../lib/usage.mjs";
 
 const KEY = (process.env.ANTHROPIC_API_KEY || "").trim();
 const anthropic = KEY ? new Anthropic({ apiKey: KEY }) : null;
@@ -28,6 +29,12 @@ Antwoord ALLEEN met geldige JSON: {"reply":"korte samenvatting voor de gebruiker
           { type: "text", text: `Dit is een toegevoegde afbeelding${filename ? " (" + filename + ")" : ""}. Vat samen en stel actiepunten voor.` },
         ],
       }],
+    });
+    await logUsage(null, {
+      source: "vision", model: MODEL,
+      inputTokens: resp?.usage?.input_tokens || 0,
+      outputTokens: resp?.usage?.output_tokens || 0,
+      webSearches: 0,
     });
     const raw = resp.content.map(b => (b.type === "text" ? b.text : "")).join("");
     const slice = raw.slice(raw.indexOf("{"), raw.lastIndexOf("}") + 1);

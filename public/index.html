@@ -46,6 +46,15 @@
   .userbox{display:flex;align-items:center;gap:9px}
   .userbox .av{width:30px;height:30px;border-radius:50%;background:#333;border:1px solid #444;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--txt);font-size:12px}
   .userbox select{background:transparent;border:none;color:var(--txt);font-size:13.5px;font-weight:600;cursor:pointer}
+  .usage-chip{font-size:11.5px;color:var(--mut2,#888);font-weight:600;cursor:pointer;padding:3px 8px;border:1px solid var(--line,#333);border-radius:999px;white-space:nowrap;opacity:.85}
+  .usage-chip:hover{opacity:1;color:var(--txt)}
+  .usage-chip:empty{display:none}
+  .usage-pop{position:absolute;top:52px;right:14px;z-index:120;background:var(--side,#1d1d1d);border:1px solid var(--line,#333);border-radius:12px;padding:14px 16px;min-width:220px;box-shadow:0 14px 34px rgba(0,0,0,.5);font-size:13px;color:var(--txt)}
+  .usage-pop h4{margin:0 0 8px;font-size:12px;color:var(--mut2,#888);font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+  .usage-pop .row{display:flex;justify-content:space-between;gap:18px;padding:3px 0;color:var(--mut,#aaa)}
+  .usage-pop .row b{color:var(--txt);font-weight:600}
+  .usage-pop .tot{border-top:1px solid var(--line,#333);margin-top:8px;padding-top:8px}
+  .usage-pop .sub{margin-top:10px;font-size:11px;color:var(--mut2,#777)}
 
   /* BODY */
   .body{display:flex;flex:1;min-height:0}
@@ -644,8 +653,10 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
+      <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" style="font-size:13.5px;font-weight:600">Jeroen</span>
     </div>
+    <div id="usagePop" class="usage-pop" hidden></div>
     <div class="logo" id="logoSlot" onclick="goHome()" style="cursor:pointer" title="Beginscherm">
       <svg viewBox="0 0 32 32" width="26" height="26" aria-label="Begeister — beginscherm">
         <g stroke="#fff" stroke-width="2.4" stroke-linecap="butt">
@@ -1992,6 +2003,42 @@ async function sbLoad(){
   if(activeTab!=='all' && !state.projects.find(x=>x.id===activeTab)) activeTab='all';
 }
 async function refresh(){ await sbLoad(); render(); }
+// ---------- verbruiksteller ----------
+let _usage=null;
+async function loadUsage(){
+  try{
+    const r=await fetch('/api/usage');
+    if(!r.ok)return;
+    const d=await r.json();
+    if(!d||d.error)return;
+    _usage=d;
+    const chip=document.getElementById('usageChip');
+    if(chip){
+      const m=(d.month||'').split(' ')[0]||'';
+      chip.textContent=m+' · €'+(Number(d.eur)||0).toFixed(2);
+    }
+    renderUsagePop();
+  }catch(_){}
+}
+function renderUsagePop(){
+  const pop=document.getElementById('usagePop'); if(!pop||!_usage)return;
+  const d=_usage, b=d.breakdown||{}, t=d.tokens||{};
+  const e=n=>'€'+(Number(n)||0).toFixed(2);
+  pop.innerHTML=
+    '<h4>Verbruik '+(d.month||'')+'</h4>'+
+    '<div class="row"><span>Chat</span><b>'+e(b.chat)+'</b></div>'+
+    '<div class="row"><span>Intake</span><b>'+e(b.intake)+'</b></div>'+
+    '<div class="row"><span>Foto/vision</span><b>'+e(b.vision)+'</b></div>'+
+    '<div class="row tot"><span>Totaal</span><b>'+e(d.eur)+'</b></div>'+
+    '<div class="sub">'+( (Number(t.input)||0)+(Number(t.output)||0) ).toLocaleString('nl-NL')+' tokens · '+(Number(t.web_searches)||0)+' web-searches<br>~$'+(Number(d.usd)||0).toFixed(2)+' (koers benadering)</div>';
+}
+function toggleUsage(ev){
+  if(ev)ev.stopPropagation();
+  const pop=document.getElementById('usagePop'); if(!pop)return;
+  if(pop.hidden){ renderUsagePop(); pop.hidden=false; setTimeout(()=>document.addEventListener('click',_closeUsage),0); }
+  else { _closeUsage(); }
+}
+function _closeUsage(){ const pop=document.getElementById('usagePop'); if(pop)pop.hidden=true; document.removeEventListener('click',_closeUsage); }
 // Gerichte verversingen: laad data opnieuw, maar herteken alleen de relevante kolom(men).
 // Zo verlies je geen scrollpositie in de andere kolommen.
 async function refreshTaken(){ await sbLoad(); rebuildColors(); renderTaken(); renderRail(); renderBadges(); save(); _animateNext=false; }
@@ -2387,6 +2434,8 @@ async function chatSend(){
   if(reply){addMsg('ai',reply);chatHistory.push({role:'assistant',content:reply});}
   if((data.items&&data.items.length)||(data.updates&&data.updates.length)||(data.removes&&data.removes.length)||(data.appointments&&data.appointments.length)){ renderProposal(data); }
   if(data.action&&data.action.view){ doChatAction(data.action); }
+  if(data.refresh){ try{ await refresh(); }catch(_){} }
+  loadUsage();
 }
 function doChatAction(a){
   const map={taken:'taken',agenda:'agenda',afspraken:'afspraken',afspraak:'afspraken',wachter:'wachter',bronnen:'bronnen',klanten:'beheer'};
@@ -2447,6 +2496,7 @@ async function handlePhoto(e){
   if(data.reply){ addMsg('ai',data.reply); chatHistory.push({role:'assistant',content:data.reply}); }
   if(data.items&&data.items.length){ renderProposal(data); }
   else { addMsg('ai','Geen concrete actiepunten uit de foto — vertel maar wat je ermee wilt.'); }
+  loadUsage();
 }
 let _rec=null;
 function voiceMode(){
@@ -2523,6 +2573,7 @@ async function startApp(session){
   who = /jeroen/i.test(email)?'Jeroen':(/marlon/i.test(email)?'Marlon':'Jeroen');
   const el=document.getElementById('who'); if(el){el.textContent=who;} const av=document.getElementById('userAv'); if(av)av.textContent=who[0];
   await refresh();
+  loadUsage();
   applyLayout();
   if(!_booted){_booted=true; setView('taken'); showWelcome(); chatGreet();}
 }

@@ -29,7 +29,7 @@ export async function extractItems({ text, sender = "", subject = "", today, cat
   // Geen AI-key? Val terug op één concept-actiepunt zodat intake blijft werken.
   if (!anthropic) {
     const firstLine = (subject || (text || "").split("\n").find(l => l.trim()) || "Nieuw bericht").trim().slice(0, 120);
-    return { items: [{ title: firstLine, owner: "", contact: "", due: null, status: "todo", project_id: null }], summary: firstLine, contacts: [] };
+    return { items: [{ title: firstLine, owner: "", contact: "", due: null, status: "todo", project_id: null }], summary: firstLine, contacts: [], usage: null };
   }
   const user = `VANDAAG: ${today}
 AFZENDER: ${sender}
@@ -61,6 +61,12 @@ Geef JSON in exact dit formaat:
     messages: [{ role: "user", content: user }],
   });
 
+  const usage = {
+    model: MODEL,
+    inputTokens: resp?.usage?.input_tokens || 0,
+    outputTokens: resp?.usage?.output_tokens || 0,
+    webSearches: 0,
+  };
   const raw = resp.content.map(b => (b.type === "text" ? b.text : "")).join("");
   const json = raw.slice(raw.indexOf("{"), raw.lastIndexOf("}") + 1);
   try {
@@ -69,9 +75,10 @@ Geef JSON in exact dit formaat:
       items: Array.isArray(parsed.items) ? parsed.items : [],
       summary: parsed.summary || "",
       contacts: Array.isArray(parsed.contacts) ? parsed.contacts : [],
+      usage,
     };
   } catch (e) {
     console.error("Kon Claude-antwoord niet als JSON lezen:", raw);
-    return { items: [], summary: "", contacts: [] };
+    return { items: [], summary: "", contacts: [], usage };
   }
 }

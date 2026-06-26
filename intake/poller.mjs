@@ -12,6 +12,7 @@ import { simpleParser } from "mailparser";
 import { createClient } from "@supabase/supabase-js";
 import { extractItems } from "./extract.mjs";
 import { sendToAll } from "../lib/push.mjs";
+import { logUsage } from "../lib/usage.mjs";
 
 const BUCKET = "intake";
 
@@ -121,9 +122,11 @@ export async function run() {
         }
 
         // 3) Claude haalt actiepunten (en contacten) eruit
-        const { items, summary, contacts } = await extractItems({
+        const { items, summary, contacts, usage } = await extractItems({
           text: body, sender, subject: mail.subject || "", today, catalog,
         });
+        // verbruik loggen (faalt stil)
+        if (usage) await logUsage(db, { source: "intake", ...usage });
         if (items.length) {
           await db.from("items").insert(items.map(it => ({
             project_id: it.project_id || null,
