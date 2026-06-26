@@ -696,7 +696,7 @@
   <div class="modal">
     <button class="modal-close" onclick="closeModal()" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     <h3 id="editModalTitle">Actiepunt bewerken</h3>
-    <textarea id="m_t" rows="3" placeholder="Omschrijving"></textarea>
+    <textarea id="m_t" rows="3" placeholder="Omschrijving" autocomplete="off"></textarea>
     <div class="twocol">
       <div><select id="m_owner"><option value="">Wie van Begeister</option><option>Jeroen</option><option>Marlon</option></select></div>
       <div><select id="m_contact"></select></div>
@@ -721,9 +721,9 @@
   <div class="modal">
     <button class="modal-close" onclick="closeApptModal()" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     <h3 id="apptModalTitle">Nieuwe afspraak</h3>
-    <input id="a_t" placeholder="Omschrijving" />
+    <input id="a_t" placeholder="Omschrijving" autocomplete="off" />
     <div class="twocol">
-      <div><input id="a_date" type="date" /></div>
+      <div><input type="hidden" id="a_date" /><div class="datefield" id="a_date_f" onclick="openDuePicker(event,'appt')"><span id="a_date_lbl" class="ph">Datum</span><span class="cal-ic">▦</span></div></div>
       <div><select id="a_kind"><option value="">Type</option><option value="fysiek">Fysiek</option><option value="bel">Telefonisch</option></select></div>
     </div>
     <div class="twocol">
@@ -737,14 +737,14 @@
       </div>
     </div>
     <div class="twocol">
-      <div><input id="a_contact" placeholder="Met wie" /></div>
-      <div><input id="a_location" placeholder="Locatie" /></div>
+      <div><input id="a_contact" placeholder="Met wie" autocomplete="off" /></div>
+      <div><input id="a_location" placeholder="Locatie" autocomplete="off" /></div>
     </div>
     <div class="twocol">
       <div><select id="a_client" onchange="onApptClientChange()"></select></div>
       <div><select id="a_owner"><option value="">Wie van Begeister</option><option>Jeroen</option><option>Marlon</option></select></div>
     </div>
-    <textarea id="a_note" rows="2" placeholder="Notitie"></textarea>
+    <textarea id="a_note" rows="2" placeholder="Notitie" autocomplete="off"></textarea>
     <div class="foot">
       <button class="iconbtn del" id="a_del" onclick="deleteAppt()" aria-label="Verwijderen"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10.4"/><path d="M9 9l6 6M15 9l-6 6"/></svg></button>
       <button class="iconbtn save" onclick="saveAppt()" aria-label="Opslaan"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10.4"/><path d="M8 12.4l2.6 2.6L16 9.2"/></svg></button>
@@ -1263,7 +1263,7 @@ function openApptModal(id){
   const a = id ? (state.appointments||[]).find(x=>x.id===id) : null;
   apptEditId = a?a.id:null;
   document.getElementById('a_t').value=a?a.t:'';
-  document.getElementById('a_date').value=a?a.date:iso(TODAY);
+  setApptDate(a?a.date:iso(TODAY));
   setTimeField('a_start',a?a.start:'');
   setTimeField('a_end',a?a.end:'');
   document.getElementById('a_kind').value=a?a.kind:'';
@@ -1314,6 +1314,7 @@ async function deleteAppt(){
 }
 // eigen tijdkiezer (donker, geen iOS-wiel)
 function setTimeField(id,val){const h=document.getElementById(id);if(h)h.value=val||'';const lbl=document.getElementById(id+'_lbl');if(lbl){const ph=id==='a_end'?'Eindtijd':'Begintijd';lbl.textContent=val||ph;lbl.classList.toggle('ph',!val);}}
+function setApptDate(val){const h=document.getElementById('a_date');if(h)h.value=val||'';const lbl=document.getElementById('a_date_lbl');if(lbl){lbl.textContent=val?d(val).toLocaleDateString('nl-NL',{weekday:'short',day:'numeric',month:'long',year:'numeric'}):'Datum';lbl.classList.toggle('ph',!val);}}
 let _timeTarget=null,_tH='',_tM='';
 function openTimePop(target){
   _timeTarget=target;
@@ -1559,7 +1560,7 @@ function deleteProject(id){const p=projById(id);if(!p)return;
 
 // ---------- acties ----------
 function toggle(id){const r=findItem(id);if(!r)return;r.it.status=r.it.status==='done'?'todo':'done';render();}
-let editingId=null,mDue=null,duePickerRef=iso(TODAY);
+let editingId=null,mDue=null,duePickerRef=iso(TODAY),_dueTarget='task';
 const CONTACTS=['Willem','Leon','Joep','Idz','Noa','Hans','Stavros','Len'];
 function uniqueClients(){const seen=[];state.projects.forEach(p=>{if(p.id==='__inbox__')return;if(!seen.includes(p.client))seen.push(p.client);});return seen;}
 function fillProjectSelect(client,selId){
@@ -1591,11 +1592,11 @@ function uiPrompt(title, value=''){
   });
 }
 function _fillClientSelect(sel,selected){
-  sel.innerHTML='<option value="__none__">— Geen klant —</option>'+uniqueClients().map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('')+'<option value="__new__">+ Nieuwe klant…</option>';
+  sel.innerHTML='<option value="__none__">— Geen klant —</option><option value="__new__">+ Nieuwe klant…</option>'+uniqueClients().map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
   if(selected!=null) sel.value=selected;
 }
 function _fillApptClientSelect(sel,selected){
-  sel.innerHTML='<option value="">Klant / project</option>'+state.projects.filter(p=>p.id!=='__inbox__').map(p=>`<option value="${p.id}">${escapeHtml(p.client)}${p.project?' · '+escapeHtml(p.project):''}</option>`).join('')+'<option value="__new__">+ Nieuwe klant…</option>';
+  sel.innerHTML='<option value="">Klant / project</option><option value="__new__">+ Nieuwe klant…</option>'+state.projects.filter(p=>p.id!=='__inbox__').map(p=>`<option value="${p.id}">${escapeHtml(p.client)}${p.project?' · '+escapeHtml(p.project):''}</option>`).join('');
   if(selected!=null) sel.value=selected;
 }
 function uiConfirm(title){
@@ -1682,26 +1683,29 @@ function deleteItem(){const r=findItem(editingId);if(!r)return;r.p.items=r.p.ite
 document.getElementById('overlay').addEventListener('click',e=>{if(e.target.id==='overlay')closeModal();});
 
 // eigen datumkiezer
-function openDuePicker(e){e.stopPropagation();duePickerRef=mDue||iso(TODAY);renderDuePicker();
+function _dueCur(){return _dueTarget==='appt'?(document.getElementById('a_date').value||null):mDue;}
+function _dueAnchor(){return _dueTarget==='appt'?'a_date_f':'m_due_field';}
+function openDuePicker(e,target){e.stopPropagation();_dueTarget=target||'task';duePickerRef=_dueCur()||iso(TODAY);renderDuePicker();
   const el=document.getElementById('duepop');el.classList.add('open');
-  const fr=document.getElementById('m_due_field').getBoundingClientRect();
+  const fr=document.getElementById(_dueAnchor()).getBoundingClientRect();
   let top=fr.bottom+6;if(top+340>window.innerHeight)top=Math.max(8,fr.top-348);
   el.style.left=Math.min(fr.left,window.innerWidth-320)+'px';el.style.top=top+'px';}
 function dueNav(dir){const r=d(duePickerRef);duePickerRef=iso(new Date(r.getFullYear(),r.getMonth()+dir,1));renderDuePicker();}
-function setDue(di){mDue=di;updateDueLabel();document.getElementById('duepop').classList.remove('open');}
-function clearDue(){mDue=null;updateDueLabel();document.getElementById('duepop').classList.remove('open');}
-function dueToday(){mDue=iso(TODAY);updateDueLabel();document.getElementById('duepop').classList.remove('open');}
+function setDue(di){if(_dueTarget==='appt')setApptDate(di);else{mDue=di;updateDueLabel();}document.getElementById('duepop').classList.remove('open');}
+function clearDue(){if(_dueTarget==='appt')setApptDate(null);else{mDue=null;updateDueLabel();}document.getElementById('duepop').classList.remove('open');}
+function dueToday(){if(_dueTarget==='appt')setApptDate(iso(TODAY));else{mDue=iso(TODAY);updateDueLabel();}document.getElementById('duepop').classList.remove('open');}
 function renderDuePicker(){
   const r=d(duePickerRef);const first=new Date(r.getFullYear(),r.getMonth(),1);const gs=monday(first);
   const lbl=first.toLocaleDateString('nl-NL',{month:'long',year:'numeric'});
   const names=['ma','di','wo','do','vr','za','zo'].map(n=>`<div>${n}</div>`).join('');
   let cells='';
-  for(let i=0;i<42;i++){const day=addDays(gs,i);const di=iso(day);const other=day.getMonth()!==r.getMonth();const today=di===iso(TODAY);const sel=di===mDue;
+  const _cur=_dueCur();
+  for(let i=0;i<42;i++){const day=addDays(gs,i);const di=iso(day);const other=day.getMonth()!==r.getMonth();const today=di===iso(TODAY);const sel=di===_cur;
     cells+=`<div class="dpc ${other?'other':''} ${today?'today':''} ${sel?'sel':''}" onclick="setDue('${di}')">${day.getDate()}</div>`;
     if(i%7===6){const nx=addDays(gs,i+1);if(nx.getMonth()!==r.getMonth()&&i>=27)break;}}
   document.getElementById('duepop').innerHTML=`<div class="dphd"><span class="lbl">${lbl}</span><span class="dpnav"><button onclick="event.stopPropagation();dueNav(-1)">‹</button><button onclick="event.stopPropagation();dueNav(1)">›</button></span></div><div class="dphdr">${names}</div><div class="dpgrid">${cells}</div><div class="dpfoot"><button onclick="event.stopPropagation();clearDue()">Wissen</button><button onclick="event.stopPropagation();dueToday()">Vandaag</button></div>`;
 }
-document.addEventListener('click',e=>{const dp=document.getElementById('duepop');if(dp&&dp.classList.contains('open')){const f=document.getElementById('m_due_field');if(!dp.contains(e.target)&&!(f&&f.contains(e.target)))dp.classList.remove('open');}});
+document.addEventListener('click',e=>{const dp=document.getElementById('duepop');if(dp&&dp.classList.contains('open')){const f=document.getElementById('m_due_field');const f2=document.getElementById('a_date_f');if(!dp.contains(e.target)&&!(f&&f.contains(e.target))&&!(f2&&f2.contains(e.target)))dp.classList.remove('open');}});
 
 function addItem(){const inp=document.getElementById('newTitle');const raw=inp.value.trim();if(!raw)return;
   const pid=activeTab==='all'?'chi':activeTab;projById(pid).items.push(parseLine(raw));inp.value='';render();}
