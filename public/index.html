@@ -526,6 +526,9 @@
     .rail #wachterBlock{flex:1;min-height:60px}
     .rail #wachterBlock::before{content:"In afwachting";display:flex;align-items:center;height:26px;font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut2);margin:0 0 12px}
     .rail #chatThread:empty{display:none}
+    /* welkomstscherm-chat vult in gesprek het hele scherm (tot bovenaan) */
+    .welcome-overlay.chatting #homeIntro{position:absolute}
+    .welcome-overlay.chatting #welcomeChat{position:absolute;left:50%;transform:translateX(-50%);top:58px;bottom:22px;width:min(680px,92vw);max-height:none;margin:0}
   }
   /* desktop-werkblad: 3 gelijke kolommen — In afwachting | Taken | Agenda */
   @media(min-width:1001px){
