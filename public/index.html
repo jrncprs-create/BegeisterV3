@@ -561,12 +561,13 @@
     .chatrow{margin:8px 11px 10px}
     .home-compliment{font-size:23px}
     /* mobiel welkomstscherm: achtergrond vullend, invoer vast onderaan, geen over-swipe; bij typen schuift quote/asterisk omhoog uit beeld */
-    .welcome-overlay{height:100dvh;overflow:hidden;overscroll-behavior:contain}
-    #welcomeBg{height:100dvh}
-    .welcome-overlay #chatDock{position:fixed;left:0;right:0;bottom:0;width:auto;margin:0;padding-bottom:env(safe-area-inset-bottom);background:transparent}
+    .welcome-overlay{height:100lvh;min-height:100dvh;overflow:hidden;overscroll-behavior:contain}
+    #welcomeBg{top:0;left:0;right:0;bottom:auto;height:100lvh}
+    .welcome-scrim{top:0;left:0;right:0;bottom:auto;height:100lvh}
+    .welcome-overlay #chatDock{position:fixed;left:0;right:0;bottom:0;width:auto;margin:0;padding:0 10px calc(env(safe-area-inset-bottom) + 12px);background:transparent}
     .welcome-overlay #welcomeChat{width:100%;margin-top:16px;max-height:42vh}
     .welcome-overlay #chatThread{padding-bottom:88px}
-    .welcome-overlay.chatting #homeIntro{transform:translateY(-130vh)}
+    .welcome-overlay.chatting #homeIntro{display:none}
     .welcome-overlay.chatting #welcomeChat{transform:none}
     /* mobiel menu: volgorde In afwachting > Taken > Afspraken > Agenda > Meldingen; AI/Bronnen/Klanten weg */
     #nav button[data-v="home"],#nav button[data-v="bronnen"],#nav button[data-v="beheer"]{display:none}
@@ -583,7 +584,7 @@
     .rail .home-star{width:48px;height:48px;margin-bottom:10px}
     .rail .home-compliment{font-size:16px;line-height:1.3;margin:0 0 12px;max-width:none}
     .rail #wachterBlock{flex:1;min-height:60px}
-    .rail #wachterBlock::before{content:"In afwachting";display:flex;align-items:center;height:26px;font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut2);margin:0 0 12px}
+    .rail #wachterBlock::before{content:"In afwachting";display:flex;align-items:center;height:26px;font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut2);margin:0 0 16px}
     .rail #chatThread:empty{display:none}
     /* welkomstscherm-chat vult in gesprek het hele scherm (tot bovenaan) */
     .welcome-overlay.chatting #chatDock{margin-top:auto}
@@ -594,17 +595,17 @@
     /* topnav uitgekleed: alleen Bronnen, Klanten, Contacten, Meldingen */
     #nav button[data-v="agenda"],#nav button[data-v="afspraken"],#nav button[data-v="taken"]{display:none}
     /* kolom 1 (rail) krijgt exact hetzelfde formaat/scrollgedrag als de werkblad-cellen */
-    .rail{width:33.333vw;flex:0 0 33.333vw;border-right:none;height:calc(100dvh - var(--tbh,52px));padding-bottom:40px;overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none}
+    .rail{width:33.333vw;flex:0 0 33.333vw;border-right:none;height:calc(100dvh - var(--tbh,52px));padding-top:18px;padding-bottom:40px;overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none}
     .rail::-webkit-scrollbar{display:none}
     /* kop "In afwachting" van kolom 1 blijft bovenaan staan bij scrollen */
     .rail #wachterBlock::before{position:sticky;top:0;z-index:4;background:var(--bg)}
     #chatDock{width:33.333vw}
     .rail #wachterDrop{display:none}
-    .main.workspace{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0;align-items:start;height:calc(100dvh - var(--tbh,52px));overflow:hidden}
-    .main.workspace #view-taken{display:block;padding-right:26px;position:relative;height:100%;overflow-y:auto;padding-bottom:40px;scrollbar-width:none;-ms-overflow-style:none}
-    .main.workspace #view-agenda{display:block;padding-left:26px;position:relative;height:100%;overflow-y:auto;padding-bottom:40px;scrollbar-width:none;-ms-overflow-style:none}
+    .main.workspace{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0;align-items:start;height:calc(100dvh - var(--tbh,52px));overflow:hidden;padding:0}
+    .main.workspace #view-taken{display:block;padding:18px 26px 40px 24px;position:relative;height:100%;overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none}
+    .main.workspace #view-agenda{display:block;padding:18px 24px 40px 26px;position:relative;height:100%;overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none}
     .main.workspace #view-taken::-webkit-scrollbar,.main.workspace #view-agenda::-webkit-scrollbar{display:none}
-    .main.workspace #view-taken::before,.main.workspace #view-agenda::before{position:sticky;top:0;z-index:4;background:var(--bg);display:flex;align-items:center;height:26px;font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut2);margin:0 0 12px}
+    .main.workspace #view-taken::before,.main.workspace #view-agenda::before{position:sticky;top:0;z-index:4;background:var(--bg);display:flex;align-items:center;height:26px;font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut2);margin:0 0 16px}
     /* knoppen in de kolomkop blijven bovenaan meeplakken bij scrollen */
     .main.workspace #view-taken .col-add,.main.workspace #view-taken .col-close,
     .main.workspace #view-agenda .agenda-add,.main.workspace #view-agenda .agenda-toggle,.main.workspace #view-agenda .col-close{position:sticky;float:right;margin-top:-26px;z-index:5}
@@ -2654,7 +2655,7 @@ async function startApp(session){
   await refresh();
   loadUsage();
   applyLayout();
-  if(!_booted){_booted=true; setView('taken'); showWelcome(); chatGreet();}
+  if(!_booted){_booted=true; setView(isMobile()?'wachter':'taken'); showWelcome(); chatGreet();}
 }
 sb.auth.getSession().then(({data})=>{ if(data.session) startApp(data.session); else showLogin(); });
 sb.auth.onAuthStateChange((_e,session)=>{ if(session) startApp(session); else showLogin(); });
@@ -2662,5 +2663,3 @@ sb.auth.onAuthStateChange((_e,session)=>{ if(session) startApp(session); else sh
 </script>
 </body>
 </html>
-
-<!-- deploy 1782503009 -->
