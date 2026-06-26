@@ -111,11 +111,11 @@
 
   /* task cards */
   .list{display:flex;flex-direction:column;gap:11px}
-  .clientdrop{display:none;width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:11px;padding:12px 13px;font-size:15px;font-weight:600;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'><path d='M6 9l6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 14px center}
+  .clientdrop{display:none;width:100%;background:transparent;border:1px solid var(--line);color:var(--txt);border-radius:11px;padding:12px 13px;font-size:15px;font-weight:600;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'><path d='M6 9l6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 14px center}
   #wachterDrop .clientdrop{display:block;margin-bottom:12px}
   #wachterDrop{margin-top:2px}
-  .task{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px 16px;display:block;cursor:default}
-  .task:hover{background:var(--panel2)}
+  .task{background:transparent;border:1px solid var(--line);border-radius:16px;padding:14px 16px;display:block;cursor:default}
+  .task:hover{background:rgba(255,255,255,.035)}
   .task.done{opacity:.5}
   .task.done .t-title{text-decoration:line-through}
   .t-top{display:flex;align-items:center;gap:11px}
@@ -313,11 +313,11 @@
   .iconbtn.del{color:var(--late)}
   .iconbtn:hover{background:var(--panel2)}
   .iconbtn:active{opacity:.7}
-  .modal input,.modal select,.modal textarea,.datefield{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:13px;padding:14px 15px;font-size:14px;font-family:inherit;transition:border-color .15s,background .15s}
+  .modal input,.modal select,.modal textarea,.datefield{width:100%;background:transparent;border:1px solid var(--line);color:var(--txt);border-radius:13px;padding:14px 15px;font-size:14px;font-family:inherit;transition:border-color .15s,background .15s}
   /* labels weg: ruimte komt van de velden zelf */
   .modal>input,.modal>select,.modal>textarea,.modal>.datefield,.modal .twocol{margin-top:18px}
   .modal h3+input,.modal h3+select,.modal h3+textarea,.modal h3+.datefield,.modal h3+.twocol{margin-top:0}
-  .modal input:focus,.modal select:focus,.modal textarea:focus{outline:none;border-color:#5a5a5a;background:#262626}
+  .modal input:focus,.modal select:focus,.modal textarea:focus{outline:none;border-color:#5a5a5a;background:rgba(255,255,255,.04)}
   .modal ::placeholder{color:var(--mut2);opacity:1}
   .modal textarea{min-height:80px;resize:vertical;line-height:1.45}
   .modal select{appearance:none;-webkit-appearance:none;cursor:pointer;padding-right:36px;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ececec' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 14px center}
