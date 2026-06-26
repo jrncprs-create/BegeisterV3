@@ -25,7 +25,7 @@ Regels:
  *          catalog:Array<{project_id:string, client:string, project:string}>}} input
  * @returns {Promise<{items:Array, summary:string, contacts:Array}>}
  */
-export async function extractItems({ text, sender = "", subject = "", today, catalog }) {
+export async function extractItems({ text, sender = "", subject = "", today, catalog, context = "" }) {
   // Geen AI-key? Val terug op één concept-actiepunt zodat intake blijft werken.
   if (!anthropic) {
     const firstLine = (subject || (text || "").split("\n").find(l => l.trim()) || "Nieuw bericht").trim().slice(0, 120);
@@ -57,7 +57,7 @@ Geef JSON in exact dit formaat:
   const resp = await anthropic.messages.create({
     model: MODEL,
     max_tokens: 1800,
-    system: SYSTEM,
+    system: SYSTEM + (context ? "\n\nVASTE CONTEXT (team/bedrijf — gebruik dit om beter te koppelen):\n" + context : ""),
     messages: [{ role: "user", content: user }],
   });
 

@@ -33,6 +33,19 @@ async function loadCatalog(db) {
   }));
 }
 
+// Vaste AI-context (Over Begeister / Jeroen / Marlon) → string voor de extractie.
+async function loadContext(db) {
+  try {
+    const { data } = await db.from("app_context").select("key, body");
+    const m = {}; (data || []).forEach(r => { m[r.key] = r.body || ""; });
+    let s = "";
+    if (m.begeister) s += "OVER BEGEISTER:\n" + m.begeister + "\n\n";
+    if (m.jeroen) s += "OVER JEROEN:\n" + m.jeroen + "\n\n";
+    if (m.marlon) s += "OVER MARLON:\n" + m.marlon + "\n";
+    return s.trim();
+  } catch (_) { return ""; }
+}
+
 // Gevonden contacten opslaan. Dedupe: op e-mail indien aanwezig (upsert),
 // anders alleen inserten als er nog geen contact met dezelfde (lower) naam is.
 async function saveContacts(db, contacts, sourceId, projectId) {
@@ -63,6 +76,7 @@ async function saveContacts(db, contacts, sourceId, projectId) {
 export async function run() {
   const db = supa();
   const catalog = await loadCatalog(db);
+  const context = await loadContext(db);
   const today = new Date().toISOString().slice(0, 10);
 
   const client = new ImapFlow({
@@ -123,7 +137,7 @@ export async function run() {
 
         // 3) Claude haalt actiepunten (en contacten) eruit
         const { items, summary, contacts, usage } = await extractItems({
-          text: body, sender, subject: mail.subject || "", today, catalog,
+          text: body, sender, subject: mail.subject || "", today, catalog, context,
         });
         // verbruik loggen (faalt stil)
         if (usage) await logUsage(db, { source: "intake", ...usage });

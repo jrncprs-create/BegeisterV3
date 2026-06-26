@@ -419,6 +419,9 @@
   .kfile-del:hover{color:var(--late)}
   .kfile-sum{flex:1 1 100%;font-size:12.5px;color:var(--mut);line-height:1.5;margin:2px 0 2px 25px;white-space:pre-wrap;display:none}
   .kfile-sum.on{display:block}
+  .ctx-intro{font-size:12.5px;color:var(--mut2);margin:0 0 6px;line-height:1.5}
+  .ctx-label{font-size:11.5px;letter-spacing:.6px;text-transform:uppercase;color:var(--mut2);margin:16px 0 7px;font-weight:600}
+  #ctxOverlay .modal textarea{min-height:96px;line-height:1.5}
 
   /* MODAL */
   .overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:20px;z-index:60;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .35s ease,visibility 0s linear .55s}
@@ -712,7 +715,7 @@
     <div class="spacer"></div>
     <div class="userbox">
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
-      <span id="who" style="font-size:13.5px;font-weight:600">Jeroen</span>
+      <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
     <div id="usagePop" class="usage-pop" hidden></div>
     <div class="logo" id="logoSlot" onclick="goHome()" style="cursor:pointer" title="Beginscherm">
@@ -898,6 +901,22 @@
     <div class="foot">
       <button class="iconbtn del" id="c_del" onclick="deleteContactModal()" aria-label="Verwijderen"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10.4"/><path d="M9 9l6 6M15 9l-6 6"/></svg></button>
       <button class="iconbtn save" onclick="saveContactModal()" aria-label="Opslaan"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10.4"/><path d="M8 12.4l2.6 2.6L16 9.2"/></svg></button>
+    </div>
+  </div>
+</div>
+
+<!-- AI-CONTEXT MODAL -->
+<div class="overlay" id="ctxOverlay">
+  <div class="modal">
+    <button class="modal-close" onclick="closeContextModal()" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <h3 id="ctxModalTitle">AI-context</h3>
+    <p class="ctx-intro">Wat je hier zet, weet de AI altijd — in de chat, bij intake en bij foto's.</p>
+    <div class="ctx-label" id="ctx_me_label">Over jou</div>
+    <textarea id="ctx_me" rows="6" placeholder="Wie ben je, wat pak jij op, je voorkeuren, contactgegevens…" autocomplete="off"></textarea>
+    <div class="ctx-label">Over Begeister — samen in te vullen</div>
+    <textarea id="ctx_company" rows="7" placeholder="Wat doen jullie, vaste klanten/locaties, leveranciers, werkwijze, toon…" autocomplete="off"></textarea>
+    <div class="foot">
+      <button class="iconbtn save" onclick="saveContextModal()" aria-label="Opslaan"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10.4"/><path d="M8 12.4l2.6 2.6L16 9.2"/></svg></button>
     </div>
   </div>
 </div>
@@ -1818,6 +1837,34 @@ async function summarizeFile(fid){
   }catch(e){ if(el)el.textContent='Kon het bestand niet lezen.'; }
 }
 
+// ---------- AI-context (Over jou / Over Begeister) ----------
+function openContextModal(){
+  const me=(who||'Jeroen');
+  const t=document.getElementById('ctx_me_label'); if(t)t.textContent='Over '+me;
+  const c=state.ctx||{};
+  const a=document.getElementById('ctx_me'); if(a)a.value=c[me.toLowerCase()]||'';
+  const b=document.getElementById('ctx_company'); if(b)b.value=c['begeister']||'';
+  const ov=document.getElementById('ctxOverlay'); if(!ov)return; ov.style.top=''; ov.classList.add('open');
+}
+function closeContextModal(){const ov=document.getElementById('ctxOverlay');if(ov)ov.classList.remove('open');}
+async function saveContextModal(){
+  const me=(who||'Jeroen').toLowerCase();
+  const meVal=(document.getElementById('ctx_me').value||'').trim();
+  const coVal=(document.getElementById('ctx_company').value||'').trim();
+  const now=new Date().toISOString();
+  try{ await sb.from('app_context').upsert([{key:me,body:meVal,updated_at:now},{key:'begeister',body:coVal,updated_at:now}],{onConflict:'key'}); }catch(_){}
+  closeContextModal(); await refresh();
+}
+function _ctxForChat(){
+  const c=state.ctx||{}; const me=(who||'Jeroen').toLowerCase();
+  let s='';
+  if(c.begeister) s+='OVER BEGEISTER:\n'+c.begeister+'\n\n';
+  if(c[me]) s+='OVER '+(who||'').toUpperCase()+' (huidige gebruiker):\n'+c[me]+'\n\n';
+  const other=me==='jeroen'?'marlon':'jeroen';
+  if(c[other]) s+='OVER '+other.toUpperCase()+':\n'+c[other]+'\n';
+  return s.trim();
+}
+
 // ---------- In afwachting ----------
 let wachterTab='all';
 async function setWachterTab(t){if(t==='__new__'){const r=await _newClientPrompt();if(r&&r.id)wachterTab=r.id;render();return;}wachterTab=t;_animateNext=true;render();}
@@ -2208,7 +2255,7 @@ function _mapSource(s,atts){
           images:[]};
 }
 async function sbLoad(){
-  const [p,i,s,a,ap,c,f] = await Promise.all([
+  const [p,i,s,a,ap,c,f,cx] = await Promise.all([
     sb.from('projects').select('*').order('sort'),
     sb.from('items').select('*').order('created_at'),
     sb.from('sources').select('*').order('received_at',{ascending:false}),
@@ -2216,10 +2263,12 @@ async function sbLoad(){
     sb.from('appointments').select('*').order('date'),
     sb.from('contacts').select('*').order('name'),
     sb.from('files').select('*').order('created_at',{ascending:false}),
+    sb.from('app_context').select('*'),
   ]);
   const projects=p.data||[], items=i.data||[], sources=s.data||[], atts=a.data||[];
   state.contacts = (c && c.data) ? c.data : [];
   state.files = (f && f.data) ? f.data : [];
+  state.ctx = {}; ((cx && cx.data) ? cx.data : []).forEach(r=>{ state.ctx[r.key]=r.body||''; });
   state.appointments = (ap && ap.data ? ap.data : []).map(_mapAppt);
   state.projects = projects.map(pr=>({id:pr.id,client:pr.client,project:pr.project,color:pr.color,icon:pr.icon,role:pr.role,
     items: items.filter(x=>x.project_id===pr.id).map(_mapItem)}));
@@ -2803,7 +2852,7 @@ async function chatTurn(){
     const ti=iso(TODAY);
     const appts=(state.appointments||[]).filter(a=>a.date>=ti).slice(0,40).map(a=>({title:a.t,date:a.date,start:a.start||'',kind:a.kind,contact:a.contact||'',client:a.projectId?projName(a.projectId):''}));
     const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({history:chatHistory,catalog,existing,appts,today:iso(TODAY),dates:dateTable(),who})});
+      body:JSON.stringify({history:chatHistory,catalog,existing,appts,today:iso(TODAY),dates:dateTable(),who,context:_ctxForChat()})});
     data=await r.json();
   }catch(_){}
   if(typing)typing.remove();
@@ -2876,7 +2925,7 @@ async function handlePhoto(e){
     const b64=await fileToB64(f);
     const catalog=state.projects.filter(p=>p.id!=='__inbox__').map(p=>({project_id:p.id,client:p.client,project:p.project||''}));
     const r=await fetch('/api/vision',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({image:b64,media_type:f.type||'image/jpeg',filename:f.name,catalog,today:iso(TODAY),dates:dateTable(),who})});
+      body:JSON.stringify({image:b64,media_type:f.type||'image/jpeg',filename:f.name,catalog,today:iso(TODAY),dates:dateTable(),who,context:_ctxForChat()})});
     data=await r.json();
   }catch(_){}
   if(typing)typing.remove();
