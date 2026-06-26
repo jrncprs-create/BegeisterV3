@@ -493,6 +493,17 @@
     .proj-row .del,.proj-row .addbtn{flex:0 0 auto}
     .chatrow{margin:8px 11px 10px}
     .home-compliment{font-size:23px}
+    /* mobiel: bij typen schuift quote/asterisk volledig omhoog uit beeld en zakt de invoer naar onderen */
+    .welcome-overlay.chatting{justify-content:flex-end}
+    .welcome-overlay.chatting #homeIntro{transform:translateY(-130vh)}
+    .welcome-overlay.chatting #welcomeChat{transform:none;width:100%;margin-top:0}
+    /* mobiel menu: volgorde In afwachting > Taken > Afspraken > Agenda > Meldingen; AI/Bronnen/Klanten weg */
+    #nav button[data-v="home"],#nav button[data-v="bronnen"],#nav button[data-v="beheer"]{display:none}
+    #nav button[data-v="wachter"]{order:1}
+    #nav button[data-v="taken"]{order:2}
+    #nav button[data-v="afspraken"]{order:3}
+    #nav button[data-v="agenda"]{order:4}
+    #nav #pushBtn{order:5}
   }
   @media(min-width:601px){
     #nav button[data-v="home"],#nav button[data-v="wachter"]{display:none}
@@ -2091,7 +2102,9 @@ function createImage(){if(isMobile()&&view!=='home')setView('home');addMsg('ai',
 
 // ── PWA + push-notificaties ──
 const VAPID_PUBLIC="BFD467bSbNKmU9lhok7tTlkRMt_QpM-d-_Nn4_R1Z86-F5I5NkvB3Bj0xSBMz-HkHFYHdupnActbSp4_3J7uJlg";
-if('serviceWorker' in navigator){ navigator.serviceWorker.register('/sw.js').catch(()=>{}); }
+if('serviceWorker' in navigator){ navigator.serviceWorker.register('/sw.js').catch(()=>{});
+  navigator.serviceWorker.ready.then(async reg=>{ try{ const s=await reg.pushManager.getSubscription(); updatePushBtn(!!s); }catch(_){ } }); }
+function updatePushBtn(on){ const b=document.getElementById('pushBtn'); if(!b)return; b.textContent = on ? 'Meldingen ✓' : 'Meldingen'; b.title = on ? 'Meldingen uitzetten' : 'Meldingen aanzetten'; }
 function isStandalone(){ return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone===true; }
 function urlB64ToUint8(b){const pad='='.repeat((4-b.length%4)%4);const s=(b+pad).replace(/-/g,'+').replace(/_/g,'/');const raw=atob(s);return Uint8Array.from([...raw].map(c=>c.charCodeAt(0)));}
 async function enablePush(){
@@ -2101,21 +2114,32 @@ async function enablePush(){
     alert(iOS?'Zet de app eerst op je beginscherm (deel-icoon → "Zet op beginscherm"), open ’m daar en zet dan meldingen aan.':'Meldingen worden in deze browser niet ondersteund.');
     return;
   }
-  if(iOS && !isStandalone()){
-    alert('Op de iPhone werkt dit alleen vanuit de app op je beginscherm. Tik op het deel-icoon → "Zet op beginscherm", open Begeister daar, en zet meldingen aan.');
-    return;
-  }
   try{
-    const perm=await Notification.requestPermission();
-    if(perm!=='granted'){ alert('Meldingen zijn geblokkeerd. Je kunt dit aanzetten via de instellingen.'); return; }
     const reg=await navigator.serviceWorker.ready;
     let sub=await reg.pushManager.getSubscription();
-    if(!sub){ sub=await reg.pushManager.subscribe({userVisibleOnly:true, applicationServerKey:urlB64ToUint8(VAPID_PUBLIC)}); }
+    // staat AAN → uitzetten (unsubscribe + uit push_subs)
+    if(sub){
+      const ep=sub.endpoint;
+      try{ await sub.unsubscribe(); }catch(_){}
+      try{ await sb.from('push_subs').delete().eq('endpoint',ep); }catch(_){}
+      updatePushBtn(false);
+      alert('Meldingen staan uit op dit apparaat.');
+      return;
+    }
+    // staat UIT → aanzetten
+    if(iOS && !isStandalone()){
+      alert('Op de iPhone werkt dit alleen vanuit de app op je beginscherm. Tik op het deel-icoon → "Zet op beginscherm", open Begeister daar, en zet meldingen aan.');
+      return;
+    }
+    const perm=await Notification.requestPermission();
+    if(perm!=='granted'){ alert('Meldingen zijn geblokkeerd. Je kunt dit aanzetten via de instellingen.'); return; }
+    sub=await reg.pushManager.subscribe({userVisibleOnly:true, applicationServerKey:urlB64ToUint8(VAPID_PUBLIC)});
     const j=sub.toJSON();
     await sb.from('push_subs').upsert({endpoint:j.endpoint,p256dh:j.keys.p256dh,auth:j.keys.auth,who:(who||'')},{onConflict:'endpoint'});
+    updatePushBtn(true);
     try{reg.showNotification('Begeister',{body:'Meldingen staan aan op dit apparaat ✓',icon:'/icon-192.png'});}catch(_){}
     alert('Gelukt — meldingen staan aan op dit apparaat.');
-  }catch(e){ console.warn('push',e); alert('Meldingen aanzetten lukte niet: '+(e&&e.message||e)); }
+  }catch(e){ console.warn('push',e); alert('Meldingen wijzigen lukte niet: '+(e&&e.message||e)); }
 }
 
 // ── auth ──
