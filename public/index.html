@@ -466,9 +466,9 @@
   .welcome-overlay .msg.me{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.22);color:#fff}
   .welcome-overlay .msg.proposal{background:rgba(20,20,20,.42);border:1px solid rgba(255,255,255,.12)}
   /* zodra je in gesprek bent: quote/asterisk schuiven omhoog uit beeld, invoer blijft vast onderaan, thread groeit omhoog */
-  #homeIntro{transition:transform 2s cubic-bezier(.22,1,.36,1)}
+  #homeIntro{transition:transform 2s cubic-bezier(.22,1,.36,1),opacity 1.2s ease}
   .welcome-overlay.chatting{justify-content:flex-end}
-  .welcome-overlay.chatting #homeIntro{transform:translateY(-90vh);pointer-events:none}
+  .welcome-overlay.chatting #homeIntro{transform:translateY(-90vh);opacity:0;pointer-events:none}
   .welcome-overlay.chatting #welcomeChat{transform:none;max-height:calc(100dvh - 150px)}
   .welcome-close:hover{border-color:#fff;color:#fff}
   .welcome-overlay.playing .welcome-close{animation:fadeUp 1.7s ease 2.2s both}
@@ -527,7 +527,7 @@
     .rail #wachterBlock::before{content:"In afwachting";display:flex;align-items:center;height:26px;font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut2);margin:0 0 12px}
     .rail #chatThread:empty{display:none}
     /* welkomstscherm-chat vult in gesprek het hele scherm (tot bovenaan) */
-    .welcome-overlay.chatting #homeIntro{position:absolute}
+    .welcome-overlay.chatting #chatDock{margin-top:auto}
     .welcome-overlay.chatting #welcomeChat{position:absolute;left:50%;transform:translateX(-50%);top:58px;bottom:22px;width:min(680px,92vw);max-height:none;margin:0}
   }
   /* desktop-werkblad: 3 gelijke kolommen — In afwachting | Taken | Agenda */
