@@ -16,7 +16,7 @@ Regels:
 - contact = de externe persoon waar het mee te maken heeft (bv. Leon, Willem, Noa). Mag leeg.
 - due = ISO-datum (YYYY-MM-DD) alleen als er een concrete datum/deadline genoemd is, anders null.
 - status = todo | doing | wait | done. "wait" als er op iemand gewacht wordt.
-- project_id = kies de best passende uit de catalogus. Geen match? null.
+- project_id = ALLEEN invullen als de klant of het project expliciet en eenduidig in het bericht genoemd wordt en exact matcht met de catalogus. Bij enige twijfel: null (de gebruiker koppelt het dan zelf).
 - Geef ALLEEN geldige JSON terug, geen uitleg eromheen.`;
 
 /**
@@ -28,7 +28,7 @@ export async function extractItems({ text, sender = "", subject = "", today, cat
   // Geen AI-key? Val terug op één concept-actiepunt zodat intake blijft werken.
   if (!anthropic) {
     const firstLine = (subject || (text || "").split("\n").find(l => l.trim()) || "Nieuw bericht").trim().slice(0, 120);
-    return { items: [{ title: firstLine, owner: "", contact: "", due: null, status: "todo", project_id: (catalog[0] ? catalog[0].project_id : null) }], summary: "" };
+    return { items: [{ title: firstLine, owner: "", contact: "", due: null, status: "todo", project_id: null }], summary: firstLine };
   }
   const user = `VANDAAG: ${today}
 AFZENDER: ${sender}

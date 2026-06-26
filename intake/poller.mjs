@@ -6,6 +6,7 @@
 //   in productie: externe cron (cron-job.org, ~elke 2 min) roept /api/intake aan,
 //   plus 1x/dag de Vercel-cron als vangnet (zie vercel.json)
 
+import crypto from "crypto";
 import { ImapFlow } from "imapflow";
 import { simpleParser } from "mailparser";
 import { createClient } from "@supabase/supabase-js";
@@ -54,15 +55,18 @@ export async function run() {
       try {
         const msg = await client.fetchOne(uid, { source: true });
         const mail = await simpleParser(msg.source);
-        const messageId = mail.messageId || `uid-${uid}-${Date.now()}`;
+        const body = (mail.text || mail.html || "").toString().trim();
+        const sender = mail.from?.text || "";
+        // Stabiele dedup-sleutel: Message-ID indien aanwezig, anders een hash van de inhoud
+        // (voorkomt dat berichten zonder Message-ID elke run opnieuw als nieuw binnenkomen).
+        const dateKey = mail.date ? new Date(mail.date).toISOString() : "";
+        const messageId = mail.messageId
+          || "h-" + crypto.createHash("sha1").update(sender + "|" + (mail.subject || "") + "|" + dateKey + "|" + body).digest("hex");
 
         // dubbele verwerking voorkomen
         const { data: existing } = await db
           .from("sources").select("id").eq("message_id", messageId).maybeSingle();
         if (existing) { result.skipped++; await client.messageFlagsAdd(uid, ["\\Seen"]); continue; }
-
-        const body = (mail.text || mail.html || "").toString().trim();
-        const sender = mail.from?.text || "";
 
         // 1) bron origineel opslaan
         const { data: source, error: srcErr } = await db.from("sources").insert({
@@ -107,6 +111,9 @@ export async function run() {
         }
         await db.from("sources").update({ processed: true, summary: summary || null }).eq("id", source.id);
 
+        // 1 melding per binnengekomen bericht — korte AI-samenvatting
+        try { await sendToAll(db, { title: "Begeister", body: "In afwachting: " + (summary || mail.subject || "nieuw bericht"), url: "/" }); } catch (e) { console.error("push-fout:", e.message); }
+
         await client.messageFlagsAdd(uid, ["\\Seen"]);
         result.processed++; result.items += items.length;
       } catch (e) {
@@ -118,20 +125,6 @@ export async function run() {
     lock.release();
     await client.logout();
   }
-
-  // push: nieuw binnengekomen + ochtend-digest (deadlines)
-  try {
-    if (result.items > 0) {
-      await sendToAll(db, { title: "Begeister — nieuw binnen", body: `${result.items} nieuw actiepunt(en) uit de mail.`, url: "/" });
-    }
-    const today = new Date().toISOString().slice(0, 10);
-    const { data: its } = await db.from("items").select("due,status").neq("status", "done");
-    const todo = (its || []).filter(i => i.due === today).length;
-    const late = (its || []).filter(i => i.due && i.due < today).length;
-    if (todo + late > 0) {
-      await sendToAll(db, { title: "Begeister — vandaag", body: `${todo} voor vandaag${late ? `, ${late} te laat` : ""}.`, url: "/" });
-    }
-  } catch (e) { console.error("push-fout:", e.message); }
 
   return result;
 }

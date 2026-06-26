@@ -165,6 +165,7 @@
   .agenda-group{margin-bottom:18px}
   .agenda-group h4{font-size:11.5px;letter-spacing:1px;text-transform:uppercase;color:var(--mut2);margin:0 0 9px;display:flex;align-items:center;gap:8px}
   .agenda-group h4 .dotc{width:8px;height:8px;border-radius:50%}
+  .afgroup{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--primary2);margin:2px 0 10px;font-weight:600}
   .arow{background:transparent;border:none;border-bottom:1px solid var(--line);border-radius:0;padding:11px 4px;display:flex;align-items:center;gap:12px;cursor:pointer}
   .arow:hover{background:var(--panel)}
   .arow .adate{font-size:12.5px;width:120px;flex:none;font-variant-numeric:tabular-nums}
@@ -1097,7 +1098,12 @@ function renderTaken(){
 
   const base=activeTab==='all'?allItems():(projById(activeTab)?projById(activeTab).items.map(it=>({p:projById(activeTab),it})):[]);
   const rows=sortRows(base.filter(x=>x.it.status!=='wait'));
-  document.getElementById('list').innerHTML=rows.map(({p,it},i)=>taskCard(p,it,i,'taken')).join('')||'<div class="hint">Geen actiepunten.</div>';
+  const _now=Date.now(), _fresh=x=>(_now-(x.it.created||0))<3600000;
+  const _fr=rows.filter(_fresh), _rs=rows.filter(x=>!_fresh(x));
+  let _h='', _i=0;
+  if(_fr.length) _h+='<div class="afgroup">Net binnen</div>'+_fr.map(({p,it})=>taskCard(p,it,_i++,'taken')).join('');
+  _h+=_rs.map(({p,it})=>taskCard(p,it,_i++,'taken')).join('');
+  document.getElementById('list').innerHTML=_h||'<div class="hint">Geen actiepunten.</div>';
   if(typeof wireTaskDrag==='function') wireTaskDrag();
 }
 async function setTab(t){if(t==='__new__'){const r=await _newClientPrompt();if(r&&r.id)activeTab=r.id;render();return;}if(t==='__manage__'){setView('beheer');return;}activeTab=t;_animateNext=true;render();}
@@ -1409,7 +1415,12 @@ function renderRail(){
   }
   const shown=flags.filter(f=>wachterTab==='all'||f.p.id===wachterTab);
   const list=document.getElementById('wachterList');
-  if(list) list.innerHTML = shown.map((f,i)=>taskCard(f.p,f.it,i,'wachter')).join('') || '<div class="hint">Niets dat nu aandacht vraagt ✦</div>';
+  const _now=Date.now(), _fresh=f=>(_now-(f.it.created||0))<3600000;
+  const _fr=shown.filter(_fresh), _rs=shown.filter(f=>!_fresh(f));
+  let _h='', _i=0;
+  if(_fr.length) _h+='<div class="afgroup">Net binnen</div>'+_fr.map(f=>taskCard(f.p,f.it,_i++,'wachter')).join('');
+  _h+=_rs.map(f=>taskCard(f.p,f.it,_i++,'wachter')).join('');
+  if(list) list.innerHTML = _h || '<div class="hint">Niets dat nu aandacht vraagt ✦</div>';
   const undated=allItems().filter(x=>x.it.status!=='done'&&!x.it.due&&x.it.status!=='wait').length;
   const foot=document.getElementById('wachterFoot');
   if(foot) foot.textContent = undated ? `${undated} actiepunt(en) staan nog zonder datum` : '';
@@ -1863,6 +1874,8 @@ let _lastD3=isDesk3();
 function setTbh(){const tb=document.querySelector('.topbar');if(tb)document.documentElement.style.setProperty('--tbh',Math.round(tb.getBoundingClientRect().height)+'px');}
 setTbh(); window.addEventListener('load',setTbh);
 window.addEventListener('resize',()=>{ setTbh(); if(isMobile()!==_lastMob) applyLayout(); if(isDesk3()!==_lastD3){ _lastD3=isDesk3(); if(view==='taken'||view==='agenda') setView(view); } });
+// "Net binnen"-items laten na een uur vanzelf naar hun normale plek zakken
+setInterval(()=>{ try{ if(document.querySelector('.overlay.open'))return; if(document.querySelector('.task.dragging'))return; if(typeof allItems==='function' && allItems().some(x=>(Date.now()-(x.it.created||0))<3900000)) render(); }catch(_){ } }, 60000);
 const UNSPLASH_KEY="zSttsMB9D_sKDPLNBZp4M7VUB4kgPMXZQzD52xOAiHU";
 const ART_QUERIES=["dark monochrome abstract","grayscale abstract texture","dark digital abstract","3d render dark abstract","generative art dark","dark geometric minimal","wireframe dark abstract","dark concrete texture","liquid ink monochrome","dark smoke grayscale","glitch dark abstract","brutalist dark texture"];
 function setWelcomeBg(url){const bg=document.getElementById('welcomeBg');if(!bg||!url)return;const im=new Image();im.onload=()=>{bg.style.backgroundImage="url("+url+")";bg.classList.add('on');};im.src=url;}
