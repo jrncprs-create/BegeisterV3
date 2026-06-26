@@ -1,6 +1,20 @@
-// Begeister service worker — push-notificaties.
+// Begeister service worker — push-notificaties + altijd verse app (v3).
 self.addEventListener('install', (e) => self.skipWaiting());
 self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()));
+
+// Network-first voor navigaties: haal de nieuwste index.html op zodat updates
+// meteen verschijnen (iOS PWA houdt anders de oude versie vast).
+self.addEventListener('fetch', (event) => {
+  const req = event.request;
+  if (req.method !== 'GET') return;
+  if (req.mode === 'navigate') {
+    event.respondWith(
+      fetch(req, { cache: 'no-store' }).catch(() =>
+        caches.match(req).then((r) => r || caches.match('/'))
+      )
+    );
+  }
+});
 
 self.addEventListener('push', (event) => {
   let d = {};
