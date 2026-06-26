@@ -1184,7 +1184,7 @@ function renderTaken(){
   tabs.innerHTML=html;
 
   const base=activeTab==='all'?allItems():(projById(activeTab)?projById(activeTab).items.map(it=>({p:projById(activeTab),it})):[]);
-  const rows=sortRows(base.filter(x=>x.it.status!=='wait'));
+  const rows=sortRows(base.filter(x=>x.it.status!=='wait' && x.p.id!=='__inbox__'));
   const _now=Date.now(), _fresh=x=>(_now-(x.it.created||0))<3600000;
   const _fr=rows.filter(_fresh), _rs=rows.filter(x=>!_fresh(x));
   let _h='', _i=0;
@@ -1627,14 +1627,12 @@ function renderRail(){
   const flags=[];
   allItems().forEach(({p,it})=>{
     if(it.status==='done')return;
-    const n=daysUntil(it.due);
+    // In afwachting = alléén niet-toegewezen items + 'wacht op'. Toegewezen taken horen in Taken
+    // (geen dubbeling tussen de kolommen).
     let sev=null;
     if(p.id==='__inbox__')sev=-1;             // niet-toegewezen → bovenaan In afwachting
-    else if(n!==null&&n<0)sev=0;
-    else if(n!==null&&n<=1)sev=1;
-    else if(it.status==='wait')sev=2;
-    else if(n!==null&&n<=9)sev=3;
-    if(sev===null)return;
+    else if(it.status==='wait')sev=2;         // wacht op iemand → In afwachting
+    else return;
     flags.push({p,it,sev});
   });
   flags.sort((a,b)=> a.sev-b.sev || ((a.it.due?d(a.it.due):8.64e15)-(b.it.due?d(b.it.due):8.64e15)));
