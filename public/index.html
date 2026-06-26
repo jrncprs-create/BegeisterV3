@@ -493,10 +493,14 @@
     .proj-row .del,.proj-row .addbtn{flex:0 0 auto}
     .chatrow{margin:8px 11px 10px}
     .home-compliment{font-size:23px}
-    /* mobiel: bij typen schuift quote/asterisk volledig omhoog uit beeld en zakt de invoer naar onderen */
-    .welcome-overlay.chatting{justify-content:flex-end}
+    /* mobiel welkomstscherm: achtergrond vullend, invoer vast onderaan, geen over-swipe; bij typen schuift quote/asterisk omhoog uit beeld */
+    .welcome-overlay{height:100dvh;overflow:hidden;overscroll-behavior:contain}
+    #welcomeBg{height:100dvh}
+    .welcome-overlay #chatDock{position:fixed;left:0;right:0;bottom:0;width:auto;margin:0;padding-bottom:env(safe-area-inset-bottom);background:transparent}
+    .welcome-overlay #welcomeChat{width:100%;margin-top:16px;max-height:42vh}
+    .welcome-overlay #chatThread{padding-bottom:88px}
     .welcome-overlay.chatting #homeIntro{transform:translateY(-130vh)}
-    .welcome-overlay.chatting #welcomeChat{transform:none;width:100%;margin-top:0}
+    .welcome-overlay.chatting #welcomeChat{transform:none}
     /* mobiel menu: volgorde In afwachting > Taken > Afspraken > Agenda > Meldingen; AI/Bronnen/Klanten weg */
     #nav button[data-v="home"],#nav button[data-v="bronnen"],#nav button[data-v="beheer"]{display:none}
     #nav button[data-v="wachter"]{order:1}
