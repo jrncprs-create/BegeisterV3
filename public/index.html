@@ -148,6 +148,8 @@
   .task.done .t-title{text-decoration:line-through}
   .t-top{display:flex;align-items:center;gap:11px}
   .picon{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#0c0d10;font-size:14px;flex:0 0 auto}
+  /* tijdelijke inkleuring van een bron in klantkleur (na klik op 'bron' bij een taak) */
+  .srow.tinted .srow-title,.srow.tinted .srow-sub,.srow.tinted .srow-date,.srow.tinted .doc-ic,.srow.tinted .srow-text,.srow.tinted .srow-derived,.srow.tinted .srow-att .fname,.srow.tinted .srow-att .file-ic{color:var(--scol)!important}
   .t-proj{flex:1;min-width:0;font-size:13.5px;font-weight:600;color:var(--ccol,var(--mut));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .t-projsub{color:var(--mut2);font-weight:400;margin-left:7px}
   .chk{width:18px;height:18px;border:1.5px solid rgba(255,255,255,.5);border-radius:50%;cursor:pointer;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:11px;color:transparent;transition:background .12s,border-color .12s,color .12s}
@@ -1461,7 +1463,7 @@ function renderTaken(){
   let _tw=va&&va.querySelector('.taken-who');
   if(isDesk3()){
     if(va&&!_tw){ _tw=document.createElement('div'); _tw.className='taken-who'; va.insertBefore(_tw, va.firstChild); }
-    if(_tw) _tw.innerHTML=`<span class="tw-opt${whoFilter==='Jeroen'?' on':''}" onclick="setWhoFilter('Jeroen')">Jeroen</span><span class="tw-opt${whoFilter==='Marlon'?' on':''}" onclick="setWhoFilter('Marlon')">Marlon</span>`;
+    if(_tw) _tw.innerHTML=`<span class="tw-opt${(whoFilter==='all'||whoFilter==='Jeroen')?' on':''}" onclick="setWhoFilter('Jeroen')">Jeroen</span><span class="tw-opt${(whoFilter==='all'||whoFilter==='Marlon')?' on':''}" onclick="setWhoFilter('Marlon')">Marlon</span>`;
   } else if(_tw){ _tw.remove(); }
   const tabs=document.getElementById('ptabs');
   const allOpen=allItems().filter(x=>x.it.status!=='done').length;
@@ -1930,7 +1932,8 @@ function toggleSrc(id){
   if(willOpen && card) setTimeout(()=>{ try{card.scrollIntoView({behavior:'smooth',block:'start'});}catch(_){card.scrollIntoView();} },70);
 }
 function toggleFull(id){const f=document.getElementById('full_'+id);const b=document.getElementById('fbtn_'+id);f.classList.toggle('open');b.textContent=f.classList.contains('open')?'Verberg origineel ▴':'Toon volledig origineel ▾';}
-function gotoSource(sid){setView('bronnen');setTimeout(()=>{const b=document.getElementById('body_'+sid);if(b){b.classList.add('open');document.getElementById('card_'+sid).scrollIntoView({behavior:'smooth',block:'center'});}},60);}
+function gotoSource(sid){setView('bronnen');setTimeout(()=>{document.querySelectorAll('.srow.tinted').forEach(x=>x.classList.remove('tinted'));const b=document.getElementById('body_'+sid);const card=document.getElementById('card_'+sid);if(b)b.classList.add('open');if(card){card.classList.add('tinted');card.scrollIntoView({behavior:'smooth',block:'center'});}},60);}
+if(!window._srcTintInit){window._srcTintInit=true;document.addEventListener('click',e=>{const t=document.querySelector('.srow.tinted');if(t&&!t.contains(e.target))t.classList.remove('tinted');});}
 
 // ---------- contacten ----------
 let _contactSearch='';
