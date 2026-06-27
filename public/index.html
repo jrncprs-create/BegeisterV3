@@ -1481,7 +1481,7 @@ function renderTaken(){
   if(isDesk3()){
     let _bar=va&&va.querySelector('.colbar');
     if(va&&!_bar){ _bar=document.createElement('div'); _bar.className='colbar'; va.insertBefore(_bar, va.firstChild); }
-    if(_bar) _bar.innerHTML=`<span class="cb-title">Taken</span><button class="cb-add" title="Nieuwe taak" aria-label="Nieuwe taak" onclick="newTask()">+</button><div class="cb-who"><span class="tw-opt${(whoFilter==='all'||whoFilter==='Jeroen')?' on':''}" onclick="setWhoFilter('Jeroen')">Jeroen</span><span class="tw-amp${whoFilter==='all'?' on':''}" onclick="setWhoFilter('all')">&amp;</span><span class="tw-opt${(whoFilter==='all'||whoFilter==='Marlon')?' on':''}" onclick="setWhoFilter('Marlon')">Marlon</span></div>`;
+    if(_bar) _bar.innerHTML=`<span class="cb-title">Taken</span><button class="cb-add" title="Nieuwe taak" aria-label="Nieuwe taak" onclick="newTask()">+</button><div class="cb-spacer"></div><div class="cb-who"><span class="tw-opt${(whoFilter==='all'||whoFilter==='Jeroen')?' on':''}" onclick="setWhoFilter('Jeroen')">Jeroen</span><span class="tw-amp${whoFilter==='all'?' on':''}" onclick="setWhoFilter('all')">&amp;</span><span class="tw-opt${(whoFilter==='all'||whoFilter==='Marlon')?' on':''}" onclick="setWhoFilter('Marlon')">Marlon</span></div>`;
   } else { const _bar=va&&va.querySelector('.colbar'); if(_bar)_bar.remove(); const b=va&&va.querySelector('.col-add'); if(b)b.remove(); }
   const tabs=document.getElementById('ptabs');
   const allOpen=allItems().filter(x=>x.it.status!=='done').length;
