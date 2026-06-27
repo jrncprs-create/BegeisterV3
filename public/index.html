@@ -2371,8 +2371,12 @@ function wireDrag(){
       list._dropWired=true;
       list.addEventListener('dragover',e=>{
         if(!_ph) return; e.preventDefault();
-        const after=[...list.querySelectorAll('.task')].find(c=>c!==_dragEl&&(e.clientY < c.getBoundingClientRect().top + c.offsetHeight/2));
+        const after=[...list.querySelectorAll('.task')].find(c=>c!==_dragEl&&(e.clientY < c.getBoundingClientRect().top + c.offsetHeight/2))||null;
+        if(after){ if(_ph.nextElementSibling===after) return; } else { if(_ph===list.lastElementChild) return; }
+        const cards=[...list.querySelectorAll('.task')].filter(c=>c!==_dragEl);
+        const pre=new Map(); cards.forEach(c=>pre.set(c,c.getBoundingClientRect().top));
         if(after) list.insertBefore(_ph,after); else list.appendChild(_ph);
+        cards.forEach(c=>{ const dy=pre.get(c)-c.getBoundingClientRect().top; if(dy){ c.style.transition='none'; c.style.transform='translateY('+dy+'px)'; requestAnimationFrame(()=>{ c.style.transition='transform .2s cubic-bezier(.16,1,.3,1)'; c.style.transform=''; }); } });
       });
       list.addEventListener('drop',e=>{ e.preventDefault(); doDropTo(from); });
     }
@@ -2398,7 +2402,7 @@ async function doDropTo(target){
     _animateNext=false; await refreshRail();
   }
 }
-function cleanupDrag(){ if(_dragEl){ _dragEl.classList.remove('dragging'); _dragEl.style.display=''; } if(_ph&&_ph.parentNode) _ph.parentNode.removeChild(_ph); _ph=null; _dragEl=null; _dragFrom=null; }
+function cleanupDrag(){ if(_dragEl){ _dragEl.classList.remove('dragging'); _dragEl.style.display=''; } if(_ph&&_ph.parentNode) _ph.parentNode.removeChild(_ph); _ph=null; _dragEl=null; _dragFrom=null; document.querySelectorAll('#list .task,#wachterList .task').forEach(c=>{c.style.transition='';c.style.transform='';}); }
 function persistTaskOrder(){ const ids=[...document.querySelectorAll('#list .task')].map(c=>c.dataset.id); ids.forEach((id,i)=>{_taskOrd[id]=i;}); try{localStorage.setItem('task_ord',JSON.stringify(_taskOrd));}catch(_){} }
 function persistWachterOrder(){ const ids=[...document.querySelectorAll('#wachterList .task')].map(c=>c.dataset.id); ids.forEach((id,i)=>{_wachterOrd[id]=i;}); try{localStorage.setItem('wachter_ord',JSON.stringify(_wachterOrd));}catch(_){} }
 
