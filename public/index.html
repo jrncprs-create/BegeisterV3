@@ -74,7 +74,7 @@
     .main{padding:14px 13px 44px}
     .main-head h1{font-size:17px}
     .ptabs .ptab{display:none}
-    .ptabs .clientdrop{display:block}
+    .ptabs .clientdrop,.ptabs .cdd{display:block}
     .arow{flex-wrap:wrap;gap:6px 10px;padding:10px 4px;align-items:center}
     .arow .evdot{order:0}
     .arow .adate{order:1;width:auto}
@@ -123,8 +123,22 @@
   /* task cards */
   .list{display:flex;flex-direction:column;gap:11px}
   .clientdrop{display:none;width:100%;background:transparent;border:1px solid var(--line);color:var(--txt);border-radius:11px;padding:12px 13px;font-size:14px;font-weight:600;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'><path d='M6 9l6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 14px center}
-  #wachterDrop .clientdrop{display:block;margin-bottom:12px}
+  #wachterDrop .clientdrop,#wachterDrop .cdd{display:block;margin-bottom:12px}
   #wachterDrop{margin-top:2px}
+  /* custom dropdown (donkere selectie i.p.v. blauw, regular i.p.v. bold) */
+  .cdd{display:none;position:relative;margin-bottom:10px}
+  .cdd-btn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;background:transparent;border:1px solid var(--line);border-radius:11px;padding:12px 13px;color:var(--txt);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;text-align:left}
+  .cdd-cur{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .cdd-chev{flex:0 0 auto;color:var(--mut2);transition:transform .15s}
+  .cdd.open .cdd-chev{transform:rotate(180deg)}
+  .cdd-menu{position:absolute;top:calc(100% + 6px);left:0;right:0;background:#161616;border:1px solid var(--line);border-radius:12px;padding:6px;z-index:60;box-shadow:0 14px 38px rgba(0,0,0,.6);display:none;max-height:62vh;overflow:auto;scrollbar-width:none}
+  .cdd-menu::-webkit-scrollbar{display:none}
+  .cdd.open .cdd-menu{display:block}
+  .cdd-opt{display:flex;align-items:center;gap:8px;padding:9px 9px;border-radius:8px;font-size:14px;font-weight:400;color:var(--txt);cursor:pointer}
+  .cdd-opt:hover{background:rgba(255,255,255,.06)}
+  .cdd-opt.sel{background:rgba(255,255,255,.10)}
+  .cdd-ck{width:14px;flex:0 0 auto;color:var(--txt);font-size:12px;text-align:center}
+  .cdd-act{color:var(--mut2)}
   .task{background:transparent;border:1px solid var(--line);border-radius:16px;padding:14px 16px;display:block;cursor:default}
   .task:hover{background:rgba(255,255,255,.035)}
   .task.done{opacity:.5}
@@ -365,7 +379,9 @@
   .kclient .kname{font-size:16px;font-weight:700}
   .kgroup .kli{border-bottom:1px solid var(--line)}
   .kgroup .kli:last-child{border-bottom:none}
-  .kgroup .kli.kproj{padding-left:6px}
+  .kgroup .kli.kproj{padding-left:6px;border-bottom:none}
+  .kprojblock{border-bottom:1px solid var(--line);padding-bottom:11px}
+  .kprojblock.last{border-bottom:none;padding-bottom:2px}
   .proj-row{display:grid;grid-template-columns:42px minmax(0,1.5fr) minmax(0,1.5fr) 56px auto;gap:12px;align-items:center;padding:10px 4px;border-bottom:1px solid var(--line)}
   .proj-row input[type=text]{width:100%;min-width:0;background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:9px 11px;font-size:14px}
   .proj-row input::placeholder{color:var(--mut2)}
@@ -417,7 +433,7 @@
   .c-linked .cl-item{font-size:13px;color:var(--mut);padding:6px 0;cursor:pointer;border-bottom:1px solid var(--line)}
   .c-linked .cl-item:hover{color:var(--txt)}
   .c-linked .cl-empty{font-size:12.5px;color:var(--mut2)}
-  .kfiles{margin-top:12px}
+  .kfiles{margin-top:7px}
   .kfiles-h{display:flex;align-items:center;justify-content:space-between;margin:0 0 8px}
   .kfiles-h span{font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:var(--mut2)}
   .kfiles-add{display:flex;align-items:center;gap:5px;background:transparent;border:1px solid var(--line);color:var(--mut);border-radius:8px;padding:5px 9px;font-size:12px;cursor:pointer}
@@ -433,7 +449,7 @@
   .arch-btn:hover{color:#fff;border-color:var(--mut2)}
   .arch-btn.del:hover{color:var(--late);border-color:var(--late)}
   .kfile{display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px solid var(--line);flex-wrap:wrap}
-  .kfile-main{display:flex;align-items:center;gap:9px;flex:1;min-width:0;color:var(--txt);text-decoration:none}
+  .kfile-main{display:flex;align-items:center;gap:9px;flex:1;min-width:0;color:var(--txt);text-decoration:none;cursor:pointer}
   .kfile-main:hover .kfile-name{color:#fff}
   .kfile-ic{flex:0 0 auto;width:22px;height:22px;display:flex;align-items:center}
   .kfile-ic svg,.kfile-ic img{width:22px;height:22px;border-radius:3px}
@@ -477,6 +493,27 @@
   .org-name{font-size:13.5px;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .org-target{font-size:12px;color:var(--primary2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .org-target.none{color:var(--mut2);opacity:.7}
+  /* file-viewer */
+  .fv{position:fixed;inset:0;z-index:200;background:rgba(8,8,8,.97);display:none;flex-direction:column}
+  .fv.open{display:flex}
+  .fv-bar{display:flex;align-items:center;gap:12px;padding:13px 18px;border-bottom:1px solid var(--line)}
+  .fv-ic{flex:0 0 auto;width:22px;height:22px;display:flex;align-items:center;color:var(--mut)}
+  .fv-ic svg{width:22px;height:22px}
+  .fv-name{min-width:0;font-size:15px;font-weight:600;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .fv-count{flex:1;font-size:12px;color:var(--mut2);white-space:nowrap}
+  .fv-actions{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+  .fv-btn{background:transparent;border:1px solid var(--line);border-radius:9px;color:var(--txt);font-size:13px;padding:7px 12px;cursor:pointer;font-family:inherit}
+  .fv-btn:hover{border-color:#fff}
+  .fv-x{background:transparent;border:none;color:var(--mut);cursor:pointer;display:flex;padding:4px;margin-left:2px}
+  .fv-x:hover{color:#fff}
+  .fv-stage{flex:1;display:flex;align-items:center;justify-content:center;overflow:auto;padding:18px;position:relative}
+  .fv-img{max-width:100%;max-height:100%;object-fit:contain;border-radius:6px}
+  .fv-frame{width:100%;height:100%;border:none;background:#fff;border-radius:6px}
+  .fv-none{text-align:center;color:var(--mut2);display:flex;flex-direction:column;align-items:center;gap:4px}
+  .fv-none svg{width:52px;height:52px;opacity:.5;margin-bottom:8px}
+  .fv-nav{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.08);border:none;color:#fff;width:44px;height:44px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2}
+  .fv-nav:hover{background:rgba(255,255,255,.18)}
+  .fv-prev{left:18px}.fv-next{right:18px}
 
   /* MODAL */
   .overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:20px;z-index:60;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .35s ease,visibility 0s linear .55s}
@@ -737,7 +774,7 @@
     .agenda-add.agenda-add-2{right:34px}
     /* klanten als dropdown i.p.v. chips in de middenkolom */
     .main.workspace .ptabs .ptab{display:none}
-    .main.workspace .ptabs .clientdrop{display:block}
+    .main.workspace .ptabs .clientdrop,.main.workspace .ptabs .cdd{display:block}
     /* agenda-kop compact op één regel */
     .main.workspace .cal-head{flex-wrap:nowrap;gap:6px;align-items:center}
     .main.workspace .cal-head .seg{padding:3px;gap:2px}
@@ -848,7 +885,7 @@
 <div id="welcomeOverlay" class="welcome-overlay">
   <div id="welcomeBg"></div>
   <div class="welcome-scrim"></div>
-  <button class="welcome-close" onclick="dismissWelcome()" aria-label="Sluiten">×</button>
+  <button class="welcome-close" onclick="dismissWelcome()" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
   <div id="homeIntro">
     <svg class="home-star" viewBox="0 0 64 64" aria-label="Begeister">
       <g stroke="#fff" stroke-width="4.6" stroke-linecap="butt">
@@ -1011,6 +1048,23 @@
     <div class="org-list" id="org_list"></div>
     <div class="foot"><button class="prop-save" id="org_apply" onclick="applyOrganize()">Verplaatsen</button></div>
   </div>
+</div>
+
+<!-- PAGINAVULLENDE FILE-VIEWER -->
+<div class="fv" id="fileViewer">
+  <div class="fv-bar">
+    <span class="fv-ic" id="fv_ic"></span>
+    <span class="fv-name" id="fv_name"></span>
+    <span class="fv-count" id="fv_count"></span>
+    <div class="fv-actions">
+      <button class="fv-btn" onclick="fvOpenOriginal()" title="Download/open in standaardprogramma">Open origineel</button>
+      <button class="fv-btn" onclick="fvOpenDropbox()" title="Open in Dropbox">Open in Dropbox</button>
+      <button class="fv-x" onclick="closeFileViewer()" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+  </div>
+  <button class="fv-nav fv-prev" onclick="fvNav(-1)" aria-label="Vorige"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6l6 6"/></svg></button>
+  <div class="fv-stage" id="fv_stage"></div>
+  <button class="fv-nav fv-next" onclick="fvNav(1)" aria-label="Volgende"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6l-6 6"/></svg></button>
 </div>
 
 <div id="duepop" class="duepop"></div>
@@ -1351,15 +1405,20 @@ function taskCard(p,it,idx,mode){
 }
 function clientDropdown(active,handler,countFn){
   const allOpen=allItems().filter(x=>x.it.status!=='done').length;
-  let h='<select class="clientdrop" onchange="'+handler+'(this.value)">';
-  h+=`<option value="all" ${active==='all'?'selected':''}>Alle klanten (${allOpen})</option>`;
-  h+=state.projects.filter(p=>p.id!=='__inbox__').map(p=>{const c=countFn?countFn(p):p.items.filter(i=>i.status!=='done').length;
-    return `<option value="${p.id}" ${active===p.id?'selected':''}>${escapeHtml(p.client)} (${c})</option>`;}).join('');
-  h+='<option value="__new__">+ Nieuwe klant…</option>';
-  h+='<option value="__manage__">Klanten beheren…</option>';
-  h+='</select>';
-  return h;
+  const opts=[{v:'all',l:`Alle klanten (${allOpen})`}];
+  state.projects.filter(p=>p.id!=='__inbox__').forEach(p=>{const c=countFn?countFn(p):p.items.filter(i=>i.status!=='done').length; opts.push({v:p.id,l:`${p.client} (${c})`});});
+  opts.push({v:'__new__',l:'+ Nieuwe klant…',cls:'cdd-act'});
+  opts.push({v:'__manage__',l:'Klanten beheren…',cls:'cdd-act'});
+  return _cddHTML(opts,active,handler);
 }
+function _cddHTML(opts,active,handler){
+  const cur=opts.find(o=>o.v===active)||opts[0]||{l:''};
+  const items=opts.map(o=>`<div class="cdd-opt${o.v===active?' sel':''} ${o.cls||''}" onclick="_cddPick('${handler}','${o.v}')"><span class="cdd-ck">${o.v===active?'✓':''}</span><span class="cdd-lbl">${escapeHtml(o.l)}</span></div>`).join('');
+  return `<div class="cdd"><button class="cdd-btn" onclick="_cddToggle(event)"><span class="cdd-cur">${escapeHtml(cur.l)}</span><svg class="cdd-chev" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6l6 -6"/></svg></button><div class="cdd-menu">${items}</div></div>`;
+}
+function _cddToggle(e){ e.stopPropagation(); const dd=e.currentTarget.closest('.cdd'); const open=dd.classList.contains('open'); document.querySelectorAll('.cdd.open').forEach(x=>x.classList.remove('open')); if(!open)dd.classList.add('open'); }
+function _cddPick(handler,v){ document.querySelectorAll('.cdd.open').forEach(x=>x.classList.remove('open')); if(typeof window[handler]==='function') window[handler](v); }
+if(!window._cddInit){window._cddInit=true; document.addEventListener('click',()=>{document.querySelectorAll('.cdd.open').forEach(x=>x.classList.remove('open'));});}
 function renderTaken(){
   const va=document.getElementById('view-taken');
   if(isDesk3()){ if(va&&!va.querySelector('.col-add')){ const b=document.createElement('button'); b.className='col-add'; b.title='Nieuwe taak'; b.setAttribute('aria-label','Nieuwe taak'); b.textContent='+'; b.onclick=newTask; va.insertBefore(b,va.firstChild); } }
@@ -1938,7 +1997,7 @@ function _filesFor(type,id){return (state.files||[]).filter(f=>f.owner_type===ty
 function _folderGlyph(){return _tIc('<path d="M5 4h4l3 3h7a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-11a2 2 0 0 1 2 -2"/>',18,1.25);}
 function _fileRow(f){
   const ic=_fileGlyph(f.name||'');
-  return `<div class="kfile"><a class="kfile-main" href="${escapeHtml(f.link)}" target="_blank" rel="noopener" onclick="event.stopPropagation()"><span class="kfile-ic">${ic}</span><span class="kfile-name">${escapeHtml(f.name||'bestand')}</span></a>`
+  return `<div class="kfile"><div class="kfile-main" onclick="event.stopPropagation();openFileViewer('${f.id}')" title="Voorvertonen"><span class="kfile-ic">${ic}</span><span class="kfile-name">${escapeHtml(f.name||'bestand')}</span></div>`
     +`<button class="kfile-ai" title="AI leest dit bestand" onclick="event.stopPropagation();summarizeFile('${f.id}')">${_tIc(_TABCHAN.asterisk,16,1.7)}</button>`
     +`<button class="kfile-del" title="Bestand verwijderen" onclick="event.stopPropagation();deleteFile('${f.id}')">${_tIc('<path d="M18 6l-12 12"/><path d="M6 6l12 12"/>',16,1.7)}</button>`
     +`<div class="kfile-sum" id="fsum_${f.id}"></div></div>`;
@@ -2021,6 +2080,34 @@ async function applyOrganize(){
   await uiConfirm(ok+' van '+moves.length+' bestand(en) verplaatst.');
 }
 async function deleteFile(fid){ if(!(await uiConfirm('Bestand ontkoppelen?')))return; await sb.from('files').delete().eq('id',fid); await refresh(); }
+// ---------- file-viewer (paginavullend) ----------
+let _fvList=[],_fvIdx=0;
+function _fvRaw(link){ let u=String(link||''); if(/[?&]dl=\d/.test(u)) return u.replace(/([?&])dl=\d/,'$1raw=1'); return u+(u.includes('?')?'&':'?')+'raw=1'; }
+function _fvDl(link){ let u=String(link||''); if(/[?&](dl|raw)=\d/.test(u)) return u.replace(/([?&])(dl|raw)=\d/,'$1dl=1'); return u+(u.includes('?')?'&':'?')+'dl=1'; }
+function openFileViewer(fid){
+  const f=(state.files||[]).find(x=>x.id===fid); if(!f)return;
+  _fvList=(state.files||[]).filter(x=>x.owner_type===f.owner_type && String(x.owner_id)===String(f.owner_id));
+  if(!_fvList.length)_fvList=[f];
+  _fvIdx=Math.max(0,_fvList.findIndex(x=>x.id===fid));
+  const ov=document.getElementById('fileViewer'); if(!ov)return; ov.classList.add('open'); fvRender();
+}
+function closeFileViewer(){ const ov=document.getElementById('fileViewer'); if(ov)ov.classList.remove('open'); const st=document.getElementById('fv_stage'); if(st)st.innerHTML=''; }
+function fvNav(d){ if(_fvList.length<2)return; _fvIdx=(_fvIdx+d+_fvList.length)%_fvList.length; fvRender(); }
+function fvOpenOriginal(){ const f=_fvList[_fvIdx]; if(f)window.open(_fvDl(f.link),'_blank','noopener'); }
+function fvOpenDropbox(){ const f=_fvList[_fvIdx]; if(f)window.open(f.link,'_blank','noopener'); }
+function fvRender(){
+  const f=_fvList[_fvIdx]; if(!f)return;
+  document.getElementById('fv_name').textContent=f.name||'bestand';
+  document.getElementById('fv_ic').innerHTML=_fileGlyph(f.name||'');
+  document.getElementById('fv_count').textContent=_fvList.length>1?`${_fvIdx+1} / ${_fvList.length}`:'';
+  const ext=((f.name||'').split('.').pop()||'').toLowerCase();
+  const url=_fvRaw(f.link); const st=document.getElementById('fv_stage');
+  if(['png','jpg','jpeg','gif','webp','bmp','svg','heic','heif'].includes(ext)) st.innerHTML=`<img class="fv-img" src="${escapeHtml(url)}" alt="">`;
+  else if(ext==='pdf') st.innerHTML=`<iframe class="fv-frame" src="${escapeHtml(url)}"></iframe>`;
+  else st.innerHTML=`<div class="fv-none">${_fileGlyph(f.name)}<p>Geen voorvertoning voor dit bestandstype.</p><p>Gebruik “Open origineel” of “Open in Dropbox”.</p></div>`;
+  const multi=_fvList.length>1; const pv=document.querySelector('.fv-prev'),nx=document.querySelector('.fv-next'); if(pv)pv.style.display=multi?'':'none'; if(nx)nx.style.display=multi?'':'none';
+}
+if(!window._fvKeyInit){window._fvKeyInit=true; document.addEventListener('keydown',e=>{ const v=document.getElementById('fileViewer'); if(!v||!v.classList.contains('open'))return; if(e.key==='Escape')closeFileViewer(); else if(e.key==='ArrowLeft')fvNav(-1); else if(e.key==='ArrowRight')fvNav(1); });}
 async function summarizeFile(fid){
   const f=(state.files||[]).find(x=>x.id===fid); if(!f)return;
   const el=document.getElementById('fsum_'+fid); if(el){el.classList.add('on');el.textContent='Even lezen…';}
@@ -2087,10 +2174,10 @@ function renderRail(){
   if(wachterTab!=='all'&&!counts[wachterTab]) wachterTab='all';
   const drop=document.getElementById('wachterDrop');
   if(drop){
-    let h='<select class="clientdrop" onchange="setWachterTab(this.value)">';
-    h+=`<option value="all" ${wachterTab==='all'?'selected':''}>Alle klanten (${flags.length})</option>`;
-    h+=state.projects.filter(p=>p.id!=='__inbox__'&&counts[p.id]).map(p=>`<option value="${p.id}" ${wachterTab===p.id?'selected':''}>${escapeHtml(p.client)} (${counts[p.id]})</option>`).join('');
-    drop.innerHTML=h+'<option value="__new__">+ Nieuwe klant…</option></select>';
+    const opts=[{v:'all',l:`Alle klanten (${flags.length})`}];
+    state.projects.filter(p=>p.id!=='__inbox__'&&counts[p.id]).forEach(p=>opts.push({v:p.id,l:`${p.client} (${counts[p.id]})`}));
+    opts.push({v:'__new__',l:'+ Nieuwe klant…',cls:'cdd-act'});
+    drop.innerHTML=_cddHTML(opts,wachterTab,'setWachterTab');
   }
   const shown=flags.filter(f=>wachterTab==='all'||f.p.id===wachterTab);
   const list=document.getElementById('wachterList');
@@ -2168,13 +2255,15 @@ function renderProjecten(){
       <span class="kcnt">${total}</span>
       <button class="kicon kadd" onclick="addProjectTo('${esc(client)}')" title="Project toevoegen"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 5v14M5 12h14"/></svg></button>
     </div>`;
-    const items=projs.map(p=>{const open=p.items.filter(i=>i.status!=='done').length;
-      return `<div class="kli kproj">
+    const items=projs.map((p,idx)=>{const open=p.items.filter(i=>i.status!=='done').length; const last=idx===projs.length-1;
+      return `<div class="kprojblock${last?' last':''}">
+        <div class="kli kproj">
         <button class="kdot" style="background:${p.color}" onclick="openColorPicker(event,'proj','${p.id}')" title="Kleur"></button>
         <input class="ksub" value="${escapeHtml(p.project||'')}" placeholder="Project / event" onchange="updateProject('${p.id}','project',this.value)" />
         <span class="kcnt">${open}</span>
         <button class="kicon" onclick="deleteProject('${p.id}')" title="Verwijderen"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/></svg></button>
-      </div>${_filesHTML('project',p.id)}`;}).join('');
+        </div>${_filesHTML('project',p.id)}
+      </div>`;}).join('');
     return `<div class="kgroup">${head}${items}</div>`;
   }).join('');
   const orgBar='<div class="org-bar"><button class="kfiles-add" onclick="openOrganize()" title="Losse Dropbox-bestanden opruimen"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M6 1.8 0 5.7l6 3.9 6-3.9-6-3.9zm12 0-6 3.9 6 3.9 6-3.9-6-3.9zM0 13.5l6 3.9 6-3.9-6-3.9-6 3.9zm18-3.9-6 3.9 6 3.9 6-3.9-6-3.9zM6 18.6l6 3.9 6-3.9-6-3.9-6 3.9z"/></svg> Opruimen</button></div>';
