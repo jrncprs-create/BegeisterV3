@@ -784,10 +784,15 @@
     .agenda-toggle{position:absolute;top:0;right:34px;height:26px;display:flex;align-items:center;border:none;background:transparent;color:var(--mut2);font-size:12px;letter-spacing:1.2px;text-transform:uppercase;cursor:pointer;padding:0;z-index:3;transition:color .15s}
     .agenda-toggle:hover{color:#fff}
     /* Jeroen/Marlon eigenaar-toggle in de TAKEN-kop, zelfde stijl als de kop */
-    .taken-who{position:sticky;top:0;float:left;margin-top:-42px;margin-left:74px;z-index:6;height:26px;display:flex;align-items:center;gap:16px}
+    .taken-who{position:sticky;top:0;float:right;margin-top:-42px;z-index:6;height:26px;display:flex;align-items:center;gap:16px}
     .taken-who .tw-opt{font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut2);cursor:pointer;transition:color .15s;line-height:1}
     .taken-who .tw-opt:hover{color:#fff}
     .taken-who .tw-opt.on{color:#fff}
+    /* + direct na het woord "Taken" (i.p.v. uiterst rechts) */
+    .main.workspace #view-taken .col-add{float:left;margin-left:62px}
+    /* + bij "In afwachting", direct na het woord */
+    .rail #wachterBlock .wacht-add{position:sticky;top:0;float:left;margin-top:-42px;margin-left:128px;z-index:5;width:26px;height:26px;border:none;background:transparent;color:rgba(255,255,255,.72);font-size:25px;font-weight:300;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:color .15s,transform .12s}
+    .rail #wachterBlock .wacht-add:hover{color:#fff;transform:scale(1.12)}
     /* sluitkruis rechtsboven in een kolom (zoals bij itembewerking) */
     .col-close{position:absolute;top:0;right:0;width:26px;height:26px;display:flex;align-items:center;justify-content:center;border:none;background:transparent;color:rgba(255,255,255,.6);cursor:pointer;padding:0;z-index:3;transition:color .15s}
     .col-close:hover{color:#fff}
@@ -2260,6 +2265,9 @@ function renderRail(){
     drop.innerHTML=_cddHTML(opts,wachterTab,'setWachterTab');
   }
   const shown=flags.filter(f=>wachterTab==='all'||f.p.id===wachterTab);
+  const _wb=document.getElementById('wachterBlock');
+  if(_wb && isDesk3()){ if(!_wb.querySelector('.wacht-add')){ const wa=document.createElement('button'); wa.className='wacht-add'; wa.title='Nieuw in-afwachting-item'; wa.setAttribute('aria-label','Nieuw in-afwachting-item'); wa.textContent='+'; wa.onclick=newWait; _wb.insertBefore(wa,_wb.firstChild); } }
+  else if(_wb){ const wa=_wb.querySelector('.wacht-add'); if(wa)wa.remove(); }
   const list=document.getElementById('wachterList');
   const _now=Date.now(), _fresh=f=>(_now-(f.it.created||0))<3600000;
   const _fr=shown.filter(_fresh), _rs=shown.filter(f=>!_fresh(f));
@@ -2512,7 +2520,8 @@ async function onApptClientChange(){
   const r=await _newClientPrompt(); _fillApptClientSelect(sel, r?r.id:'');
 }
 function newTask(){ openModal(null); }
-function openModal(id, src){
+function newWait(){ openModal(null,'wachter','wait'); }
+function openModal(id, src, defStatus){
   const isNew=!id; const r=isNew?null:findItem(id); if(!isNew&&!r)return; editingId=isNew?null:id;
   document.getElementById('m_owner').value=isNew?(who||'Jeroen'):(r.it.owner==='Marlon'?'Marlon':'Jeroen');
   const cur=isNew?'':(r.it.contact||'');
@@ -2524,7 +2533,7 @@ function openModal(id, src){
   _fillClientSelect(document.getElementById('m_client'), clientVal);
   fillProjectSelect(clientVal,(isNew||inInbox)?null:r.p.id);
   document.getElementById('m_t').value=isNew?'':r.it.t;
-  document.getElementById('m_status').value=isNew?'todo':r.it.status;
+  document.getElementById('m_status').value=isNew?(defStatus||'todo'):r.it.status;
   mDue=isNew?null:(r.it.due||null);duePickerRef=mDue||iso(TODAY);updateDueLabel();
   const t=document.getElementById('editModalTitle');if(t)t.textContent=isNew?'Nieuwe taak':'Actiepunt bewerken';
   const delBtn=document.querySelector('#overlay .iconbtn.del');if(delBtn)delBtn.style.display=isNew?'none':'';
