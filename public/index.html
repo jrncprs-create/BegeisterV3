@@ -1428,12 +1428,12 @@ function clientDropdown(){
   return _cddHTML(opts, filterClient==='all'?'all':('c:'+filterClient), 'setClient');
 }
 function projectDropdown(){
-  if(filterClient==='all') return '';
-  const projs=state.projects.filter(p=>p.id!=='__inbox__'&&p.client===filterClient);
-  if(projs.length<2) return '';
+  const all=filterClient==='all';
+  const projs=state.projects.filter(p=>p.id!=='__inbox__'&&(all||p.client===filterClient));
+  if(!projs.length) return '';
   const tot=projs.reduce((n,p)=>n+p.items.filter(i=>i.status!=='done').length,0);
   const opts=[{v:'all',l:`Alle projecten (${tot})`}];
-  projs.forEach(p=>opts.push({v:p.id,l:`${p.project||'—'} (${p.items.filter(i=>i.status!=='done').length})`}));
+  projs.forEach(p=>{const lbl=all?`${p.client} · ${p.project||'—'}`:(p.project||'—');opts.push({v:p.id,l:`${lbl} (${p.items.filter(i=>i.status!=='done').length})`});});
   return _cddHTML(opts, activeTab, 'setTab');
 }
 async function setClient(v){
