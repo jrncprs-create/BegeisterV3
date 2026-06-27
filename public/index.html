@@ -784,7 +784,7 @@
     .agenda-toggle{position:absolute;top:0;right:34px;height:26px;display:flex;align-items:center;border:none;background:transparent;color:var(--mut2);font-size:12px;letter-spacing:1.2px;text-transform:uppercase;cursor:pointer;padding:0;z-index:3;transition:color .15s}
     .agenda-toggle:hover{color:#fff}
     /* Jeroen/Marlon eigenaar-toggle in de TAKEN-kop, zelfde stijl als de kop */
-    .taken-who{position:sticky;top:0;float:right;margin-top:-42px;z-index:6;height:26px;display:flex;align-items:center;gap:16px}
+    .taken-who{position:sticky;top:0;float:left;margin-top:-42px;margin-left:16px;z-index:6;height:26px;display:flex;align-items:center;gap:16px}
     .taken-who .tw-opt{font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut2);cursor:pointer;transition:color .15s;line-height:1}
     .taken-who .tw-opt:hover{color:#fff}
     .taken-who .tw-opt.on{color:#fff}
@@ -1411,9 +1411,7 @@ function taskCard(p,it,idx,mode){
   const srcPill=it.src?`<span class="pill src" onclick="event.stopPropagation();gotoSource('${it.src}')">↪ bron</span>`:'';
   const proj=projName(p.id), psub=projProj(p.id);
   const style=`--ccol:${col}`+(_animateNext?`;animation-delay:${450+Math.min(idx,24)*130}ms`:'');
-  const action = mode==='wachter'
-    ? `<div class="wact"><button class="wbtn ok" title="Goedkeuren" onclick="event.stopPropagation();approveWait('${it.id}')">${_SVG_OK}</button><button class="wbtn no" title="Afwijzen" onclick="event.stopPropagation();rejectWait('${it.id}')">${_SVG_NO}</button></div>`
-    : `<div class="chk${done?' on':''}" onclick="event.stopPropagation();toggle('${it.id}')">✓</div>`;
+  const action = `<div class="chk${done?' on':''}" onclick="event.stopPropagation();toggle('${it.id}')">✓</div>`;
   const drag = mode==='taken' ? ' draggable="true"' : '';
   const oc = mode==='wachter' ? `openModal('${it.id}','wachter')` : `openModal('${it.id}')`;
   return `<div class="task${done?' done':''}${_animateNext?' in':''}${mode==='taken'?' tdrag':''}" data-id="${it.id}"${drag} style="${style}">
@@ -1467,7 +1465,7 @@ function renderTaken(){
   // Jeroen/Marlon eigenaar-toggle in de kop
   let _tw=va&&va.querySelector('.taken-who');
   if(isDesk3()){
-    if(va&&!_tw){ _tw=document.createElement('div'); _tw.className='taken-who'; va.insertBefore(_tw, va.firstChild); }
+    if(va&&!_tw){ _tw=document.createElement('div'); _tw.className='taken-who'; const _ca=va.querySelector('.col-add'); va.insertBefore(_tw, _ca?_ca.nextSibling:va.firstChild); }
     if(_tw) _tw.innerHTML=`<span class="tw-opt${(whoFilter==='all'||whoFilter==='Jeroen')?' on':''}" onclick="setWhoFilter('Jeroen')">Jeroen</span><span class="tw-opt${(whoFilter==='all'||whoFilter==='Marlon')?' on':''}" onclick="setWhoFilter('Marlon')">Marlon</span>`;
   } else if(_tw){ _tw.remove(); }
   const tabs=document.getElementById('ptabs');
