@@ -633,8 +633,12 @@
   .welcome-overlay .msg.ai.thinking{background:transparent;border:none;backdrop-filter:none;-webkit-backdrop-filter:none;max-width:none}
   .chat-thread{display:flex;flex-direction:column;gap:15px;padding:32px 4px 22px}
   .msg{padding:12px 15px;border-radius:15px;font-size:14.5px;line-height:1.5;max-width:92%;white-space:pre-wrap;text-align:left}
-  .msg.ai{background:var(--panel);align-self:flex-start;border:1px solid var(--line);color:var(--txt)}
+  .msg.ai{background:var(--panel);align-self:flex-start;border:1px solid var(--line);color:var(--txt);position:relative}
   .msg.me{background:#fff;align-self:flex-end;color:#111}
+  .msg-x{position:absolute;top:7px;right:7px;background:transparent;border:none;color:var(--mut2);cursor:pointer;padding:2px;line-height:0;display:flex;opacity:.4;transition:opacity .15s,color .15s}
+  .msg.ai:hover .msg-x{opacity:.85}
+  .msg-x:hover{opacity:1;color:#fff}
+  .msg.ai.has-x{padding-right:32px}
   /* VOORSTEL-KAART (samenvatten → review → opslaan) */
   .msg.proposal{align-self:stretch;width:100%;max-width:100%;background:var(--panel);border:1px solid var(--line)}
   .prop-h{font-size:11.5px;letter-spacing:.6px;text-transform:uppercase;color:var(--primary2);margin-bottom:11px}
@@ -3086,7 +3090,9 @@ function mdLite(s){s=String(s==null?'':s);
   s=s.replace(/^#{1,6}\s+(.*)$/gm,'<strong>$1</strong>');
   s=s.replace(/^[\t ]*[-*]\s+/gm,'• ');
   return s;}
-function addMsg(role,text){const t=document.getElementById('chatThread');if(!t)return;const dv=document.createElement('div');dv.className='msg '+(role==='me'?'me':'ai');dv.innerHTML=mdLite(text);t.appendChild(dv);updateIntroFade();_scrollThreadBottom();}
+function addMsg(role,text){const t=document.getElementById('chatThread');if(!t)return;const dv=document.createElement('div');dv.className='msg '+(role==='me'?'me':'ai');dv.innerHTML=mdLite(text);
+  if(role!=='me'){ dv.classList.add('has-x'); const x=document.createElement('button'); x.className='msg-x'; x.title='Negeer'; x.setAttribute('aria-label','Negeer'); x.innerHTML='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>'; x.onclick=function(e){e.stopPropagation();dv.remove();updateIntroFade();}; dv.appendChild(x); }
+  t.appendChild(dv);updateIntroFade();_scrollThreadBottom();}
 let _pendingIds=[];
 function clearChips(){_pendingIds=[];const b=document.getElementById('chatChips');if(b)b.innerHTML='';}
 function clientFirstProject(client){const p=state.projects.find(x=>x.id!=='__inbox__'&&x.client===client);return p&&p.id;}
