@@ -1846,9 +1846,9 @@ function _filesHTML(type,id){
   const list=_filesFor(type,id).map(_fileRow).join('');
   return `<div class="kfiles"><div class="kfiles-h"><span>Bestanden</span><button class="kfiles-add" onclick="event.stopPropagation();dropboxPick('${type}','${id}')" title="Koppel Dropbox-bestand"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg> Dropbox</button></div>${list}</div>`;
 }
-let _dbxOwner=null,_dbxPath='',_dbxBusy=false,_dbxSearchT=null;
+let _dbxOwner=null,_dbxPath='',_dbxBusy=false,_dbxSearchT=null; const _DBX_ROOT='/Begeister';
 function dropboxPick(type,id){ openDbxBrowser(type,id); }
-function openDbxBrowser(type,id){ _dbxOwner={type,id}; _dbxPath=''; const s=document.getElementById('dbx_search'); if(s)s.value=''; const ov=document.getElementById('dbxOverlay'); if(!ov)return; ov.style.top=''; ov.classList.add('open'); dbxLoad(''); }
+function openDbxBrowser(type,id){ _dbxOwner={type,id}; _dbxPath=_DBX_ROOT; const s=document.getElementById('dbx_search'); if(s)s.value=''; const ov=document.getElementById('dbxOverlay'); if(!ov)return; ov.style.top=''; ov.classList.add('open'); dbxLoad(_DBX_ROOT); }
 function closeDbxBrowser(){ const ov=document.getElementById('dbxOverlay'); if(ov)ov.classList.remove('open'); }
 async function dbxLoad(path){
   _dbxPath=path||''; const list=document.getElementById('dbx_list'); const crumb=document.getElementById('dbx_crumb');
@@ -1868,9 +1868,9 @@ function dbxRender(entries){
     return `<div class="dbx-row" onclick="${onclick}"><span class="dbx-ic">${folder?'📁':'📄'}</span><span class="dbx-name">${escapeHtml(e.name)}</span>${folder?'<span class="dbx-chev">›</span>':''}</div>`;
   }).join('');
 }
-function dbxUp(){ if(!_dbxPath)return; const p=_dbxPath.split('/'); p.pop(); dbxLoad(p.join('/')); }
+function dbxUp(){ if(!_dbxPath || _dbxPath.toLowerCase()===_DBX_ROOT.toLowerCase())return; const p=_dbxPath.split('/'); p.pop(); const np=p.join('/'); dbxLoad((np.toLowerCase().indexOf(_DBX_ROOT.toLowerCase())===0)?np:_DBX_ROOT); }
 function dbxSearchDebounced(q){ clearTimeout(_dbxSearchT); _dbxSearchT=setTimeout(()=>dbxSearch(q),350); }
-async function dbxSearch(q){ q=(q||'').trim(); if(!q){ dbxLoad(_dbxPath); return; } const list=document.getElementById('dbx_list'); if(list)list.innerHTML='<div class="dbx-empty">Zoeken…</div>'; let d; try{ d=await fetch('/api/dropbox/list',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'search',query:q})}).then(r=>r.json()); }catch(_){ return; } if(!d||d.connected===false){ dbxLoad(''); return; } dbxRender((d.entries||[]).filter(e=>e.type!=='folder')); }
+async function dbxSearch(q){ q=(q||'').trim(); if(!q){ dbxLoad(_dbxPath); return; } const list=document.getElementById('dbx_list'); if(list)list.innerHTML='<div class="dbx-empty">Zoeken…</div>'; let d; try{ d=await fetch('/api/dropbox/list',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'search',query:q})}).then(r=>r.json()); }catch(_){ return; } if(!d||d.connected===false){ dbxLoad(_DBX_ROOT); return; } const rp=_DBX_ROOT.toLowerCase()+'/'; dbxRender((d.entries||[]).filter(e=>e.type!=='folder' && (e.path||'').toLowerCase().indexOf(rp)===0)); }
 async function dbxPickFile(path,name){
   if(_dbxBusy)return; _dbxBusy=true; const list=document.getElementById('dbx_list'); const prev=list?list.innerHTML:''; if(list)list.innerHTML='<div class="dbx-empty">Koppelen…</div>';
   try{
