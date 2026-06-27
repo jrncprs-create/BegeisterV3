@@ -2130,7 +2130,7 @@ function orgRender(){
 async function applyOrganize(){
   const moves=_orgSug.filter(s=>s._on&&s.to).map(s=>({name:s.name,from:s.from,to:s.to}));
   if(!moves.length){ await uiConfirm('Niets aangevinkt om te verplaatsen.'); return; }
-  if(!(await uiConfirm(moves.length+' bestand(en) verplaatsen naar hun klant/projectmap in Dropbox? Dit verplaatst de echte bestanden.')))return;
+  if(!(await uiConfirm(moves.length+' bestand(en) verplaatsen naar hun klant/projectmap in Dropbox? Dit verplaatst de echte bestanden.',{ok:'Verplaatsen',danger:false})))return;
   const btn=document.getElementById('org_apply'); if(btn){btn.textContent='Bezig…';btn.disabled=true;}
   let d; try{ d=await fetch('/api/dropbox/list',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'apply',moves})}).then(r=>r.json()); }catch(_){ d=null; }
   const ok=((d&&d.results)||[]).filter(r=>r.ok).length;
@@ -2440,14 +2440,17 @@ function _fillApptClientSelect(sel,selected){
   sel.innerHTML='<option value="">Klant / project</option><option value="__new__">+ Nieuwe klant…</option>'+state.projects.filter(p=>p.id!=='__inbox__').map(p=>`<option value="${p.id}">${escapeHtml(p.client)}${p.project?' · '+escapeHtml(p.project):''}</option>`).join('');
   if(selected!=null) sel.value=selected;
 }
-function uiConfirm(title){
+function uiConfirm(title,opts){
+  opts=opts||{};
+  const okLabel=opts.ok||'Verwijderen';
+  const danger=opts.danger!==false;
   return new Promise(resolve=>{
     const ov=document.createElement('div'); ov.className='overlay';
     ov.innerHTML='<div class="modal" style="width:420px;max-width:92vw;padding:24px 22px">'
       +'<h3 style="margin:0 0 18px">'+escapeHtml(title)+'</h3>'
       +'<div class="foot" style="display:flex;justify-content:flex-end;gap:10px;margin-top:8px">'
       +'<button class="btn ghost uic-cancel">Annuleren</button>'
-      +'<button class="btn danger uic-ok" style="color:#f87171">Verwijderen</button></div></div>';
+      +'<button class="btn uic-ok'+(danger?' danger':'')+'"'+(danger?' style="color:#f87171"':'')+'>'+escapeHtml(okLabel)+'</button></div></div>';
     document.body.appendChild(ov);
     requestAnimationFrame(()=>ov.classList.add('open'));
     const done=v=>{ ov.classList.remove('open'); setTimeout(()=>ov.remove(),320); resolve(v); };
