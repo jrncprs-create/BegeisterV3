@@ -1521,7 +1521,7 @@ function renderAgenda(){
     const bar = isDesk3() ? `<div class="colbar"><span class="cb-title">Afspraken</span><button class="cb-add" onclick="openApptModal()" title="Nieuwe afspraak" aria-label="Nieuwe afspraak">+</button><div class="cb-spacer"></div><button class="cb-close" onclick="setAgendaCol('agenda')" title="Sluiten" aria-label="Sluiten">${_xIc}</button></div>` : '';
     wrap.innerHTML=bar+afsprakenGroupsHTML(); return;
   }
-  const bar = isDesk3() ? `<div class="colbar"><span class="cb-title">Agenda</span><button class="cb-add" onclick="openApptModal()" title="Nieuwe afspraak" aria-label="Nieuwe afspraak">+</button><div class="cb-spacer"></div><button class="cb-toggle" onclick="setAgendaCol('afspraken')">Afspraken</button></div>` : '';
+  const bar = isDesk3() ? `<div class="colbar"><span class="cb-title">Agenda</span><div class="cb-spacer"></div><button class="cb-toggle" onclick="setAgendaCol('afspraken')">Afspraken</button><button class="cb-add" onclick="openApptModal()" title="Nieuwe afspraak" aria-label="Nieuwe afspraak">+</button></div>` : '';
   const seg=`<div class="cal-head">
     <div class="seg">
       <button class="${calMode==='lijst'?'active':''}" onclick="setCal('lijst')">Lijst</button>
@@ -3291,9 +3291,11 @@ async function chatSend(){
   if(!data||data.error||data.noai){ chatHistory.pop(); addMsg('ai','Sorry, ik ben er even niet bij — de AI is niet bereikbaar. Probeer het zo nog eens.'); const t=document.getElementById('chatInput'); if(t){t.value=text;t.dispatchEvent(new Event('input'));} return; }
   const reply=data.reply||'';
   if(reply){addMsg('ai',reply);chatHistory.push({role:'assistant',content:reply});}
-  if((data.items&&data.items.length)||(data.updates&&data.updates.length)||(data.removes&&data.removes.length)||(data.appointments&&data.appointments.length)){ renderProposal(data); }
+  const _hasProp=(data.items&&data.items.length)||(data.updates&&data.updates.length)||(data.removes&&data.removes.length)||(data.appointments&&data.appointments.length);
+  if(_hasProp){ renderProposal(data); }
   if(data.action&&data.action.view){ doChatAction(data.action); }
   if(data.refresh){ try{ await refresh(); }catch(_){} }
+  if(reply && !_hasProp){ setTimeout(()=>_followupReminder(text+' '+reply), 650); }
   loadUsage();
 }
 function doChatAction(a){
@@ -3330,6 +3332,28 @@ function chatGreet(){
   const msg = inboxItem
     ? ('“'+opdracht+'” kwam binnen maar staat nog bij geen klant. Vergeet je ’m niet?')
     : (projName(pick.p.id)+' · “'+opdracht+'” wacht hier nog op. Vergeet je ’m niet?');
+  _greetNudge(msg, pick.it.id);
+}
+// Eén keer per sessie, als natuurlijke follow-up ná een antwoord ("Ow, en trouwens…").
+// Liefst over de klant/opdracht die net besproken is.
+let _followedUp=false;
+function _followupReminder(convo){
+  if(_followedUp)return;
+  const lc=(convo||'').toLowerCase();
+  const now=Date.now();
+  const stale=allItems().filter(x=>x.p.id!=='__inbox__'&&x.it.status!=='done'&&x.it.status!=='wait'&&!x.it.due&&(now-(x.it.created||now))>2*864e5);
+  const inbox=state.projects.find(p=>p.id==='__inbox__');
+  let pick=null, inboxItem=false;
+  const rel=stale.find(x=>{const c=(x.p.client||'').trim().toLowerCase(); return c&&lc.includes(c);});
+  if(rel){ pick=rel; }
+  else if(inbox&&inbox.items.length){ pick={p:inbox,it:inbox.items[0]}; inboxItem=true; }
+  else if(stale.length){ pick=stale[0]; }
+  if(!pick)return;
+  _followedUp=true;
+  const opdracht=pick.it.t;
+  const msg = inboxItem
+    ? ('Ow, en trouwens — “'+opdracht+'” kwam binnen maar staat nog bij geen klant. Vergeet je ’m niet?')
+    : ('Ow, en trouwens — '+projName(pick.p.id)+' · “'+opdracht+'” wacht hier nog op. Vergeet je ’m niet?');
   _greetNudge(msg, pick.it.id);
 }
 
@@ -3442,7 +3466,7 @@ async function startApp(session){
   await refresh();
   loadUsage();
   applyLayout();
-  if(!_booted){_booted=true; setView(isMobile()?'wachter':'taken'); showWelcome(); chatGreet();
+  if(!_booted){_booted=true; setView(isMobile()?'wachter':'taken'); showWelcome();
     if(/[?&]dropbox=ok/.test(location.search)){ try{history.replaceState({},'',location.pathname);}catch(_){ } setTimeout(()=>{try{uiConfirm('✅ Dropbox is gekoppeld. Je kunt nu bestanden koppelen aan projecten en taken.');}catch(_){}} ,400); }
     else if(/[?&]dropbox=err/.test(location.search)){ try{history.replaceState({},'',location.pathname);}catch(_){ } setTimeout(()=>{try{uiConfirm('Koppelen met Dropbox lukte niet helemaal. Probeer het zo nog eens via "+ Dropbox".');}catch(_){}} ,400); } }
 }
