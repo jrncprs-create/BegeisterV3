@@ -784,8 +784,9 @@
     .colbar .cb-who .tw-opt:hover,.colbar .cb-who .tw-opt.on{color:#fff}
     .colbar .cb-who .tw-amp{font-size:12px;color:var(--mut2);cursor:pointer;transition:color .15s;line-height:1}
     .colbar .cb-who .tw-amp:hover,.colbar .cb-who .tw-amp.on{color:#fff}
-    .main.workspace #view-agenda::before{content:"Agenda"}
-    .main.workspace #view-agenda.afsprakenmode::before{content:"Afspraken"}
+    /* In-afwachting blok: geen extra top-padding zodat de colbar gelijk staat met Taken/Agenda */
+    .rail #wachterBlock{padding-top:0}
+    /* titels komen nu uit .colbar (zie boven), niet meer uit ::before */
     /* Bronnen & Klanten: één kolom breed i.p.v. volle breedte */
     #view-bronnen,#view-beheer,#view-contacten{max-width:34vw}
     /* Bronnen / Klanten / Contacten wonen in de eerste kolom (#rail) met eigen scroll */
