@@ -1441,7 +1441,7 @@ function clientDropdown(){
 }
 function projectDropdown(){
   const all=filterClient==='all';
-  const projs=state.projects.filter(p=>p.id!=='__inbox__'&&(all||p.client===filterClient));
+  const projs=state.projects.filter(p=>p.id!=='__inbox__'&&(p.project&&p.project.trim())&&(all||p.client===filterClient));
   if(!projs.length) return '';
   const opts=[{v:'all',l:'Projecten'}];
   projs.forEach(p=>opts.push({v:p.id,l:(p.project||'—'),badge:{col:PROJCOL[p.id]||'#888',ch:p.icon||(p.client||'?').trim().charAt(0).toUpperCase()}}));
