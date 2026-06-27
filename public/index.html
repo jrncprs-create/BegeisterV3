@@ -3176,6 +3176,11 @@ function renderProposal(data){
       +(m?'<span class="prop-meta">'+escapeHtml(m)+'</span>':'')+'</div>';}).join('');
   html+='<div class="prop-foot"><button class="prop-save" onclick="saveProposal()">Opslaan</button></div>';
   card.innerHTML=html;
+  card.classList.add('has-x');
+  const _xb=document.createElement('button'); _xb.className='msg-x'; _xb.title='Negeer'; _xb.setAttribute('aria-label','Negeer');
+  _xb.innerHTML='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+  _xb.onclick=function(e){e.stopPropagation();card.remove();proposalCard=null;if(typeof updateIntroFade==='function')updateIntroFade();};
+  card.appendChild(_xb);
   t.appendChild(card); proposalCard=card; card.scrollIntoView&&card.scrollIntoView({block:'nearest'});
 }
 function dStr(due){try{return d(due).toLocaleDateString('nl-NL',{day:'numeric',month:'short'});}catch(_){return due;}}
