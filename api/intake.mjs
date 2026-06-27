@@ -12,10 +12,13 @@ export default async function handler(req, res) {
     if (challenge !== null) return res.status(200).send(challenge);
     return res.status(403).send("forbidden");
   }
-  // POST-events (inkomende WhatsApp-berichten) — altijd 200 terug zodat Meta niet blijft herproberen
+  // POST-events (inkomende WhatsApp-berichten).
+  // Direct 200 teruggeven (Meta heeft een korte timeout en herprobeert anders → dubbele items),
+  // de AI-verwerking draait daarna op de achtergrond.
   if (req.method === "POST" && req.body && req.body.object === "whatsapp_business_account") {
-    try { await handleEvent(req.body); } catch (e) { console.error("whatsapp:", e.message); }
-    return res.status(200).json({ ok: true });
+    res.status(200).json({ ok: true });
+    Promise.resolve(handleEvent(req.body)).catch(e => console.error("whatsapp:", e.message));
+    return;
   }
 
   const auth = req.headers["authorization"];
