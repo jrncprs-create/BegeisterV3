@@ -55,7 +55,7 @@ export default async function handler(req, res) {
       let byName = {};
       if (anthropic) {
         const cat = (catalog || []).map(c => `- ${c.client} · ${c.project || ""}`).join("\n") || "(geen)";
-        const sys = "Je sorteert losse bestanden in mappen per klant en project. Kies voor elk bestand de best passende klant en (indien duidelijk) project uit de lijst, op basis van de bestandsnaam. Bij twijfel: laat client en project leeg. Verzin geen klanten/projecten buiten de lijst. Geef ALLEEN geldige JSON.";
+        const sys = "Je sorteert losse bestanden in mappen per klant en project. Kies voor elk bestand de best passende klant en (indien duidelijk) project uit de lijst, op basis van de bestandsnaam. Algemene Begeister-bedrijfsdocumenten (strategie, canvas, menustructuur, huisstijl e.d.) horen bij klant 'Begeister'. Bij twijfel: laat client en project leeg. Verzin geen klanten/projecten buiten de lijst. Geef ALLEEN geldige JSON.";
         const user = `KLANTEN · PROJECTEN:\n${cat}\n\nBESTANDEN:\n${files.map(f => f.name).join("\n")}\n\nGeef exact dit JSON-formaat:\n{"map":[{"name":"exacte bestandsnaam","client":"","project":""}]}`;
         try {
           const resp = await anthropic.messages.create({ model: MODEL, max_tokens: 1500, system: sys, messages: [{ role: "user", content: user }] });
@@ -67,10 +67,11 @@ export default async function handler(req, res) {
       }
       const suggestions = files.map(f => {
         const m = byName[f.name] || {};
-        const client = (m.client || "").trim();
-        const project = (m.project || "").trim();
-        const target = client ? (ROOT + "/" + client + (project ? "/" + project : "")) : "";
-        return { name: f.name, from: f.path, client, project, to: target ? target + "/" + f.name : "" };
+        let client = (m.client || "").trim();
+        let project = (m.project || "").trim();
+        if (!client) { client = "Begeister"; project = ""; }   // losse/algemene docs → /Begeister/Begeister/
+        const target = ROOT + "/" + client + (project ? "/" + project : "");
+        return { name: f.name, from: f.path, client, project, to: target + "/" + f.name };
       });
       return res.status(200).json({ connected: true, suggestions });
     }
