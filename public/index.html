@@ -153,6 +153,7 @@
   .t-proj{flex:1;min-width:0;font-size:13.5px;font-weight:600;color:var(--ccol,var(--mut));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .t-projsub{color:var(--mut2);font-weight:400;margin-left:7px}
   .chk{width:18px;height:18px;border:1.5px solid rgba(255,255,255,.5);border-radius:50%;cursor:pointer;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:11px;color:transparent;transition:background .12s,border-color .12s,color .12s}
+  .chk.sq{border-radius:6px}
   .chk:hover{background:#34d399;border-color:#34d399;color:#0c0c0c}
   .chk:hover{border-color:#fff}
   .chk.on{background:#34d399;border-color:#34d399;color:#0c0c0c}
@@ -768,7 +769,16 @@
     /* knoppen in de kolomkop blijven bovenaan meeplakken bij scrollen */
     .main.workspace #view-taken .col-add,.main.workspace #view-taken .col-close,
     .main.workspace #view-agenda .agenda-add,.main.workspace #view-agenda .agenda-toggle,.main.workspace #view-agenda .col-close{position:sticky;float:right;margin-top:-42px;z-index:5}
-    .main.workspace #view-taken::before{content:"Taken"}
+    .main.workspace #view-taken::before{content:none}
+    .main.workspace #view-taken .colbar{position:sticky;top:0;z-index:6;background:var(--bg);display:flex;align-items:center;height:26px;padding-top:18px;box-sizing:content-box;margin:0 0 16px;gap:11px}
+    .main.workspace #view-taken .colbar .cb-title{font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut2);line-height:1}
+    .main.workspace #view-taken .colbar .cb-add{width:24px;height:24px;border:none;background:transparent;color:rgba(255,255,255,.72);font-size:24px;font-weight:300;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;transition:color .15s,transform .12s}
+    .main.workspace #view-taken .colbar .cb-add:hover{color:#fff;transform:scale(1.12)}
+    .main.workspace #view-taken .colbar .cb-who{display:flex;align-items:center;gap:9px;margin-left:6px}
+    .main.workspace #view-taken .colbar .cb-who .tw-opt{font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut2);cursor:pointer;transition:color .15s;line-height:1}
+    .main.workspace #view-taken .colbar .cb-who .tw-opt:hover,.main.workspace #view-taken .colbar .cb-who .tw-opt.on{color:#fff}
+    .main.workspace #view-taken .colbar .cb-who .tw-amp{font-size:12px;color:var(--mut2);cursor:pointer;transition:color .15s;line-height:1}
+    .main.workspace #view-taken .colbar .cb-who .tw-amp:hover,.main.workspace #view-taken .colbar .cb-who .tw-amp.on{color:#fff}
     .main.workspace #view-agenda::before{content:"Agenda"}
     .main.workspace #view-agenda.afsprakenmode::before{content:"Afspraken"}
     /* Bronnen & Klanten: één kolom breed i.p.v. volle breedte */
@@ -784,10 +794,12 @@
     .agenda-toggle{position:absolute;top:0;right:34px;height:26px;display:flex;align-items:center;border:none;background:transparent;color:var(--mut2);font-size:12px;letter-spacing:1.2px;text-transform:uppercase;cursor:pointer;padding:0;z-index:3;transition:color .15s}
     .agenda-toggle:hover{color:#fff}
     /* Jeroen/Marlon eigenaar-toggle in de TAKEN-kop, zelfde stijl als de kop */
-    .taken-who{position:sticky;top:0;float:left;margin-top:-42px;margin-left:16px;z-index:6;height:26px;display:flex;align-items:center;gap:16px}
+    .taken-who{position:sticky;top:0;float:left;margin-top:-42px;margin-left:16px;z-index:6;height:26px;display:flex;align-items:center;gap:9px}
     .taken-who .tw-opt{font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut2);cursor:pointer;transition:color .15s;line-height:1}
     .taken-who .tw-opt:hover{color:#fff}
     .taken-who .tw-opt.on{color:#fff}
+    .taken-who .tw-amp{font-size:12px;color:var(--mut2);cursor:pointer;transition:color .15s;line-height:1}
+    .taken-who .tw-amp:hover,.taken-who .tw-amp.on{color:#fff}
     /* + direct na het woord "Taken" (i.p.v. uiterst rechts) */
     .main.workspace #view-taken .col-add{float:left;margin-left:62px}
     /* + bij "In afwachting", direct na het woord */
@@ -1411,7 +1423,7 @@ function taskCard(p,it,idx,mode){
   const srcPill=it.src?`<span class="pill src" onclick="event.stopPropagation();gotoSource('${it.src}')">↪ bron</span>`:'';
   const proj=projName(p.id), psub=projProj(p.id);
   const style=`--ccol:${col}`+(_animateNext?`;animation-delay:${450+Math.min(idx,24)*130}ms`:'');
-  const action = `<div class="chk${done?' on':''}" onclick="event.stopPropagation();toggle('${it.id}')">✓</div>`;
+  const action = `<div class="chk${mode==='wachter'?' sq':''}${done?' on':''}" onclick="event.stopPropagation();toggle('${it.id}')">✓</div>`;
   const drag = mode==='taken' ? ' draggable="true"' : '';
   const oc = mode==='wachter' ? `openModal('${it.id}','wachter')` : `openModal('${it.id}')`;
   return `<div class="task${done?' done':''}${_animateNext?' in':''}${mode==='taken'?' tdrag':''}" data-id="${it.id}"${drag} style="${style}">
@@ -1460,14 +1472,11 @@ function _cddPick(handler,v){ document.querySelectorAll('.cdd.open').forEach(x=>
 if(!window._cddInit){window._cddInit=true; document.addEventListener('click',()=>{document.querySelectorAll('.cdd.open').forEach(x=>x.classList.remove('open'));});}
 function renderTaken(){
   const va=document.getElementById('view-taken');
-  if(isDesk3()){ if(va&&!va.querySelector('.col-add')){ const b=document.createElement('button'); b.className='col-add'; b.title='Nieuwe taak'; b.setAttribute('aria-label','Nieuwe taak'); b.textContent='+'; b.onclick=newTask; va.insertBefore(b,va.firstChild); } }
-  else { const b=va&&va.querySelector('.col-add'); if(b)b.remove(); }
-  // Jeroen/Marlon eigenaar-toggle in de kop
-  let _tw=va&&va.querySelector('.taken-who');
   if(isDesk3()){
-    if(va&&!_tw){ _tw=document.createElement('div'); _tw.className='taken-who'; const _ca=va.querySelector('.col-add'); va.insertBefore(_tw, _ca?_ca.nextSibling:va.firstChild); }
-    if(_tw) _tw.innerHTML=`<span class="tw-opt${(whoFilter==='all'||whoFilter==='Jeroen')?' on':''}" onclick="setWhoFilter('Jeroen')">Jeroen</span><span class="tw-opt${(whoFilter==='all'||whoFilter==='Marlon')?' on':''}" onclick="setWhoFilter('Marlon')">Marlon</span>`;
-  } else if(_tw){ _tw.remove(); }
+    let _bar=va&&va.querySelector('.colbar');
+    if(va&&!_bar){ _bar=document.createElement('div'); _bar.className='colbar'; va.insertBefore(_bar, va.firstChild); }
+    if(_bar) _bar.innerHTML=`<span class="cb-title">Taken</span><button class="cb-add" title="Nieuwe taak" aria-label="Nieuwe taak" onclick="newTask()">+</button><div class="cb-who"><span class="tw-opt${(whoFilter==='all'||whoFilter==='Jeroen')?' on':''}" onclick="setWhoFilter('Jeroen')">Jeroen</span><span class="tw-amp${whoFilter==='all'?' on':''}" onclick="setWhoFilter('all')">&amp;</span><span class="tw-opt${(whoFilter==='all'||whoFilter==='Marlon')?' on':''}" onclick="setWhoFilter('Marlon')">Marlon</span></div>`;
+  } else { const _bar=va&&va.querySelector('.colbar'); if(_bar)_bar.remove(); const b=va&&va.querySelector('.col-add'); if(b)b.remove(); }
   const tabs=document.getElementById('ptabs');
   const allOpen=allItems().filter(x=>x.it.status!=='done').length;
   // klant-filter afleiden uit het actieve project (zodat alles consistent blijft)
@@ -2186,7 +2195,7 @@ function fvRender(){
   const ext=((f.name||'').split('.').pop()||'').toLowerCase();
   const url=_fvRaw(f.link); const st=document.getElementById('fv_stage');
   if(['png','jpg','jpeg','gif','webp','bmp','svg','heic','heif'].includes(ext)) st.innerHTML=`<img class="fv-img" src="${escapeHtml(url)}" alt="">`;
-  else if(ext==='pdf') st.innerHTML=`<iframe class="fv-frame" src="https://docs.google.com/viewer?embedded=true&url=${encodeURIComponent(url)}"></iframe>`;
+  else if(ext==='pdf') st.innerHTML=`<iframe class="fv-frame" src="${escapeHtml(url)}#toolbar=0&navpanes=0&view=FitH" title="PDF"></iframe>`;
   else st.innerHTML=`<div class="fv-none">${_fileGlyph(f.name)}<p>Geen voorvertoning voor dit bestandstype.</p><p>Gebruik “Download origineel” of “Open in Dropbox”.</p></div>`;
   const multi=_fvList.length>1; const pv=document.querySelector('.fv-prev'),nx=document.querySelector('.fv-next'); if(pv)pv.style.display=multi?'':'none'; if(nx)nx.style.display=multi?'':'none';
 }
