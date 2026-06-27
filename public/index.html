@@ -781,6 +781,11 @@
     /* AFSPRAKEN-knop: tekstknop links naast de +-knop, op kophoogte */
     .agenda-toggle{position:absolute;top:0;right:34px;height:26px;display:flex;align-items:center;border:none;background:transparent;color:var(--mut2);font-size:12px;letter-spacing:1.2px;text-transform:uppercase;cursor:pointer;padding:0;z-index:3;transition:color .15s}
     .agenda-toggle:hover{color:#fff}
+    /* Jeroen/Marlon eigenaar-toggle in de TAKEN-kop, zelfde stijl als de kop */
+    .taken-who{position:sticky;top:0;float:left;margin-top:-42px;margin-left:74px;z-index:6;height:26px;display:flex;align-items:center;gap:16px}
+    .taken-who .tw-opt{font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut2);cursor:pointer;transition:color .15s;line-height:1}
+    .taken-who .tw-opt:hover{color:#fff}
+    .taken-who .tw-opt.on{color:#fff}
     /* sluitkruis rechtsboven in een kolom (zoals bij itembewerking) */
     .col-close{position:absolute;top:0;right:0;width:26px;height:26px;display:flex;align-items:center;justify-content:center;border:none;background:transparent;color:rgba(255,255,255,.6);cursor:pointer;padding:0;z-index:3;transition:color .15s}
     .col-close:hover{color:#fff}
@@ -1276,7 +1281,7 @@ if(!Array.isArray(state.appointments))state.appointments=[];
 if(!Array.isArray(state.contacts))state.contacts=[];
 function load(){try{const s=JSON.parse(localStorage.getItem('begeister_v8'));if(s&&s.projects)return s;}catch(e){}return JSON.parse(JSON.stringify(SEED));}
 function save(){localStorage.setItem('begeister_v8',JSON.stringify(state));}
-let view='taken',activeTab='all',filterClient='all',who='Jeroen';
+let view='taken',activeTab='all',filterClient='all',who='Jeroen',whoFilter='all';
 let calMode='maand',calRef=iso(TODAY),selectedDay=iso(TODAY);
 
 // ---------- lookups ----------
@@ -1452,6 +1457,12 @@ function renderTaken(){
   const va=document.getElementById('view-taken');
   if(isDesk3()){ if(va&&!va.querySelector('.col-add')){ const b=document.createElement('button'); b.className='col-add'; b.title='Nieuwe taak'; b.setAttribute('aria-label','Nieuwe taak'); b.textContent='+'; b.onclick=newTask; va.insertBefore(b,va.firstChild); } }
   else { const b=va&&va.querySelector('.col-add'); if(b)b.remove(); }
+  // Jeroen/Marlon eigenaar-toggle in de kop
+  let _tw=va&&va.querySelector('.taken-who');
+  if(isDesk3()){
+    if(va&&!_tw){ _tw=document.createElement('div'); _tw.className='taken-who'; va.insertBefore(_tw, va.firstChild); }
+    if(_tw) _tw.innerHTML=`<span class="tw-opt${whoFilter==='Jeroen'?' on':''}" onclick="setWhoFilter('Jeroen')">Jeroen</span><span class="tw-opt${whoFilter==='Marlon'?' on':''}" onclick="setWhoFilter('Marlon')">Marlon</span>`;
+  } else if(_tw){ _tw.remove(); }
   const tabs=document.getElementById('ptabs');
   const allOpen=allItems().filter(x=>x.it.status!=='done').length;
   // klant-filter afleiden uit het actieve project (zodat alles consistent blijft)
@@ -1466,7 +1477,7 @@ function renderTaken(){
   if(activeTab!=='all'){ const ap=projById(activeTab); base=ap?ap.items.map(it=>({p:ap,it})):[]; }
   else if(filterClient!=='all'){ base=state.projects.filter(p=>p.id!=='__inbox__'&&p.client===filterClient).flatMap(p=>p.items.map(it=>({p,it}))); }
   else base=allItems();
-  const rows=sortRows(base.filter(x=>x.it.status!=='wait' && x.p.id!=='__inbox__'));
+  const rows=sortRows(base.filter(x=>x.it.status!=='wait' && x.p.id!=='__inbox__' && (whoFilter==='all'||(x.it.owner||'')===whoFilter)));
   const _now=Date.now(), _fresh=x=>(_now-(x.it.created||0))<3600000;
   const _fr=rows.filter(_fresh), _rs=rows.filter(x=>!_fresh(x));
   let _h='', _i=0;
@@ -1476,6 +1487,7 @@ function renderTaken(){
   if(typeof wireTaskDrag==='function') wireTaskDrag();
 }
 async function setTab(t){if(t==='__new__'){const r=await _newClientPrompt();if(r&&r.id)activeTab=r.id;render();return;}if(t==='__manage__'){setView('beheer');return;}activeTab=t;_animateNext=true;render();}
+function setWhoFilter(name){ whoFilter=(whoFilter===name)?'all':name; _animateNext=false; render(); }
 
 // ---------- agenda ----------
 let agendaCol='agenda';   // 'agenda' (kalender) of 'afspraken' (lijst) in de rechterkolom
