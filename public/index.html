@@ -380,8 +380,8 @@
   .caddrow input::placeholder{color:var(--mut2)}
   .chdr{display:flex;align-items:center;gap:6px;margin:0 0 18px}
   .chdr-t{font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut2);font-weight:600}
-  .chdr-add{background:transparent;border:none;color:var(--mut);font-size:21px;line-height:1;cursor:pointer;padding:0 2px;display:flex;align-items:center}
-  .chdr-add:hover{color:#fff}
+  .chdr-add{width:26px;height:26px;background:transparent;border:1.5px solid rgba(255,255,255,.38);border-radius:50%;color:rgba(255,255,255,.72);font-size:16px;line-height:1;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;transition:color .15s,border-color .15s}
+  .chdr-add:hover{color:#fff;border-color:#fff}
   .csearchrow{display:flex;gap:8px;margin:0 0 22px;align-items:center}
   .csearchrow input{flex:1 1 auto;min-width:0;background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:10px;padding:11px 13px;font-size:14px}
   .csearchrow input::placeholder{color:var(--mut2)}
@@ -529,6 +529,9 @@
   #chatInput:focus{outline:none;box-shadow:none;border:0}
   #chatInput:empty:before{content:attr(data-ph);color:var(--mut2);pointer-events:none}
   .ci-btn{background:transparent;border:none;color:var(--mut);cursor:pointer;padding:5px;display:flex;align-items:center;justify-content:center;line-height:1}
+  .ci-close{display:none}
+  .ci-close svg{width:20px;height:20px}
+  .ci-close:hover{color:#fff}
   .ci-btn:hover{color:var(--txt)}
   .ci-plus{font-size:27px;width:38px;height:38px;border-radius:50%}
   .ci-plus:hover{background:var(--panel)}
@@ -652,6 +655,8 @@
   }
   /* desktop-werkblad: 3 gelijke kolommen — In afwachting | Taken | Agenda */
   @media(min-width:1001px){
+    .welcome-overlay .welcome-close{display:none}
+    .welcome-overlay .ci-close{display:flex}
     /* topnav uitgekleed: alleen Bronnen, Klanten, Contacten, Meldingen */
     #nav button[data-v="agenda"],#nav button[data-v="afspraken"],#nav button[data-v="taken"]{display:none}
     /* kolom 1 (rail) krijgt exact hetzelfde formaat/scrollgedrag als de werkblad-cellen */
@@ -700,8 +705,8 @@
     .main.workspace .cal-head .navbtn{width:26px;height:26px;font-size:13px}
     .main.workspace .cal-head .today{padding:5px 9px;font-size:11.5px;white-space:nowrap}
     /* + knop rechtsboven in een kolom (afspraak / taak) */
-    .agenda-add,.col-add{position:absolute;top:0;right:0;width:26px;height:26px;border:none;background:transparent;color:rgba(255,255,255,.6);font-size:22px;font-weight:300;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding-bottom:2px;z-index:3;transition:color .15s}
-    .agenda-add:hover,.col-add:hover{color:#fff}
+    .agenda-add,.col-add{position:absolute;top:0;right:0;width:26px;height:26px;border:1.5px solid rgba(255,255,255,.38);background:transparent;color:rgba(255,255,255,.72);font-size:16px;font-weight:300;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:50%;z-index:3;transition:color .15s,border-color .15s}
+    .agenda-add:hover,.col-add:hover{color:#fff;border-color:#fff}
     /* toevoegen speelt zich af binnen de betreffende kolom */
     .overlay.incol{background:transparent;align-items:flex-start;justify-content:stretch;padding:0;overflow-y:auto;right:auto}
     .overlay.incol .modal{width:100%;max-width:none;border-radius:0;border:none;border-left:1px solid var(--line);min-height:100%;box-shadow:none;padding:24px 24px 32px}
@@ -820,7 +825,7 @@
 <div id="chatDock">
   <div class="chat-chips" id="chatChips"></div>
   <div id="plusMenu" class="plusmenu hidden">
-    <button onclick="pasteClip()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="4" width="8" height="4" rx="1"/><path d="M9 4H6a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3"/></svg>Plakken</button>
+    <button onclick="dropboxToChat()"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 1.8 0 5.7l6 3.9 6-3.9-6-3.9zm12 0-6 3.9 6 3.9 6-3.9-6-3.9zM0 13.5l6 3.9 6-3.9-6-3.9-6 3.9zm18-3.9-6 3.9 6 3.9 6-3.9-6-3.9zM6 18.6l6 3.9 6-3.9-6-3.9-6 3.9z"/></svg>Dropbox</button>
     <button onclick="openCamera()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h3l2-2h8l2 2h3v11H3z"/><circle cx="12" cy="13" r="3.2"/></svg>Camera</button>
     <button onclick="chatAttach()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8 12.5 21a4.5 4.5 0 0 1-6.4-6.4l8.5-8.5a3 3 0 0 1 4.2 4.2l-8.5 8.5a1.5 1.5 0 0 1-2.1-2.1l7.8-7.8"/></svg>Bijlage</button>
   </div>
@@ -829,6 +834,7 @@
     <div id="chatInput" contenteditable="true" role="textbox" aria-label="Bericht" data-ph="Kom maar door…"></div>
     <button class="ci-btn ci-mic" onclick="voiceMode()" title="Spreek in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
     <button class="ci-send" onclick="chatSend()" title="Stuur" aria-label="Stuur">↑</button>
+    <button class="ci-btn ci-close" onclick="dismissWelcome()" title="Sluiten" aria-label="Sluiten"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
   </div>
 </div>
 <input type="file" id="camInput" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(event)" />
@@ -1844,7 +1850,7 @@ function _fileRow(f){
 function _filesHTML(type,id){
   if(!id) return '<div class="kfiles-hint">Sla eerst op om bestanden te koppelen.</div>';
   const list=_filesFor(type,id).map(_fileRow).join('');
-  return `<div class="kfiles"><div class="kfiles-h"><span>Bestanden</span><button class="kfiles-add" onclick="event.stopPropagation();dropboxPick('${type}','${id}')" title="Koppel Dropbox-bestand"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg> Dropbox</button></div>${list}</div>`;
+  return `<div class="kfiles"><div class="kfiles-h"><span>Bestanden</span><button class="kfiles-add" onclick="event.stopPropagation();dropboxPick('${type}','${id}')" title="Koppel Dropbox-bestand"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M6 1.8 0 5.7l6 3.9 6-3.9-6-3.9zm12 0-6 3.9 6 3.9 6-3.9-6-3.9zM0 13.5l6 3.9 6-3.9-6-3.9-6 3.9zm18-3.9-6 3.9 6 3.9 6-3.9-6-3.9zM6 18.6l6 3.9 6-3.9-6-3.9-6 3.9z"/></svg> Dropbox</button></div>${list}</div>`;
 }
 let _dbxOwner=null,_dbxPath='',_dbxBusy=false,_dbxSearchT=null; const _DBX_ROOT='/Begeister';
 function dropboxPick(type,id){ openDbxBrowser(type,id); }
@@ -1876,10 +1882,15 @@ async function dbxPickFile(path,name){
   try{
     const l=await fetch('/api/dropbox/list',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'link',dropbox_path:path})}).then(r=>r.json());
     const link=l&&l.link; if(!link){ if(list)list.innerHTML=prev; _dbxBusy=false; await uiConfirm('Kon geen deel-link maken voor dit bestand.'); return; }
+    if(_dbxOwner && _dbxOwner.type==='chat'){
+      const ta=document.getElementById('chatInput'); if(ta){ ta.value=((ta.value?ta.value+' ':'')+name+': '+link); ta.dispatchEvent(new Event('input')); ta.focus(); }
+      _dbxBusy=false; closeDbxBrowser(); return;
+    }
     await sb.from('files').insert([{owner_type:_dbxOwner.type,owner_id:String(_dbxOwner.id),name:name,link:link,icon:null}]);
     _dbxBusy=false; closeDbxBrowser(); await refresh();
   }catch(e){ if(list)list.innerHTML=prev; _dbxBusy=false; }
 }
+function dropboxToChat(){ closePlus(); openDbxBrowser('chat',''); }
 async function deleteFile(fid){ if(!(await uiConfirm('Bestand ontkoppelen?')))return; await sb.from('files').delete().eq('id',fid); await refresh(); }
 async function summarizeFile(fid){
   const f=(state.files||[]).find(x=>x.id===fid); if(!f)return;
@@ -3068,7 +3079,8 @@ async function startApp(session){
   loadUsage();
   applyLayout();
   if(!_booted){_booted=true; setView(isMobile()?'wachter':'taken'); showWelcome(); chatGreet();
-    if(/[?&]dropbox=ok/.test(location.search)){ try{history.replaceState({},'',location.pathname);}catch(_){ } setTimeout(()=>{try{uiConfirm('✅ Dropbox is gekoppeld. Je kunt nu bestanden koppelen aan projecten en taken.');}catch(_){}} ,400); } }
+    if(/[?&]dropbox=ok/.test(location.search)){ try{history.replaceState({},'',location.pathname);}catch(_){ } setTimeout(()=>{try{uiConfirm('✅ Dropbox is gekoppeld. Je kunt nu bestanden koppelen aan projecten en taken.');}catch(_){}} ,400); }
+    else if(/[?&]dropbox=err/.test(location.search)){ try{history.replaceState({},'',location.pathname);}catch(_){ } setTimeout(()=>{try{uiConfirm('Koppelen met Dropbox lukte niet helemaal. Probeer het zo nog eens via "+ Dropbox".');}catch(_){}} ,400); } }
 }
 sb.auth.getSession().then(({data})=>{ if(data.session) startApp(data.session); else showLogin(); });
 sb.auth.onAuthStateChange((_e,session)=>{ if(session) startApp(session); else showLogin(); });

@@ -1,5 +1,5 @@
 // Dropbox stuurt hierheen terug met ?code=… → ruil om voor tokens en bewaar ze.
-import { svc, saveTokens, DBX_KEY, DBX_SECRET, REDIRECT_URI } from "../../lib/dropbox.mjs";
+import { svc, saveTokens, getAccessToken, DBX_KEY, DBX_SECRET, REDIRECT_URI } from "../../lib/dropbox.mjs";
 
 export default async function handler(req, res) {
   try {
@@ -22,7 +22,10 @@ export default async function handler(req, res) {
       res.writeHead(302, { Location: "/?dropbox=ok" });
       res.end();
     } else {
-      res.status(200).send("Koppelen mislukt: " + JSON.stringify(j));
+      // Dubbele callback-aanroep (code al gebruikt): als er al een geldige koppeling is, gewoon doorsturen.
+      try { const tok = await getAccessToken(svc()); if (tok) { res.writeHead(302, { Location: "/?dropbox=ok" }); res.end(); return; } } catch (_) {}
+      res.writeHead(302, { Location: "/?dropbox=err" });
+      res.end();
     }
   } catch (e) {
     res.status(200).send("Fout bij koppelen: " + String(e.message || e));
