@@ -240,7 +240,7 @@
   .iohd{text-align:center;font-size:12px;color:var(--mut2)}
   .iogrid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
   .iocell{height:64px;display:flex;flex-direction:column;align-items:center;padding-top:8px;gap:6px;cursor:pointer;border-radius:10px}
-  .iocell:hover{background:rgba(255,255,255,.05)}
+  .iocell:hover .ionum{background:rgba(255,255,255,.08)}
   .iocell.other .ionum{color:var(--mut2);opacity:.45}
   .ionum{font-size:15px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:9px}
   .iocell.today .ionum{box-shadow:inset 0 0 0 1px rgba(255,255,255,.55);color:var(--txt);font-weight:600}
@@ -479,6 +479,11 @@
   .dbx-ic svg{width:21px;height:21px}
   .dbx-name{flex:1;min-width:0;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .dbx-chev{flex:0 0 auto;color:var(--mut2)}
+  .dbx-box{flex:0 0 auto;width:18px;height:18px;border:1.5px solid rgba(255,255,255,.34);border-radius:5px;display:flex;align-items:center;justify-content:center;color:#fff}
+  .dbx-row.sel{background:rgba(52,211,153,.10)}
+  .dbx-row.sel .dbx-box{background:#34d399;border-color:#34d399;color:#0a0a0a}
+  .dbx-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+  .dbx-selnote{font-size:12px;color:var(--mut2)}
   .dbx-empty{font-size:13px;color:var(--mut2);padding:18px 4px;text-align:center}
   .dbx-connect{text-align:center;padding:22px 8px}
   .dbx-connect p{font-size:13.5px;color:var(--mut);margin:0 0 14px;line-height:1.5}
@@ -1036,6 +1041,7 @@
     </div>
     <div class="dbx-crumb" id="dbx_crumb"></div>
     <div class="dbx-list" id="dbx_list"></div>
+    <div class="dbx-foot" id="dbx_foot"><span class="dbx-selnote" id="dbx_selnote">Tik bestanden aan om ze te selecteren</span><button class="prop-save" id="dbx_link" onclick="dbxLinkSelected()" disabled>Koppel</button></div>
   </div>
 </div>
 
@@ -2007,9 +2013,9 @@ function _filesHTML(type,id){
   const list=_filesFor(type,id).map(_fileRow).join('');
   return `<div class="kfiles"><div class="kfiles-h"><span>Bestanden</span><button class="kfiles-add" onclick="event.stopPropagation();dropboxPick('${type}','${id}')" title="Koppel Dropbox-bestand"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M6 1.8 0 5.7l6 3.9 6-3.9-6-3.9zm12 0-6 3.9 6 3.9 6-3.9-6-3.9zM0 13.5l6 3.9 6-3.9-6-3.9-6 3.9zm18-3.9-6 3.9 6 3.9 6-3.9-6-3.9zM6 18.6l6 3.9 6-3.9-6-3.9-6 3.9z"/></svg> Dropbox</button></div>${list}</div>`;
 }
-let _dbxOwner=null,_dbxPath='',_dbxBusy=false,_dbxSearchT=null; const _DBX_ROOT='/Begeister';
+let _dbxOwner=null,_dbxPath='',_dbxBusy=false,_dbxSearchT=null,_dbxSel={}; const _DBX_ROOT='/Begeister';
 function dropboxPick(type,id){ openDbxBrowser(type,id); }
-function openDbxBrowser(type,id){ _dbxOwner={type,id}; _dbxPath=_DBX_ROOT; const s=document.getElementById('dbx_search'); if(s)s.value=''; const ov=document.getElementById('dbxOverlay'); if(!ov)return; ov.style.top=''; ov.classList.add('open'); dbxLoad(_DBX_ROOT); }
+function openDbxBrowser(type,id){ _dbxOwner={type,id}; _dbxPath=_DBX_ROOT; _dbxSel={}; const s=document.getElementById('dbx_search'); if(s)s.value=''; const ov=document.getElementById('dbxOverlay'); if(!ov)return; ov.style.top=''; ov.classList.add('open'); _dbxUpdateFoot(); dbxLoad(_DBX_ROOT); }
 function closeDbxBrowser(){ const ov=document.getElementById('dbxOverlay'); if(ov)ov.classList.remove('open'); }
 async function dbxLoad(path){
   _dbxPath=path||''; const list=document.getElementById('dbx_list'); const crumb=document.getElementById('dbx_crumb');
@@ -2025,9 +2031,38 @@ function dbxRender(entries){
   if(!entries.length){ list.innerHTML='<div class="dbx-empty">Niets gevonden.</div>'; return; }
   list.innerHTML=entries.map(e=>{
     const folder=e.type==='folder'; const p=(e.path||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'"); const nm=(e.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-    const onclick= folder? `dbxLoad('${p}')` : `dbxPickFile('${p}','${nm}')`;
-    return `<div class="dbx-row" onclick="${onclick}"><span class="dbx-ic">${folder?_folderGlyph():_fileGlyph(e.name)}</span><span class="dbx-name">${escapeHtml(e.name)}</span>${folder?'<span class="dbx-chev">›</span>':''}</div>`;
+    if(folder) return `<div class="dbx-row" onclick="dbxLoad('${p}')"><span class="dbx-ic">${_folderGlyph()}</span><span class="dbx-name">${escapeHtml(e.name)}</span><span class="dbx-chev">›</span></div>`;
+    const sel=!!_dbxSel[e.path];
+    return `<div class="dbx-row dbx-file${sel?' sel':''}" onclick="dbxToggleSel(this,'${p}','${nm}')"><span class="dbx-box">${sel?'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4 4l10 -10"/></svg>':''}</span><span class="dbx-ic">${_fileGlyph(e.name)}</span><span class="dbx-name">${escapeHtml(e.name)}</span></div>`;
   }).join('');
+}
+function dbxToggleSel(el,path,name){
+  if(_dbxSel[path]){ delete _dbxSel[path]; el.classList.remove('sel'); const b=el.querySelector('.dbx-box'); if(b)b.innerHTML=''; }
+  else { _dbxSel[path]=name; el.classList.add('sel'); const b=el.querySelector('.dbx-box'); if(b)b.innerHTML='<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4 4l10 -10"/></svg>'; }
+  _dbxUpdateFoot();
+}
+function _dbxUpdateFoot(){
+  const n=Object.keys(_dbxSel).length; const btn=document.getElementById('dbx_link'); const note=document.getElementById('dbx_selnote');
+  if(btn){ btn.disabled=n===0; btn.textContent=n>0?('Koppel '+n+' bestand'+(n>1?'en':'')):'Koppel'; }
+  if(note) note.textContent=n>0?(n+' geselecteerd'):'Tik bestanden aan om ze te selecteren';
+}
+async function dbxLinkSelected(){
+  const sel=Object.entries(_dbxSel); if(!sel.length)return;
+  const btn=document.getElementById('dbx_link'); if(btn){btn.disabled=true;btn.textContent='Koppelen…';}
+  const links=[];
+  for(const [path,name] of sel){
+    try{ const l=await fetch('/api/dropbox/list',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'link',dropbox_path:path})}).then(r=>r.json()); if(l&&l.link) links.push({name,link:l.link}); }catch(_){}
+  }
+  if(!links.length){ _dbxUpdateFoot(); await uiConfirm('Kon geen deel-link maken.'); return; }
+  if(_dbxOwner && _dbxOwner.type==='chat'){
+    const ta=document.getElementById('chatInput'); if(ta){ const add=links.map(x=>x.name+': '+x.link).join('\n'); ta.value=((ta.value?ta.value+'\n':'')+add); ta.dispatchEvent(new Event('input')); ta.focus(); }
+    closeDbxBrowser(); return;
+  }
+  const rows=links.map(x=>({owner_type:_dbxOwner.type,owner_id:String(_dbxOwner.id),name:x.name,link:x.link,icon:null}));
+  await sb.from('files').insert(rows);
+  const ownerType=_dbxOwner.type, ownerId=String(_dbxOwner.id);
+  closeDbxBrowser(); await refresh();
+  if(ownerType==='task'){ const mf=document.getElementById('m_files'); if(mf && editingId===ownerId) mf.innerHTML=_filesHTML('task', ownerId); }
 }
 function dbxUp(){ if(!_dbxPath || _dbxPath.toLowerCase()===_DBX_ROOT.toLowerCase())return; const p=_dbxPath.split('/'); p.pop(); const np=p.join('/'); dbxLoad((np.toLowerCase().indexOf(_DBX_ROOT.toLowerCase())===0)?np:_DBX_ROOT); }
 function dbxSearchDebounced(q){ clearTimeout(_dbxSearchT); _dbxSearchT=setTimeout(()=>dbxSearch(q),350); }
@@ -2082,7 +2117,7 @@ async function applyOrganize(){
 async function deleteFile(fid){ if(!(await uiConfirm('Bestand ontkoppelen?')))return; await sb.from('files').delete().eq('id',fid); await refresh(); }
 // ---------- file-viewer (paginavullend) ----------
 let _fvList=[],_fvIdx=0;
-function _fvRaw(link){ let u=String(link||''); if(/[?&]dl=\d/.test(u)) return u.replace(/([?&])dl=\d/,'$1raw=1'); return u+(u.includes('?')?'&':'?')+'raw=1'; }
+function _fvRaw(link){ let u=String(link||''); u=u.replace('://www.dropbox.com/','://dl.dropboxusercontent.com/').replace('://dropbox.com/','://dl.dropboxusercontent.com/'); u=u.replace(/([?&])dl=\d/,'$1raw=1'); if(!/[?&]raw=1/.test(u)) u+=(u.includes('?')?'&':'?')+'raw=1'; return u; }
 function _fvDl(link){ let u=String(link||''); if(/[?&](dl|raw)=\d/.test(u)) return u.replace(/([?&])(dl|raw)=\d/,'$1dl=1'); return u+(u.includes('?')?'&':'?')+'dl=1'; }
 function openFileViewer(fid){
   const f=(state.files||[]).find(x=>x.id===fid); if(!f)return;
