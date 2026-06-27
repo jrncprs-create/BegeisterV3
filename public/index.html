@@ -1433,7 +1433,9 @@ function taskCard(p,it,idx,mode){
   const srcPill=it.src?`<span class="pill src" onclick="event.stopPropagation();gotoSource('${it.src}')">↪ bron</span>`:'';
   const proj=projName(p.id), psub=projProj(p.id);
   const style=`--ccol:${col}`+(_animateNext?`;animation-delay:${450+Math.min(idx,24)*130}ms`:'');
-  const action = `<div class="chk${mode==='wachter'?' sq':''}${done?' on':''}" onclick="event.stopPropagation();toggle('${it.id}')">✓</div>`;
+  const action = mode==='wachter'
+    ? `<div class="wact"><button class="wbtn ok" title="Goedkeuren — naar Taken" onclick="event.stopPropagation();approveWait('${it.id}')">${_SVG_OK}</button><button class="wbtn no" title="Verwijderen" onclick="event.stopPropagation();rejectWait('${it.id}')">${_SVG_NO}</button></div>`
+    : `<div class="chk${done?' on':''}" onclick="event.stopPropagation();toggle('${it.id}')">✓</div>`;
   const drag = mode==='taken' ? ' draggable="true"' : '';
   const oc = mode==='wachter' ? `openModal('${it.id}','wachter')` : `openModal('${it.id}')`;
   return `<div class="task${done?' done':''}${_animateNext?' in':''}${mode==='taken'?' tdrag':''}" data-id="${it.id}"${drag} style="${style}">
