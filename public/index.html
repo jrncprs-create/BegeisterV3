@@ -1946,7 +1946,7 @@ function closeOrganize(){ const ov=document.getElementById('orgOverlay'); if(ov)
 async function orgScan(){
   const l=document.getElementById('org_list');
   const catalog=(state.projects||[]).filter(p=>p.id!=='__inbox__').map(p=>({client:p.client,project:p.project||''}));
-  let d; try{ d=await fetch('/api/dropbox/organize',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'scan',catalog})}).then(r=>r.json()); }catch(_){ if(l)l.innerHTML='<div class="dbx-empty">Kon niet scannen.</div>'; return; }
+  let d; try{ d=await fetch('/api/dropbox/list',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'scan',catalog})}).then(r=>r.json()); }catch(_){ if(l)l.innerHTML='<div class="dbx-empty">Kon niet scannen.</div>'; return; }
   if(d.connected===false){ if(l)l.innerHTML='<div class="dbx-connect"><p>Nog niet aan Dropbox gekoppeld.</p><button class="prop-save" onclick="location.href=\'/api/dropbox/connect\'">Verbind Dropbox</button></div>'; return; }
   if(d.error){ if(l)l.innerHTML='<div class="dbx-empty">Fout: '+escapeHtml(d.error)+'</div>'; return; }
   _orgSug=(d.suggestions||[]); _orgSug.forEach(s=>{ s._on=!!s.to; });
@@ -1965,7 +1965,7 @@ async function applyOrganize(){
   if(!moves.length){ await uiConfirm('Niets aangevinkt om te verplaatsen.'); return; }
   if(!(await uiConfirm(moves.length+' bestand(en) verplaatsen naar hun klant/projectmap in Dropbox? Dit verplaatst de echte bestanden.')))return;
   const btn=document.getElementById('org_apply'); if(btn){btn.textContent='Bezig…';btn.disabled=true;}
-  let d; try{ d=await fetch('/api/dropbox/organize',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'apply',moves})}).then(r=>r.json()); }catch(_){ d=null; }
+  let d; try{ d=await fetch('/api/dropbox/list',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'apply',moves})}).then(r=>r.json()); }catch(_){ d=null; }
   const ok=((d&&d.results)||[]).filter(r=>r.ok).length;
   closeOrganize();
   await uiConfirm(ok+' van '+moves.length+' bestand(en) verplaatst.');
