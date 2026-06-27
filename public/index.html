@@ -3270,24 +3270,30 @@ function doChatAction(a){
   setView(v);
 }
 let _greeted=false;
+// Korte nudge over één item; het ×'je zet dat item in "In afwachting".
+function _greetNudge(text,itemId){
+  const t=document.getElementById('chatThread'); if(!t)return;
+  const dv=document.createElement('div'); dv.className='msg ai has-x'; dv.innerHTML=mdLite(text);
+  const x=document.createElement('button'); x.className='msg-x'; x.title='Naar In afwachting'; x.setAttribute('aria-label','Naar In afwachting');
+  x.innerHTML='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+  x.onclick=async function(e){ e.stopPropagation(); dv.remove(); if(typeof updateIntroFade==='function')updateIntroFade(); try{ await sb.from('items').update({status:'wait'}).eq('id',itemId); if(typeof refresh==='function') await refresh(); }catch(_){ } };
+  dv.appendChild(x); t.appendChild(dv); if(typeof updateIntroFade==='function')updateIntroFade(); _scrollThreadBottom();
+}
 function chatGreet(){
   if(_greeted)return;_greeted=true;
+  // Eerste inlog van de dag: géén reminder. Pas vanaf de 2e inlog die dag één korte nudge.
+  try{ const today=new Date().toISOString().slice(0,10); if(localStorage.getItem('bg_greetDay')!==today){ localStorage.setItem('bg_greetDay',today); return; } }catch(_){}
+  // Eén item: eerst een binnengekomen item zonder klant, anders een taak zonder datum die al een tijdje staat.
   const inbox=state.projects.find(p=>p.id==='__inbox__');
-  if(inbox&&inbox.items.length){
-    const ids=inbox.items.map(i=>i.id);
-    const n=inbox.items.length;
-    const bullets=inbox.items.slice(0,6).map(i=>'• '+i.t).join('\n');
-    const more=n>6?('\n• … en nog '+(n-6)):'';
-    addMsg('ai','Er staan '+n+' binnengekomen die ik nog niet kon plaatsen. Bij welke klant horen ze?\n\n'+bullets+more);
-    renderClientChips(ids);
-  }
-  // herinnering: taken die al een tijdje zonder datum blijven staan
-  const now=Date.now();
-  const stale=allItems().filter(x=>x.p.id!=='__inbox__'&&x.it.status!=='done'&&!x.it.due&&(now-(x.it.created||now))>2*864e5);
-  if(stale.length){
-    const sb2=stale.slice(0,5).map(x=>'• '+x.it.t+' ('+projName(x.p.id)+')').join('\n');
-    addMsg('ai','Trouwens — '+stale.length+' taak/taken staat al een tijdje zónder datum. Zullen we er deadlines bij zetten? Bijvoorbeeld:\n\n'+sb2);
-  }
+  let pick=null, inboxItem=false;
+  if(inbox&&inbox.items.length){ pick={p:inbox,it:inbox.items[0]}; inboxItem=true; }
+  else { const now=Date.now(); const stale=allItems().filter(x=>x.p.id!=='__inbox__'&&x.it.status!=='done'&&x.it.status!=='wait'&&!x.it.due&&(now-(x.it.created||now))>2*864e5); if(stale.length) pick=stale[0]; }
+  if(!pick)return;
+  const opdracht=pick.it.t;
+  const msg = inboxItem
+    ? ('“'+opdracht+'” kwam binnen maar staat nog bij geen klant. Vergeet je ’m niet?')
+    : (projName(pick.p.id)+' · “'+opdracht+'” wacht hier nog op. Vergeet je ’m niet?');
+  _greetNudge(msg, pick.it.id);
 }
 
 // ---------- camera / bijlage / voice / beeld ----------
