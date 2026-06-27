@@ -293,10 +293,20 @@
   .srow-text{font-size:12.5px;color:var(--mut);white-space:pre-wrap;line-height:1.55;max-height:320px;overflow:auto}
   .srow-att{display:flex;align-items:center;gap:9px;padding:7px 0;border-top:1px solid var(--line);cursor:pointer}
   .srow-att:hover{color:var(--txt)}
-  .file-ic{flex:0 0 auto;width:20px;height:20px;color:var(--mut)}
-  .file-ic svg{width:20px;height:20px;display:block}
+  .file-ic{flex:0 0 auto;width:22px;height:22px;color:var(--mut)}
+  .file-ic svg{width:22px;height:22px;display:block}
   .srow-att .fname{font-size:12.5px;color:var(--mut)}
   .srow-derived{margin-top:8px;font-size:11.5px;color:var(--mut2)}
+  /* WhatsApp-ballonnen */
+  .wa{display:flex;flex-direction:column;gap:5px;padding:2px 0 4px}
+  .wa-msg{max-width:84%;display:flex;flex-direction:column}
+  .wa-msg.them{align-self:flex-start;align-items:flex-start}
+  .wa-msg.me{align-self:flex-end;align-items:flex-end}
+  .wa-name{font-size:11px;color:var(--primary2);font-weight:600;margin:2px 0 2px 11px}
+  .wa-bub{font-size:13.5px;line-height:1.45;padding:7px 11px 6px;border-radius:14px;white-space:pre-wrap;word-break:break-word;color:var(--txt)}
+  .wa-msg.them .wa-bub{background:rgba(255,255,255,.07);border-bottom-left-radius:5px}
+  .wa-msg.me .wa-bub{background:rgba(52,211,153,.15);border-bottom-right-radius:5px}
+  .wa-time{display:block;font-size:9.5px;color:var(--mut2);margin-top:3px;text-align:right;opacity:.75}
 
   /* RAIL */
   .rail{background:var(--bg);border-right:1px solid var(--line);width:360px;flex:0 0 360px;position:sticky;top:0;height:100dvh;align-self:flex-start;overflow-y:auto;overflow-x:hidden;padding-bottom:150px;scrollbar-width:none;-ms-overflow-style:none}
@@ -425,12 +435,15 @@
   .kfile{display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px solid var(--line);flex-wrap:wrap}
   .kfile-main{display:flex;align-items:center;gap:9px;flex:1;min-width:0;color:var(--txt);text-decoration:none}
   .kfile-main:hover .kfile-name{color:#fff}
-  .kfile-ic{flex:0 0 auto;width:16px;height:16px;display:flex}
-  .kfile-ic svg,.kfile-ic img{width:16px;height:16px;border-radius:3px}
+  .kfile-ic{flex:0 0 auto;width:22px;height:22px;display:flex;align-items:center}
+  .kfile-ic svg,.kfile-ic img{width:22px;height:22px;border-radius:3px}
   .kfile-name{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .kfile-ai,.kfile-del{flex:0 0 auto;background:transparent;border:none;color:var(--mut2);cursor:pointer;font-size:15px;line-height:1;padding:2px 4px}
-  .kfile-ai:hover{color:var(--primary2)}
-  .kfile-del:hover{color:var(--late)}
+  .kfile-ai,.kfile-del{flex:0 0 auto;background:transparent;border:none;cursor:pointer;line-height:0;padding:3px 4px;display:flex;align-items:center}
+  .kfile-ai{color:var(--mut2)}
+  .kfile-ai:hover{color:#fff}
+  .kfile-del{color:var(--late,#f87171)}
+  .kfile-del:hover{color:#ff6b6b}
+  .kfile-aianim{width:18px;height:18px;display:block;object-fit:contain}
   .kfile-sum{flex:1 1 100%;font-size:12.5px;color:var(--mut);line-height:1.5;margin:2px 0 2px 25px;white-space:pre-wrap;display:none}
   .kfile-sum.on{display:block}
   .ctx-intro{font-size:12.5px;color:var(--mut2);margin:0 0 6px;line-height:1.5}
@@ -446,8 +459,8 @@
   .dbx-list::-webkit-scrollbar{display:none}
   .dbx-row{display:flex;align-items:center;gap:11px;padding:11px 4px;border-bottom:1px solid var(--line);cursor:pointer}
   .dbx-row:hover{background:rgba(255,255,255,.03)}
-  .dbx-ic{flex:0 0 auto;width:20px;height:20px;display:flex;align-items:center;justify-content:center}
-  .dbx-ic svg{width:18px;height:18px}
+  .dbx-ic{flex:0 0 auto;width:22px;height:22px;display:flex;align-items:center;justify-content:center}
+  .dbx-ic svg{width:21px;height:21px}
   .dbx-name{flex:1;min-width:0;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .dbx-chev{flex:0 0 auto;color:var(--mut2)}
   .dbx-empty{font-size:13px;color:var(--mut2);padding:18px 4px;text-align:center}
@@ -458,8 +471,8 @@
   .org-list::-webkit-scrollbar{display:none}
   .org-row{display:flex;align-items:center;gap:11px;padding:10px 2px;border-bottom:1px solid var(--line)}
   .org-row input[type=checkbox]{flex:0 0 auto;width:16px;height:16px;accent-color:#34d399}
-  .org-ic{flex:0 0 auto;width:18px;height:18px;display:flex;align-items:center}
-  .org-ic svg{width:18px;height:18px}
+  .org-ic{flex:0 0 auto;width:22px;height:22px;display:flex;align-items:center}
+  .org-ic svg{width:21px;height:21px}
   .org-main{min-width:0;flex:1}
   .org-name{font-size:13.5px;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .org-target{font-size:12px;color:var(--primary2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -733,8 +746,8 @@
     .main.workspace .cal-head .navbtn{width:26px;height:26px;font-size:13px}
     .main.workspace .cal-head .today{padding:5px 9px;font-size:11.5px;white-space:nowrap}
     /* + knop rechtsboven in een kolom (afspraak / taak) */
-    .agenda-add,.col-add{position:absolute;top:0;right:0;width:26px;height:26px;border:1.5px solid rgba(255,255,255,.38);background:transparent;color:rgba(255,255,255,.72);font-size:16px;font-weight:300;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:50%;z-index:3;transition:color .15s,border-color .15s}
-    .agenda-add:hover,.col-add:hover{color:#fff;border-color:#fff}
+    .agenda-add,.col-add{position:absolute;top:0;right:0;width:26px;height:26px;border:none;background:transparent;color:rgba(255,255,255,.72);font-size:25px;font-weight:300;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:3;transition:color .15s,transform .12s}
+    .agenda-add:hover,.col-add:hover{color:#fff;transform:scale(1.12)}
     /* toevoegen speelt zich af binnen de betreffende kolom */
     .overlay.incol{background:transparent;align-items:flex-start;justify-content:stretch;padding:0;overflow-y:auto;right:auto}
     .overlay.incol .modal{width:100%;max-width:none;border-radius:0;border:none;border-left:1px solid var(--line);min-height:100%;box-shadow:none;padding:24px 24px 32px}
@@ -1679,6 +1692,26 @@ function _srcDedupeKey(s){
   return [String(s.from||'').trim().toLowerCase(),String(s.subject||'').trim().toLowerCase(),String(s.date||''),body].join('|');
 }
 function _srcChanLabel(ch){return ch==='whatsapp'?'WhatsApp':(ch==='email'?'E-mail':(ch==='chat'?'Chat':(ch==='camera'?'Foto':'Geplakt')));}
+// WhatsApp-conversatie → chatballonnen. Herkent "Naam (tijd): bericht"-regels.
+function _waBubbles(text){
+  const lines=String(text||'').split('\n');
+  const re=/^([A-Za-zÀ-ÿ][^:(]*?)(?:\s*\(([^)]*)\))?:\s+(.*)$/;
+  const meRe=/^(jeroen|marlon|ik|wij|begeister)\b/i;
+  const msgs=[];
+  lines.forEach(ln=>{
+    const m=ln.match(re);
+    if(m){ msgs.push({name:m[1].trim(),meta:(m[2]||'').trim(),text:m[3],me:meRe.test(m[1].trim())}); }
+    else if(msgs.length && ln.trim()){ msgs[msgs.length-1].text+='\n'+ln; }
+    else if(ln.trim()){ msgs.push({name:'',meta:'',text:ln,me:false}); }
+  });
+  if(msgs.length<2) return '';
+  let last=null;
+  const html=msgs.map(x=>{
+    const showName=!x.me && x.name && x.name!==last; last=x.name;
+    return `<div class="wa-msg ${x.me?'me':'them'}">${showName?`<div class="wa-name">${escapeHtml(x.name)}</div>`:''}<div class="wa-bub">${autolink(escapeHtml(x.text),'var(--primary2)')}${x.meta?`<span class="wa-time">${escapeHtml(x.meta)}</span>`:''}</div></div>`;
+  }).join('');
+  return '<div class="wa">'+html+'</div>';
+}
 function _srcRowHTML(s){
   const col=PROJCOL[s.proj]||'var(--primary2)';
   const derived=[];state.projects.forEach(p=>p.items.forEach(it=>{if(it.src===s.id)derived.push(it);}));
@@ -1700,7 +1733,7 @@ function _srcRowHTML(s){
       <span class="srow-date">${dateTxt}</span>
     </div>
     <div class="srow-body" id="body_${s.id}">
-      <div class="srow-text">${autolink(escapeHtml(s.full||s.text||s.summary||''),col)}</div>
+      ${(()=>{ const raw=s.full||s.text||s.summary||''; if(s.channel==='whatsapp'){ const b=_waBubbles(raw); if(b) return b; } return `<div class="srow-text">${autolink(escapeHtml(raw),col)}</div>`; })()}
       ${attHTML}${derHTML}
     </div>
   </div>`;
@@ -1781,7 +1814,14 @@ function renderChat(text,col){
   return msgs.map(m=>{const me=/jeroen/i.test(m.who);
     return `<div class="msg ${me?'me':'them'}"><div class="mh">${escapeHtml(m.who)} · ${escapeHtml(m.time)}</div>${autolink(escapeHtml(m.text),col)}</div>`;}).join('');
 }
-function toggleSrc(id){document.getElementById('body_'+id).classList.toggle('open');}
+function toggleSrc(id){
+  const body=document.getElementById('body_'+id); if(!body)return;
+  const willOpen=!body.classList.contains('open');
+  // accordion: sluit alle andere geopende bronnen
+  document.querySelectorAll('.srow-body.open').forEach(b=>{ if(b!==body) b.classList.remove('open'); });
+  body.classList.toggle('open', willOpen);
+  if(willOpen){ const card=document.getElementById('card_'+id); if(card) setTimeout(()=>{ try{card.scrollIntoView({behavior:'smooth',block:'start'});}catch(_){card.scrollIntoView();} },70); }
+}
 function toggleFull(id){const f=document.getElementById('full_'+id);const b=document.getElementById('fbtn_'+id);f.classList.toggle('open');b.textContent=f.classList.contains('open')?'Verberg origineel ▴':'Toon volledig origineel ▾';}
 function gotoSource(sid){setView('bronnen');setTimeout(()=>{const b=document.getElementById('body_'+sid);if(b){b.classList.add('open');document.getElementById('card_'+sid).scrollIntoView({behavior:'smooth',block:'center'});}},60);}
 
@@ -1895,12 +1935,12 @@ async function mergeDupContacts(){
 
 // ---------- Dropbox-bestanden (per project / taak) ----------
 function _filesFor(type,id){return (state.files||[]).filter(f=>f.owner_type===type && String(f.owner_id)===String(id));}
-function _folderGlyph(){return '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#cfcfcf" stroke-width="1.6" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h3.6l2 2H19a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>';}
+function _folderGlyph(){return _tIc('<path d="M5 4h4l3 3h7a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-11a2 2 0 0 1 2 -2"/>',18,1.25);}
 function _fileRow(f){
   const ic=_fileGlyph(f.name||'');
   return `<div class="kfile"><a class="kfile-main" href="${escapeHtml(f.link)}" target="_blank" rel="noopener" onclick="event.stopPropagation()"><span class="kfile-ic">${ic}</span><span class="kfile-name">${escapeHtml(f.name||'bestand')}</span></a>`
-    +`<button class="kfile-ai" title="AI: samenvatten" onclick="event.stopPropagation();summarizeFile('${f.id}')">✦</button>`
-    +`<button class="kfile-del" title="Ontkoppelen" onclick="event.stopPropagation();deleteFile('${f.id}')">×</button>`
+    +`<button class="kfile-ai" title="AI leest dit bestand" onclick="event.stopPropagation();summarizeFile('${f.id}')">${_tIc(_TABCHAN.asterisk,16,1.7)}</button>`
+    +`<button class="kfile-del" title="Bestand verwijderen" onclick="event.stopPropagation();deleteFile('${f.id}')">${_tIc('<path d="M18 6l-12 12"/><path d="M6 6l12 12"/>',16,1.7)}</button>`
     +`<div class="kfile-sum" id="fsum_${f.id}"></div></div>`;
 }
 function _filesHTML(type,id){
@@ -1914,7 +1954,7 @@ function openDbxBrowser(type,id){ _dbxOwner={type,id}; _dbxPath=_DBX_ROOT; const
 function closeDbxBrowser(){ const ov=document.getElementById('dbxOverlay'); if(ov)ov.classList.remove('open'); }
 async function dbxLoad(path){
   _dbxPath=path||''; const list=document.getElementById('dbx_list'); const crumb=document.getElementById('dbx_crumb');
-  if(crumb)crumb.textContent=_dbxPath?('📁 '+_dbxPath):'📁 /';
+  if(crumb)crumb.innerHTML='<span style="display:inline-flex;vertical-align:-4px;margin-right:5px">'+_folderGlyph()+'</span>'+escapeHtml(_dbxPath||'/');
   if(list)list.innerHTML='<div class="dbx-empty">Laden…</div>';
   let d; try{ d=await fetch('/api/dropbox/list',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'list',path:_dbxPath})}).then(r=>r.json()); }catch(_){ if(list)list.innerHTML='<div class="dbx-empty">Kon Dropbox niet bereiken.</div>'; return; }
   if(d.connected===false){ if(list)list.innerHTML='<div class="dbx-connect"><p>Begeister is nog niet aan Dropbox gekoppeld.</p><button class="prop-save" onclick="location.href=\'/api/dropbox/connect\'">Verbind Dropbox</button></div>'; return; }
@@ -1984,12 +2024,16 @@ async function deleteFile(fid){ if(!(await uiConfirm('Bestand ontkoppelen?')))re
 async function summarizeFile(fid){
   const f=(state.files||[]).find(x=>x.id===fid); if(!f)return;
   const el=document.getElementById('fsum_'+fid); if(el){el.classList.add('on');el.textContent='Even lezen…';}
+  const btn=document.querySelector(`.kfile-ai[onclick*="'${fid}'"]`);
+  const _orig=btn?btn.innerHTML:null;
+  if(btn){ btn.innerHTML='<img class="kfile-aianim" src="/thinking.webp" alt="">'; btn.disabled=true; }
   try{
     const r=await fetch('/api/readfile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({link:f.link,name:f.name})});
     const d=await r.json();
     if(el) el.textContent = d&&d.summary ? d.summary : (d&&d.error ? ('Lukt niet: '+d.error) : 'Kon het bestand niet lezen.');
     if(typeof loadUsage==='function') loadUsage();
   }catch(e){ if(el)el.textContent='Kon het bestand niet lezen.'; }
+  if(btn){ btn.innerHTML=_orig; btn.disabled=false; }
 }
 
 // ---------- AI-context (Over jou / Over Begeister) ----------
