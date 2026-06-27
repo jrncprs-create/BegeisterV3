@@ -2303,13 +2303,36 @@ function renderRail(){
 // goedkeuren: van 'In afwachting' (links) naar Taken (midden) met animatie
 async function approveWait(id){
   const r=findItem(id); if(!r) return;
-  const card=document.querySelector('#wachterList .task[data-id="'+id+'"]');
-  if(card){ card.classList.add('approving'); await new Promise(res=>setTimeout(res,430)); }
+  const src=document.querySelector('#wachterList .task[data-id="'+id+'"]');
+  // Mobiel of geen kaart: simpele overgang
+  if(!src || !isDesk3()){
+    if(src){ src.classList.add('approving'); await new Promise(res=>setTimeout(res,430)); }
+    await sb.from('items').update({status:'todo'}).eq('id',id);
+    notifyPartner((who||'Iemand')+' keurde goed: '+r.it.t);
+    lastAddedIds=[id]; _animateNext=true; await refreshRail(); return;
+  }
+  // Desktop: gat opent zich op de chronologische plek (1,5s), daarna vliegt het item erheen.
+  const sr=src.getBoundingClientRect();
+  const clone=src.cloneNode(true);
+  clone.style.cssText='position:fixed;left:'+sr.left+'px;top:'+sr.top+'px;width:'+sr.width+'px;margin:0;z-index:9999;pointer-events:none;box-sizing:border-box';
+  document.body.appendChild(clone);
+  src.style.visibility='hidden';
   await sb.from('items').update({status:'todo'}).eq('id',id);
-  notifyPartner((who||'Iemand')+' keurde goed: '+r.it.t);
-  lastAddedIds=[id]; _animateNext=true;
+  _animateNext=false;
   await refreshRail();
-  setTimeout(()=>{const el=document.querySelector('#list .task[data-id="'+id+'"]');if(el){el.classList.add('justlanded');el.scrollIntoView&&el.scrollIntoView({block:'center',behavior:'smooth'});setTimeout(()=>el.classList.remove('justlanded'),1400);}},120);
+  const ph=document.querySelector('#list .task[data-id="'+id+'"]');
+  if(!ph){ clone.remove(); notifyPartner((who||'Iemand')+' keurde goed: '+r.it.t); return; }
+  ph.scrollIntoView({block:'center'});
+  const full=ph.getBoundingClientRect().height;
+  ph.style.overflow='hidden'; ph.style.visibility='hidden'; ph.style.height='0px'; void ph.offsetHeight;
+  const gap=ph.animate([{height:'0px'},{height:full+'px'}],{duration:1500,easing:'cubic-bezier(.22,1,.36,1)',fill:'forwards'});
+  gap.onfinish=()=>{
+    ph.style.height=''; ph.style.overflow='';
+    const tr=ph.getBoundingClientRect();
+    const fly=clone.animate([{transform:'translate(0,0)'},{transform:'translate('+(tr.left-sr.left)+'px,'+(tr.top-sr.top)+'px)'}],{duration:650,easing:'cubic-bezier(.22,1,.36,1)',fill:'forwards'});
+    fly.onfinish=()=>{ ph.style.visibility=''; ph.classList.add('justlanded'); clone.remove(); setTimeout(()=>ph.classList.remove('justlanded'),1200); };
+  };
+  notifyPartner((who||'Iemand')+' keurde goed: '+r.it.t);
 }
 // afwijzen: definitief verwijderen (met animatie)
 async function rejectWait(id){
