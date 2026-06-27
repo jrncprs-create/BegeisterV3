@@ -126,7 +126,7 @@
   #wachterDrop .clientdrop,#wachterDrop .cdd{display:block;margin-bottom:12px}
   #wachterDrop{margin-top:2px}
   /* custom dropdown (donkere selectie i.p.v. blauw, regular i.p.v. bold) */
-  .cdd-row{display:flex;gap:8px}
+  .cdd-row{display:flex;gap:8px;width:100%}
   .cdd-row .cdd{flex:1;min-width:0}
   .cdd{display:none;position:relative;margin-bottom:10px}
   .cdd-btn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;background:transparent;border:1px solid var(--line);border-radius:11px;padding:12px 13px;color:var(--txt);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;text-align:left}
@@ -140,6 +140,7 @@
   .cdd-opt:hover{background:rgba(255,255,255,.06)}
   .cdd-opt.sel{background:rgba(255,255,255,.10)}
   .cdd-ck{width:14px;flex:0 0 auto;color:var(--txt);font-size:12px;text-align:center}
+  .cdd-badge{width:22px;height:22px;border-radius:6px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-weight:700;color:#0c0d10;font-size:11px}
   .cdd-act{color:var(--mut2)}
   .task{background:transparent;border:1px solid var(--line);border-radius:16px;padding:14px 16px;display:block;cursor:default}
   .task:hover{background:rgba(255,255,255,.035)}
@@ -1418,11 +1419,10 @@ function taskCard(p,it,idx,mode){
   </div>`;
 }
 function clientDropdown(){
-  const allOpen=allItems().filter(x=>x.it.status!=='done').length;
   const seen={}, order=[];
-  state.projects.filter(p=>p.id!=='__inbox__').forEach(p=>{ if(!(p.client in seen)){seen[p.client]=0;order.push(p.client);} seen[p.client]+=p.items.filter(i=>i.status!=='done').length; });
-  const opts=[{v:'all',l:`Alle klanten (${allOpen})`}];
-  order.forEach(c=>opts.push({v:'c:'+c,l:`${c} (${seen[c]})`}));
+  state.projects.filter(p=>p.id!=='__inbox__').forEach(p=>{ if(!(p.client in seen)){seen[p.client]=1;order.push(p.client);} });
+  const opts=[{v:'all',l:'Klanten'}];
+  order.forEach(c=>opts.push({v:'c:'+c,l:c}));
   opts.push({v:'__new__',l:'+ Nieuwe klant…',cls:'cdd-act'});
   opts.push({v:'__manage__',l:'Klanten beheren…',cls:'cdd-act'});
   return _cddHTML(opts, filterClient==='all'?'all':('c:'+filterClient), 'setClient');
@@ -1431,9 +1431,8 @@ function projectDropdown(){
   const all=filterClient==='all';
   const projs=state.projects.filter(p=>p.id!=='__inbox__'&&(all||p.client===filterClient));
   if(!projs.length) return '';
-  const tot=projs.reduce((n,p)=>n+p.items.filter(i=>i.status!=='done').length,0);
-  const opts=[{v:'all',l:`Alle projecten (${tot})`}];
-  projs.forEach(p=>{const lbl=all?`${p.client} · ${p.project||'—'}`:(p.project||'—');opts.push({v:p.id,l:`${lbl} (${p.items.filter(i=>i.status!=='done').length})`});});
+  const opts=[{v:'all',l:'Projecten'}];
+  projs.forEach(p=>opts.push({v:p.id,l:(p.project||'—'),badge:{col:PROJCOL[p.id]||'#888',ch:p.icon||(p.client||'?').trim().charAt(0).toUpperCase()}}));
   return _cddHTML(opts, activeTab, 'setTab');
 }
 async function setClient(v){
@@ -1443,7 +1442,7 @@ async function setClient(v){
 }
 function _cddHTML(opts,active,handler){
   const cur=opts.find(o=>o.v===active)||opts[0]||{l:''};
-  const items=opts.map(o=>`<div class="cdd-opt${o.v===active?' sel':''} ${o.cls||''}" onclick="_cddPick('${handler}','${o.v}')"><span class="cdd-ck">${o.v===active?'✓':''}</span><span class="cdd-lbl">${escapeHtml(o.l)}</span></div>`).join('');
+  const items=opts.map(o=>{const lead=o.badge?`<span class="cdd-badge" style="background:${o.badge.col}">${escapeHtml(o.badge.ch||'')}</span>`:`<span class="cdd-ck">${o.v===active?'✓':''}</span>`;return `<div class="cdd-opt${o.v===active?' sel':''} ${o.cls||''}" onclick="_cddPick('${handler}','${o.v}')">${lead}<span class="cdd-lbl">${escapeHtml(o.l)}</span></div>`;}).join('');
   return `<div class="cdd"><button class="cdd-btn" onclick="_cddToggle(event)"><span class="cdd-cur">${escapeHtml(cur.l)}</span><svg class="cdd-chev" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6l6 -6"/></svg></button><div class="cdd-menu">${items}</div></div>`;
 }
 function _cddToggle(e){ e.stopPropagation(); const dd=e.currentTarget.closest('.cdd'); const open=dd.classList.contains('open'); document.querySelectorAll('.cdd.open').forEach(x=>x.classList.remove('open')); if(!open)dd.classList.add('open'); }
