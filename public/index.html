@@ -313,6 +313,8 @@
   .file-ic svg{width:22px;height:22px;display:block}
   .srow-att .fname{font-size:12.5px;color:var(--mut)}
   .srow-derived{margin-top:8px;font-size:11.5px;color:var(--mut2)}
+  /* geopende bron: kop in projectkleur */
+  .srow.open .doc-ic,.srow.open .srow-title,.srow.open .srow-sub,.srow.open .srow-date{color:var(--scol);transition:color .15s}
   /* WhatsApp-ballonnen */
   .wa{display:flex;flex-direction:column;gap:5px;padding:2px 0 4px}
   .wa-msg{max-width:84%;display:flex;flex-direction:column}
@@ -1811,7 +1813,7 @@ function _srcRowHTML(s){
   const atts=allAtts.filter(a=>!(imgRe.test(a.filename||'')||/^image\//i.test(a.mime||'')));
   const attHTML=atts.map((a)=>{const gi=allAtts.indexOf(a);return `<div class="srow-att" onclick="openAttachment('${s.id}',${gi})"><span class="file-ic">${_fileGlyph(a.filename)}</span><span class="fname">${escapeHtml(a.filename)}</span></div>`;}).join('');
   const derHTML=derived.length?`<div class="srow-derived">${derived.length} actiepunt(en) hieruit gehaald</div>`:'';
-  return `<div class="srow" id="card_${s.id}">
+  return `<div class="srow" id="card_${s.id}" style="--scol:${col}">
     <div class="srow-head" onclick="toggleSrc('${s.id}')">
       <span class="doc-ic">${_chanGlyph(s.channel)}</span>
       <span class="srow-main">
@@ -1905,10 +1907,12 @@ function renderChat(text,col){
 function toggleSrc(id){
   const body=document.getElementById('body_'+id); if(!body)return;
   const willOpen=!body.classList.contains('open');
-  // accordion: sluit alle andere geopende bronnen
+  // accordion: sluit alle andere geopende bronnen (incl. kleurmarkering)
   document.querySelectorAll('.srow-body.open').forEach(b=>{ if(b!==body) b.classList.remove('open'); });
+  document.querySelectorAll('.srow.open').forEach(c=>{ if(c.id!=='card_'+id) c.classList.remove('open'); });
   body.classList.toggle('open', willOpen);
-  if(willOpen){ const card=document.getElementById('card_'+id); if(card) setTimeout(()=>{ try{card.scrollIntoView({behavior:'smooth',block:'start'});}catch(_){card.scrollIntoView();} },70); }
+  const card=document.getElementById('card_'+id); if(card) card.classList.toggle('open', willOpen);
+  if(willOpen && card) setTimeout(()=>{ try{card.scrollIntoView({behavior:'smooth',block:'start'});}catch(_){card.scrollIntoView();} },70);
 }
 function toggleFull(id){const f=document.getElementById('full_'+id);const b=document.getElementById('fbtn_'+id);f.classList.toggle('open');b.textContent=f.classList.contains('open')?'Verberg origineel ▴':'Toon volledig origineel ▾';}
 function gotoSource(sid){setView('bronnen');setTimeout(()=>{const b=document.getElementById('body_'+sid);if(b){b.classList.add('open');document.getElementById('card_'+sid).scrollIntoView({behavior:'smooth',block:'center'});}},60);}
