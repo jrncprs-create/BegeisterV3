@@ -225,11 +225,11 @@
   .iohd{text-align:center;font-size:12px;color:var(--mut2)}
   .iogrid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
   .iocell{height:64px;display:flex;flex-direction:column;align-items:center;padding-top:8px;gap:6px;cursor:pointer;border-radius:10px}
-  .iocell:hover{background:var(--panel)}
+  .iocell:hover{background:rgba(255,255,255,.05)}
   .iocell.other .ionum{color:var(--mut2);opacity:.45}
   .ionum{font-size:15px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:50%}
   .iocell.today .ionum{background:#fff;color:#000;font-weight:700}
-  .iocell.sel .ionum{box-shadow:0 0 0 1.5px var(--mut)}
+  .iocell.sel .ionum{box-shadow:0 0 0 1.5px rgba(255,255,255,.55)}
   .iodots{display:flex;gap:3px;height:6px}
   .iodot{width:5px;height:5px;border-radius:50%}
   .iolist{margin-top:20px;max-width:680px}
@@ -412,6 +412,15 @@
   .kfiles-add{display:flex;align-items:center;gap:5px;background:transparent;border:1px solid var(--line);color:var(--mut);border-radius:8px;padding:5px 9px;font-size:12px;cursor:pointer}
   .kfiles-add:hover{color:#fff;border-color:var(--mut2)}
   .kfiles-hint{font-size:12px;color:var(--mut2);margin-top:8px}
+  .arch-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 2px;border-bottom:1px solid var(--line)}
+  .arch-main{display:flex;align-items:center;gap:10px;min-width:0}
+  .arch-dot{width:10px;height:10px;border-radius:50%;flex:0 0 auto}
+  .arch-name{font-size:14px;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .arch-cnt{font-size:12px;color:var(--mut2);flex:0 0 auto}
+  .arch-act{display:flex;gap:8px;flex:0 0 auto}
+  .arch-btn{background:transparent;border:1px solid var(--line);color:var(--mut);border-radius:8px;padding:5px 10px;font-size:12px;cursor:pointer}
+  .arch-btn:hover{color:#fff;border-color:var(--mut2)}
+  .arch-btn.del:hover{color:var(--late);border-color:var(--late)}
   .kfile{display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px solid var(--line);flex-wrap:wrap}
   .kfile-main{display:flex;align-items:center;gap:9px;flex:1;min-width:0;color:var(--txt);text-decoration:none}
   .kfile-main:hover .kfile-name{color:#fff}
@@ -737,6 +746,7 @@
       <button data-v="bronnen" onclick="setView('bronnen')">Bronnen <span class="badge" id="nb-bron"></span></button>
       <button data-v="beheer" onclick="setView('beheer')">Klanten</button>
       <button data-v="contacten" onclick="setView('contacten')">Contacten</button>
+      <button data-v="archief" onclick="setView('archief')">Archief</button>
       <button id="pushBtn" onclick="enablePush()" title="Meldingen aanzetten">Meldingen</button>
     </nav>
     <div class="spacer"></div>
@@ -793,6 +803,9 @@
       </div>
       <div id="view-contacten" class="hidden">
         <div id="contactenWrap"></div>
+      </div>
+      <div id="view-archief" class="hidden">
+        <div id="archiefWrap"></div>
       </div>
       <div id="view-wachter" class="hidden">
         <div id="wachterBlock">
@@ -1180,7 +1193,7 @@ function chipTip(x){const di=dueInfo(x.it.due);return (escapeHtml(x.it.t)+' — 
 
 // ---------- view switch ----------
 // welke views horen op desktop in de eerste kolom (#rail)
-const RAILVIEWS=['bronnen','beheer','contacten'];
+const RAILVIEWS=['bronnen','beheer','contacten','archief'];
 function setView(v){
   view=v;
   document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('active',b.dataset.v===v));
@@ -1195,10 +1208,11 @@ function setView(v){
   document.getElementById('view-bronnen').classList.toggle('hidden', d3 ? (v!=='bronnen') : v!=='bronnen');
   document.getElementById('view-beheer').classList.toggle('hidden', d3 ? (v!=='beheer') : v!=='beheer');
   document.getElementById('view-contacten').classList.toggle('hidden', d3 ? (v!=='contacten') : v!=='contacten');
+  document.getElementById('view-archief').classList.toggle('hidden', v!=='archief');
   // eerste kolom (#wachterBlock) verbergen wanneer er een rail-view getoond wordt
   const wb=document.getElementById('wachterBlock'); if(wb) wb.classList.toggle('hidden', d3 && railView);
   if(typeof _ensureRailCloses==='function') _ensureRailCloses();
-  document.getElementById('viewTitle').textContent={home:'',taken:'Taken',agenda:'Agenda',afspraken:'Afspraken',wachter:'In afwachting',bronnen:'Bronnen',beheer:'Klanten & projecten',contacten:'Contacten'}[v];
+  document.getElementById('viewTitle').textContent={home:'',taken:'Taken',agenda:'Agenda',afspraken:'Afspraken',wachter:'In afwachting',bronnen:'Bronnen',beheer:'Klanten & projecten',contacten:'Contacten',archief:'Archief'}[v];
   // desktop-werkblad: Taken (midden) + Agenda (rechts) tegelijk zichtbaar — op desktop ALTIJD aan
   const ws = d3;
   const main=document.querySelector('.main'); if(main) main.classList.toggle('workspace',ws);
@@ -1226,6 +1240,7 @@ function render(){
   if(view==='bronnen'||ws)renderBronnen();
   if(view==='beheer'||ws)renderProjecten();
   if(view==='contacten'||ws)renderContacten();
+  if(view==='archief')renderArchief();
   save();
   _animateNext=false;
 }
@@ -2052,6 +2067,19 @@ function renderProjecten(){
   }).join('');
   document.getElementById('beheerWrap').innerHTML=html||'<div class="hint">Nog geen klanten.</div>';
 }
+function renderArchief(){
+  const wrap=document.getElementById('archiefWrap'); if(!wrap)return;
+  const arch=(state.archived||[]);
+  let html='<div class="chdr"><span class="chdr-t">Archief</span></div>';
+  if(!arch.length){ html+='<div class="hint">Niets gearchiveerd. Verwijder je een project, dan komt het hier — herstellen kan altijd.</div>'; wrap.innerHTML=html; return; }
+  const byClient={},order=[];
+  arch.forEach(p=>{const c=(p.client||'').trim()||'Overig'; if(!byClient[c]){byClient[c]=[];order.push(c);} byClient[c].push(p);});
+  html+=order.map(client=>{
+    const rows=byClient[client].map(p=>`<div class="arch-row"><div class="arch-main"><span class="arch-dot" style="background:${p.color||'#888'}"></span><span class="arch-name">${escapeHtml(p.project||p.client||'(zonder naam)')}</span><span class="arch-cnt">${p.items.length}</span></div><div class="arch-act"><button class="arch-btn" onclick="restoreProject('${p.id}')">herstellen</button><button class="arch-btn del" onclick="purgeProject('${p.id}')">verwijderen</button></div></div>`).join('');
+    return `<div class="cgroup"><div class="cgroup-h">${escapeHtml(client)}</div>${rows}</div>`;
+  }).join('');
+  wrap.innerHTML=html;
+}
 async function renameClient(oldName,newVal){
   newVal=(newVal||'').trim();
   if(!newVal||newVal===oldName){ renderProjecten(); return; }
@@ -2099,12 +2127,17 @@ function pickColor(c){if(!cpopTarget){return;}
   document.getElementById('cpop').classList.remove('open');cpopTarget=null;
 }
 document.addEventListener('click',()=>{const el=document.getElementById('cpop');if(el)el.classList.remove('open');cpopTarget=null;});
-function deleteProject(id){const p=projById(id);if(!p)return;
-  if(p.items.length&&!confirm(`"${projName(id)}" heeft ${p.items.length} actiepunt(en). Toch verwijderen?`))return;
-  state.projects=state.projects.filter(x=>x.id!==id);
+async function deleteProject(id){const p=projById(id);if(!p)return;
+  if(!(await uiConfirm(`"${projName(id)}" naar het archief verplaatsen? Je kunt het later herstellen.`)))return;
+  await sb.from('projects').update({archived:true}).eq('id',id);
   if(activeTab===id)activeTab='all';
-  render();
+  await refresh();
 }
+async function restoreProject(id){ await sb.from('projects').update({archived:false}).eq('id',id); await refresh(); }
+async function purgeProject(id){ if(!(await uiConfirm('Dit project definitief verwijderen? Inclusief de taken eronder — dit kan niet ongedaan gemaakt worden.')))return;
+  try{ await sb.from('items').delete().eq('project_id',id); }catch(_){}
+  try{ await sb.from('files').delete().eq('owner_type','project').eq('owner_id',id); }catch(_){}
+  await sb.from('projects').delete().eq('id',id); await refresh(); }
 
 // ---------- acties ----------
 function toggle(id){const r=findItem(id);if(!r)return;r.it.status=r.it.status==='done'?'todo':'done';render();}
@@ -2342,9 +2375,12 @@ async function sbLoad(){
   state.files = (f && f.data) ? f.data : [];
   state.ctx = {}; ((cx && cx.data) ? cx.data : []).forEach(r=>{ state.ctx[r.key]=r.body||''; });
   state.appointments = (ap && ap.data ? ap.data : []).map(_mapAppt);
-  state.projects = projects.map(pr=>({id:pr.id,client:pr.client,project:pr.project,color:pr.color,icon:pr.icon,role:pr.role,
-    items: items.filter(x=>x.project_id===pr.id).map(_mapItem)}));
-  // Items zonder (bekende) klant → Inbox, zodat nieuwe intake nooit verdwijnt
+  const _mapProj=pr=>({id:pr.id,client:pr.client,project:pr.project,color:pr.color,icon:pr.icon,role:pr.role,
+    items: items.filter(x=>x.project_id===pr.id).map(_mapItem)});
+  const activeProjects=projects.filter(pr=>!pr.archived);
+  state.archived = projects.filter(pr=>pr.archived).map(_mapProj);
+  state.projects = activeProjects.map(_mapProj);
+  // Items zonder (bekende) klant → Inbox; items onder een gearchiveerd project blijven verborgen (niet als wees)
   const known=new Set(projects.map(pr=>pr.id));
   const orphans=items.filter(x=>!x.project_id || !known.has(x.project_id));
   if(orphans.length){
@@ -2497,11 +2533,12 @@ function applyLayout(){
   const vBron=document.getElementById('view-bronnen');
   const vBeh=document.getElementById('view-beheer');
   const vCon=document.getElementById('view-contacten');
+  const vArch=document.getElementById('view-archief');
   if(mob){ wview.appendChild(wb); }
   else { rail.appendChild(wb); }
   // Bronnen/Klanten/Contacten: desktop → eerste kolom (#rail), mobiel → terug in #main
-  if(d3){ if(vBron)rail.appendChild(vBron); if(vBeh)rail.appendChild(vBeh); if(vCon)rail.appendChild(vCon); }
-  else if(main){ if(vBron)main.appendChild(vBron); if(vBeh)main.appendChild(vBeh); if(vCon)main.appendChild(vCon); }
+  if(d3){ if(vBron)rail.appendChild(vBron); if(vBeh)rail.appendChild(vBeh); if(vCon)rail.appendChild(vCon); if(vArch)rail.appendChild(vArch); }
+  else if(main){ if(vBron)main.appendChild(vBron); if(vBeh)main.appendChild(vBeh); if(vCon)main.appendChild(vCon); if(vArch)main.appendChild(vArch); }
   if(!mob && (view==='home')) setView('taken');
   _ensureRailCloses();
   _lastMob=mob;
@@ -2509,7 +2546,7 @@ function applyLayout(){
 // sluitkruis + kop in elke rail-view (Bronnen/Klanten/Contacten) op desktop; weg op mobiel
 function _ensureRailCloses(){
   const _xIc='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
-  const spec=[['view-bronnen','Bronnen'],['view-beheer','Klanten & projecten'],['view-contacten','']];
+  const spec=[['view-bronnen','Bronnen'],['view-beheer','Klanten & projecten'],['view-contacten',''],['view-archief','Archief']];
   const d3=isDesk3();
   spec.forEach(([vid,label])=>{
     const v=document.getElementById(vid); if(!v)return;
