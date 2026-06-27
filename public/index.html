@@ -132,9 +132,10 @@
   .picon{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#0c0d10;font-size:14px;flex:0 0 auto}
   .t-proj{flex:1;min-width:0;font-size:13.5px;font-weight:600;color:var(--ccol,var(--mut));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .t-projsub{color:var(--mut2);font-weight:400;margin-left:7px}
-  .chk{width:22px;height:22px;border:1.5px solid rgba(255,255,255,.6);border-radius:50%;cursor:pointer;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:12px;color:transparent;transition:border-color .12s}
+  .chk{width:18px;height:18px;border:1.5px solid rgba(255,255,255,.5);border-radius:50%;cursor:pointer;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:11px;color:transparent;transition:background .12s,border-color .12s,color .12s}
+  .chk:hover{background:#34d399;border-color:#34d399;color:#0c0c0c}
   .chk:hover{border-color:#fff}
-  .chk.on{background:var(--ok);border-color:var(--ok);color:#0c0c0c}
+  .chk.on{background:#34d399;border-color:#34d399;color:#0c0c0c}
   .t-due{font-size:13px;font-variant-numeric:tabular-nums;color:var(--mut);margin-top:11px}
   .t-due.warn{color:var(--warn)} .t-due.risk{color:var(--risk)} .t-due.late{color:var(--late);font-weight:600}
   .t-title{font-size:14px;line-height:1.4;margin-top:8px;cursor:pointer;color:var(--txt)}
@@ -153,6 +154,9 @@
   .wbtn{background:transparent;border:none;cursor:pointer;padding:3px;display:flex;align-items:center;justify-content:center;border-radius:50%;line-height:0;color:rgba(255,255,255,.6);transition:transform .12s,color .12s}
   .wbtn:hover{color:#fff;transform:scale(1.08)}
   .wbtn:active{transform:scale(.92)}
+  .wbtn.ok{color:rgba(255,255,255,.82)}
+  .wbtn.no{color:var(--late,#f87171)}
+  .wbtn.no:hover{color:var(--late,#f87171)}
   /* sleepbaar in Taken */
   .task.tdrag{cursor:grab}
   .task.tdrag.dragging{cursor:grabbing;background:#0e0e0e;border-color:#3a3a3a;box-shadow:0 16px 40px rgba(0,0,0,.6)}
@@ -451,6 +455,8 @@
   .iconbtn.save{margin-left:auto}
   .iconbtn:hover{color:#fff;transform:scale(1.06)}
   .iconbtn:active{opacity:.7}
+  .iconbtn.del{color:var(--late,#f87171)}
+  .iconbtn.del:hover{color:var(--late,#f87171)}
   .modal input,.modal select,.modal textarea,.datefield{width:100%;background:transparent;border:1px solid var(--line);color:var(--txt);border-radius:13px;padding:14px 15px;font-size:14px;font-family:inherit;transition:border-color .15s,background .15s}
   /* labels weg: ruimte komt van de velden zelf */
   .modal>input,.modal>select,.modal>textarea,.modal>.datefield,.modal .twocol{margin-top:18px}
@@ -667,10 +673,10 @@
     #chatDock{width:33.333vw}
     .rail #wachterDrop{display:none}
     .main.workspace{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0;align-items:start;height:calc(100dvh - var(--tbh,52px));overflow:hidden;padding:0}
-    .main.workspace #view-taken{display:block;padding:18px 26px 40px 24px;position:relative;height:100%;overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none}
-    .main.workspace #view-agenda{display:block;padding:18px 24px 40px 26px;position:relative;height:100%;overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none}
+    .main.workspace #view-taken{display:block;padding:0 26px 40px 24px;position:relative;height:100%;overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none}
+    .main.workspace #view-agenda{display:block;padding:0 24px 40px 26px;position:relative;height:100%;overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none}
     .main.workspace #view-taken::-webkit-scrollbar,.main.workspace #view-agenda::-webkit-scrollbar{display:none}
-    .main.workspace #view-taken::before,.main.workspace #view-agenda::before{position:sticky;top:0;z-index:4;background:var(--bg);display:flex;align-items:center;height:26px;font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut2);margin:0 0 16px}
+    .main.workspace #view-taken::before,.main.workspace #view-agenda::before{position:sticky;top:0;z-index:4;background:var(--bg);display:flex;align-items:center;height:26px;box-sizing:content-box;padding-top:18px;font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut2);margin:0 0 16px}
     /* knoppen in de kolomkop blijven bovenaan meeplakken bij scrollen */
     .main.workspace #view-taken .col-add,.main.workspace #view-taken .col-close,
     .main.workspace #view-agenda .agenda-add,.main.workspace #view-agenda .agenda-toggle,.main.workspace #view-agenda .col-close{position:sticky;float:right;margin-top:-42px;z-index:5}
@@ -685,7 +691,7 @@
     /* sluitkruis rechtsboven in een rail-kolom */
     .rail .rail-close{position:absolute;top:14px;right:12px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;background:transparent;border:none;color:rgba(255,255,255,.6);cursor:pointer;padding:0;z-index:5;transition:color .15s}
     .rail .rail-close:hover{color:#fff}
-    .rail .rail-coltitle{font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut2);margin:0 0 14px;padding-right:34px}
+    .rail .rail-coltitle{position:sticky;top:0;z-index:4;background:var(--bg);display:flex;align-items:center;height:26px;box-sizing:content-box;font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut2);margin:0 0 16px;padding-right:34px}
     /* AFSPRAKEN-knop: tekstknop links naast de +-knop, op kophoogte */
     .agenda-toggle{position:absolute;top:0;right:34px;height:26px;display:flex;align-items:center;border:none;background:transparent;color:var(--mut2);font-size:12px;letter-spacing:1.2px;text-transform:uppercase;cursor:pointer;padding:0;z-index:3;transition:color .15s}
     .agenda-toggle:hover{color:#fff}
