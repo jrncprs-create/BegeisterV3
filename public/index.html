@@ -126,6 +126,8 @@
   #wachterDrop .clientdrop,#wachterDrop .cdd{display:block;margin-bottom:12px}
   #wachterDrop{margin-top:2px}
   /* custom dropdown (donkere selectie i.p.v. blauw, regular i.p.v. bold) */
+  .cdd-row{display:flex;gap:8px}
+  .cdd-row .cdd{flex:1;min-width:0}
   .cdd{display:none;position:relative;margin-bottom:10px}
   .cdd-btn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;background:transparent;border:1px solid var(--line);border-radius:11px;padding:12px 13px;color:var(--txt);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;text-align:left}
   .cdd-cur{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -1063,7 +1065,7 @@
     <span class="fv-name" id="fv_name"></span>
     <span class="fv-count" id="fv_count"></span>
     <div class="fv-actions">
-      <button class="fv-btn" onclick="fvOpenOriginal()" title="Download/open in standaardprogramma">Open origineel</button>
+      <button class="fv-btn" onclick="fvOpenOriginal()" title="Download in standaardprogramma">Download origineel</button>
       <button class="fv-btn" onclick="fvOpenDropbox()" title="Open in Dropbox">Open in Dropbox</button>
       <button class="fv-x" onclick="closeFileViewer()" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </div>
@@ -1267,7 +1269,7 @@ if(!Array.isArray(state.appointments))state.appointments=[];
 if(!Array.isArray(state.contacts))state.contacts=[];
 function load(){try{const s=JSON.parse(localStorage.getItem('begeister_v8'));if(s&&s.projects)return s;}catch(e){}return JSON.parse(JSON.stringify(SEED));}
 function save(){localStorage.setItem('begeister_v8',JSON.stringify(state));}
-let view='taken',activeTab='all',who='Jeroen';
+let view='taken',activeTab='all',filterClient='all',who='Jeroen';
 let calMode='maand',calRef=iso(TODAY),selectedDay=iso(TODAY);
 
 // ---------- lookups ----------
@@ -1409,13 +1411,29 @@ function taskCard(p,it,idx,mode){
     </div>
   </div>`;
 }
-function clientDropdown(active,handler,countFn){
+function clientDropdown(){
   const allOpen=allItems().filter(x=>x.it.status!=='done').length;
+  const seen={}, order=[];
+  state.projects.filter(p=>p.id!=='__inbox__').forEach(p=>{ if(!(p.client in seen)){seen[p.client]=0;order.push(p.client);} seen[p.client]+=p.items.filter(i=>i.status!=='done').length; });
   const opts=[{v:'all',l:`Alle klanten (${allOpen})`}];
-  state.projects.filter(p=>p.id!=='__inbox__').forEach(p=>{const c=countFn?countFn(p):p.items.filter(i=>i.status!=='done').length; opts.push({v:p.id,l:`${p.client} (${c})`});});
+  order.forEach(c=>opts.push({v:'c:'+c,l:`${c} (${seen[c]})`}));
   opts.push({v:'__new__',l:'+ Nieuwe klant…',cls:'cdd-act'});
   opts.push({v:'__manage__',l:'Klanten beheren…',cls:'cdd-act'});
-  return _cddHTML(opts,active,handler);
+  return _cddHTML(opts, filterClient==='all'?'all':('c:'+filterClient), 'setClient');
+}
+function projectDropdown(){
+  if(filterClient==='all') return '';
+  const projs=state.projects.filter(p=>p.id!=='__inbox__'&&p.client===filterClient);
+  if(projs.length<2) return '';
+  const tot=projs.reduce((n,p)=>n+p.items.filter(i=>i.status!=='done').length,0);
+  const opts=[{v:'all',l:`Alle projecten (${tot})`}];
+  projs.forEach(p=>opts.push({v:p.id,l:`${p.project||'—'} (${p.items.filter(i=>i.status!=='done').length})`}));
+  return _cddHTML(opts, activeTab, 'setTab');
+}
+async function setClient(v){
+  if(v==='__new__'){const r=await _newClientPrompt(); if(r&&r.id){activeTab=r.id;} render(); return;}
+  if(v==='__manage__'){setView('beheer');return;}
+  filterClient=(v==='all')?'all':v.replace(/^c:/,''); activeTab='all'; _animateNext=true; render();
 }
 function _cddHTML(opts,active,handler){
   const cur=opts.find(o=>o.v===active)||opts[0]||{l:''};
@@ -1431,13 +1449,18 @@ function renderTaken(){
   else { const b=va&&va.querySelector('.col-add'); if(b)b.remove(); }
   const tabs=document.getElementById('ptabs');
   const allOpen=allItems().filter(x=>x.it.status!=='done').length;
-  let html=clientDropdown(activeTab,'setTab');
-  html+=`<div class="ptab ${activeTab==='all'?'active':''}" onclick="setTab('all')"><span class="pdot" style="background:linear-gradient(135deg,var(--chi),var(--ost))"></span>Alles <span class="badge">${allOpen}</span></div>`;
+  // klant-filter afleiden uit het actieve project (zodat alles consistent blijft)
+  if(activeTab!=='all'){ const ap=projById(activeTab); if(ap) filterClient=ap.client; else activeTab='all'; }
+  let html=`<div class="cdd-row">${clientDropdown()}${projectDropdown()}</div>`;
+  html+=`<div class="ptab ${activeTab==='all'&&filterClient==='all'?'active':''}" onclick="setClient('all')"><span class="pdot" style="background:linear-gradient(135deg,var(--chi),var(--ost))"></span>Alles <span class="badge">${allOpen}</span></div>`;
   html+=state.projects.filter(p=>p.id!=='__inbox__'||p.items.length).map(p=>{const open=p.items.filter(i=>i.status!=='done').length;
     return `<div class="ptab ${activeTab===p.id?'active':''}" onclick="setTab('${p.id}')"><span class="pdot" style="background:${PROJCOL[p.id]}"></span>${escapeHtml(p.client)} <span class="badge">${open}</span></div>`;}).join('');
   tabs.innerHTML=html;
 
-  const base=activeTab==='all'?allItems():(projById(activeTab)?projById(activeTab).items.map(it=>({p:projById(activeTab),it})):[]);
+  let base;
+  if(activeTab!=='all'){ const ap=projById(activeTab); base=ap?ap.items.map(it=>({p:ap,it})):[]; }
+  else if(filterClient!=='all'){ base=state.projects.filter(p=>p.id!=='__inbox__'&&p.client===filterClient).flatMap(p=>p.items.map(it=>({p,it}))); }
+  else base=allItems();
   const rows=sortRows(base.filter(x=>x.it.status!=='wait' && x.p.id!=='__inbox__'));
   const _now=Date.now(), _fresh=x=>(_now-(x.it.created||0))<3600000;
   const _fr=rows.filter(_fresh), _rs=rows.filter(x=>!_fresh(x));
@@ -2117,7 +2140,7 @@ async function applyOrganize(){
 async function deleteFile(fid){ if(!(await uiConfirm('Bestand ontkoppelen?')))return; await sb.from('files').delete().eq('id',fid); await refresh(); }
 // ---------- file-viewer (paginavullend) ----------
 let _fvList=[],_fvIdx=0;
-function _fvRaw(link){ let u=String(link||''); u=u.replace('://www.dropbox.com/','://dl.dropboxusercontent.com/').replace('://dropbox.com/','://dl.dropboxusercontent.com/'); u=u.replace(/([?&])dl=\d/,'$1raw=1'); if(!/[?&]raw=1/.test(u)) u+=(u.includes('?')?'&':'?')+'raw=1'; return u; }
+function _fvRaw(link){ let u=String(link||'').replace('://www.dropbox.com/','://dl.dropboxusercontent.com/').replace('://dropbox.com/','://dl.dropboxusercontent.com/'); u=u.replace(/([?&])dl=\d&?/,'$1').replace(/[?&]$/,''); return u; }
 function _fvDl(link){ let u=String(link||''); if(/[?&](dl|raw)=\d/.test(u)) return u.replace(/([?&])(dl|raw)=\d/,'$1dl=1'); return u+(u.includes('?')?'&':'?')+'dl=1'; }
 function openFileViewer(fid){
   const f=(state.files||[]).find(x=>x.id===fid); if(!f)return;
@@ -2138,8 +2161,8 @@ function fvRender(){
   const ext=((f.name||'').split('.').pop()||'').toLowerCase();
   const url=_fvRaw(f.link); const st=document.getElementById('fv_stage');
   if(['png','jpg','jpeg','gif','webp','bmp','svg','heic','heif'].includes(ext)) st.innerHTML=`<img class="fv-img" src="${escapeHtml(url)}" alt="">`;
-  else if(ext==='pdf') st.innerHTML=`<iframe class="fv-frame" src="${escapeHtml(url)}"></iframe>`;
-  else st.innerHTML=`<div class="fv-none">${_fileGlyph(f.name)}<p>Geen voorvertoning voor dit bestandstype.</p><p>Gebruik “Open origineel” of “Open in Dropbox”.</p></div>`;
+  else if(ext==='pdf') st.innerHTML=`<iframe class="fv-frame" src="https://docs.google.com/viewer?embedded=true&url=${encodeURIComponent(url)}"></iframe>`;
+  else st.innerHTML=`<div class="fv-none">${_fileGlyph(f.name)}<p>Geen voorvertoning voor dit bestandstype.</p><p>Gebruik “Download origineel” of “Open in Dropbox”.</p></div>`;
   const multi=_fvList.length>1; const pv=document.querySelector('.fv-prev'),nx=document.querySelector('.fv-next'); if(pv)pv.style.display=multi?'':'none'; if(nx)nx.style.display=multi?'':'none';
 }
 if(!window._fvKeyInit){window._fvKeyInit=true; document.addEventListener('keydown',e=>{ const v=document.getElementById('fileViewer'); if(!v||!v.classList.contains('open'))return; if(e.key==='Escape')closeFileViewer(); else if(e.key==='ArrowLeft')fvNav(-1); else if(e.key==='ArrowRight')fvNav(1); });}
