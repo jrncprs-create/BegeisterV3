@@ -769,16 +769,21 @@
     /* knoppen in de kolomkop blijven bovenaan meeplakken bij scrollen */
     .main.workspace #view-taken .col-add,.main.workspace #view-taken .col-close,
     .main.workspace #view-agenda .agenda-add,.main.workspace #view-agenda .agenda-toggle,.main.workspace #view-agenda .col-close{position:sticky;float:right;margin-top:-42px;z-index:5}
-    .main.workspace #view-taken::before{content:none}
-    .main.workspace #view-taken .colbar{position:sticky;top:0;z-index:6;background:var(--bg);display:flex;align-items:center;height:26px;padding-top:18px;box-sizing:content-box;margin:0 0 16px;gap:11px}
-    .main.workspace #view-taken .colbar .cb-title{font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut2);line-height:1}
-    .main.workspace #view-taken .colbar .cb-add{width:24px;height:24px;border:none;background:transparent;color:rgba(255,255,255,.72);font-size:24px;font-weight:300;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;transition:color .15s,transform .12s}
-    .main.workspace #view-taken .colbar .cb-add:hover{color:#fff;transform:scale(1.12)}
-    .main.workspace #view-taken .colbar .cb-who{display:flex;align-items:center;gap:9px;margin-left:6px}
-    .main.workspace #view-taken .colbar .cb-who .tw-opt{font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut2);cursor:pointer;transition:color .15s;line-height:1}
-    .main.workspace #view-taken .colbar .cb-who .tw-opt:hover,.main.workspace #view-taken .colbar .cb-who .tw-opt.on{color:#fff}
-    .main.workspace #view-taken .colbar .cb-who .tw-amp{font-size:12px;color:var(--mut2);cursor:pointer;transition:color .15s;line-height:1}
-    .main.workspace #view-taken .colbar .cb-who .tw-amp:hover,.main.workspace #view-taken .colbar .cb-who .tw-amp.on{color:#fff}
+    .main.workspace #view-taken::before,.main.workspace #view-agenda::before,.main.workspace #view-agenda.afsprakenmode::before,.rail #wachterBlock::before{content:none}
+    .colbar{position:sticky;top:0;z-index:6;background:var(--bg);display:flex;align-items:center;height:26px;padding-top:18px;box-sizing:content-box;margin:0 0 16px;gap:11px}
+    .colbar .cb-title{font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut2);line-height:1;white-space:nowrap}
+    .colbar .cb-add{width:24px;height:24px;border:none;background:transparent;color:rgba(255,255,255,.72);font-size:24px;font-weight:300;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;transition:color .15s,transform .12s}
+    .colbar .cb-add:hover{color:#fff;transform:scale(1.12)}
+    .colbar .cb-spacer{flex:1}
+    .colbar .cb-toggle{border:none;background:transparent;color:var(--mut2);font-size:12px;letter-spacing:1.2px;text-transform:uppercase;cursor:pointer;padding:0;line-height:1;transition:color .15s}
+    .colbar .cb-toggle:hover{color:#fff}
+    .colbar .cb-close{border:none;background:transparent;color:rgba(255,255,255,.6);cursor:pointer;padding:0;display:flex;align-items:center;transition:color .15s}
+    .colbar .cb-close:hover{color:#fff}
+    .colbar .cb-who{display:flex;align-items:center;gap:9px;margin-left:6px}
+    .colbar .cb-who .tw-opt{font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut2);cursor:pointer;transition:color .15s;line-height:1}
+    .colbar .cb-who .tw-opt:hover,.colbar .cb-who .tw-opt.on{color:#fff}
+    .colbar .cb-who .tw-amp{font-size:12px;color:var(--mut2);cursor:pointer;transition:color .15s;line-height:1}
+    .colbar .cb-who .tw-amp:hover,.colbar .cb-who .tw-amp.on{color:#fff}
     .main.workspace #view-agenda::before{content:"Agenda"}
     .main.workspace #view-agenda.afsprakenmode::before{content:"Afspraken"}
     /* Bronnen & Klanten: één kolom breed i.p.v. volle breedte */
@@ -1512,11 +1517,10 @@ function renderAgenda(){
   wrap.classList.toggle('afsprakenmode', showAppts);
   const _xIc='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
   if(showAppts){
-    const closeBtn = isDesk3() ? `<button class="col-close" onclick="setAgendaCol('agenda')" title="Sluiten" aria-label="Sluiten">${_xIc}</button>` : '';
-    const addAppt = isDesk3() ? '<button class="agenda-add agenda-add-2" onclick="openApptModal()" title="Nieuwe afspraak" aria-label="Nieuwe afspraak">+</button>' : '';
-    wrap.innerHTML=closeBtn+addAppt+afsprakenGroupsHTML(); return;
+    const bar = isDesk3() ? `<div class="colbar"><span class="cb-title">Afspraken</span><button class="cb-add" onclick="openApptModal()" title="Nieuwe afspraak" aria-label="Nieuwe afspraak">+</button><div class="cb-spacer"></div><button class="cb-close" onclick="setAgendaCol('agenda')" title="Sluiten" aria-label="Sluiten">${_xIc}</button></div>` : '';
+    wrap.innerHTML=bar+afsprakenGroupsHTML(); return;
   }
-  const openBtn = isDesk3() ? `<button class="agenda-toggle" onclick="setAgendaCol('afspraken')">Afspraken</button>` : '';
+  const bar = isDesk3() ? `<div class="colbar"><span class="cb-title">Agenda</span><button class="cb-add" onclick="openApptModal()" title="Nieuwe afspraak" aria-label="Nieuwe afspraak">+</button><div class="cb-spacer"></div><button class="cb-toggle" onclick="setAgendaCol('afspraken')">Afspraken</button></div>` : '';
   const seg=`<div class="cal-head">
     <div class="seg">
       <button class="${calMode==='lijst'?'active':''}" onclick="setCal('lijst')">Lijst</button>
@@ -1528,10 +1532,9 @@ function renderAgenda(){
       <span class="label" id="calLabel"></span>
       <button class="navbtn" onclick="calNav(1)">›</button>`:''}
   </div>`;
-  const addBtn = isDesk3() ? '<button class="agenda-add" onclick="openApptModal()" title="Nieuwe afspraak" aria-label="Nieuwe afspraak">+</button>' : '';
-  if(calMode==='lijst')wrap.innerHTML=openBtn+addBtn+seg+agendaList();
-  else if(calMode==='week')wrap.innerHTML=openBtn+addBtn+seg+agendaWeek();
-  else wrap.innerHTML=openBtn+addBtn+seg+agendaMonth();
+  if(calMode==='lijst')wrap.innerHTML=bar+seg+agendaList();
+  else if(calMode==='week')wrap.innerHTML=bar+seg+agendaWeek();
+  else wrap.innerHTML=bar+seg+agendaMonth();
 }
 function setCal(m){calMode=m;render();}
 function calNav(dir){const r=d(calRef);
@@ -2273,8 +2276,11 @@ function renderRail(){
   }
   const shown=flags.filter(f=>wachterTab==='all'||f.p.id===wachterTab);
   const _wb=document.getElementById('wachterBlock');
-  if(_wb && isDesk3()){ if(!_wb.querySelector('.wacht-add')){ const wa=document.createElement('button'); wa.className='wacht-add'; wa.title='Nieuw in-afwachting-item'; wa.setAttribute('aria-label','Nieuw in-afwachting-item'); wa.textContent='+'; wa.onclick=newWait; _wb.insertBefore(wa,_wb.firstChild); } }
-  else if(_wb){ const wa=_wb.querySelector('.wacht-add'); if(wa)wa.remove(); }
+  if(_wb && isDesk3()){
+    let _wbar=_wb.querySelector('.colbar');
+    if(!_wbar){ _wbar=document.createElement('div'); _wbar.className='colbar'; _wb.insertBefore(_wbar,_wb.firstChild); }
+    _wbar.innerHTML='<span class="cb-title">In afwachting</span><button class="cb-add" title="Nieuw in-afwachting-item" aria-label="Nieuw in-afwachting-item" onclick="newWait()">+</button>';
+  } else if(_wb){ const _wbar=_wb.querySelector('.colbar'); if(_wbar)_wbar.remove(); const wa=_wb.querySelector('.wacht-add'); if(wa)wa.remove(); }
   const list=document.getElementById('wachterList');
   const _now=Date.now(), _fresh=f=>(_now-(f.it.created||0))<3600000;
   const _fr=shown.filter(_fresh), _rs=shown.filter(f=>!_fresh(f));
