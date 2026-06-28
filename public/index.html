@@ -179,6 +179,18 @@
   .fm-file{display:flex;align-items:center;gap:8px;padding:6px 6px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--mut)}
   .fm-file:hover{background:rgba(255,255,255,.05);color:var(--txt)}
   .fm-file .fm-ic{color:var(--mut2)}
+  .fm-file.sel{background:rgba(255,255,255,.10);color:var(--txt)}
+  .main.workspace #view-filespreview{padding:0 24px 40px 24px;height:100%;overflow-y:auto;scrollbar-width:none}
+  .main.workspace #view-filespreview::-webkit-scrollbar{display:none}
+  .fmp-head{display:flex;align-items:center;gap:8px;height:26px;padding-top:18px;margin:0 0 16px;font-size:13px;color:var(--txt)}
+  .fmp-head .fmp-ic{display:flex;align-items:center;color:var(--mut)}
+  .fmp-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .fmp-stage{height:calc(100% - 130px);min-height:320px;border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#0c0c0c}
+  .fmp-img{max-width:100%;max-height:100%;object-fit:contain}
+  .fmp-frame{width:100%;height:100%;border:none}
+  .fmp-none{display:flex;flex-direction:column;align-items:center;gap:10px;color:var(--mut2);font-size:13px}
+  .fmp-foot{display:flex;gap:10px;margin-top:14px}
+  .fmp-empty{display:flex;align-items:center;justify-content:center;height:55%;color:var(--mut2);font-size:13px}
   /* rustiger beeld: alleen de gekleurde + witte elementen dimmen (donker), rest blijft; op hover/sleep weer vol */
   @media(hover:hover){
     #list .task .picon,#list .task .t-proj,#list .task .t-title,#list .task .chk,#list .task .pill.who,#list .task .wact,
@@ -934,6 +946,8 @@
         <div class="list" id="list"></div>
       </div>
 
+      <div id="view-filespreview" class="hidden"></div>
+
       <div id="view-agenda" class="hidden"></div>
 
       <div id="view-afspraken" class="hidden"></div>
@@ -1401,6 +1415,7 @@ function setView(v){
   const ws = d3;
   const main=document.querySelector('.main'); if(main) main.classList.toggle('workspace',ws);
   if(ws){ document.getElementById('view-taken').classList.remove('hidden'); document.getElementById('view-agenda').classList.remove('hidden'); }
+  if(ws){ const fp=document.getElementById('view-filespreview'); if(v==='files'){ document.getElementById('view-taken').classList.add('hidden'); if(fp)fp.classList.remove('hidden'); } else { if(fp)fp.classList.add('hidden'); } }
   const mh=document.querySelector('.main-head'); if(mh) mh.style.display = (v==='home'||ws) ? 'none' : 'flex';
   if(typeof closePlus==='function') closePlus();
   if(typeof hideWelcome==='function') hideWelcome();
@@ -2519,6 +2534,7 @@ function renderFiles(){
     const si=document.getElementById('fmSearch'); if(si)si.value=_fmQuery;
   }
   _renderFmTree();
+  const pane=document.getElementById('view-filespreview'); if(pane&&isDesk3()&&!pane.innerHTML.trim()) pane.innerHTML='<div class="fmp-empty">Kies een bestand</div>';
 }
 function fmSearch(v){ _fmQuery=v; _renderFmTree(); }
 function fmToggle(k){ if(_fmOpen.has(k))_fmOpen.delete(k); else _fmOpen.add(k); _renderFmTree(); }
@@ -2550,7 +2566,7 @@ function _renderFmTree(){
         const fl=q?pr.cats[cat].filter(f=>(f.name||'').toLowerCase().includes(q)):pr.cats[cat];
         if(!fl.length) return;
         const ckey=c+'|'+pid+'|'+cat, copen=q?true:_fmOpen.has(ckey);
-        const files=fl.map(f=>`<div class="fm-file" draggable="true" data-fid="${f.id}" ondragstart="fmDragStart(event,'${f.id}')" onclick="openFileViewer('${f.id}')"><span class="fm-ic">${_fileGlyph(f.name||'')}</span><span class="fm-name">${escapeHtml(f.name||'bestand')}</span></div>`).join('');
+        const files=fl.map(f=>`<div class="fm-file" draggable="true" data-fid="${f.id}" ondragstart="fmDragStart(event,'${f.id}')" onclick="fmFileClick('${f.id}')"><span class="fm-ic">${_fileGlyph(f.name||'')}</span><span class="fm-name">${escapeHtml(f.name||'bestand')}</span></div>`).join('');
         catHtml.push(`<div class="fm-row fm-catrow${copen?' open':''}" data-drop="1" data-client="${escapeHtml(c)}" data-pid="${escapeHtml(pid)}" data-cat="${escapeHtml(cat)}" ondragover="fmDragOver(event)" ondragleave="fmDragLeave(event)" ondrop="fmDrop(event)" onclick="fmToggle('${_fk(ckey)}')"><span class="fm-tw">▸</span><span class="fm-ic" style="color:${g.col}">${_folderGlyph()}</span><span class="fm-name">${escapeHtml(cat)}</span><span class="fm-cnt">${fl.length}</span></div><div class="fm-kids"${copen?'':' style="display:none"'}>${files}</div>`);
       });
       if(!catHtml.length) return;
@@ -2592,6 +2608,23 @@ async function fmSortAI(){
     _renderFmTree();
   }catch(_){}
   if(btn){ btn.disabled=false; btn.textContent='Sorteer met AI'; }
+}
+let _fmPrevId=null;
+function fmFileClick(id){ if(isDesk3()) fmPreview(id); else openFileViewer(id); }
+function fmPreview(id){
+  _fmPrevId=id;
+  const pane=document.getElementById('view-filespreview'); if(!pane) return;
+  document.querySelectorAll('#fmTree .fm-file.sel').forEach(e=>e.classList.remove('sel'));
+  const sel=document.querySelector('#fmTree .fm-file[data-fid="'+id+'"]'); if(sel)sel.classList.add('sel');
+  const f=(state.files||[]).find(x=>x.id===id);
+  if(!f){ pane.innerHTML='<div class="fmp-empty">Kies een bestand</div>'; return; }
+  const ext=((f.name||'').split('.').pop()||'').toLowerCase();
+  const url=_fvRaw(f.link);
+  let body;
+  if(['png','jpg','jpeg','gif','webp','bmp','svg','heic','heif'].includes(ext)) body='<img class="fmp-img" src="'+escapeHtml(url)+'" alt="">';
+  else if(ext==='pdf') body='<iframe class="fmp-frame" src="'+escapeHtml(url)+'#toolbar=0&navpanes=0&view=FitH" title="PDF"></iframe>';
+  else body='<div class="fmp-none">'+_fileGlyph(f.name)+'<p>Geen voorvertoning</p></div>';
+  pane.innerHTML='<div class="fmp-head"><span class="fmp-ic">'+_fileGlyph(f.name)+'</span><span class="fmp-name">'+escapeHtml(f.name||'bestand')+'</span></div><div class="fmp-stage">'+body+'</div><div class="fmp-foot"><button class="fv-btn" onclick="window.open(\''+_fvDl(f.link)+'\',\'_blank\',\'noopener\')">Download origineel</button><button class="fv-btn" onclick="window.open(\''+(f.link||'')+'\',\'_blank\',\'noopener\')">Open in Dropbox</button></div>';
 }
 function renderArchief(){
   const wrap=document.getElementById('archiefWrap'); if(!wrap)return;
