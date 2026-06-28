@@ -111,6 +111,36 @@ export default async function handler(req, res) {
       }
       return res.status(200).json({ connected: true, results });
     }
+    if (action === "upload") {
+      // Bestand uploaden naar /Begeister/<target>/<naam>, deel-link maken en koppelen in de files-tabel.
+      const { name, b64, target, owner_type, owner_id, cat } = req.body || {};
+      if (!name || !b64) return res.status(400).json({ error: "geen bestand" });
+      const sub = String(target || "").split("/").map(s => s.trim()).filter(Boolean).join("/");
+      const folder = ROOT + (sub ? "/" + sub : "");
+      const parts = folder.split("/").filter(Boolean);
+      let cur = "";
+      for (const p of parts) { cur += "/" + p; await call("files/create_folder_v2", { path: cur, autorename: false }); }
+      const dpath = folder + "/" + name;
+      const bytes = Buffer.from(b64, "base64");
+      const up = await fetch("https://content.dropboxapi.com/2/files/upload", {
+        method: "POST",
+        headers: {
+          Authorization: "Bearer " + token,
+          "Content-Type": "application/octet-stream",
+          "Dropbox-API-Arg": JSON.stringify({ path: dpath, mode: "add", autorename: true, mute: true }),
+        },
+        body: bytes,
+      }).then(r => r.json());
+      if (up.error) return res.status(200).json({ error: JSON.stringify(up.error) });
+      const finalPath = up.path_lower || dpath;
+      let link = null;
+      const c = await call("sharing/create_shared_link_with_settings", { path: finalPath });
+      if (c.url) link = c.url;
+      else { const l = await call("sharing/list_shared_links", { path: finalPath, direct_only: true }); if (l.links && l.links[0]) link = l.links[0].url; }
+      const row = { owner_type: owner_type || "client", owner_id: String(owner_id || "Begeister"), name: up.name || name, link, icon: cat || "" };
+      const ins = await db.from("files").insert(row).select().single();
+      return res.status(200).json({ connected: true, file: (ins && ins.data) ? ins.data : row });
+    }
     return res.status(400).json({ error: "unknown action" });
   } catch (e) {
     return res.status(200).json({ connected: true, error: String(e.message || e) });

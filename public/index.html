@@ -180,6 +180,9 @@
   .fm-file:hover{background:rgba(255,255,255,.05);color:var(--txt)}
   .fm-file .fm-ic{color:var(--mut2)}
   .fm-file.sel{background:rgba(255,255,255,.10);color:var(--txt)}
+  #filesWrap{position:relative}
+  .fm-drop-overlay{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(18,18,18,.86);border:2px dashed rgba(255,255,255,.28);border-radius:14px;z-index:30;color:var(--mut);font-size:14px;pointer-events:none;text-align:center;padding:20px}
+  #filesWrap.fm-dropping .fm-drop-overlay{display:flex}
   .main.workspace #view-filespreview{padding:0 24px 40px 24px;height:100%;overflow-y:auto;scrollbar-width:none}
   .main.workspace #view-filespreview::-webkit-scrollbar{display:none}
   .fmp-head{display:flex;align-items:center;gap:8px;height:26px;padding-top:18px;margin:0 0 16px;font-size:13px;color:var(--txt)}
@@ -2530,8 +2533,13 @@ function _fileProject(f){
 function renderFiles(){
   const wrap=document.getElementById('filesWrap'); if(!wrap) return;
   if(!wrap.querySelector('.fm-search')){
-    wrap.innerHTML='<div class="fm-top"><div class="fm-search"><span class="fm-sic">'+_searchGlyph()+'</span><input id="fmSearch" placeholder="Zoek bestanden…" autocomplete="off" oninput="fmSearch(this.value)"></div><button class="fm-sort" id="fmSortBtn" onclick="fmSortAI()">Sorteer met AI</button><button class="fm-sort" id="fmSyncBtn" onclick="fmSyncDropbox()" title="Dropbox-mappen gelijktrekken met deze indeling">Sync naar Dropbox</button></div><div id="fmTree"></div>';
+    wrap.innerHTML='<div class="fm-top"><div class="fm-search"><span class="fm-sic">'+_searchGlyph()+'</span><input id="fmSearch" placeholder="Zoek bestanden…" autocomplete="off" oninput="fmSearch(this.value)"></div><button class="fm-sort" id="fmSortBtn" onclick="fmSortAI()">Sorteer met AI</button><button class="fm-sort" id="fmSyncBtn" onclick="fmSyncDropbox()" title="Dropbox-mappen gelijktrekken met deze indeling">Sync naar Dropbox</button></div><div id="fmTree"></div><div class="fm-drop-overlay"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"/><path d="M7 9l5 -5l5 5"/><path d="M12 4v12"/></svg><div class="fm-do-txt">Sleep bestanden op een map om te uploaden</div></div>';
     const si=document.getElementById('fmSearch'); if(si)si.value=_fmQuery;
+  }
+  if(!wrap._dropWired){ wrap._dropWired=true;
+    wrap.addEventListener('dragover',e=>{ if(_hasFiles(e)){ e.preventDefault(); _fmShowDropOverlay(); } });
+    wrap.addEventListener('dragleave',e=>{ if(!wrap.contains(e.relatedTarget)) _fmHideDropOverlay(); });
+    wrap.addEventListener('drop',e=>{ if(e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files.length){ e.preventDefault(); _fmHideDropOverlay(); } });
   }
   _renderFmTree();
   const pane=document.getElementById('view-filespreview'); if(pane&&isDesk3()&&!pane.innerHTML.trim()) pane.innerHTML='<div class="fmp-empty">Kies een bestand</div>';
@@ -2571,22 +2579,24 @@ function _renderFmTree(){
       });
       if(!catHtml.length) return;
       const pkey=c+'|'+pid, popen=q?true:_fmOpen.has(pkey);
-      projHtml.push(`<div class="fm-row fm-prow${popen?' open':''}" onclick="fmToggle('${_fk(pkey)}')"><span class="fm-tw">▸</span><span class="fm-ic" style="color:${g.col}">${_folderGlyph()}</span><span class="fm-name">${escapeHtml(pr.name)}</span></div><div class="fm-kids"${popen?'':' style="display:none"'}>${catHtml.join('')}</div>`);
+      projHtml.push(`<div class="fm-row fm-prow${popen?' open':''}" data-drop="1" data-client="${escapeHtml(c)}" data-pid="${escapeHtml(pid)}" data-cat="" ondragover="fmDragOver(event)" ondragleave="fmDragLeave(event)" ondrop="fmDrop(event)" onclick="fmToggle('${_fk(pkey)}')"><span class="fm-tw">▸</span><span class="fm-ic" style="color:${g.col}">${_folderGlyph()}</span><span class="fm-name">${escapeHtml(pr.name)}</span></div><div class="fm-kids"${popen?'':' style="display:none"'}>${catHtml.join('')}</div>`);
     });
     if(!projHtml.length) return;
     const open=q?true:_fmOpen.has(c);
-    html+=`<div class="fm-client"><div class="fm-row fm-crow${open?' open':''}" onclick="fmToggle('${_fk(c)}')"><span class="fm-tw">▸</span><span class="fm-badge" style="background:${g.col}"></span><span class="fm-name" style="color:${g.col}">${escapeHtml(c)}</span></div><div class="fm-kids"${open?'':' style="display:none"'}>${projHtml.join('')}</div></div>`;
+    html+=`<div class="fm-client"><div class="fm-row fm-crow${open?' open':''}" data-drop="1" data-client="${escapeHtml(c)}" data-pid="__alg__" data-cat="" ondragover="fmDragOver(event)" ondragleave="fmDragLeave(event)" ondrop="fmDrop(event)" onclick="fmToggle('${_fk(c)}')"><span class="fm-tw">▸</span><span class="fm-badge" style="background:${g.col}"></span><span class="fm-name" style="color:${g.col}">${escapeHtml(c)}</span></div><div class="fm-kids"${open?'':' style="display:none"'}>${projHtml.join('')}</div></div>`;
   });
   t.innerHTML=html||'<div class="hint">Nog geen bestanden — of nog niet gesorteerd. Klik “Sorteer met AI”.</div>';
 }
 let _fmDragId=null;
 function fmDragStart(e,id){ _fmDragId=id; try{e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',id);}catch(_){}}
-function fmDragOver(e){ if(!_fmDragId)return; e.preventDefault(); e.currentTarget.classList.add('fm-dragover'); }
+function _hasFiles(e){ try{ return [...(e.dataTransfer.types||[])].includes('Files'); }catch(_){ return false; } }
+function fmDragOver(e){ if(!_fmDragId && !_hasFiles(e)) return; e.preventDefault(); e.currentTarget.classList.add('fm-dragover'); }
 function fmDragLeave(e){ e.currentTarget.classList.remove('fm-dragover'); }
 async function fmDrop(e){
-  e.preventDefault(); const row=e.currentTarget; row.classList.remove('fm-dragover');
+  e.preventDefault(); e.stopPropagation(); const row=e.currentTarget; row.classList.remove('fm-dragover');
+  const client=row.getAttribute('data-client'), pid=row.getAttribute('data-pid'), cat=row.getAttribute('data-cat')||'';
+  if(e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length){ _fmHideDropOverlay(); await fmUploadFiles(e.dataTransfer.files, client, pid, cat); return; }
   const id=_fmDragId; _fmDragId=null; if(!id) return;
-  const client=row.getAttribute('data-client'), pid=row.getAttribute('data-pid'), cat=row.getAttribute('data-cat');
   const f=(state.files||[]).find(x=>x.id===id); if(!f) return;
   const patch={ icon: cat };
   if(pid==='__alg__'){ patch.owner_type='client'; patch.owner_id=client; }
@@ -2596,6 +2606,26 @@ async function fmDrop(e){
   try{ await sb.from('files').update(patch).eq('id',id); }catch(_){}
   _renderFmTree();
 }
+function _fileToB64(file){ return new Promise((res,rej)=>{ const fr=new FileReader(); fr.onload=()=>{ const s=String(fr.result||''); const i=s.indexOf(','); res(i>=0?s.slice(i+1):s); }; fr.onerror=rej; fr.readAsDataURL(file); }); }
+async function fmUploadFiles(list, client, pid, cat){
+  const arr=[...list]; if(!arr.length) return;
+  _fmShowUploading(arr.length);
+  for(const file of arr){
+    try{
+      const b64=await _fileToB64(file);
+      let owner_type, owner_id, target;
+      if(pid==='__alg__'){ owner_type='client'; owner_id=client||'Begeister'; target=(client||'Begeister')+'/Algemeen'+(cat?'/'+cat:''); }
+      else if(pid==='__none__'){ owner_type='client'; owner_id='Begeister'; target='Begeister/Algemeen'+(cat?'/'+cat:''); }
+      else { owner_type='project'; owner_id=pid; const p=projById(pid); target=(p?((p.client||'Begeister')+'/'+(p.project||p.client||'Project')):'Overig')+(cat?'/'+cat:''); }
+      const r=await fetch('/api/dropbox/list',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'upload',name:file.name,b64,target,owner_type,owner_id,cat})});
+      const d=await r.json(); if(d&&d.file){ state.files=state.files||[]; state.files.unshift(d.file); }
+    }catch(_){}
+  }
+  _fmHideDropOverlay(); _renderFmTree();
+}
+function _fmShowDropOverlay(t){ const w=document.getElementById('filesWrap'); if(!w)return; const o=w.querySelector('.fm-drop-overlay'); if(o&&t){const s=o.querySelector('.fm-do-txt'); if(s)s.textContent=t;} w.classList.add('fm-dropping'); }
+function _fmShowUploading(n){ _fmShowDropOverlay('Uploaden… ('+n+')'); }
+function _fmHideDropOverlay(){ const w=document.getElementById('filesWrap'); if(!w)return; w.classList.remove('fm-dropping'); const o=w.querySelector('.fm-drop-overlay .fm-do-txt'); if(o)o.textContent='Sleep bestanden op een map om te uploaden'; }
 async function fmSortAI(){
   const todo=(state.files||[]).filter(f=>!_cat(f)).map(f=>({id:f.id,name:f.name||'',scope:f.owner_type==='client'?'client':'project'}));
   const btn=document.getElementById('fmSortBtn');
