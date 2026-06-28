@@ -130,8 +130,11 @@
   .cdd-row .cdd{flex:1;min-width:0}
   .cdd{display:none;position:relative;margin-bottom:10px}
   .cdd.cdd-form{display:block;margin-bottom:0;width:100%}
-  .appt-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
-  .appt-who{display:flex;gap:14px;align-items:center;margin-right:36px}
+  .appt-head{display:flex;align-items:center;gap:16px;margin:0 0 22px}
+  #apptOverlay .modal h3{margin:0;padding-right:0}
+  .appt-head .appt-who{margin-left:auto}
+  .appt-head .modal-close{position:static;top:auto;right:auto;width:auto;height:auto}
+  .appt-who{display:flex;gap:14px;align-items:center}
   .appt-who .tw-opt{font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut2);cursor:pointer;transition:color .15s}
   .appt-who .tw-opt:hover,.appt-who .tw-opt.on{color:#fff}
   .cdd-btn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;background:transparent;border:1px solid var(--line);border-radius:11px;padding:12px 13px;color:var(--txt);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;text-align:left}
@@ -1013,8 +1016,7 @@
 <!-- AFSPRAAK MODAL -->
 <div class="overlay" id="apptOverlay">
   <div class="modal">
-    <button class="modal-close" onclick="closeApptModal()" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
-    <div class="appt-head"><h3 id="apptModalTitle">Nieuwe afspraak</h3><div class="appt-who" id="a_whoToggle"></div></div>
+    <div class="appt-head"><h3 id="apptModalTitle">Nieuwe afspraak</h3><div class="appt-who" id="a_whoToggle"></div><button class="modal-close" onclick="closeApptModal()" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
     <input id="a_t" placeholder="Omschrijving" autocomplete="off" />
     <div class="twocol">
       <div><input type="hidden" id="a_date" /><div class="datefield" id="a_date_f" onclick="openDuePicker(event,'appt')"><span id="a_date_lbl" class="ph">Datum</span><span class="cal-ic">▦</span></div></div>
