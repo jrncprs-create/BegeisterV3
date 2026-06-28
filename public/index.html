@@ -157,6 +157,23 @@
   .t-top{display:flex;align-items:center;gap:11px}
   .picon{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#0c0d10;font-size:14px;flex:0 0 auto}
   .picon.empty{background:transparent;border:1.5px solid rgba(255,255,255,.32)}
+  /* File manager */
+  .fm-search{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:11px;padding:9px 12px;margin:0 0 14px}
+  .fm-search .fm-sic{color:var(--mut2);display:flex}
+  .fm-search input{flex:1;background:transparent;border:none;outline:none;color:var(--txt);font-size:14px;font-family:inherit}
+  .fm-search input::placeholder{color:var(--mut2)}
+  .fm-row{display:flex;align-items:center;gap:8px;padding:7px 6px;border-radius:8px;cursor:pointer;font-size:13.5px;color:var(--txt)}
+  .fm-row:hover{background:rgba(255,255,255,.05)}
+  .fm-tw{width:12px;flex:0 0 auto;color:var(--mut2);font-size:9px;transition:transform .15s}
+  .fm-row.open>.fm-tw{transform:rotate(90deg)}
+  .fm-ic{display:flex;align-items:center;color:var(--mut)}
+  .fm-badge{width:15px;height:15px;border-radius:5px;flex:0 0 auto}
+  .fm-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .fm-cnt{margin-left:auto;color:var(--mut2);font-size:11px}
+  .fm-kids{margin-left:15px;border-left:1px solid rgba(255,255,255,.06);padding-left:6px}
+  .fm-file{display:flex;align-items:center;gap:8px;padding:6px 6px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--mut)}
+  .fm-file:hover{background:rgba(255,255,255,.05);color:var(--txt)}
+  .fm-file .fm-ic{color:var(--mut2)}
   /* rustiger beeld: alleen de gekleurde + witte elementen dimmen (donker), rest blijft; op hover/sleep weer vol */
   @media(hover:hover){
     #list .task .picon,#list .task .t-proj,#list .task .t-title,#list .task .chk,#list .task .pill.who,#list .task .wact,
@@ -752,9 +769,10 @@
     #nav button[data-v="taken"]{order:2}
     #nav button[data-v="afspraken"]{order:3}
     #nav button[data-v="agenda"]{order:4}
-    #nav button[data-v="contacten"]{order:5}
-    #nav button[data-v="archief"]{order:6}
-    #nav #pushBtn{order:7}
+    #nav button[data-v="files"]{order:5}
+    #nav button[data-v="contacten"]{order:6}
+    #nav button[data-v="archief"]{order:7}
+    #nav #pushBtn{order:8}
   }
   @media(min-width:601px){
     #nav button[data-v="home"],#nav button[data-v="wachter"]{display:none}
@@ -874,6 +892,7 @@
       <button data-v="beheer" onclick="setView('beheer')">Klanten</button>
       <button data-v="contacten" onclick="setView('contacten')">Contacten</button>
       <button data-v="bronnen" onclick="setView('bronnen')">Bronnen <span class="badge" id="nb-bron"></span></button>
+      <button data-v="files" onclick="setView('files')">Files</button>
       <button data-v="archief" onclick="setView('archief')">Archief</button>
       <button id="pushBtn" onclick="enablePush()" title="Meldingen aanzetten">Meldingen</button>
     </nav>
@@ -934,6 +953,9 @@
       </div>
       <div id="view-archief" class="hidden">
         <div id="archiefWrap"></div>
+      </div>
+      <div id="view-files" class="hidden">
+        <div id="filesWrap"></div>
       </div>
       <div id="view-wachter" class="hidden">
         <div id="wachterBlock">
@@ -1349,7 +1371,7 @@ function chipTip(x){const di=dueInfo(x.it.due);return (escapeHtml(x.it.t)+' — 
 
 // ---------- view switch ----------
 // welke views horen op desktop in de eerste kolom (#rail)
-const RAILVIEWS=['bronnen','beheer','contacten','archief'];
+const RAILVIEWS=['bronnen','beheer','contacten','archief','files'];
 function setView(v){
   view=v;
   document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('active',b.dataset.v===v));
@@ -1365,10 +1387,11 @@ function setView(v){
   document.getElementById('view-beheer').classList.toggle('hidden', d3 ? (v!=='beheer') : v!=='beheer');
   document.getElementById('view-contacten').classList.toggle('hidden', d3 ? (v!=='contacten') : v!=='contacten');
   document.getElementById('view-archief').classList.toggle('hidden', v!=='archief');
+  document.getElementById('view-files').classList.toggle('hidden', v!=='files');
   // eerste kolom (#wachterBlock) verbergen wanneer er een rail-view getoond wordt
   const wb=document.getElementById('wachterBlock'); if(wb) wb.classList.toggle('hidden', d3 && railView);
   if(typeof _ensureRailCloses==='function') _ensureRailCloses();
-  document.getElementById('viewTitle').textContent={home:'',taken:'Taken',agenda:'Agenda',afspraken:'Afspraken',wachter:'In afwachting',bronnen:'Bronnen',beheer:'Klanten & projecten',contacten:'Contacten',archief:'Archief'}[v];
+  document.getElementById('viewTitle').textContent={home:'',taken:'Taken',agenda:'Agenda',afspraken:'Afspraken',wachter:'In afwachting',bronnen:'Bronnen',beheer:'Klanten & projecten',contacten:'Contacten',archief:'Archief',files:'Files'}[v];
   // desktop-werkblad: Taken (midden) + Agenda (rechts) tegelijk zichtbaar — op desktop ALTIJD aan
   const ws = d3;
   const main=document.querySelector('.main'); if(main) main.classList.toggle('workspace',ws);
@@ -1397,6 +1420,7 @@ function render(){
   if(view==='beheer'||ws)renderProjecten();
   if(view==='contacten'||ws)renderContacten();
   if(view==='archief')renderArchief();
+  if(view==='files')renderFiles();
   save();
   _animateNext=false;
 }
@@ -2475,6 +2499,56 @@ function renderProjecten(){
   const orgBar='<div class="org-bar"><button class="kfiles-add" onclick="openOrganize()" title="Losse Dropbox-bestanden opruimen"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M6 1.8 0 5.7l6 3.9 6-3.9-6-3.9zm12 0-6 3.9 6 3.9 6-3.9-6-3.9zM0 13.5l6 3.9 6-3.9-6-3.9-6 3.9zm18-3.9-6 3.9 6 3.9 6-3.9-6-3.9zM6 18.6l6 3.9 6-3.9-6-3.9-6 3.9z"/></svg> Opruimen</button></div>';
   document.getElementById('beheerWrap').innerHTML=orgBar+(html||'<div class="hint">Nog geen klanten.</div>');
 }
+// ---------- File manager (tree) ----------
+let _fmOpen=new Set(), _fmQuery='';
+function _searchGlyph(){return '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="7"/><path d="M21 21l-6 -6"/></svg>';}
+function _fileProject(f){
+  if(f.owner_type==='project') return projById(f.owner_id)||null;
+  if(f.owner_type==='task'){ const r=findItem(f.owner_id); return r?r.p:null; }
+  return null;
+}
+function renderFiles(){
+  const wrap=document.getElementById('filesWrap'); if(!wrap) return;
+  if(!wrap.querySelector('.fm-search')){
+    wrap.innerHTML='<div class="fm-search"><span class="fm-sic">'+_searchGlyph()+'</span><input id="fmSearch" placeholder="Zoek bestanden…" autocomplete="off" oninput="fmSearch(this.value)"></div><div id="fmTree"></div>';
+    const si=document.getElementById('fmSearch'); if(si)si.value=_fmQuery;
+  }
+  _renderFmTree();
+}
+function fmSearch(v){ _fmQuery=v; _renderFmTree(); }
+function fmToggle(k){ if(_fmOpen.has(k))_fmOpen.delete(k); else _fmOpen.add(k); _renderFmTree(); }
+function _renderFmTree(){
+  const t=document.getElementById('fmTree'); if(!t) return;
+  const q=(_fmQuery||'').trim().toLowerCase();
+  const groups={};
+  (state.files||[]).forEach(f=>{
+    let client,pid,pname,col;
+    if(f.owner_type==='client'){ client=f.owner_id||'Geen klant'; pid='__alg__'; pname='Algemeen'; const b=_formBadge('client',client); col=b?b.col:'#888'; }
+    else { const p=_fileProject(f); const real=p&&p.id!=='__inbox__';
+      client=real?(p.client||'Geen klant'):'Geen klant'; pid=real?p.id:'__none__'; pname=real?(p.project||'—'):'Losse bestanden'; col=real?(PROJCOL[p.id]||'#888'):'#888'; }
+    if(!groups[client]) groups[client]={col, projs:{}, order:[]};
+    if(col&&col!=='#888') groups[client].col=col;
+    if(!groups[client].projs[pid]){ groups[client].projs[pid]={name:pname, files:[]}; groups[client].order.push(pid); }
+    groups[client].projs[pid].files.push(f);
+  });
+  const clients=Object.keys(groups).sort((a,b)=> a==='Geen klant'?1:(b==='Geen klant'?-1:a.localeCompare(b)));
+  let html='';
+  clients.forEach(c=>{
+    const g=groups[c]; const projHtml=[];
+    g.order.forEach(pid=>{
+      const pr=g.projs[pid];
+      const fl=q?pr.files.filter(f=>(f.name||'').toLowerCase().includes(q)):pr.files;
+      if(!fl.length) return;
+      const key=c+'|'+pid, open=q?true:_fmOpen.has(key);
+      const files=fl.map(f=>`<div class="fm-file" onclick="openFileViewer('${f.id}')"><span class="fm-ic">${_fileGlyph(f.name||'')}</span><span class="fm-name">${escapeHtml(f.name||'bestand')}</span></div>`).join('');
+      projHtml.push(`<div class="fm-row fm-prow${open?' open':''}" onclick="fmToggle('${key.replace(/'/g,"\\'")}')"><span class="fm-tw">▸</span><span class="fm-ic">${_folderGlyph()}</span><span class="fm-name">${escapeHtml(pr.name)}</span><span class="fm-cnt">${fl.length}</span></div><div class="fm-kids"${open?'':' style="display:none"'}>${files}</div>`);
+    });
+    if(!projHtml.length) return;
+    const open=q?true:_fmOpen.has(c);
+    html+=`<div class="fm-client"><div class="fm-row fm-crow${open?' open':''}" onclick="fmToggle('${c.replace(/'/g,"\\'")}')"><span class="fm-tw">▸</span><span class="fm-badge" style="background:${g.col}"></span><span class="fm-name" style="color:${g.col}">${escapeHtml(c)}</span></div><div class="fm-kids"${open?'':' style="display:none"'}>${projHtml.join('')}</div></div>`;
+  });
+  t.innerHTML=html||'<div class="hint">Nog geen bestanden.</div>';
+}
 function renderArchief(){
   const wrap=document.getElementById('archiefWrap'); if(!wrap)return;
   const arch=(state.archived||[]);
@@ -2969,11 +3043,12 @@ function applyLayout(){
   const vBeh=document.getElementById('view-beheer');
   const vCon=document.getElementById('view-contacten');
   const vArch=document.getElementById('view-archief');
+  const vFiles=document.getElementById('view-files');
   if(mob){ wview.appendChild(wb); }
   else { rail.appendChild(wb); }
   // Bronnen/Klanten/Contacten: desktop → eerste kolom (#rail), mobiel → terug in #main
-  if(d3){ if(vBron)rail.appendChild(vBron); if(vBeh)rail.appendChild(vBeh); if(vCon)rail.appendChild(vCon); if(vArch)rail.appendChild(vArch); }
-  else if(main){ if(vBron)main.appendChild(vBron); if(vBeh)main.appendChild(vBeh); if(vCon)main.appendChild(vCon); if(vArch)main.appendChild(vArch); }
+  if(d3){ if(vBron)rail.appendChild(vBron); if(vBeh)rail.appendChild(vBeh); if(vCon)rail.appendChild(vCon); if(vArch)rail.appendChild(vArch); if(vFiles)rail.appendChild(vFiles); }
+  else if(main){ if(vBron)main.appendChild(vBron); if(vBeh)main.appendChild(vBeh); if(vCon)main.appendChild(vCon); if(vArch)main.appendChild(vArch); if(vFiles)main.appendChild(vFiles); }
   if(!mob && (view==='home')) setView('taken');
   _ensureRailCloses();
   _lastMob=mob;
@@ -2981,7 +3056,7 @@ function applyLayout(){
 // sluitkruis + kop in elke rail-view (Bronnen/Klanten/Contacten) op desktop; weg op mobiel
 function _ensureRailCloses(){
   const _xIc='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
-  const spec=[['view-bronnen','Bronnen'],['view-beheer','Klanten & projecten'],['view-contacten',''],['view-archief','Archief']];
+  const spec=[['view-bronnen','Bronnen'],['view-beheer','Klanten & projecten'],['view-contacten',''],['view-archief','Archief'],['view-files','Files']];
   const d3=isDesk3();
   spec.forEach(([vid,label])=>{
     const v=document.getElementById(vid); if(!v)return;
