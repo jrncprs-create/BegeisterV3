@@ -2541,7 +2541,7 @@ function _renderFmTree(){
       if(!fl.length) return;
       const key=c+'|'+pid, open=q?true:_fmOpen.has(key);
       const files=fl.map(f=>`<div class="fm-file" onclick="openFileViewer('${f.id}')"><span class="fm-ic">${_fileGlyph(f.name||'')}</span><span class="fm-name">${escapeHtml(f.name||'bestand')}</span></div>`).join('');
-      projHtml.push(`<div class="fm-row fm-prow${open?' open':''}" onclick="fmToggle('${key.replace(/'/g,"\\'")}')"><span class="fm-tw">▸</span><span class="fm-ic">${_folderGlyph()}</span><span class="fm-name">${escapeHtml(pr.name)}</span><span class="fm-cnt">${fl.length}</span></div><div class="fm-kids"${open?'':' style="display:none"'}>${files}</div>`);
+      projHtml.push(`<div class="fm-row fm-prow${open?' open':''}" onclick="fmToggle('${key.replace(/'/g,"\\'")}')"><span class="fm-tw">▸</span><span class="fm-ic" style="color:${g.col}">${_folderGlyph()}</span><span class="fm-name">${escapeHtml(pr.name)}</span><span class="fm-cnt">${fl.length}</span></div><div class="fm-kids"${open?'':' style="display:none"'}>${files}</div>`);
     });
     if(!projHtml.length) return;
     const open=q?true:_fmOpen.has(c);
