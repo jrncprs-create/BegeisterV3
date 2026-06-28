@@ -199,6 +199,7 @@
   .fm-edit{flex:0 0 auto;border:0;background:transparent;color:var(--mut2);cursor:pointer;padding:3px 5px;border-radius:6px;opacity:.28;line-height:0}
   .fm-row:hover .fm-edit,.fm-file:hover .fm-edit{opacity:.7}
   .fm-edit:hover{opacity:1;color:#fff;background:rgba(255,255,255,.08)}
+  .fm-edit.fm-del:hover{color:#f87171;background:rgba(248,113,113,.12)}
   .org-edit{flex:0 0 auto;border:0;background:transparent;color:var(--mut2);cursor:pointer;font-size:12px;padding:4px 8px;border-radius:6px;white-space:nowrap;line-height:0}
   .org-edit:hover{color:#fff;background:rgba(255,255,255,.08)}
   .org-q{color:#fbbf24;font-weight:700;margin-right:3px}
@@ -989,7 +990,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v22</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v23</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -2664,7 +2665,7 @@ function _fileProject(f){
 function renderFiles(){
   const wrap=document.getElementById('filesWrap'); if(!wrap) return;
   if(!wrap.querySelector('.fm-search')){
-    wrap.innerHTML='<div class="fm-top"><div class="fm-search"><span class="fm-sic">'+_searchGlyph()+'</span><input id="fmSearch" placeholder="Zoek bestanden…" autocomplete="off" oninput="fmSearch(this.value)"></div></div><div id="fmTree"></div><div class="fm-foot"><button class="fm-sort" id="fmSortBtn" onclick="fmSortAI()">Sorteer met AI</button><button class="fm-sort" id="fmSyncBtn" onclick="fmSyncDropbox()" title="Dropbox-mappen gelijktrekken met deze indeling">Sync naar Dropbox</button></div><div class="fm-drop-overlay"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"/><path d="M7 9l5 -5l5 5"/><path d="M12 4v12"/></svg><div class="fm-do-txt">Sleep bestanden op een map om te uploaden</div></div>';
+    wrap.innerHTML='<div class="fm-top"><div class="fm-search"><span class="fm-sic">'+_searchGlyph()+'</span><input id="fmSearch" placeholder="Zoek bestanden…" autocomplete="off" oninput="fmSearch(this.value)"></div><button class="fm-newfolder" onclick="fmNewClient()" title="Nieuwe map"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5a2 2 0 0 1 2 -2h4l2 2h5a2 2 0 0 1 2 2v3"/><path d="M3 7v11a2 2 0 0 0 2 2h7"/><path d="M16 19h6M19 16v6"/></svg></button></div><div id="fmTree"></div><div class="fm-foot"><button class="fm-sort" id="fmSortBtn" onclick="fmSortAI()">Sorteer met AI</button><button class="fm-sort" id="fmSyncBtn" onclick="fmSyncDropbox()" title="Dropbox-mappen gelijktrekken met deze indeling">Sync naar Dropbox</button></div><div class="fm-drop-overlay"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"/><path d="M7 9l5 -5l5 5"/><path d="M12 4v12"/></svg><div class="fm-do-txt">Sleep bestanden op een map om te uploaden</div></div>';
     const si=document.getElementById('fmSearch'); if(si)si.value=_fmQuery;
   }
   if(!wrap._dropWired){ wrap._dropWired=true;
@@ -2679,6 +2680,28 @@ function fmSearch(v){ _fmQuery=v; _renderFmTree(); }
 async function fmNewClient(){ const name=((await uiPrompt('Naam nieuwe klant:'))||'').trim(); if(!name) return; const col=_nextClientColor(); const icon=(name[0]||'?').toUpperCase(); try{ await sb.from('projects').insert({client:name,project:'',color:col,icon,sort:0}); }catch(_){} _fmOpen.add(name); await refresh(); }
 function fmToggle(k){ if(_fmOpen.has(k))_fmOpen.delete(k); else _fmOpen.add(k); _renderFmTree(); }
 function _penGlyph(){ return '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4l10.5 -10.5a2.1 2.1 0 0 0 -3 -3l-10.5 10.5v3"/><path d="M13.5 6.5l3 3"/></svg>'; }
+function _trashGlyph(){ return '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/></svg>'; }
+// Verwijderen vanuit de boom (map=categorie / project / klant). Veilig: niet-lege mappen re-homen of vragen.
+async function fmDelete(btn){
+  const k=btn.dataset.kind;
+  if(k==='cat'){ const client=btn.dataset.client,pid=btn.dataset.pid,cat=btn.dataset.cat;
+    const files=(state.files||[]).filter(f=>{ if((f.icon||'')!==cat)return false; if(f.owner_type==='client')return pid==='__alg__'&&String(f.owner_id)===String(client); const p=_fileProject(f); return !!p&&pid!=='__alg__'&&String(p.id)===String(pid); });
+    if(!(await uiConfirm("Map '"+cat+"' opheffen?"+(files.length?" De "+files.length+" bestand(en) gaan naar 'Niet gesorteerd'.":""))))return;
+    for(const f of files){ try{ await sb.from('files').update({icon:''}).eq('id',f.id); }catch(_){} }
+    await refresh(); return; }
+  if(k==='project'){ const pid=btn.dataset.pid; const p=projById(pid); if(!p)return;
+    const files=(state.files||[]).filter(f=>{ const fp=_fileProject(f); return !!fp&&String(fp.id)===String(pid); });
+    if(!(await uiConfirm("Project-map '"+(p.project||'')+"' verwijderen?"+(files.length?" De "+files.length+" bestand(en) gaan naar de klant.":""))))return;
+    for(const f of files){ try{ await sb.from('files').update({owner_type:'client',owner_id:p.client}).eq('id',f.id); }catch(_){} }
+    try{ await sb.from('projects').delete().eq('id',pid); }catch(_){}
+    await refresh(); return; }
+  if(k==='client'){ const client=btn.dataset.client;
+    const files=(state.files||[]).filter(f=> (f.owner_type==='client'&&String(f.owner_id)===String(client)) || (function(){const p=_fileProject(f);return !!p&&p.client===client;})() );
+    if(files.length){ await uiConfirm("Deze map bevat nog "+files.length+" bestand(en). Verplaats of verwijder die eerst."); return; }
+    if(!(await uiConfirm("Map '"+client+"' verwijderen?")))return;
+    try{ await sb.from('projects').delete().eq('client',client); }catch(_){}
+    await refresh(); return; }
+}
 // Hernoemen vanuit de boom (bestand / map=categorie / project / klant).
 async function fmRename(btn){
   const k=btn.dataset.kind;
@@ -2713,6 +2736,8 @@ function _renderFmTree(){
     if(!P.cats[cat]){ P.cats[cat]=[]; P.order.push(cat); }
     P.cats[cat].push(f);
   });
+  // ook lege mappen (klanten zonder bestanden) tonen, zodat je er in kunt slepen
+  (typeof uniqueClients==='function'?uniqueClients():[]).forEach(c=>{ if(c && !groups[c]){ const b=_formBadge('client',c); groups[c]={col:b?b.col:'#888',projs:{},order:[]}; } });
   const clients=Object.keys(groups).sort((a,b)=> a==='Geen klant'?1:(b==='Geen klant'?-1:a.localeCompare(b)));
   let html='';
   clients.forEach(c=>{
@@ -2724,15 +2749,15 @@ function _renderFmTree(){
         if(!fl.length) return;
         const ckey=c+'|'+pid+'|'+cat, copen=q?true:_fmOpen.has(ckey);
         const files=fl.map(f=>`<div class="fm-file" draggable="true" data-fid="${f.id}" ondragstart="fmDragStart(event,'${f.id}')" onclick="fmFileClick('${f.id}')"><span class="fm-ic" style="color:${g.col}">${_fileGlyph(f.name||'')}</span><span class="fm-name">${escapeHtml(f.name||'bestand')}</span><button class="fm-edit" style="margin-left:auto" data-kind="file" data-fid="${f.id}" onclick="event.stopPropagation();fmRename(this)" title="Naam wijzigen">${_penGlyph()}</button></div>`).join('');
-        catHtml.push(`<div class="fm-row fm-catrow${copen?' open':''}" draggable="true" ondragstart="fmFolderDragStart(event,'cat',this)" data-drop="1" data-client="${escapeHtml(c)}" data-pid="${escapeHtml(pid)}" data-cat="${escapeHtml(cat)}" ondragover="fmDragOver(event)" ondragleave="fmDragLeave(event)" ondrop="fmDrop(event)" onclick="fmToggle('${_fk(ckey)}')"><span class="fm-tw">▸</span><span class="fm-ic" style="color:${g.col}">${_folderGlyph()}</span><span class="fm-name">${escapeHtml(cat)}</span><span class="fm-cnt">${fl.length}</span><button class="fm-edit" data-kind="cat" data-client="${escapeHtml(c)}" data-pid="${escapeHtml(pid)}" data-cat="${escapeHtml(cat)}" onclick="event.stopPropagation();fmRename(this)" title="Naam wijzigen">${_penGlyph()}</button></div><div class="fm-kids"${copen?'':' style="display:none"'}>${files}</div>`);
+        catHtml.push(`<div class="fm-row fm-catrow${copen?' open':''}" draggable="true" ondragstart="fmFolderDragStart(event,'cat',this)" data-drop="1" data-client="${escapeHtml(c)}" data-pid="${escapeHtml(pid)}" data-cat="${escapeHtml(cat)}" ondragover="fmDragOver(event)" ondragleave="fmDragLeave(event)" ondrop="fmDrop(event)" onclick="fmToggle('${_fk(ckey)}')"><span class="fm-tw">▸</span><span class="fm-ic" style="color:${g.col}">${_folderGlyph()}</span><span class="fm-name">${escapeHtml(cat)}</span><span class="fm-cnt">${fl.length}</span><button class="fm-edit" data-kind="cat" data-client="${escapeHtml(c)}" data-pid="${escapeHtml(pid)}" data-cat="${escapeHtml(cat)}" onclick="event.stopPropagation();fmRename(this)" title="Naam wijzigen">${_penGlyph()}</button><button class="fm-edit fm-del" data-kind="cat" data-client="${escapeHtml(c)}" data-pid="${escapeHtml(pid)}" data-cat="${escapeHtml(cat)}" onclick="event.stopPropagation();fmDelete(this)" title="Verwijderen">${_trashGlyph()}</button></div><div class="fm-kids"${copen?'':' style="display:none"'}>${files}</div>`);
       });
       if(!catHtml.length) return;
       const pkey=c+'|'+pid, popen=q?true:_fmOpen.has(pkey);
-      projHtml.push(`<div class="fm-row fm-prow${popen?' open':''}" draggable="true" ondragstart="fmFolderDragStart(event,'project',this)" data-drop="1" data-client="${escapeHtml(c)}" data-pid="${escapeHtml(pid)}" data-cat="" ondragover="fmDragOver(event)" ondragleave="fmDragLeave(event)" ondrop="fmDrop(event)" onclick="fmToggle('${_fk(pkey)}')"><span class="fm-tw">▸</span><span class="fm-ic" style="color:${g.col}">${_folderGlyph()}</span><span class="fm-name">${escapeHtml(pr.name)}</span><button class="fm-edit" style="margin-left:auto" data-kind="project" data-pid="${escapeHtml(pid)}" onclick="event.stopPropagation();fmRename(this)" title="Naam wijzigen">${_penGlyph()}</button></div><div class="fm-kids"${popen?'':' style="display:none"'}>${catHtml.join('')}</div>`);
+      projHtml.push(`<div class="fm-row fm-prow${popen?' open':''}" draggable="true" ondragstart="fmFolderDragStart(event,'project',this)" data-drop="1" data-client="${escapeHtml(c)}" data-pid="${escapeHtml(pid)}" data-cat="" ondragover="fmDragOver(event)" ondragleave="fmDragLeave(event)" ondrop="fmDrop(event)" onclick="fmToggle('${_fk(pkey)}')"><span class="fm-tw">▸</span><span class="fm-ic" style="color:${g.col}">${_folderGlyph()}</span><span class="fm-name">${escapeHtml(pr.name)}</span><button class="fm-edit" data-kind="project" data-pid="${escapeHtml(pid)}" onclick="event.stopPropagation();fmRename(this)" title="Naam wijzigen">${_penGlyph()}</button><button class="fm-edit fm-del" style="margin-left:auto" data-kind="project" data-client="${escapeHtml(c)}" data-pid="${escapeHtml(pid)}" onclick="event.stopPropagation();fmDelete(this)" title="Verwijderen">${_trashGlyph()}</button></div><div class="fm-kids"${popen?'':' style="display:none"'}>${catHtml.join('')}</div>`);
     });
-    if(!projHtml.length) return;
+    if(!projHtml.length && c==='Geen klant') return;
     const open=q?true:_fmOpen.has(c);
-    html+=`<div class="fm-client"><div class="fm-row fm-crow${open?' open':''}" data-drop="1" data-client="${escapeHtml(c)}" data-pid="__alg__" data-cat="" ondragover="fmDragOver(event)" ondragleave="fmDragLeave(event)" ondrop="fmDrop(event)" onclick="fmToggle('${_fk(c)}')"><span class="fm-tw">▸</span><span class="fm-badge" style="background:${g.col}"></span><span class="fm-name" style="color:${g.col}">${escapeHtml(c)}</span><button class="fm-edit" style="margin-left:auto" data-kind="client" data-client="${escapeHtml(c)}" onclick="event.stopPropagation();fmRename(this)" title="Naam wijzigen">${_penGlyph()}</button></div><div class="fm-kids"${open?'':' style="display:none"'}>${projHtml.join('')}</div></div>`;
+    html+=`<div class="fm-client"><div class="fm-row fm-crow${open?' open':''}" data-drop="1" data-client="${escapeHtml(c)}" data-pid="__alg__" data-cat="" ondragover="fmDragOver(event)" ondragleave="fmDragLeave(event)" ondrop="fmDrop(event)" onclick="fmToggle('${_fk(c)}')"><span class="fm-tw">▸</span><span class="fm-badge" style="background:${g.col}"></span><span class="fm-name" style="color:${g.col}">${escapeHtml(c)}</span><button class="fm-edit" data-kind="client" data-client="${escapeHtml(c)}" onclick="event.stopPropagation();fmRename(this)" title="Naam wijzigen">${_penGlyph()}</button><button class="fm-edit fm-del" style="margin-left:auto" data-kind="client" data-client="${escapeHtml(c)}" onclick="event.stopPropagation();fmDelete(this)" title="Verwijderen">${_trashGlyph()}</button></div><div class="fm-kids"${open?'':' style="display:none"'}>${projHtml.join('')}</div></div>`;
   });
   t.innerHTML=html||'<div class="hint">Nog geen bestanden — of nog niet gesorteerd. Klik “Sorteer met AI”.</div>';
 }
