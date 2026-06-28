@@ -150,10 +150,15 @@
   .t-top{display:flex;align-items:center;gap:11px}
   .picon{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#0c0d10;font-size:14px;flex:0 0 auto}
   .picon.empty{background:transparent;border:1.5px solid rgba(255,255,255,.32)}
-  /* rustiger beeld: items 40% donkerder, behalve waar je overheen hovert of sleept */
+  /* rustiger beeld: alleen de gekleurde + witte elementen dimmen (donker), rest blijft; op hover/sleep weer vol */
   @media(hover:hover){
-    #list .task,#wachterList .task{filter:brightness(.6);transition:filter .25s}
-    #list .task:hover,#wachterList .task:hover,#list .task.dragging,#wachterList .task.dragging,#list .task.justlanded,#wachterList .task.justlanded{filter:none}
+    #list .task .picon,#list .task .t-proj,#list .task .t-title,#list .task .chk,#list .task .pill.who,#list .task .wact,
+    #wachterList .task .picon,#wachterList .task .t-proj,#wachterList .task .t-title,#wachterList .task .chk,#wachterList .task .pill.who,#wachterList .task .wact{filter:brightness(.4);transition:filter .25s}
+    #list .task .t-proj .t-projsub,#wachterList .task .t-proj .t-projsub{filter:brightness(2.5)}
+    #list .task:hover .picon,#list .task:hover .t-proj,#list .task:hover .t-title,#list .task:hover .chk,#list .task:hover .pill.who,#list .task:hover .wact,
+    #wachterList .task:hover .picon,#wachterList .task:hover .t-proj,#wachterList .task:hover .t-title,#wachterList .task:hover .chk,#wachterList .task:hover .pill.who,#wachterList .task:hover .wact,
+    #list .task.dragging .picon,#list .task.dragging .t-proj,#list .task.dragging .t-title,#list .task.dragging .chk,#list .task.dragging .pill.who,
+    #wachterList .task.justlanded .picon,#wachterList .task.justlanded .t-proj,#wachterList .task.justlanded .t-title,#list .task.justlanded .picon,#list .task.justlanded .t-proj,#list .task.justlanded .t-title{filter:none}
   }
   /* tijdelijke inkleuring van een bron in klantkleur (na klik op 'bron' bij een taak) */
   .srow.tinted .srow-title,.srow.tinted .srow-sub,.srow.tinted .srow-date,.srow.tinted .doc-ic,.srow.tinted .srow-text,.srow.tinted .srow-derived,.srow.tinted .srow-att .fname,.srow.tinted .srow-att .file-ic{color:var(--scol)!important}
