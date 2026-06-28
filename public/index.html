@@ -171,7 +171,7 @@
   .picon{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#0c0d10;font-size:14px;flex:0 0 auto}
   .picon.empty{background:transparent;border:1.5px solid rgba(255,255,255,.32)}
   /* File manager */
-  .fm-top{display:flex;align-items:center;gap:8px;margin:0 0 14px}
+  .fm-top{display:flex;align-items:center;gap:8px;margin:0 0 14px;position:sticky;top:0;z-index:6;background:var(--bg);padding-top:4px}
   .fm-top .fm-search{flex:1;margin:0}
   .fm-foot{position:sticky;bottom:0;display:flex;gap:8px;padding:12px 0 8px;margin-top:10px;background:linear-gradient(to top, var(--bg) 55%, transparent)}
   .fm-foot .fm-sort{flex:1;white-space:nowrap}
@@ -990,7 +990,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v23</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v24</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -2677,7 +2677,7 @@ function renderFiles(){
   const pane=document.getElementById('view-filespreview'); if(pane&&isDesk3()&&!pane.innerHTML.trim()) pane.innerHTML='<div class="fmp-empty">Kies een bestand</div>';
 }
 function fmSearch(v){ _fmQuery=v; _renderFmTree(); }
-async function fmNewClient(){ const name=((await uiPrompt('Naam nieuwe klant:'))||'').trim(); if(!name) return; const col=_nextClientColor(); const icon=(name[0]||'?').toUpperCase(); try{ await sb.from('projects').insert({client:name,project:'',color:col,icon,sort:0}); }catch(_){} _fmOpen.add(name); await refresh(); }
+async function fmNewClient(){ const name=((await uiPrompt('Naam nieuwe map:'))||'').trim(); if(!name) return; const col=_nextClientColor(); const icon=(name[0]||'?').toUpperCase(); try{ await sb.from('projects').insert({client:name,project:'',color:col,icon,sort:0}); }catch(_){} _fmOpen.add(name); await refresh(); try{ const row=document.querySelector('#fmTree .fm-crow[data-client="'+((window.CSS&&CSS.escape)?CSS.escape(name):name)+'"]'); if(row)row.scrollIntoView({block:'start',behavior:'smooth'}); }catch(_){} }
 function fmToggle(k){ if(_fmOpen.has(k))_fmOpen.delete(k); else _fmOpen.add(k); _renderFmTree(); }
 function _penGlyph(){ return '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4l10.5 -10.5a2.1 2.1 0 0 0 -3 -3l-10.5 10.5v3"/><path d="M13.5 6.5l3 3"/></svg>'; }
 function _trashGlyph(){ return '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/></svg>'; }
@@ -2752,6 +2752,7 @@ function _renderFmTree(){
         catHtml.push(`<div class="fm-row fm-catrow${copen?' open':''}" draggable="true" ondragstart="fmFolderDragStart(event,'cat',this)" data-drop="1" data-client="${escapeHtml(c)}" data-pid="${escapeHtml(pid)}" data-cat="${escapeHtml(cat)}" ondragover="fmDragOver(event)" ondragleave="fmDragLeave(event)" ondrop="fmDrop(event)" onclick="fmToggle('${_fk(ckey)}')"><span class="fm-tw">▸</span><span class="fm-ic" style="color:${g.col}">${_folderGlyph()}</span><span class="fm-name">${escapeHtml(cat)}</span><span class="fm-cnt">${fl.length}</span><button class="fm-edit" data-kind="cat" data-client="${escapeHtml(c)}" data-pid="${escapeHtml(pid)}" data-cat="${escapeHtml(cat)}" onclick="event.stopPropagation();fmRename(this)" title="Naam wijzigen">${_penGlyph()}</button><button class="fm-edit fm-del" data-kind="cat" data-client="${escapeHtml(c)}" data-pid="${escapeHtml(pid)}" data-cat="${escapeHtml(cat)}" onclick="event.stopPropagation();fmDelete(this)" title="Verwijderen">${_trashGlyph()}</button></div><div class="fm-kids"${copen?'':' style="display:none"'}>${files}</div>`);
       });
       if(!catHtml.length) return;
+      if(pid==='__alg__'){ catHtml.forEach(ch=>projHtml.push(ch)); return; }   // client-niveau: geen "Algemeen"-wrapper, categorieën direct onder de map
       const pkey=c+'|'+pid, popen=q?true:_fmOpen.has(pkey);
       projHtml.push(`<div class="fm-row fm-prow${popen?' open':''}" draggable="true" ondragstart="fmFolderDragStart(event,'project',this)" data-drop="1" data-client="${escapeHtml(c)}" data-pid="${escapeHtml(pid)}" data-cat="" ondragover="fmDragOver(event)" ondragleave="fmDragLeave(event)" ondrop="fmDrop(event)" onclick="fmToggle('${_fk(pkey)}')"><span class="fm-tw">▸</span><span class="fm-ic" style="color:${g.col}">${_folderGlyph()}</span><span class="fm-name">${escapeHtml(pr.name)}</span><button class="fm-edit" data-kind="project" data-pid="${escapeHtml(pid)}" onclick="event.stopPropagation();fmRename(this)" title="Naam wijzigen">${_penGlyph()}</button><button class="fm-edit fm-del" style="margin-left:auto" data-kind="project" data-client="${escapeHtml(c)}" data-pid="${escapeHtml(pid)}" onclick="event.stopPropagation();fmDelete(this)" title="Verwijderen">${_trashGlyph()}</button></div><div class="fm-kids"${popen?'':' style="display:none"'}>${catHtml.join('')}</div>`);
     });
