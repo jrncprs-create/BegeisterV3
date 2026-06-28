@@ -18,7 +18,8 @@ owner = "Jeroen" of "Marlon" of leeg. contact = externe persoon of leeg. due = Y
 ${context ? "VASTE CONTEXT (team/bedrijf — gebruik dit):\n" + context + "\n" : ""}VANDAAG: ${today || ""}. GEBRUIKER: ${who || ""}. Reken geen weekdagen zelf uit; gebruik de datumtabel.
 DATUMTABEL:\n${dates || "(geen)"}
 CATALOGUS (project_id → klant · project):\n${cat}
-Antwoord ALLEEN met geldige JSON: {"reply":"korte samenvatting voor de gebruiker","items":[{"title":"","owner":"","contact":"","due":null,"status":"todo","project_id":null}]}`;
+Bepaal ook of het bestand over een specifieke KLANT/opdrachtgever gaat. Geef "client" = de klantnaam als die duidelijk is, anders "". Geef "project" = de projectnaam als die expliciet genoemd wordt; staat er geen projectnaam maar wél een duidelijk onderwerp, stel dan een KORTE projectnaam voor (paar woorden); anders "".
+Antwoord ALLEEN met geldige JSON: {"reply":"korte samenvatting voor de gebruiker","client":"","project":"","items":[{"title":"","owner":"","contact":"","due":null,"status":"todo","project_id":null}]}`;
 }
 
 async function aiFromBlocks(blocks, opts, src) {
@@ -40,7 +41,7 @@ async function aiFromBlocks(blocks, opts, src) {
   let parsed;
   try { parsed = JSON.parse(slice); }
   catch (_) { parsed = { reply: raw.trim() || "Ik heb het bestand bekeken.", items: [] }; }
-  return { reply: parsed.reply || "", items: Array.isArray(parsed.items) ? parsed.items : [] };
+  return { reply: parsed.reply || "", items: Array.isArray(parsed.items) ? parsed.items : [], client: (parsed.client || "").toString().trim(), project: (parsed.project || "").toString().trim() };
 }
 
 export default async function handler(req, res) {

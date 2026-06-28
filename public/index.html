@@ -201,6 +201,14 @@
   #dropZone .dz-prev{display:none;max-width:280px;max-height:200px;border-radius:12px;object-fit:contain;box-shadow:0 8px 26px rgba(0,0,0,.5)}
   #dropZone.hasprev .dz-prev{display:block}
   #dropZone.hasprev .dz-up,#dropZone.hasprev .dz-star{display:none}
+  #dropZone .dz-q{display:none;flex-direction:column;gap:10px;margin-top:4px;width:min(330px,80vw)}
+  #dropZone.hasq .dz-q{display:flex}
+  #dropZone .dz-q-line{color:#fff;font-size:14.5px;font-weight:600;text-align:center}
+  #dropZone .dz-q-proj{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);border-radius:10px;padding:10px 12px;color:#fff;font-size:14px;text-align:center}
+  #dropZone .dz-q-btns{display:flex;gap:10px;justify-content:center}
+  #dropZone .dz-q-btns button{border:0;border-radius:10px;padding:9px 18px;font-size:13.5px;font-weight:600;cursor:pointer}
+  #dropZone .dz-q-yes{background:#fff;color:#111}
+  #dropZone .dz-q-no{background:rgba(255,255,255,.1);color:#fff}
   #dropZone .dz-title{color:#fff;font-size:18px;font-weight:600;letter-spacing:.2px}
   #dropZone .dz-sub{color:var(--mut);font-size:13.5px;max-width:330px;text-align:center;line-height:1.5}
   .main.workspace #view-filespreview{padding:0 24px 40px 24px;height:100%;overflow-y:auto;scrollbar-width:none}
@@ -1063,6 +1071,11 @@
     <svg class="dz-ic dz-star" viewBox="0 0 64 64" width="42" height="42" aria-hidden="true"><g stroke="#fff" stroke-width="4.6" stroke-linecap="butt"><line x1="32" y1="6" x2="32" y2="58"/><line x1="9.5" y1="19" x2="54.5" y2="45"/><line x1="9.5" y1="45" x2="54.5" y2="19"/></g></svg>
     <div class="dz-title">Laat los om toe te voegen</div>
     <div class="dz-sub">Foto, PDF, tekst of Word — ik lees het en stel meteen actiepunten voor.</div>
+    <div class="dz-q">
+      <div class="dz-q-line"></div>
+      <input class="dz-q-proj" placeholder="Projectnaam" autocomplete="off">
+      <div class="dz-q-btns"><button class="dz-q-no" onclick="_dzQNo()">Overslaan</button><button class="dz-q-yes" onclick="_dzQYes()">Aanmaken</button></div>
+    </div>
   </div>
 </div>
 
@@ -3295,13 +3308,18 @@ async function pasteClip(){closePlus();composeMode(true);const ta=document.getEl
 var _dropFiles=[], _dropQueue=[], _dropSrc=null, _dropAdvancing=false;
 var _DZ_DEF={t:'Laat los om toe te voegen',s:'Foto, PDF, tekst of Word — ik lees het en stel meteen actiepunten voor.'};
 function _dzText(t,s){const z=document.getElementById('dropZone');if(!z)return;const a=z.querySelector('.dz-title'),b=z.querySelector('.dz-sub');if(a)a.textContent=t;if(b)b.textContent=s;}
-var _dzResolve=null;
-function _dzCloseClick(){ if(_dzResolve){ const r=_dzResolve; _dzResolve=null; r(); } }
-function _dzShow(t,s,mode){_dzText(t,s);const z=document.getElementById('dropZone');if(!z)return;z.classList.remove('reading','summary','hasprev');if(mode)z.classList.add(mode);z.classList.add('on');}
-function _dzShowSummary(t,s,previewUrl){_dzText(t,s);const z=document.getElementById('dropZone');if(!z)return;const img=z.querySelector('.dz-prev');
+var _dzResolve=null, _fileProjectId=null;
+function _dzResolveWith(v){ if(_dzResolve){ const r=_dzResolve; _dzResolve=null; r(v); } }
+function _dzCloseClick(){ _dzResolveWith({create:false}); }
+function _dzQNo(){ _dzResolveWith({create:false}); }
+function _dzQYes(){ const inp=document.querySelector('#dropZone .dz-q-proj'); _dzResolveWith({create:true, project:inp?inp.value.trim():''}); }
+function _dzShow(t,s,mode){_dzText(t,s);const z=document.getElementById('dropZone');if(!z)return;z.classList.remove('reading','summary','hasprev','hasq');if(mode)z.classList.add(mode);z.classList.add('on');}
+function _dzShowSummary(t,s,previewUrl,q){_dzText(t,s);const z=document.getElementById('dropZone');if(!z)return;const img=z.querySelector('.dz-prev');
   if(previewUrl&&img){ img.src=previewUrl; z.classList.add('hasprev'); } else { z.classList.remove('hasprev'); if(img)img.removeAttribute('src'); }
+  const ql=z.querySelector('.dz-q-line'), qp=z.querySelector('.dz-q-proj');
+  if(q){ if(ql)ql.textContent=(q.kind==='client'?('Nieuwe klant: '+q.client):('Nieuw project onder '+q.client)); if(qp)qp.value=q.project||''; z.classList.add('hasq'); } else { z.classList.remove('hasq'); }
   z.classList.remove('reading'); z.classList.add('summary','on');}
-function _dzHide(){const z=document.getElementById('dropZone');if(z){z.classList.remove('on','reading','summary','hasprev');const img=z.querySelector('.dz-prev');if(img)img.removeAttribute('src');}_dzText(_DZ_DEF.t,_DZ_DEF.s);}
+function _dzHide(){const z=document.getElementById('dropZone');if(z){z.classList.remove('on','reading','summary','hasprev','hasq');const img=z.querySelector('.dz-prev');if(img)img.removeAttribute('src');}_dzText(_DZ_DEF.t,_DZ_DEF.s);}
 
 // PDF.js lazy laden + eerste pagina naar een afbeelding renderen (voor de preview).
 function _ensurePdfjs(){
@@ -3358,12 +3376,22 @@ async function _dropProcess(f){
     _dzHide(); _dropRunNext(); return;
   }
   const summary=data.reply||''; const items=(data.items&&data.items.length)?data.items:[];
+  // klant/project-resolutie: nog niet bestaand -> vraag stellen
+  _fileProjectId=null; let q=null;
+  const clientName=(data.client||'').trim(), projName=(data.project||'').trim();
+  if(clientName){
+    const cmatch=uniqueClients().find(c=>c.toLowerCase()===clientName.toLowerCase());
+    if(!cmatch){ q={kind:'client', client:clientName, project:projName}; }
+    else { const pmatch=projName?state.projects.find(p=>p.client===cmatch&&(p.project||'').toLowerCase()===projName.toLowerCase()):null;
+      if(pmatch){ _fileProjectId=pmatch.id; } else if(projName){ q={kind:'project', client:cmatch, project:projName}; } }
+  }
   let previewUrl=null, _prevObj=false; const _mime=(f.type||'').toLowerCase();
   if(_mime.startsWith('image/')){ previewUrl=URL.createObjectURL(f); _prevObj=true; }
   else if(_mime==='application/pdf'||/\.pdf$/i.test(f.name)){ try{ previewUrl=await _pdfFirstPagePreview(f); }catch(_){ previewUrl=null; } }
-  _dzShowSummary(items.length?('Gevonden — '+items.length+' actiepunt'+(items.length>1?'en':'')):'Bestand gelezen', summary||f.name, previewUrl);
-  await new Promise(res=>{ _dzResolve=res; });   // blijft staan tot je op × klikt
+  _dzShowSummary(items.length?('Gevonden — '+items.length+' actiepunt'+(items.length>1?'en':'')):'Bestand gelezen', summary||f.name, previewUrl, q);
+  const res=await new Promise(r=>{ _dzResolve=r; });   // blijft staan tot Aanmaken/Overslaan/×
   if(_prevObj&&previewUrl){ try{URL.revokeObjectURL(previewUrl);}catch(_){} }
+  if(q && res && res.create){ try{ await _createFromDrop(q, res.project); }catch(_){} }
   _dzHide();
   _startDropReview(items, summary, src?src.id:null);
 }
@@ -3374,13 +3402,27 @@ function _startDropReview(items, summary, srcId){
   else { _dropQueue=[]; _openDraftModal({title:summary||'', owner:'', contact:'', due:null, status:'todo', project_id:null}); }   // geen punten: leeg venster + samenvatting
 }
 
+async function _createFromDrop(q, projInput){
+  const client=q.client; const pname=((projInput!=null?projInput:q.project)||'').trim(); const icon=(client[0]||'?').toUpperCase();
+  if(q.kind==='client'){
+    const col=_nextClientColor();
+    await sb.from('projects').insert({client,project:'',color:col,icon,sort:state.projects.length+1});
+    if(pname){ const ins=await sb.from('projects').insert({client,project:pname,color:col,icon,sort:state.projects.length+2}).select('id').single(); if(ins&&ins.data)_fileProjectId=ins.data.id; }
+  } else {
+    const col=_clientColor(client);
+    if(pname){ const ins=await sb.from('projects').insert({client,project:pname,color:col,icon,sort:state.projects.length+1}).select('id').single(); if(ins&&ins.data)_fileProjectId=ins.data.id; }
+  }
+  try{ await refresh(); }catch(_){}
+}
+
 function _openDraftModal(draft){
   openModal(null);
   pendingSourceId=_dropSrc||null;
   if(draft.title) document.getElementById('m_t').value=draft.title;
   if(draft.owner==='Jeroen'||draft.owner==='Marlon') document.getElementById('m_owner').value=draft.owner;
   if(draft.contact){ const sel=document.getElementById('m_contact'); if(![...sel.options].some(o=>o.value===draft.contact)){ const o=document.createElement('option'); o.value=draft.contact; o.textContent=draft.contact; sel.appendChild(o);} sel.value=draft.contact; }
-  if(draft.project_id){ const p=projById(draft.project_id); if(p){ try{ _fillClientSelect(document.getElementById('m_client'), p.client); fillProjectSelect(p.client, draft.project_id); _enhanceSelect('m_client','client'); _enhanceSelect('m_project','project'); }catch(_){}}}
+  const _pid=draft.project_id||_fileProjectId||null;
+  if(_pid){ const p=projById(_pid); if(p){ try{ _fillClientSelect(document.getElementById('m_client'), p.client); fillProjectSelect(p.client, _pid); _enhanceSelect('m_client','client'); _enhanceSelect('m_project','project'); }catch(_){}}}
   if(draft.due){ mDue=draft.due; duePickerRef=mDue; updateDueLabel(); }
   document.getElementById('m_status').value='wait';   // dropped items komen in In-afwachting
 }
