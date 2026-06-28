@@ -19,6 +19,7 @@ Regels:
 - project_id = ALLEEN invullen als de klant of het project expliciet en eenduidig in het bericht genoemd wordt en exact matcht met de catalogus. Bij enige twijfel: null (de gebruiker koppelt het dan zelf).
 - contacts = externe personen die EXPLICIET in het bericht voorkomen, met hun gegevens. Wees conservatief: alleen contacten die echt in het bericht staan. Verzin geen e-mailadressen of telefoonnummers. Lege velden laat je leeg (""). Neem GEEN interne Begeister-mensen (Jeroen, Marlon) op.
 - client = de klant/opdrachtgever waar dit bericht duidelijk over gaat (anders ""). project = projectnaam als die expliciet genoemd wordt; staat er geen projectnaam maar wél een duidelijk onderwerp, stel dan een KORTE projectnaam voor (paar woorden); anders "".
+- type = kort documenttype in 1-2 woorden (bv. "mail", "appje", "offerte", "factuur", "pitchdeck", "draaiboek"), anders "". from = afzender/auteur als die herkenbaar is, anders "".
 - Geef ALLEEN geldige JSON terug, geen uitleg eromheen.`;
 
 /**
@@ -49,6 +50,8 @@ Geef JSON in exact dit formaat:
   "summary": "korte samenvatting van het bericht in 1 zin",
   "client": "",
   "project": "",
+  "type": "",
+  "from": "",
   "items": [
     { "title": "...", "owner": "Jeroen|Marlon|", "contact": "", "due": null, "status": "todo", "project_id": null }
   ],
@@ -80,6 +83,8 @@ Geef JSON in exact dit formaat:
       contacts: Array.isArray(parsed.contacts) ? parsed.contacts : [],
       client: (parsed.client || "").toString().trim(),
       project: (parsed.project || "").toString().trim(),
+      type: (parsed.type || "").toString().trim(),
+      from: (parsed.from || "").toString().trim(),
       usage,
     };
   } catch (e) {

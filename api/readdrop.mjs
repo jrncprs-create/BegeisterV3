@@ -13,13 +13,14 @@ const MODEL = "claude-sonnet-4-6";
 function visionSystem({ context, today, who, dates, catalog }) {
   const cat = (catalog || []).map(c => `- ${c.project_id} → ${c.client} · ${c.project}`).join("\n") || "(nog geen klanten/projecten)";
   return `Je bent de AI-assistent van Begeister (licht, decor, events). Je krijgt een BESTAND (foto/screenshot van een appje of mail, een PDF, een document of een whiteboard).
-Vat in 1-2 zinnen samen wat erin staat, en haal er concrete ACTIEPUNTEN uit als die er zijn. Verzin niets.
+Vat in 1 KORTE zin samen wat erin staat, en haal er concrete ACTIEPUNTEN uit als die er zijn. Verzin niets.
 owner = "Jeroen" of "Marlon" of leeg. contact = externe persoon of leeg. due = YYYY-MM-DD of null. status = todo. project_id = ALLEEN als klant/project eenduidig in het bestand staat én matcht met de catalogus, anders null (dan vult de gebruiker het zelf).
 ${context ? "VASTE CONTEXT (team/bedrijf — gebruik dit):\n" + context + "\n" : ""}VANDAAG: ${today || ""}. GEBRUIKER: ${who || ""}. Reken geen weekdagen zelf uit; gebruik de datumtabel.
 DATUMTABEL:\n${dates || "(geen)"}
 CATALOGUS (project_id → klant · project):\n${cat}
 Bepaal ook of het bestand over een specifieke KLANT/opdrachtgever gaat. Geef "client" = de klantnaam als die duidelijk is, anders "". Geef "project" = de projectnaam als die expliciet genoemd wordt; staat er geen projectnaam maar wél een duidelijk onderwerp, stel dan een KORTE projectnaam voor (paar woorden); anders "".
-Antwoord ALLEEN met geldige JSON: {"reply":"korte samenvatting voor de gebruiker","client":"","project":"","items":[{"title":"","owner":"","contact":"","due":null,"status":"todo","project_id":null}]}`;
+Geef "type" = kort documenttype in 1-2 woorden (bv. "pitchdeck", "offerte", "factuur", "mail", "screenshot", "tekening", "draaiboek"), anders "". Geef "from" = afzender/auteur als die herkenbaar is, anders "".
+Antwoord ALLEEN met geldige JSON: {"reply":"korte samenvatting (1 zin)","client":"","project":"","type":"","from":"","items":[{"title":"","owner":"","contact":"","due":null,"status":"todo","project_id":null}]}`;
 }
 
 async function aiFromBlocks(blocks, opts, src) {
@@ -41,7 +42,7 @@ async function aiFromBlocks(blocks, opts, src) {
   let parsed;
   try { parsed = JSON.parse(slice); }
   catch (_) { parsed = { reply: raw.trim() || "Ik heb het bestand bekeken.", items: [] }; }
-  return { reply: parsed.reply || "", items: Array.isArray(parsed.items) ? parsed.items : [], client: (parsed.client || "").toString().trim(), project: (parsed.project || "").toString().trim() };
+  return { reply: parsed.reply || "", items: Array.isArray(parsed.items) ? parsed.items : [], client: (parsed.client || "").toString().trim(), project: (parsed.project || "").toString().trim(), type: (parsed.type || "").toString().trim(), from: (parsed.from || "").toString().trim() };
 }
 
 export default async function handler(req, res) {
@@ -86,7 +87,7 @@ export default async function handler(req, res) {
       if (!docText) return res.status(200).json({ reply: "Het Word-document lijkt leeg of bevat geen leesbare tekst.", items: [] });
       const ex = await extractItems({ text: docText, sender: who || "Document", subject: name, today, catalog, context });
       if (ex.usage) { try { await logUsage(null, { source: "drop-docx", ...ex.usage }); } catch (_) {} }
-      return res.status(200).json({ reply: ex.summary || "Document gelezen.", items: ex.items || [], client: ex.client || "", project: ex.project || "" });
+      return res.status(200).json({ reply: ex.summary || "Document gelezen.", items: ex.items || [], client: ex.client || "", project: ex.project || "", type: ex.type || "", from: ex.from || "" });
     }
 
     // 4) Platte tekst (.txt/.md/etc.) → extractItems
@@ -94,7 +95,7 @@ export default async function handler(req, res) {
     if (plain) {
       const ex = await extractItems({ text: plain, sender: who || "Tekst", subject: name, today, catalog, context });
       if (ex.usage) { try { await logUsage(null, { source: "drop-text", ...ex.usage }); } catch (_) {} }
-      return res.status(200).json({ reply: ex.summary || "Tekst gelezen.", items: ex.items || [], client: ex.client || "", project: ex.project || "" });
+      return res.status(200).json({ reply: ex.summary || "Tekst gelezen.", items: ex.items || [], client: ex.client || "", project: ex.project || "", type: ex.type || "", from: ex.from || "" });
     }
 
     return res.status(400).json({ error: "leeg of niet-ondersteund bestandstype: " + (mime || name) });
