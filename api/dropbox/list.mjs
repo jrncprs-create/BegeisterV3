@@ -88,6 +88,29 @@ export default async function handler(req, res) {
       }
       return res.status(200).json({ connected: true, results });
     }
+    if (action === "sync") {
+      // Trek de fysieke Dropbox-mappen gelijk met de app-indeling: /Begeister/<Klant>/<Project>/<Map>/<bestand>
+      const items = req.body.items || [];
+      const results = [];
+      for (const it of items) {
+        try {
+          if (!it.link) { results.push({ name: it.name, ok: false, err: "geen link" }); continue; }
+          const meta = await call("sharing/get_shared_link_metadata", { url: it.link });
+          const from = meta && meta.path_lower;
+          if (!from) { results.push({ name: it.name, ok: false, err: "geen pad" }); continue; }
+          const sub = String(it.target || "").split("/").map(s => s.trim()).filter(Boolean).join("/");
+          const folder = ROOT + (sub ? "/" + sub : "");
+          const parts = folder.split("/").filter(Boolean);
+          let cur = "";
+          for (const p of parts) { cur += "/" + p; await call("files/create_folder_v2", { path: cur, autorename: false }); }
+          const to = folder + "/" + (it.name || from.split("/").pop());
+          if (from === to.toLowerCase()) { results.push({ name: it.name, ok: true, skipped: true }); continue; }
+          const r = await call("files/move_v2", { from_path: from, to_path: to, autorename: true });
+          results.push({ name: it.name, ok: !r.error });
+        } catch (e) { results.push({ name: it.name, ok: false, err: String(e.message || e) }); }
+      }
+      return res.status(200).json({ connected: true, results });
+    }
     return res.status(400).json({ error: "unknown action" });
   } catch (e) {
     return res.status(200).json({ connected: true, error: String(e.message || e) });

@@ -2530,7 +2530,7 @@ function _fileProject(f){
 function renderFiles(){
   const wrap=document.getElementById('filesWrap'); if(!wrap) return;
   if(!wrap.querySelector('.fm-search')){
-    wrap.innerHTML='<div class="fm-top"><div class="fm-search"><span class="fm-sic">'+_searchGlyph()+'</span><input id="fmSearch" placeholder="Zoek bestanden…" autocomplete="off" oninput="fmSearch(this.value)"></div><button class="fm-sort" id="fmSortBtn" onclick="fmSortAI()">Sorteer met AI</button></div><div id="fmTree"></div>';
+    wrap.innerHTML='<div class="fm-top"><div class="fm-search"><span class="fm-sic">'+_searchGlyph()+'</span><input id="fmSearch" placeholder="Zoek bestanden…" autocomplete="off" oninput="fmSearch(this.value)"></div><button class="fm-sort" id="fmSortBtn" onclick="fmSortAI()">Sorteer met AI</button><button class="fm-sort" id="fmSyncBtn" onclick="fmSyncDropbox()" title="Dropbox-mappen gelijktrekken met deze indeling">Sync naar Dropbox</button></div><div id="fmTree"></div>';
     const si=document.getElementById('fmSearch'); if(si)si.value=_fmQuery;
   }
   _renderFmTree();
@@ -2608,6 +2608,25 @@ async function fmSortAI(){
     _renderFmTree();
   }catch(_){}
   if(btn){ btn.disabled=false; btn.textContent='Sorteer met AI'; }
+}
+async function fmSyncDropbox(){
+  const files=(state.files||[]).filter(f=>f.link);
+  const items=files.map(f=>{
+    const cat=_cat(f)||'Overig';
+    let client,proj;
+    if(f.owner_type==='client'){ client=f.owner_id||'Begeister'; proj='Algemeen'; }
+    else { const p=_fileProject(f); const real=p&&p.id!=='__inbox__'; client=real?(p.client||'Begeister'):'Begeister'; proj=real?(p.project||p.client):'Overig'; }
+    return { link:f.link, name:f.name, target: client+'/'+proj+'/'+cat };
+  });
+  if(!items.length){ await uiConfirm('Er zijn nog geen bestanden om te synchroniseren.',{ok:'Oké',danger:false}); return; }
+  if(!(await uiConfirm('Dropbox-mappen gelijktrekken met deze indeling? '+items.length+' bestand(en) worden in Dropbox naar /Begeister/Klant/Project/Map verplaatst.',{ok:'Synchroniseren',danger:false}))) return;
+  const btn=document.getElementById('fmSyncBtn'); if(btn){ btn.disabled=true; btn.textContent='Synct…'; }
+  try{
+    const r=await fetch('/api/dropbox/list',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'sync',items})});
+    const d=await r.json(); const res=d.results||[]; const ok=res.filter(x=>x.ok).length;
+    await uiConfirm('Klaar — '+ok+' van '+items.length+' bestand(en) staan nu in de juiste Dropbox-map.',{ok:'Top',danger:false});
+  }catch(_){ await uiConfirm('Sync mislukt. Probeer het zo nog eens.',{ok:'Oké',danger:false}); }
+  if(btn){ btn.disabled=false; btn.textContent='Sync naar Dropbox'; }
 }
 let _fmPrevId=null;
 function fmFileClick(id){ if(isDesk3()) fmPreview(id); else openFileViewer(id); }
