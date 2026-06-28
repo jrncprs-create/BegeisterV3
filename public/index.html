@@ -3303,6 +3303,31 @@ function _dzShowSummary(t,s,previewUrl){_dzText(t,s);const z=document.getElement
   z.classList.remove('reading'); z.classList.add('summary','on');}
 function _dzHide(){const z=document.getElementById('dropZone');if(z){z.classList.remove('on','reading','summary','hasprev');const img=z.querySelector('.dz-prev');if(img)img.removeAttribute('src');}_dzText(_DZ_DEF.t,_DZ_DEF.s);}
 
+// PDF.js lazy laden + eerste pagina naar een afbeelding renderen (voor de preview).
+function _ensurePdfjs(){
+  if(window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+  if(window._pdfjsP) return window._pdfjsP;
+  window._pdfjsP=new Promise((res,rej)=>{
+    const s=document.createElement('script'); s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+    s.onload=()=>{ try{ window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'; }catch(_){ } res(window.pdfjsLib); };
+    s.onerror=rej; document.head.appendChild(s);
+  });
+  return window._pdfjsP;
+}
+async function _pdfFirstPagePreview(file){
+  const lib=await _ensurePdfjs();
+  const buf=await file.arrayBuffer();
+  const pdf=await lib.getDocument({data:buf}).promise;
+  const page=await pdf.getPage(1);
+  const vp0=page.getViewport({scale:1});
+  const scale=Math.min(2, 560/vp0.width);
+  const vp=page.getViewport({scale});
+  const canvas=document.createElement('canvas'); canvas.width=Math.ceil(vp.width); canvas.height=Math.ceil(vp.height);
+  const ctx=canvas.getContext('2d'); ctx.fillStyle='#fff'; ctx.fillRect(0,0,canvas.width,canvas.height);
+  await page.render({canvasContext:ctx, viewport:vp}).promise;
+  return canvas.toDataURL('image/png');
+}
+
 async function handleDroppedFiles(list){
   _dropFiles=[...list];
   try{ if(typeof dismissWelcome==='function') dismissWelcome(); }catch(_){}   // chat verdwijnt bij droppen
@@ -3333,10 +3358,12 @@ async function _dropProcess(f){
     _dzHide(); _dropRunNext(); return;
   }
   const summary=data.reply||''; const items=(data.items&&data.items.length)?data.items:[];
-  const previewUrl=((f.type||'').toLowerCase().startsWith('image/'))?URL.createObjectURL(f):null;
+  let previewUrl=null, _prevObj=false; const _mime=(f.type||'').toLowerCase();
+  if(_mime.startsWith('image/')){ previewUrl=URL.createObjectURL(f); _prevObj=true; }
+  else if(_mime==='application/pdf'||/\.pdf$/i.test(f.name)){ try{ previewUrl=await _pdfFirstPagePreview(f); }catch(_){ previewUrl=null; } }
   _dzShowSummary(items.length?('Gevonden — '+items.length+' actiepunt'+(items.length>1?'en':'')):'Bestand gelezen', summary||f.name, previewUrl);
   await new Promise(res=>{ _dzResolve=res; });   // blijft staan tot je op × klikt
-  if(previewUrl){ try{URL.revokeObjectURL(previewUrl);}catch(_){} }
+  if(_prevObj&&previewUrl){ try{URL.revokeObjectURL(previewUrl);}catch(_){} }
   _dzHide();
   _startDropReview(items, summary, src?src.id:null);
 }
