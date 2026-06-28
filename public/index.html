@@ -3233,10 +3233,7 @@ async function pasteClip(){closePlus();composeMode(true);const ta=document.getEl
   // contenteditable div met .value-shim — zo blijft alle bestaande code werken en toont iOS geen form-balk boven het toetsenbord
   Object.defineProperty(ta,'value',{configurable:true,get(){return (this.innerText||'').replace(/ /g,' ');},set(v){this.textContent=v||'';}});
   ta.addEventListener('input',()=>{if(!ta.innerText.trim())ta.innerHTML='';updateIntroFade();});
-  ta.addEventListener('focus',()=>{composeMode(true);const o=document.getElementById('welcomeOverlay');if(o&&!o.classList.contains('dismissed'))o.classList.add('chatting');
-    // HACK (iOS 26): inputmode even op 'none' en dan terug op 'text' bij focus, om iOS' toetsenbord-balk (vorige/volgende/Gereed) te onderdrukken. Fragiel — verwijder deze try-regel om terug te draaien.
-    try{ta.setAttribute('inputmode','none');setTimeout(()=>{ta.setAttribute('inputmode','text');},100);}catch(_){}
-  });
+  ta.addEventListener('focus',()=>{composeMode(true);const o=document.getElementById('welcomeOverlay');if(o&&!o.classList.contains('dismissed'))o.classList.add('chatting');});
   ta.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();chatSend();}});
   ta.addEventListener('paste',e=>{e.preventDefault();const t=((e.clipboardData||window.clipboardData).getData('text')||'');document.execCommand('insertText',false,t);});
 })();
