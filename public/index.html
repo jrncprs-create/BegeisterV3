@@ -177,6 +177,8 @@
   .fm-foot .fm-sort{flex:1;white-space:nowrap}
   .fm-newfolder{flex:0 0 auto;width:42px;height:42px;border:1px solid var(--line);border-radius:11px;background:transparent;color:var(--mut);cursor:pointer;display:flex;align-items:center;justify-content:center}
   .fm-newfolder:hover{color:#fff;border-color:rgba(255,255,255,.3)}
+  .fm-foldic{color:#fff}
+  .fm-foldrow .fm-name{color:#fff}
   .fm-sort{flex:0 0 auto;border:1px solid var(--line);background:transparent;color:var(--mut);border-radius:11px;padding:9px 13px;font-size:12.5px;font-family:inherit;cursor:pointer;white-space:nowrap;transition:color .15s,border-color .15s}
   .fm-sort:hover{color:#fff;border-color:rgba(255,255,255,.25)}
   .fm-row.fm-dragover{background:rgba(255,255,255,.12);outline:1px dashed rgba(255,255,255,.3)}
@@ -990,7 +992,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v25</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v26</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -2665,7 +2667,7 @@ function _fileProject(f){
 function renderFiles(){
   const wrap=document.getElementById('filesWrap'); if(!wrap) return;
   if(!wrap.querySelector('.fm-search')){
-    wrap.innerHTML='<div class="fm-top"><div class="fm-search"><span class="fm-sic">'+_searchGlyph()+'</span><input id="fmSearch" placeholder="Zoek bestanden…" autocomplete="off" oninput="fmSearch(this.value)"></div></div><div id="fmTree"></div><div class="fm-foot"><button class="fm-sort" id="fmSortBtn" onclick="fmSortAI()">Sorteer met AI</button><button class="fm-sort" id="fmSyncBtn" onclick="fmSyncDropbox()" title="Dropbox-mappen gelijktrekken met deze indeling">Sync naar Dropbox</button></div><div class="fm-drop-overlay"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"/><path d="M7 9l5 -5l5 5"/><path d="M12 4v12"/></svg><div class="fm-do-txt">Sleep bestanden op een map om te uploaden</div></div>';
+    wrap.innerHTML='<div class="fm-top"><div class="fm-search"><span class="fm-sic">'+_searchGlyph()+'</span><input id="fmSearch" placeholder="Zoek bestanden…" autocomplete="off" oninput="fmSearch(this.value)"></div><button class="fm-newfolder" onclick="fmNewFolder()" title="Nieuwe map"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5a2 2 0 0 1 2 -2h4l2 2h5a2 2 0 0 1 2 2v3"/><path d="M3 7v11a2 2 0 0 0 2 2h7"/><path d="M16 19h6M19 16v6"/></svg></button></div><div id="fmTree"></div><div class="fm-foot"><button class="fm-sort" id="fmSortBtn" onclick="fmSortAI()">Sorteer met AI</button><button class="fm-sort" id="fmSyncBtn" onclick="fmSyncDropbox()" title="Dropbox-mappen gelijktrekken met deze indeling">Sync naar Dropbox</button></div><div class="fm-drop-overlay"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"/><path d="M7 9l5 -5l5 5"/><path d="M12 4v12"/></svg><div class="fm-do-txt">Sleep bestanden op een map om te uploaden</div></div>';
     const si=document.getElementById('fmSearch'); if(si)si.value=_fmQuery;
   }
   if(!wrap._dropWired){ wrap._dropWired=true;
@@ -2719,12 +2721,34 @@ async function fmRename(btn){
     try{ let q=sb.from('files').update({icon:nv}).eq('icon',cat||''); if(pid==='__alg__'){ q=q.eq('owner_type','client').eq('owner_id',client); } else { q=q.eq('owner_type','project').eq('owner_id',pid); } await q; }catch(_){} await refresh(); return; }
 }
 function _cat(f){ return (f && f.icon || '').trim(); }
+// ===== Losse mappen (folders-tabel) — wit, eigen mapicoon, vrij te verplaatsen =====
+function _folderHTML(fo){
+  const fkey='fold|'+fo.id; const open=_fmOpen.has(fkey);
+  const myFiles=(state.files||[]).filter(f=>String(f.folder_id||'')===String(fo.id));
+  const subs=(state.folders||[]).filter(x=>x.parent_kind==='folder' && String(x.parent_id)===String(fo.id));
+  const filesHtml=myFiles.map(f=>`<div class="fm-file" draggable="true" data-fid="${f.id}" ondragstart="fmDragStart(event,'${f.id}')" onclick="fmFileClick('${f.id}')"><span class="fm-ic">${_fileGlyph(f.name||'')}</span><span class="fm-name">${escapeHtml(f.name||'bestand')}</span><button class="fm-edit" style="margin-left:auto" data-kind="file" data-fid="${f.id}" onclick="event.stopPropagation();fmRename(this)" title="Naam wijzigen">${_penGlyph()}</button></div>`).join('');
+  const kids=subs.map(_folderHTML).join('')+filesHtml;
+  const cnt=myFiles.length+subs.length;
+  return `<div class="fm-row fm-foldrow${open?' open':''}" draggable="true" ondragstart="fmLooseDragStart(event,'${fo.id}')" data-fold="${fo.id}" ondragover="fmDragOver(event)" ondragleave="fmDragLeave(event)" ondrop="fmFolderDrop(event,'${fo.id}')" onclick="fmToggle('${_fk(fkey)}')"><span class="fm-tw">▸</span><span class="fm-ic fm-foldic">${_folderGlyph()}</span><span class="fm-name">${escapeHtml(fo.name)}</span>${cnt?`<span class="fm-cnt">${cnt}</span>`:''}<button class="fm-edit" data-kind="fold" data-fold="${fo.id}" onclick="event.stopPropagation();fmRenameFolder(this)" title="Naam wijzigen">${_penGlyph()}</button><button class="fm-edit fm-del" data-kind="fold" data-fold="${fo.id}" onclick="event.stopPropagation();fmDeleteFolder(this)" title="Verwijderen">${_trashGlyph()}</button></div><div class="fm-kids"${open?'':' style="display:none"'}>${kids}</div>`;
+}
+async function fmNewFolder(){ const name=((await uiPrompt('Naam nieuwe map:'))||'').trim(); if(!name)return; let nid=null; try{ const ins=await sb.from('folders').insert({name,parent_kind:'root',sort:0}).select('id').single(); nid=ins&&ins.data?ins.data.id:null; }catch(_){} if(nid)_fmOpen.add('fold|'+nid); await refresh(); try{ const row=document.querySelector('#fmTree .fm-foldrow[data-fold="'+nid+'"]'); if(row)row.scrollIntoView({block:'start',behavior:'smooth'}); }catch(_){} }
+function fmLooseDragStart(e,fid){ _fmDragLoose=fid; _fmDragId=null; _fmDragFolder=null; try{e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain','loose');}catch(_){} if(e&&e.stopPropagation)e.stopPropagation(); }
+function _isFolderDescendant(fid, ofId){ let cur=(state.folders||[]).find(x=>String(x.id)===String(fid)); let g=0; while(cur&&g++<60){ if(String(cur.id)===String(ofId))return true; if(cur.parent_kind!=='folder')return false; cur=(state.folders||[]).find(x=>String(x.id)===String(cur.parent_id)); } return false; }
+async function fmFolderDrop(e,targetFolderId){
+  e.preventDefault(); e.stopPropagation(); const row=e.currentTarget; if(row&&row.classList)row.classList.remove('fm-dragover');
+  if(_fmDragLoose){ const fid=_fmDragLoose; _fmDragLoose=null; if(String(fid)===String(targetFolderId)||_isFolderDescendant(targetFolderId,fid))return; try{ await sb.from('folders').update({parent_kind:'folder',parent_id:String(targetFolderId)}).eq('id',fid); }catch(_){} await refresh(); return; }
+  const id=_fmDragId; _fmDragId=null; if(!id)return;
+  try{ await sb.from('files').update({folder_id:targetFolderId}).eq('id',id); }catch(_){} await refresh();
+}
+async function fmRenameFolder(btn){ const fid=btn.dataset.fold; const fo=(state.folders||[]).find(x=>String(x.id)===String(fid)); if(!fo)return; const nv=((await uiPrompt('Nieuwe mapnaam:', fo.name||''))||'').trim(); if(!nv||nv===fo.name)return; try{ await sb.from('folders').update({name:nv}).eq('id',fid); }catch(_){} await refresh(); }
+async function fmDeleteFolder(btn){ const fid=btn.dataset.fold; const fo=(state.folders||[]).find(x=>String(x.id)===String(fid)); if(!fo)return; const n=(state.files||[]).filter(f=>String(f.folder_id||'')===String(fid)).length; if(!(await uiConfirm("Map '"+(fo.name||'')+"' verwijderen?"+(n?" De "+n+" bestand(en) vallen terug naar 'Niet gesorteerd'.":""))))return; try{ await sb.from('folders').delete().eq('id',fid); }catch(_){} await refresh(); }
 function _fk(s){ return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
 function _renderFmTree(){
   const t=document.getElementById('fmTree'); if(!t) return;
   const q=(_fmQuery||'').trim().toLowerCase();
   const groups={};
   (state.files||[]).forEach(f=>{
+    if(f.folder_id) return;   // zit in een losse map -> daar getoond
     let client,pid,pname,col;
     if(f.owner_type==='client'){ client=f.owner_id||'Geen klant'; pid='__alg__'; pname='Algemeen'; const b=_formBadge('client',client); col=b?b.col:'#888'; }
     else { const p=_fileProject(f); const real=p&&p.id!=='__inbox__';
@@ -2740,6 +2764,7 @@ function _renderFmTree(){
   let html='';
   clients.forEach(c=>{
     const g=groups[c]; const projHtml=[];
+    (state.folders||[]).filter(x=>x.parent_kind==='client'&&String(x.parent_id)===String(c)).forEach(fo=>projHtml.push(_folderHTML(fo)));
     g.order.forEach(pid=>{
       const pr=g.projs[pid]; const catHtml=[];
       pr.order.forEach(cat=>{
@@ -2758,9 +2783,10 @@ function _renderFmTree(){
     const open=q?true:_fmOpen.has(c);
     html+=`<div class="fm-client"><div class="fm-row fm-crow${open?' open':''}" data-drop="1" data-client="${escapeHtml(c)}" data-pid="__alg__" data-cat="" ondragover="fmDragOver(event)" ondragleave="fmDragLeave(event)" ondrop="fmDrop(event)" onclick="fmToggle('${_fk(c)}')"><span class="fm-tw">▸</span><span class="fm-badge" style="background:${g.col}"></span><span class="fm-name" style="color:${g.col}">${escapeHtml(c)}</span><button class="fm-edit" style="margin-left:auto" data-kind="client" data-client="${escapeHtml(c)}" onclick="event.stopPropagation();fmRename(this)" title="Naam wijzigen">${_penGlyph()}</button></div><div class="fm-kids"${open?'':' style="display:none"'}>${projHtml.join('')}</div></div>`;
   });
-  t.innerHTML=html||'<div class="hint">Nog geen bestanden — of nog niet gesorteerd. Klik “Sorteer met AI”.</div>';
+  const rootF=(state.folders||[]).filter(x=>(x.parent_kind||'root')==='root').map(_folderHTML).join('');
+  t.innerHTML=(rootF+html)||'<div class="hint">Nog geen bestanden — of nog niet gesorteerd. Klik “Sorteer met AI”.</div>';
 }
-let _fmDragId=null, _fmDragFolder=null;
+let _fmDragId=null, _fmDragFolder=null, _fmDragLoose=null;
 function fmDragStart(e,id){ _fmDragId=id; _fmDragFolder=null; try{e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',id);}catch(_){}}
 function fmFolderDragStart(e,kind,el){ const d=(el&&el.dataset)||{}; _fmDragFolder={kind,client:d.client||'',pid:d.pid||'',cat:d.cat||''}; _fmDragId=null; try{e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain','folder');}catch(_){} if(e&&e.stopPropagation)e.stopPropagation(); }
 async function _fmMoveFolder(src,tgt){
@@ -2788,16 +2814,17 @@ async function _fmMoveFolder(src,tgt){
   await refresh();   // herladen uit DB i.p.v. lokaal muteren -> geen halve/dubbele staat
 }
 function _hasFiles(e){ try{ return [...(e.dataTransfer.types||[])].includes('Files'); }catch(_){ return false; } }
-function fmDragOver(e){ if(!_fmDragId && !_fmDragFolder && !_hasFiles(e)) return; e.preventDefault(); e.currentTarget.classList.add('fm-dragover'); }
+function fmDragOver(e){ if(!_fmDragId && !_fmDragFolder && !_fmDragLoose && !_hasFiles(e)) return; e.preventDefault(); e.currentTarget.classList.add('fm-dragover'); }
 function fmDragLeave(e){ e.currentTarget.classList.remove('fm-dragover'); }
 async function fmDrop(e){
   e.preventDefault(); e.stopPropagation(); const row=e.currentTarget; row.classList.remove('fm-dragover');
   const client=row.getAttribute('data-client'), pid=row.getAttribute('data-pid'), cat=row.getAttribute('data-cat')||'';
   if(e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length){ _fmHideDropOverlay(); await fmUploadFiles(e.dataTransfer.files, client, pid, cat); return; }
+  if(_fmDragLoose){ const fid=_fmDragLoose; _fmDragLoose=null; const pk=(pid==='__alg__')?'client':((pid==='__none__')?'root':'project'); const pidv=(pk==='client')?client:((pk==='project')?pid:null); try{ await sb.from('folders').update({parent_kind:pk,parent_id:pidv}).eq('id',fid); }catch(_){} await refresh(); return; }
   if(_fmDragFolder){ const fd=_fmDragFolder; _fmDragFolder=null; await _fmMoveFolder(fd, {client,pid,cat}); return; }
   const id=_fmDragId; _fmDragId=null; if(!id) return;
   const f=(state.files||[]).find(x=>x.id===id); if(!f) return;
-  const patch={ icon: cat };
+  const patch={ icon: cat, folder_id: null };
   if(pid==='__alg__'){ patch.owner_type='client'; patch.owner_id=client; }
   else if(pid==='__none__'){ /* losse bestanden: laat owner staan */ }
   else { patch.owner_type='project'; patch.owner_id=pid; }
@@ -3196,7 +3223,7 @@ function _mapSource(s,atts){
           images:[]};
 }
 async function sbLoad(){
-  const [p,i,s,a,ap,c,f,cx] = await Promise.all([
+  const [p,i,s,a,ap,c,f,cx,fo] = await Promise.all([
     sb.from('projects').select('*').order('sort'),
     sb.from('items').select('*').order('created_at'),
     sb.from('sources').select('*').order('received_at',{ascending:false}),
@@ -3205,7 +3232,9 @@ async function sbLoad(){
     sb.from('contacts').select('*').order('name'),
     sb.from('files').select('*').order('created_at',{ascending:false}),
     sb.from('app_context').select('*'),
+    sb.from('folders').select('*').order('sort'),
   ]);
+  state.folders = (fo && fo.data) ? fo.data : [];
   const projects=p.data||[], items=i.data||[], sources=s.data||[], atts=a.data||[];
   state.contacts = (c && c.data) ? c.data : [];
   state.files = (f && f.data) ? f.data : [];
