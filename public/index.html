@@ -15,7 +15,7 @@
 <style>
   :root{
     --bg:#0d0d0d; --side:#151515; --panel:#1a1a1a; --panel2:#212121; --line:#2e2e2e;
-    --txt:#ececec; --mut:#9b9b9b; --mut2:#6a6a6a;
+    --txt:#ececec; --mut:#9b9b9b; --mut2:#6a6a6a; --calm:#404040;
     --primary:#5f5f5f; --primary2:#cfcfcf;   /* geneutraliseerd: geen blauw/paars meer */
     --ok:#e6e6e6;                            /* 'klaar' = neutraal wit, geen groen */
     --warn:#fbbf24; --risk:#fb923c; --late:#f87171;   /* urgentie blijft geel/oranje/rood */
@@ -185,6 +185,11 @@
   .org-edit{flex:0 0 auto;border:0;background:transparent;color:var(--mut2);cursor:pointer;font-size:12px;padding:4px 8px;border-radius:6px;white-space:nowrap;line-height:0}
   .org-edit:hover{color:#fff;background:rgba(255,255,255,.08)}
   .org-q{color:#fbbf24;font-weight:700;margin-right:3px}
+  /* === MONOCHROOM (iteratie 1) === gekleurde objecten grijs tot je de rij/kaart hovert */
+  .fm-badge,.kdot,.arch-dot,.dotc,.evdot{filter:grayscale(1) brightness(.62);transition:filter .3s}
+  .fm-row:hover .fm-badge,.kli:hover .kdot,.arch-row:hover .arch-dot,.agenda-group:hover .dotc{filter:none}
+  .fm-crow .fm-name{filter:grayscale(1) brightness(.62);transition:filter .3s}
+  .fm-crow:hover .fm-name{filter:none}
   .fm-file.sel{background:rgba(255,255,255,.10);color:var(--txt)}
   #filesWrap{position:relative}
   .fm-drop-overlay{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(18,18,18,.86);border:2px dashed rgba(255,255,255,.28);border-radius:14px;z-index:30;color:var(--mut);font-size:14px;pointer-events:none;text-align:center;padding:20px}
