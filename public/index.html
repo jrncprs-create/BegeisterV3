@@ -131,7 +131,7 @@
   .cdd{display:none;position:relative;margin-bottom:10px}
   .cdd.cdd-form{display:block;margin-bottom:0;width:100%}
   .appt-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
-  .appt-who{display:flex;gap:12px;align-items:center}
+  .appt-who{display:flex;gap:14px;align-items:center;margin-right:36px}
   .appt-who .tw-opt{font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut2);cursor:pointer;transition:color .15s}
   .appt-who .tw-opt:hover,.appt-who .tw-opt.on{color:#fff}
   .cdd-btn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;background:transparent;border:1px solid var(--line);border-radius:11px;padding:12px 13px;color:var(--txt);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;text-align:left}
@@ -1491,7 +1491,7 @@ async function setClient(v){
 }
 function _cddHTML(opts,active,handler){
   const cur=opts.find(o=>o.v===active)||opts[0]||{l:''};
-  const items=opts.map(o=>{const lead=o.badge?`<span class="cdd-badge" style="background:${o.badge.col}">${escapeHtml(o.badge.ch||'')}</span>`:`<span class="cdd-ck">${o.v===active?'✓':''}</span>`;return `<div class="cdd-opt${o.v===active?' sel':''} ${o.cls||''}" onclick="_cddPick('${handler}','${o.v}')">${lead}<span class="cdd-lbl">${escapeHtml(o.l)}</span></div>`;}).join('');
+  const items=opts.map(o=>{const lead=o.badge?`<span class="cdd-badge" style="background:${o.badge.col}">${escapeHtml(o.badge.ch||'')}</span>`:`<span class="cdd-ck">${o.v===active?'✓':''}</span>`;return `<div class="cdd-opt${o.v===active?' sel':''} ${o.cls||''}" onclick="_cddPick('${handler}','${o.v}')">${lead}<span class="cdd-lbl"${o.badge?` style="color:${o.badge.col}"`:''}>${escapeHtml(o.l)}</span></div>`;}).join('');
   return `<div class="cdd"><button class="cdd-btn" onclick="_cddToggle(event)"><span class="cdd-cur">${escapeHtml(cur.l)}</span><svg class="cdd-chev" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6l6 -6"/></svg></button><div class="cdd-menu">${items}</div></div>`;
 }
 function _cddToggle(e){ e.stopPropagation(); const dd=e.currentTarget.closest('.cdd'); const open=dd.classList.contains('open'); document.querySelectorAll('.cdd.open').forEach(x=>x.classList.remove('open')); if(!open)dd.classList.add('open'); }
@@ -1514,8 +1514,8 @@ function _enhanceSelect(sel,kind){
   const opts=[...sel.options].map(o=>({v:o.value,l:o.textContent,cls:(o.value==='__new__'||o.value==='__manage__')?'cdd-act':''}));
   const cur=opts.find(o=>o.v===sel.value)||opts[0]||{l:'',v:''};
   const cb=_formBadge(kind,cur.v);
-  const items=opts.map(o=>{ const b=_formBadge(kind,o.v); const lead=b?`<span class="cdd-badge" style="background:${b.col}">${escapeHtml(b.ch||'')}</span>`:`<span class="cdd-ck">${o.v===sel.value?'✓':''}</span>`; return `<div class="cdd-opt${o.v===sel.value?' sel':''} ${o.cls}" data-v="${escapeHtml(o.v)}">${lead}<span class="cdd-lbl">${escapeHtml(o.l)}</span></div>`; }).join('');
-  wrap.innerHTML=`<button type="button" class="cdd-btn">${cb?`<span class="cdd-badge" style="background:${cb.col}">${escapeHtml(cb.ch||'')}</span>`:''}<span class="cdd-cur">${escapeHtml(cur.l)}</span><svg class="cdd-chev" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6l6 -6"/></svg></button><div class="cdd-menu">${items}</div>`;
+  const items=opts.map(o=>{ const b=_formBadge(kind,o.v); const lead=b?`<span class="cdd-badge" style="background:${b.col}">${escapeHtml(b.ch||'')}</span>`:`<span class="cdd-ck">${o.v===sel.value?'✓':''}</span>`; return `<div class="cdd-opt${o.v===sel.value?' sel':''} ${o.cls}" data-v="${escapeHtml(o.v)}">${lead}<span class="cdd-lbl"${b?` style="color:${b.col}"`:''}>${escapeHtml(o.l)}</span></div>`; }).join('');
+  wrap.innerHTML=`<button type="button" class="cdd-btn">${cb?`<span class="cdd-badge" style="background:${cb.col}">${escapeHtml(cb.ch||'')}</span>`:''}<span class="cdd-cur"${cb?` style="color:${cb.col}"`:''}>${escapeHtml(cur.l)}</span><svg class="cdd-chev" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6l6 -6"/></svg></button><div class="cdd-menu">${items}</div>`;
   wrap.querySelector('.cdd-btn').onclick=e=>{ e.stopPropagation(); const open=wrap.classList.contains('open'); document.querySelectorAll('.cdd.open').forEach(x=>x.classList.remove('open')); if(!open)wrap.classList.add('open'); };
   wrap.querySelectorAll('.cdd-opt').forEach(el=>{ el.onclick=e=>{ e.stopPropagation(); wrap.classList.remove('open'); sel.value=el.getAttribute('data-v'); sel.dispatchEvent(new Event('change')); _enhanceSelect(sel,kind); }; });
 }
