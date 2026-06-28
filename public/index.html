@@ -992,7 +992,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v26</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v27</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -2760,6 +2760,8 @@ function _renderFmTree(){
     if(!P.cats[cat]){ P.cats[cat]=[]; P.order.push(cat); }
     P.cats[cat].push(f);
   });
+  // elke klant krijgt een map (ook zonder bestanden); nieuwe klanten verschijnen zo automatisch
+  (typeof uniqueClients==='function'?uniqueClients():[]).forEach(c=>{ if(c && !groups[c]){ const b=_formBadge('client',c); groups[c]={col:b?b.col:'#888',projs:{},order:[]}; } });
   const clients=Object.keys(groups).sort((a,b)=> a==='Geen klant'?1:(b==='Geen klant'?-1:a.localeCompare(b)));
   let html='';
   clients.forEach(c=>{
@@ -2779,7 +2781,7 @@ function _renderFmTree(){
       const pkey=c+'|'+pid, popen=q?true:_fmOpen.has(pkey);
       projHtml.push(`<div class="fm-row fm-prow${popen?' open':''}" draggable="true" ondragstart="fmFolderDragStart(event,'project',this)" data-drop="1" data-client="${escapeHtml(c)}" data-pid="${escapeHtml(pid)}" data-cat="" ondragover="fmDragOver(event)" ondragleave="fmDragLeave(event)" ondrop="fmDrop(event)" onclick="fmToggle('${_fk(pkey)}')"><span class="fm-tw">▸</span><span class="fm-ic" style="color:${g.col}">${_folderGlyph()}</span><span class="fm-name">${escapeHtml(pr.name)}</span><button class="fm-edit" style="margin-left:auto" data-kind="project" data-pid="${escapeHtml(pid)}" onclick="event.stopPropagation();fmRename(this)" title="Naam wijzigen">${_penGlyph()}</button></div><div class="fm-kids"${popen?'':' style="display:none"'}>${catHtml.join('')}</div>`);
     });
-    if(!projHtml.length) return;
+    if(!projHtml.length && c==='Geen klant') return;
     const open=q?true:_fmOpen.has(c);
     html+=`<div class="fm-client"><div class="fm-row fm-crow${open?' open':''}" data-drop="1" data-client="${escapeHtml(c)}" data-pid="__alg__" data-cat="" ondragover="fmDragOver(event)" ondragleave="fmDragLeave(event)" ondrop="fmDrop(event)" onclick="fmToggle('${_fk(c)}')"><span class="fm-tw">▸</span><span class="fm-badge" style="background:${g.col}"></span><span class="fm-name" style="color:${g.col}">${escapeHtml(c)}</span><button class="fm-edit" style="margin-left:auto" data-kind="client" data-client="${escapeHtml(c)}" onclick="event.stopPropagation();fmRename(this)" title="Naam wijzigen">${_penGlyph()}</button></div><div class="fm-kids"${open?'':' style="display:none"'}>${projHtml.join('')}</div></div>`;
   });
