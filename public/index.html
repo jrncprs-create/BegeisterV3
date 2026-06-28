@@ -2907,7 +2907,9 @@ function openModal(id, src, defStatus){
 function updateDueLabel(){const el=document.getElementById('m_due_label');if(!el)return;
   el.textContent=mDue?d(mDue).toLocaleDateString('nl-NL',{weekday:'short',day:'numeric',month:'long',year:'numeric'}):'Deadline';
   el.classList.toggle('ph',!mDue);}
-function closeModal(){const ov=document.getElementById('overlay');ov.classList.remove('open');document.getElementById('duepop').classList.remove('open');setTimeout(()=>{if(!ov.classList.contains('open')){editingId=null;ov.classList.remove('incol');ov.classList.remove('incol-left');ov.style.top='';}},560);}
+function closeModal(){const ov=document.getElementById('overlay');ov.classList.remove('open');document.getElementById('duepop').classList.remove('open');
+  if(!_dropAdvancing){ _dropFiles=[]; _dropQueue=[]; _dropSrc=null; if(typeof _dzHide==='function')_dzHide(); }   // handmatig sluiten = drop-review afbreken
+  setTimeout(()=>{if(!ov.classList.contains('open')){editingId=null;ov.classList.remove('incol');ov.classList.remove('incol-left');ov.style.top='';}},560);}
 function saveModal(){const r=findItem(editingId);if(!r)return;const np=document.getElementById('m_project').value;
   r.it.t=document.getElementById('m_t').value.trim()||r.it.t;
   r.it.owner=document.getElementById('m_owner').value;
@@ -3099,12 +3101,16 @@ saveModal = async function(){
     if(!title){alert('Vul een omschrijving in.');return;}
     const rec={project_id:document.getElementById('m_project').value||null,title,
       owner:document.getElementById('m_owner').value||null,contact:document.getElementById('m_contact').value||null,
-      due:mDue||null,status:document.getElementById('m_status').value||'todo'};
+      due:mDue||null,status:document.getElementById('m_status').value||'todo',
+      source_id:_dropSrc||null};
     const ins=await sb.from('items').insert(rec).select('id').single();
     if(ins&&ins.data) lastAddedIds=[ins.data.id];
     if(rec.project_id && activeTab!=='all') activeTab=rec.project_id;
     notifyPartner((who||'Iemand')+' voegde een taak toe: '+title);
-    _animateNext=true; closeModal(); await refreshTaken(); return;
+    _animateNext=true;
+    if(_dropQueue.length){ const nx=_dropQueue.shift(); await refreshTaken(); _openDraftModal(nx); return; }   // volgend gevonden punt
+    if(_dropFiles.length){ _dropSrc=null; _dropAdvancing=true; closeModal(); _dropAdvancing=false; await refreshTaken(); _dropRunNext(); return; }   // volgend bestand
+    _dropSrc=null; closeModal(); await refreshTaken(); return;
   }
   const r=findItem(editingId);if(!r)return;
   const patch={title:document.getElementById('m_t').value.trim()||r.it.t,
@@ -3269,22 +3275,29 @@ async function pasteClip(){closePlus();composeMode(true);const ta=document.getEl
   window.addEventListener('drop',e=>{ if(!hasFiles(e)||skip())return; e.preventDefault(); dc=0; const z=dz(); if(z)z.classList.remove('on'); const files=[...((e.dataTransfer&&e.dataTransfer.files)||[])]; if(files.length)handleDroppedFiles(files); });
 })();
 
-async function handleDroppedFiles(list){ for(const f of list){ await handleDroppedFile(f); } }
+// Drop -> bestand lezen -> chat sluit -> per gevonden punt het Nieuwe-taak-venster (vooraf ingevuld).
+var _dropFiles=[], _dropQueue=[], _dropSrc=null, _dropAdvancing=false;
+var _DZ_DEF={t:'Laat los om toe te voegen',s:'Foto, PDF, tekst of Word — ik lees het en stel meteen actiepunten voor.'};
+function _dzText(t,s){const z=document.getElementById('dropZone');if(!z)return;const a=z.querySelector('.dz-title'),b=z.querySelector('.dz-sub');if(a)a.textContent=t;if(b)b.textContent=s;}
+function _dzShow(t,s){_dzText(t,s);const z=document.getElementById('dropZone');if(z)z.classList.add('on');}
+function _dzHide(){const z=document.getElementById('dropZone');if(z)z.classList.remove('on');_dzText(_DZ_DEF.t,_DZ_DEF.s);}
 
-async function handleDroppedFile(f){
-  composeMode(true);
-  if(isMobile()&&view!=='home')setView('home');
-  addMsg('me','Bestand: '+f.name);
-  chatHistory.push({role:'user',content:'(bestand toegevoegd: '+f.name+')'});
-  // origineel bewaren onder Bronnen
+async function handleDroppedFiles(list){
+  _dropFiles=[...list];
+  try{ if(typeof dismissWelcome==='function') dismissWelcome(); }catch(_){}   // chat verdwijnt bij droppen
+  _dropRunNext();
+}
+function _dropRunNext(){ if(!_dropFiles.length){ _dzHide(); return; } _dropProcess(_dropFiles.shift()); }
+
+async function _dropProcess(f){
+  _dzShow('Bestand lezen…', f.name);
   let src=null;
   try{ const r=await sb.from('sources').insert({channel:'drop',sender:who||'Sleep',body:f.name,processed:true}).select().single(); src=r.data||null; }catch(_){}
-  pendingSourceId=src?src.id:null;
   try{const path='drop/'+(src?src.id:Date.now())+'_'+f.name.replace(/[^\w.\-]/g,'_');
     const up=await sb.storage.from('intake').upload(path,f,{contentType:f.type||'application/octet-stream',upsert:true});
     if(!up.error&&src){await sb.from('attachments').insert({source_id:src.id,filename:f.name,storage_path:path,mime:f.type,size:f.size});}
   }catch(_){}
-  const typing=addTyping({phrases:['Bestand bekijken…','Tekst herkennen…','Actiepunten eruit halen…','Bijna klaar…']}); let data=null;
+  let data=null;
   try{
     const b64=await fileToB64(f);
     const catalog=state.projects.filter(p=>p.id!=='__inbox__').map(p=>({project_id:p.id,client:p.client,project:p.project||''}));
@@ -3292,12 +3305,30 @@ async function handleDroppedFile(f){
       body:JSON.stringify({name:f.name,mime:f.type||'',b64,catalog,today:iso(TODAY),dates:dateTable(),who,context:_ctxForChat()})});
     data=await r.json();
   }catch(_){}
-  if(typing)typing.remove();
-  if(!data||data.error){ addMsg('ai','Het bestand staat onder Bronnen, maar ik kon \'m niet automatisch lezen. Vertel kort wat erin staat?'); return; }
-  if(data.reply){ addMsg('ai',data.reply); chatHistory.push({role:'assistant',content:data.reply}); }
-  if(data.items&&data.items.length){ renderProposal(data); }
-  else { addMsg('ai','Geen concrete actiepunten uit dit bestand — vertel maar wat je ermee wilt.'); }
-  loadUsage();
+  try{ loadUsage(); }catch(_){}
+  if(!data||data.error){ _dzShow('Kon dit bestand niet lezen', f.name); setTimeout(()=>{ _dzHide(); _dropRunNext(); }, 1600); return; }
+  const summary=data.reply||''; const items=(data.items&&data.items.length)?data.items:[];
+  _dzShow(items.length?('Gevonden — '+items.length+' actiepunt'+(items.length>1?'en':'')):'Bestand gelezen', summary||f.name);
+  await new Promise(r=>setTimeout(r,1300));   // samenvatting even kort tonen
+  _dzHide();
+  _startDropReview(items, summary, src?src.id:null);
+}
+
+function _startDropReview(items, summary, srcId){
+  _dropSrc=srcId||null;
+  if(items.length){ _dropQueue=items.slice(1); _openDraftModal(items[0]); }
+  else { _dropQueue=[]; _openDraftModal({title:summary||'', owner:'', contact:'', due:null, status:'todo', project_id:null}); }   // geen punten: leeg venster + samenvatting
+}
+
+function _openDraftModal(draft){
+  openModal(null);
+  pendingSourceId=_dropSrc||null;
+  if(draft.title) document.getElementById('m_t').value=draft.title;
+  if(draft.owner==='Jeroen'||draft.owner==='Marlon') document.getElementById('m_owner').value=draft.owner;
+  if(draft.contact){ const sel=document.getElementById('m_contact'); if(![...sel.options].some(o=>o.value===draft.contact)){ const o=document.createElement('option'); o.value=draft.contact; o.textContent=draft.contact; sel.appendChild(o);} sel.value=draft.contact; }
+  if(draft.project_id){ const p=projById(draft.project_id); if(p){ try{ _fillClientSelect(document.getElementById('m_client'), p.client); fillProjectSelect(p.client, draft.project_id); _enhanceSelect('m_client','client'); _enhanceSelect('m_project','project'); }catch(_){}}}
+  if(draft.due){ mDue=draft.due; duePickerRef=mDue; updateDueLabel(); }
+  if(['todo','doing','wait','done'].includes(draft.status)) document.getElementById('m_status').value=draft.status;
 }
 
 // ---------- dagelijks complimentje ----------
