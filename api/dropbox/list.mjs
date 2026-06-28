@@ -55,8 +55,8 @@ export default async function handler(req, res) {
       let byName = {};
       if (anthropic) {
         const cat = (catalog || []).map(c => `- ${c.client} · ${c.project || ""}`).join("\n") || "(geen)";
-        const sys = "Je sorteert losse bestanden in mappen per klant en project. Kies voor elk bestand de best passende klant en (indien duidelijk) project uit de lijst, op basis van de bestandsnaam. Algemene Begeister-bedrijfsdocumenten (strategie, canvas, menustructuur, huisstijl e.d.) horen bij klant 'Begeister'. Bij twijfel: laat client en project leeg. Verzin geen klanten/projecten buiten de lijst. Geef ALLEEN geldige JSON.";
-        const user = `KLANTEN · PROJECTEN:\n${cat}\n\nBESTANDEN:\n${files.map(f => f.name).join("\n")}\n\nGeef exact dit JSON-formaat:\n{"map":[{"name":"exacte bestandsnaam","client":"","project":""}]}`;
+        const sys = "Je sorteert losse bestanden in mappen per klant en project, op basis van de bestandsnaam. Kies voor elk bestand de best passende KLANT en (indien duidelijk) PROJECT, ALLEEN uit de gegeven lijst — verzin niets buiten de lijst. Kies ook een CATEGORY uit: Concept, Lichtontwerp, Decor, Tekeningen, Plattegronden, Draaiboek, Planning, Leveranciers, Techniek, Offertes, Media. Ben je niet zeker over de klant? Laat 'client', 'project' én 'category' LEEG — gok NIET, ook niet 'Begeister'. Geef ALLEEN geldige JSON.";
+        const user = `KLANTEN · PROJECTEN:\n${cat}\n\nBESTANDEN:\n${files.map(f => f.name).join("\n")}\n\nGeef exact dit JSON-formaat:\n{"map":[{"name":"exacte bestandsnaam","client":"","project":"","category":""}]}`;
         try {
           const resp = await anthropic.messages.create({ model: MODEL, max_tokens: 1500, system: sys, messages: [{ role: "user", content: user }] });
           try { await logUsage(db, { source: "organize", model: MODEL, inputTokens: resp.usage?.input_tokens || 0, outputTokens: resp.usage?.output_tokens || 0, webSearches: 0 }); } catch (_) {}
@@ -67,11 +67,13 @@ export default async function handler(req, res) {
       }
       const suggestions = files.map(f => {
         const m = byName[f.name] || {};
-        let client = (m.client || "").trim();
-        let project = (m.project || "").trim();
-        if (!client) { client = "Begeister"; project = ""; }   // losse/algemene docs → /Begeister/Begeister/
-        const target = ROOT + "/" + client + (project ? "/" + project : "");
-        return { name: f.name, from: f.path, client, project, to: target + "/" + f.name };
+        const client = (m.client || "").trim();
+        const project = (m.project || "").trim();
+        const category = (m.category || "").trim();
+        if (!client) return { name: f.name, from: f.path, client: "", project: "", category: "", to: null, confident: false };   // onzeker -> niet gokken
+        const catf = category || "Concept";
+        const target = ROOT + "/" + client + (project ? "/" + project : "") + "/" + catf;
+        return { name: f.name, from: f.path, client, project, category: catf, to: target + "/" + f.name, confident: true };
       });
       return res.status(200).json({ connected: true, suggestions });
     }

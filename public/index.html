@@ -182,6 +182,9 @@
   .fm-edit{flex:0 0 auto;border:0;background:transparent;color:var(--mut2);cursor:pointer;padding:3px 5px;border-radius:6px;opacity:.28;line-height:0}
   .fm-row:hover .fm-edit,.fm-file:hover .fm-edit{opacity:.7}
   .fm-edit:hover{opacity:1;color:#fff;background:rgba(255,255,255,.08)}
+  .org-edit{flex:0 0 auto;border:0;background:transparent;color:var(--mut2);cursor:pointer;font-size:12px;padding:4px 8px;border-radius:6px;white-space:nowrap;line-height:0}
+  .org-edit:hover{color:#fff;background:rgba(255,255,255,.08)}
+  .org-q{color:#fbbf24;font-weight:700;margin-right:3px}
   .fm-file.sel{background:rgba(255,255,255,.10);color:var(--txt)}
   #filesWrap{position:relative}
   .fm-drop-overlay{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(18,18,18,.86);border:2px dashed rgba(255,255,255,.28);border-radius:14px;z-index:30;color:var(--mut);font-size:14px;pointer-events:none;text-align:center;padding:20px}
@@ -2328,9 +2331,19 @@ async function orgScan(){
 function orgRender(){
   const l=document.getElementById('org_list'); if(!l)return;
   l.innerHTML=_orgSug.map((s,i)=>{
-    const has=!!s.to; const tgt=has?(s.client+(s.project?' · '+s.project:'')):'geen voorstel';
-    return `<div class="org-row"><input type="checkbox" ${has?'checked':''} ${has?'':'disabled'} onchange="_orgSug[${i}]._on=this.checked"><span class="org-ic">${_fileGlyph(s.name)}</span><div class="org-main"><div class="org-name">${escapeHtml(s.name)}</div><div class="org-target ${has?'':'none'}">${has?'→ '+escapeHtml(tgt):'geen voorstel'}</div></div></div>`;
+    const has=!!s.to;
+    const tgt=has?('→ '+escapeHtml(s.client+(s.project?' · '+s.project:'')+(s.category?' · '+s.category:''))):'<span class="org-q">?</span> nog geen map';
+    return `<div class="org-row"><input type="checkbox" ${s._on?'checked':''} onchange="_orgSug[${i}]._on=this.checked"><span class="org-ic">${_fileGlyph(s.name)}</span><div class="org-main"><div class="org-name">${escapeHtml(s.name)}</div><div class="org-target ${has?'':'none'}">${tgt}</div></div><button class="org-edit" onclick="orgEdit(${i})" title="Map kiezen of aanpassen">${has?_penGlyph():'+ map'}</button></div>`;
   }).join('');
+}
+async function orgEdit(i){
+  const s=_orgSug[i]; if(!s)return;
+  const client=((await uiPrompt('Klant:', s.client||''))||'').trim(); if(!client)return;
+  const project=((await uiPrompt('Project (optioneel):', s.project||''))||'').trim();
+  const cat=((await uiPrompt('Map / categorie:', s.category||'Concept'))||'').trim()||'Concept';
+  s.client=client; s.project=project; s.category=cat;
+  s.to='/Begeister/'+client+(project?'/'+project:'')+'/'+cat+'/'+s.name;
+  s._on=true; orgRender();
 }
 async function applyOrganize(){
   const moves=_orgSug.filter(s=>s._on&&s.to).map(s=>({name:s.name,from:s.from,to:s.to}));
