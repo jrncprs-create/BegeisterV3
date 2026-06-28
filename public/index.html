@@ -779,6 +779,9 @@
     #welcomeBg{top:0;left:0;right:0;bottom:auto;height:100lvh}
     .welcome-scrim{top:0;left:0;right:0;bottom:auto;height:100lvh}
     .welcome-overlay #chatDock{position:fixed;left:0;right:0;bottom:0;width:auto;margin:0;padding:0 10px calc(env(safe-area-inset-bottom) + 12px);background:transparent}
+    /* mobiel: invoervak naadloos laten overlopen in iOS' toetsenbordbalk bij typen (pixel-perfect merge — iteratie 1) */
+    .welcome-overlay #chatDock:focus-within{padding-bottom:0}
+    .welcome-overlay .chatrow:focus-within{background:#1c1c1e;backdrop-filter:none;-webkit-backdrop-filter:none;border:1px solid rgba(255,255,255,.05);border-bottom:0;border-bottom-left-radius:0;border-bottom-right-radius:0}
     .welcome-overlay #welcomeChat{width:100%;margin-top:16px;max-height:42vh}
     .welcome-overlay #chatThread{padding-bottom:88px}
     .welcome-overlay.chatting #homeIntro{display:none}
