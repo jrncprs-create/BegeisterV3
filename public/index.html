@@ -2448,9 +2448,26 @@ function renderRail(){
   if(typeof wireDrag==='function') wireDrag();
 }
 
+// gedropt bestand bij goedkeuren fysiek verhuizen: /Begeister/In afwachting/ -> /Begeister/Klant/Project/categorie/
+async function _moveApprovedFiles(r){
+  try{
+    const pid=r.it.project_id; const p=pid?projById(pid):null;
+    if(!p || p.id==='__inbox__' || !p.client) return;   // geen project -> laat in /In afwachting/
+    const { data:files } = await sb.from('files').select('*').eq('owner_type','task').eq('owner_id',String(r.it.id));
+    for(const f of (files||[])){
+      const cat=(f.icon||'Concept');
+      const target=p.client+'/'+(p.project||p.client)+'/'+cat;
+      try{
+        await fetch('/api/dropbox/list',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'sync',items:[{link:f.link,name:f.name,target}]})});
+        await sb.from('files').update({owner_type:'project',owner_id:String(pid)}).eq('id',f.id);
+      }catch(_){}
+    }
+  }catch(_){}
+}
 // goedkeuren: van 'In afwachting' (links) naar Taken (midden) met animatie
 async function approveWait(id){
   const r=findItem(id); if(!r) return;
+  _moveApprovedFiles(r).catch(()=>{});   // gedropt bestand: /In afwachting/ -> Klant/Project/categorie
   const src=document.querySelector('#wachterList .task[data-id="'+id+'"]');
   // Mobiel of geen kaart: simpele overgang
   if(!src || !isDesk3()){
