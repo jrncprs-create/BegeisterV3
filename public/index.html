@@ -918,7 +918,7 @@
     /* Bronnen & Klanten: één kolom breed i.p.v. volle breedte */
     #view-bronnen,#view-beheer,#view-contacten{max-width:34vw}
     /* Bronnen / Klanten / Contacten wonen in de eerste kolom (#rail) met eigen scroll */
-    .rail #view-bronnen,.rail #view-beheer,.rail #view-contacten{display:block;max-width:none;position:relative;padding:18px 16px 60px}
+    .rail #view-bronnen,.rail #view-beheer,.rail #view-contacten,.rail #view-files,.rail #view-archief{display:block;max-width:none;position:relative;padding:18px 16px 60px}
     .rail #view-bronnen.hidden,.rail #view-beheer.hidden,.rail #view-contacten.hidden{display:none!important}
     /* sluitkruis rechtsboven in een rail-kolom */
     .rail .rail-close{position:absolute;top:14px;right:12px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;background:transparent;border:none;color:rgba(255,255,255,.6);cursor:pointer;padding:0;z-index:5;transition:color .15s}
@@ -987,7 +987,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v19</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v20</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -2720,7 +2720,7 @@ function _renderFmTree(){
         const fl=q?pr.cats[cat].filter(f=>(f.name||'').toLowerCase().includes(q)):pr.cats[cat];
         if(!fl.length) return;
         const ckey=c+'|'+pid+'|'+cat, copen=q?true:_fmOpen.has(ckey);
-        const files=fl.map(f=>`<div class="fm-file" draggable="true" data-fid="${f.id}" ondragstart="fmDragStart(event,'${f.id}')" onclick="fmFileClick('${f.id}')"><span class="fm-ic">${_fileGlyph(f.name||'')}</span><span class="fm-name">${escapeHtml(f.name||'bestand')}</span><button class="fm-edit" style="margin-left:auto" data-kind="file" data-fid="${f.id}" onclick="event.stopPropagation();fmRename(this)" title="Naam wijzigen">${_penGlyph()}</button></div>`).join('');
+        const files=fl.map(f=>`<div class="fm-file" draggable="true" data-fid="${f.id}" ondragstart="fmDragStart(event,'${f.id}')" onclick="fmFileClick('${f.id}')"><span class="fm-ic" style="color:${g.col}">${_fileGlyph(f.name||'')}</span><span class="fm-name">${escapeHtml(f.name||'bestand')}</span><button class="fm-edit" style="margin-left:auto" data-kind="file" data-fid="${f.id}" onclick="event.stopPropagation();fmRename(this)" title="Naam wijzigen">${_penGlyph()}</button></div>`).join('');
         catHtml.push(`<div class="fm-row fm-catrow${copen?' open':''}" data-drop="1" data-client="${escapeHtml(c)}" data-pid="${escapeHtml(pid)}" data-cat="${escapeHtml(cat)}" ondragover="fmDragOver(event)" ondragleave="fmDragLeave(event)" ondrop="fmDrop(event)" onclick="fmToggle('${_fk(ckey)}')"><span class="fm-tw">▸</span><span class="fm-ic" style="color:${g.col}">${_folderGlyph()}</span><span class="fm-name">${escapeHtml(cat)}</span><span class="fm-cnt">${fl.length}</span><button class="fm-edit" data-kind="cat" data-client="${escapeHtml(c)}" data-pid="${escapeHtml(pid)}" data-cat="${escapeHtml(cat)}" onclick="event.stopPropagation();fmRename(this)" title="Naam wijzigen">${_penGlyph()}</button></div><div class="fm-kids"${copen?'':' style="display:none"'}>${files}</div>`);
       });
       if(!catHtml.length) return;
