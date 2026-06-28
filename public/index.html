@@ -3321,13 +3321,17 @@ async function pasteClip(){closePlus();composeMode(true);const ta=document.getEl
 // ---------- Globale sleep-zone: bestand de app in slepen -> als input verwerken ----------
 (function(){
   let dc=0; const dz=()=>document.getElementById('dropZone');
-  const hasFiles=e=>{try{return [...(e.dataTransfer.types||[])].includes('Files');}catch(_){return false;}};
-  // In de Files-view geldt de eigen map-upload (sleep op een map); de globale zone laten we daar met rust.
+  // Ruime detectie: Safari-tab geeft 'Files', standalone WebView geeft vaak UTI-types (public.file-url, dyn.*).
+  const hasFiles=e=>{ try{ const dt=e.dataTransfer; if(!dt) return false;
+    if(dt.types){ for(const t of dt.types){ const tl=String(t).toLowerCase(); if(tl==='files'||tl.indexOf('file-url')>=0||tl.indexOf('public.')>=0||tl.indexOf('dyn.')===0) return true; } }
+    if(dt.items){ for(const it of dt.items){ if(it&&it.kind==='file') return true; } }
+    return false; }catch(_){ return false; } };
+  // In de Files-view geldt de eigen map-upload; de globale zone laten we daar met rust.
   const skip=()=>(typeof view!=='undefined' && view==='files');
-  window.addEventListener('dragenter',e=>{ if(!hasFiles(e)||skip())return; e.preventDefault(); dc++; const z=dz(); if(z)z.classList.add('on'); });
-  window.addEventListener('dragover',e=>{ if(!hasFiles(e)||skip())return; e.preventDefault(); });
-  window.addEventListener('dragleave',e=>{ if(!hasFiles(e)||skip())return; dc=Math.max(0,dc-1); if(dc===0){const z=dz(); if(z)z.classList.remove('on');} });
-  window.addEventListener('drop',e=>{ if(!hasFiles(e)||skip())return; e.preventDefault(); dc=0; const z=dz(); if(z)z.classList.remove('on'); const files=[...((e.dataTransfer&&e.dataTransfer.files)||[])]; if(files.length)handleDroppedFiles(files); });
+  document.addEventListener('dragenter',e=>{ if(skip()||!hasFiles(e))return; e.preventDefault(); dc++; const z=dz(); if(z)z.classList.add('on'); }, true);
+  document.addEventListener('dragover',e=>{ if(skip()||!hasFiles(e))return; e.preventDefault(); try{e.dataTransfer.dropEffect='copy';}catch(_){ } }, true);
+  document.addEventListener('dragleave',e=>{ if(skip()||!hasFiles(e))return; dc=Math.max(0,dc-1); if(dc===0){const z=dz(); if(z)z.classList.remove('on');} }, true);
+  document.addEventListener('drop',e=>{ if(skip()||!hasFiles(e))return; e.preventDefault(); dc=0; const z=dz(); if(z)z.classList.remove('on'); const files=[...((e.dataTransfer&&e.dataTransfer.files)||[])]; if(files.length)handleDroppedFiles(files); }, true);
 })();
 
 // Drop -> bestand lezen -> chat sluit -> per gevonden punt het Nieuwe-taak-venster (vooraf ingevuld).
