@@ -1007,14 +1007,6 @@
 
       <div id="view-beheer" class="hidden">
         <div id="beheerWrap"></div>
-        <div class="kli knew">
-          <button class="kdot" id="np_color_btn" style="background:#fbbf24" onclick="openColorPicker(event,'new')" title="Kleur"></button>
-          <div class="kmain">
-            <input class="kname" id="np_name" placeholder="Nieuwe klant" />
-            <input class="ksub" id="np_project" placeholder="Project / event" />
-          </div>
-          <button class="kicon kadd" onclick="addProject()" title="Toevoegen"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg></button>
-        </div>
       </div>
       <div id="view-contacten" class="hidden">
         <div id="contactenWrap"></div>
@@ -1479,7 +1471,7 @@ function setView(v){
   // eerste kolom (#wachterBlock) verbergen wanneer er een rail-view getoond wordt
   const wb=document.getElementById('wachterBlock'); if(wb) wb.classList.toggle('hidden', d3 && railView);
   if(typeof _ensureRailCloses==='function') _ensureRailCloses();
-  document.getElementById('viewTitle').textContent={home:'',taken:'Taken',agenda:'Agenda',afspraken:'Afspraken',wachter:'In afwachting',bronnen:'Bronnen',beheer:'Klanten & projecten',contacten:'Contacten',archief:'Archief',files:'Files'}[v];
+  document.getElementById('viewTitle').textContent={home:'',taken:'Taken',agenda:'Agenda',afspraken:'Afspraken',wachter:'In afwachting',bronnen:'Bronnen',beheer:'Klanten & projecten',contacten:'Contacten',archief:'Archief',files:'Bestanden'}[v];
   // desktop-werkblad: Taken (midden) + Agenda (rechts) tegelijk zichtbaar — op desktop ALTIJD aan
   const ws = d3;
   const main=document.querySelector('.main'); if(main) main.classList.toggle('workspace',ws);
@@ -2602,8 +2594,15 @@ function renderProjecten(){
       </div>`;}).join('');
     return `<div class="kgroup">${head}${items}</div>`;
   }).join('');
-  const orgBar='<div class="org-bar"><button class="kfiles-add" onclick="openOrganize()" title="Losse Dropbox-bestanden opruimen"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M6 1.8 0 5.7l6 3.9 6-3.9-6-3.9zm12 0-6 3.9 6 3.9 6-3.9-6-3.9zM0 13.5l6 3.9 6-3.9-6-3.9-6 3.9zm18-3.9-6 3.9 6 3.9 6-3.9-6-3.9zM6 18.6l6 3.9 6-3.9-6-3.9-6 3.9z"/></svg> Opruimen</button></div>';
+  const orgBar='<div class="org-bar"><button class="kfiles-add" onclick="newClientFromHeader()" title="Nieuwe klant"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg> Nieuwe klant</button><button class="kfiles-add" onclick="openOrganize()" title="Losse Dropbox-bestanden opruimen"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M6 1.8 0 5.7l6 3.9 6-3.9-6-3.9zm12 0-6 3.9 6 3.9 6-3.9-6-3.9zM0 13.5l6 3.9 6-3.9-6-3.9-6 3.9zm18-3.9-6 3.9 6 3.9 6-3.9-6-3.9zM6 18.6l6 3.9 6-3.9-6-3.9-6 3.9z"/></svg> Opruimen</button></div>';
   document.getElementById('beheerWrap').innerHTML=orgBar+(html||'<div class="hint">Nog geen klanten.</div>');
+}
+async function newClientFromHeader(){
+  const name=((await uiPrompt('Nieuwe klant:'))||'').trim(); if(!name)return;
+  const proj=((await uiPrompt('Project / event (optioneel):'))||'').trim();
+  const col=_nextClientColor(); const icon=(name[0]||'?').toUpperCase();
+  try{ await sb.from('projects').insert({client:name,project:proj||'',color:col,icon,sort:state.projects.length+1}); }catch(_){}
+  await refresh();
 }
 // ---------- File manager (tree) ----------
 let _fmOpen=new Set(), _fmQuery='';
