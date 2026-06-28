@@ -179,6 +179,9 @@
   .fm-file{display:flex;align-items:center;gap:8px;padding:6px 6px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--mut)}
   .fm-file:hover{background:rgba(255,255,255,.05);color:var(--txt)}
   .fm-file .fm-ic{color:var(--mut2)}
+  .fm-edit{flex:0 0 auto;border:0;background:transparent;color:var(--mut2);cursor:pointer;padding:3px 5px;border-radius:6px;opacity:.28;line-height:0}
+  .fm-row:hover .fm-edit,.fm-file:hover .fm-edit{opacity:.7}
+  .fm-edit:hover{opacity:1;color:#fff;background:rgba(255,255,255,.08)}
   .fm-file.sel{background:rgba(255,255,255,.10);color:var(--txt)}
   #filesWrap{position:relative}
   .fm-drop-overlay{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(18,18,18,.86);border:2px dashed rgba(255,255,255,.28);border-radius:14px;z-index:30;color:var(--mut);font-size:14px;pointer-events:none;text-align:center;padding:20px}
@@ -955,7 +958,7 @@
       <button data-v="beheer" onclick="setView('beheer')">Klanten</button>
       <button data-v="contacten" onclick="setView('contacten')">Contacten</button>
       <button data-v="bronnen" onclick="setView('bronnen')">Bronnen <span class="badge" id="nb-bron"></span></button>
-      <button data-v="files" onclick="setView('files')">Files</button>
+      <button data-v="files" onclick="setView('files')">Bestanden</button>
       <button data-v="archief" onclick="setView('archief')">Archief</button>
       <button id="pushBtn" onclick="enablePush()" title="Meldingen aanzetten">Meldingen</button>
     </nav>
@@ -2626,6 +2629,23 @@ function renderFiles(){
 }
 function fmSearch(v){ _fmQuery=v; _renderFmTree(); }
 function fmToggle(k){ if(_fmOpen.has(k))_fmOpen.delete(k); else _fmOpen.add(k); _renderFmTree(); }
+function _penGlyph(){ return '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4l10.5 -10.5a2.1 2.1 0 0 0 -3 -3l-10.5 10.5v3"/><path d="M13.5 6.5l3 3"/></svg>'; }
+// Hernoemen vanuit de boom (bestand / map=categorie / project / klant).
+async function fmRename(btn){
+  const k=btn.dataset.kind;
+  if(k==='file'){ const id=btn.dataset.fid; const f=(state.files||[]).find(x=>String(x.id)===String(id)); if(!f)return;
+    const nv=((await uiPrompt('Nieuwe bestandsnaam:', f.name||''))||'').trim(); if(!nv||nv===f.name)return;
+    try{ await sb.from('files').update({name:nv}).eq('id',id); f.name=nv; }catch(_){} _renderFmTree(); return; }
+  if(k==='project'){ const pid=btn.dataset.pid; const p=projById(pid); if(!p)return;
+    const nv=((await uiPrompt('Nieuwe projectnaam:', p.project||''))||'').trim(); if(!nv||nv===p.project)return;
+    try{ await sb.from('projects').update({project:nv}).eq('id',pid); }catch(_){} await refresh(); return; }
+  if(k==='client'){ const client=btn.dataset.client;
+    const nv=((await uiPrompt('Nieuwe klantnaam:', client||''))||'').trim(); if(!nv||nv===client)return;
+    try{ await renameClient(client, nv); }catch(_){} _renderFmTree(); return; }
+  if(k==='cat'){ const client=btn.dataset.client, pid=btn.dataset.pid, cat=btn.dataset.cat;
+    const nv=((await uiPrompt('Nieuwe mapnaam:', cat||''))||'').trim(); if(!nv||nv===cat)return;
+    try{ let q=sb.from('files').update({icon:nv}).eq('icon',cat||''); if(pid==='__alg__'){ q=q.eq('owner_type','client').eq('owner_id',client); } else { q=q.eq('owner_type','project').eq('owner_id',pid); } await q; }catch(_){} await refresh(); return; }
+}
 function _cat(f){ return (f && f.icon || '').trim(); }
 function _fk(s){ return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
 function _renderFmTree(){
@@ -2654,16 +2674,16 @@ function _renderFmTree(){
         const fl=q?pr.cats[cat].filter(f=>(f.name||'').toLowerCase().includes(q)):pr.cats[cat];
         if(!fl.length) return;
         const ckey=c+'|'+pid+'|'+cat, copen=q?true:_fmOpen.has(ckey);
-        const files=fl.map(f=>`<div class="fm-file" draggable="true" data-fid="${f.id}" ondragstart="fmDragStart(event,'${f.id}')" onclick="fmFileClick('${f.id}')"><span class="fm-ic">${_fileGlyph(f.name||'')}</span><span class="fm-name">${escapeHtml(f.name||'bestand')}</span></div>`).join('');
-        catHtml.push(`<div class="fm-row fm-catrow${copen?' open':''}" data-drop="1" data-client="${escapeHtml(c)}" data-pid="${escapeHtml(pid)}" data-cat="${escapeHtml(cat)}" ondragover="fmDragOver(event)" ondragleave="fmDragLeave(event)" ondrop="fmDrop(event)" onclick="fmToggle('${_fk(ckey)}')"><span class="fm-tw">▸</span><span class="fm-ic" style="color:${g.col}">${_folderGlyph()}</span><span class="fm-name">${escapeHtml(cat)}</span><span class="fm-cnt">${fl.length}</span></div><div class="fm-kids"${copen?'':' style="display:none"'}>${files}</div>`);
+        const files=fl.map(f=>`<div class="fm-file" draggable="true" data-fid="${f.id}" ondragstart="fmDragStart(event,'${f.id}')" onclick="fmFileClick('${f.id}')"><span class="fm-ic">${_fileGlyph(f.name||'')}</span><span class="fm-name">${escapeHtml(f.name||'bestand')}</span><button class="fm-edit" style="margin-left:auto" data-kind="file" data-fid="${f.id}" onclick="event.stopPropagation();fmRename(this)" title="Naam wijzigen">${_penGlyph()}</button></div>`).join('');
+        catHtml.push(`<div class="fm-row fm-catrow${copen?' open':''}" data-drop="1" data-client="${escapeHtml(c)}" data-pid="${escapeHtml(pid)}" data-cat="${escapeHtml(cat)}" ondragover="fmDragOver(event)" ondragleave="fmDragLeave(event)" ondrop="fmDrop(event)" onclick="fmToggle('${_fk(ckey)}')"><span class="fm-tw">▸</span><span class="fm-ic" style="color:${g.col}">${_folderGlyph()}</span><span class="fm-name">${escapeHtml(cat)}</span><span class="fm-cnt">${fl.length}</span><button class="fm-edit" data-kind="cat" data-client="${escapeHtml(c)}" data-pid="${escapeHtml(pid)}" data-cat="${escapeHtml(cat)}" onclick="event.stopPropagation();fmRename(this)" title="Naam wijzigen">${_penGlyph()}</button></div><div class="fm-kids"${copen?'':' style="display:none"'}>${files}</div>`);
       });
       if(!catHtml.length) return;
       const pkey=c+'|'+pid, popen=q?true:_fmOpen.has(pkey);
-      projHtml.push(`<div class="fm-row fm-prow${popen?' open':''}" data-drop="1" data-client="${escapeHtml(c)}" data-pid="${escapeHtml(pid)}" data-cat="" ondragover="fmDragOver(event)" ondragleave="fmDragLeave(event)" ondrop="fmDrop(event)" onclick="fmToggle('${_fk(pkey)}')"><span class="fm-tw">▸</span><span class="fm-ic" style="color:${g.col}">${_folderGlyph()}</span><span class="fm-name">${escapeHtml(pr.name)}</span></div><div class="fm-kids"${popen?'':' style="display:none"'}>${catHtml.join('')}</div>`);
+      projHtml.push(`<div class="fm-row fm-prow${popen?' open':''}" data-drop="1" data-client="${escapeHtml(c)}" data-pid="${escapeHtml(pid)}" data-cat="" ondragover="fmDragOver(event)" ondragleave="fmDragLeave(event)" ondrop="fmDrop(event)" onclick="fmToggle('${_fk(pkey)}')"><span class="fm-tw">▸</span><span class="fm-ic" style="color:${g.col}">${_folderGlyph()}</span><span class="fm-name">${escapeHtml(pr.name)}</span><button class="fm-edit" style="margin-left:auto" data-kind="project" data-pid="${escapeHtml(pid)}" onclick="event.stopPropagation();fmRename(this)" title="Naam wijzigen">${_penGlyph()}</button></div><div class="fm-kids"${popen?'':' style="display:none"'}>${catHtml.join('')}</div>`);
     });
     if(!projHtml.length) return;
     const open=q?true:_fmOpen.has(c);
-    html+=`<div class="fm-client"><div class="fm-row fm-crow${open?' open':''}" data-drop="1" data-client="${escapeHtml(c)}" data-pid="__alg__" data-cat="" ondragover="fmDragOver(event)" ondragleave="fmDragLeave(event)" ondrop="fmDrop(event)" onclick="fmToggle('${_fk(c)}')"><span class="fm-tw">▸</span><span class="fm-badge" style="background:${g.col}"></span><span class="fm-name" style="color:${g.col}">${escapeHtml(c)}</span></div><div class="fm-kids"${open?'':' style="display:none"'}>${projHtml.join('')}</div></div>`;
+    html+=`<div class="fm-client"><div class="fm-row fm-crow${open?' open':''}" data-drop="1" data-client="${escapeHtml(c)}" data-pid="__alg__" data-cat="" ondragover="fmDragOver(event)" ondragleave="fmDragLeave(event)" ondrop="fmDrop(event)" onclick="fmToggle('${_fk(c)}')"><span class="fm-tw">▸</span><span class="fm-badge" style="background:${g.col}"></span><span class="fm-name" style="color:${g.col}">${escapeHtml(c)}</span><button class="fm-edit" style="margin-left:auto" data-kind="client" data-client="${escapeHtml(c)}" onclick="event.stopPropagation();fmRename(this)" title="Naam wijzigen">${_penGlyph()}</button></div><div class="fm-kids"${open?'':' style="display:none"'}>${projHtml.join('')}</div></div>`;
   });
   t.innerHTML=html||'<div class="hint">Nog geen bestanden — of nog niet gesorteerd. Klik “Sorteer met AI”.</div>';
 }
@@ -3268,7 +3288,7 @@ function applyLayout(){
 // sluitkruis + kop in elke rail-view (Bronnen/Klanten/Contacten) op desktop; weg op mobiel
 function _ensureRailCloses(){
   const _xIc='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
-  const spec=[['view-bronnen','Bronnen'],['view-beheer','Klanten & projecten'],['view-contacten',''],['view-archief','Archief'],['view-files','Files']];
+  const spec=[['view-bronnen','Bronnen'],['view-beheer','Klanten & projecten'],['view-contacten',''],['view-archief','Archief'],['view-files','Bestanden']];
   const d3=isDesk3();
   spec.forEach(([vid,label])=>{
     const v=document.getElementById(vid); if(!v)return;
