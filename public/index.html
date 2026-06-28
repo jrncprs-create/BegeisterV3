@@ -2288,7 +2288,7 @@ function fvRender(){
   document.getElementById('fv_ic').innerHTML=_fileGlyph(f.name||'');
   document.getElementById('fv_count').textContent=_fvList.length>1?`${_fvIdx+1} / ${_fvList.length}`:'';
   const ext=((f.name||'').split('.').pop()||'').toLowerCase();
-  const url=_fvRaw(f.link); const st=document.getElementById('fv_stage');
+  const url='/api/fileproxy?u='+encodeURIComponent(_fvRaw(f.link)); const st=document.getElementById('fv_stage');
   if(['png','jpg','jpeg','gif','webp','bmp','svg','heic','heif'].includes(ext)) st.innerHTML=`<img class="fv-img" src="${escapeHtml(url)}" alt="">`;
   else if(ext==='pdf') st.innerHTML=`<iframe class="fv-frame" src="${escapeHtml(url)}#toolbar=0&navpanes=0&view=FitH" title="PDF"></iframe>`;
   else st.innerHTML=`<div class="fv-none">${_fileGlyph(f.name)}<p>Geen voorvertoning voor dit bestandstype.</p><p>Gebruik “Download origineel” of “Open in Dropbox”.</p></div>`;
@@ -2638,7 +2638,7 @@ function fmPreview(id){
   const f=(state.files||[]).find(x=>x.id===id);
   if(!f){ pane.innerHTML='<div class="fmp-empty">Kies een bestand</div>'; return; }
   const ext=((f.name||'').split('.').pop()||'').toLowerCase();
-  const url=_fvRaw(f.link);
+  const url='/api/fileproxy?u='+encodeURIComponent(_fvRaw(f.link));
   let body;
   if(['png','jpg','jpeg','gif','webp','bmp','svg','heic','heif'].includes(ext)) body='<img class="fmp-img" src="'+escapeHtml(url)+'" alt="">';
   else if(ext==='pdf') body='<iframe class="fmp-frame" src="'+escapeHtml(url)+'#toolbar=0&navpanes=0&view=FitH" title="PDF"></iframe>';
