@@ -86,7 +86,7 @@ export default async function handler(req, res) {
       if (!docText) return res.status(200).json({ reply: "Het Word-document lijkt leeg of bevat geen leesbare tekst.", items: [] });
       const ex = await extractItems({ text: docText, sender: who || "Document", subject: name, today, catalog, context });
       if (ex.usage) { try { await logUsage(null, { source: "drop-docx", ...ex.usage }); } catch (_) {} }
-      return res.status(200).json({ reply: ex.summary || "Document gelezen.", items: ex.items || [] });
+      return res.status(200).json({ reply: ex.summary || "Document gelezen.", items: ex.items || [], client: ex.client || "", project: ex.project || "" });
     }
 
     // 4) Platte tekst (.txt/.md/etc.) → extractItems
@@ -94,7 +94,7 @@ export default async function handler(req, res) {
     if (plain) {
       const ex = await extractItems({ text: plain, sender: who || "Tekst", subject: name, today, catalog, context });
       if (ex.usage) { try { await logUsage(null, { source: "drop-text", ...ex.usage }); } catch (_) {} }
-      return res.status(200).json({ reply: ex.summary || "Tekst gelezen.", items: ex.items || [] });
+      return res.status(200).json({ reply: ex.summary || "Tekst gelezen.", items: ex.items || [], client: ex.client || "", project: ex.project || "" });
     }
 
     return res.status(400).json({ error: "leeg of niet-ondersteund bestandstype: " + (mime || name) });
