@@ -183,6 +183,13 @@
   #filesWrap{position:relative}
   .fm-drop-overlay{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(18,18,18,.86);border:2px dashed rgba(255,255,255,.28);border-radius:14px;z-index:30;color:var(--mut);font-size:14px;pointer-events:none;text-align:center;padding:20px}
   #filesWrap.fm-dropping .fm-drop-overlay{display:flex}
+  /* Globale sleep-zone: sleep een bestand de app in -> verwerk als input */
+  #dropZone{position:fixed;inset:0;z-index:9999;display:none;flex-direction:column;align-items:center;justify-content:center;background:rgba(12,12,14,.82);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);pointer-events:none}
+  #dropZone.on{display:flex}
+  #dropZone .dz-card{display:flex;flex-direction:column;align-items:center;gap:14px;padding:38px 48px;border:2px dashed rgba(255,255,255,.34);border-radius:22px;background:rgba(22,22,22,.5)}
+  #dropZone .dz-ic{color:#fff;opacity:.92}
+  #dropZone .dz-title{color:#fff;font-size:18px;font-weight:600;letter-spacing:.2px}
+  #dropZone .dz-sub{color:var(--mut);font-size:13.5px;max-width:330px;text-align:center;line-height:1.5}
   .main.workspace #view-filespreview{padding:0 24px 40px 24px;height:100%;overflow-y:auto;scrollbar-width:none}
   .main.workspace #view-filespreview::-webkit-scrollbar{display:none}
   .fmp-head{display:flex;align-items:center;gap:8px;height:26px;padding-top:18px;margin:0 0 16px;font-size:13px;color:var(--txt)}
@@ -1033,6 +1040,15 @@
 </div>
 <input type="file" id="camInput" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(event)" />
 <input type="file" id="attInput" style="display:none" onchange="handlePhoto(event)" />
+
+<!-- GLOBALE SLEEP-ZONE: bestand de app in slepen -> als input verwerken -->
+<div id="dropZone" aria-hidden="true">
+  <div class="dz-card">
+    <svg class="dz-ic" viewBox="0 0 24 24" width="42" height="42" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/><path d="M7 9l5-5 5 5"/><path d="M12 4v12"/></svg>
+    <div class="dz-title">Laat los om toe te voegen</div>
+    <div class="dz-sub">Foto, PDF, tekst of Word — ik lees het en stel meteen actiepunten voor.</div>
+  </div>
+</div>
 
 <!-- EDIT MODAL -->
 <div class="overlay" id="overlay">
@@ -3240,6 +3256,49 @@ async function pasteClip(){closePlus();composeMode(true);const ta=document.getEl
   ta.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();chatSend();}});
   ta.addEventListener('paste',e=>{e.preventDefault();const t=((e.clipboardData||window.clipboardData).getData('text')||'');document.execCommand('insertText',false,t);});
 })();
+
+// ---------- Globale sleep-zone: bestand de app in slepen -> als input verwerken ----------
+(function(){
+  let dc=0; const dz=()=>document.getElementById('dropZone');
+  const hasFiles=e=>{try{return [...(e.dataTransfer.types||[])].includes('Files');}catch(_){return false;}};
+  // In de Files-view geldt de eigen map-upload (sleep op een map); de globale zone laten we daar met rust.
+  const skip=()=>(typeof view!=='undefined' && view==='files');
+  window.addEventListener('dragenter',e=>{ if(!hasFiles(e)||skip())return; e.preventDefault(); dc++; const z=dz(); if(z)z.classList.add('on'); });
+  window.addEventListener('dragover',e=>{ if(!hasFiles(e)||skip())return; e.preventDefault(); });
+  window.addEventListener('dragleave',e=>{ if(!hasFiles(e)||skip())return; dc=Math.max(0,dc-1); if(dc===0){const z=dz(); if(z)z.classList.remove('on');} });
+  window.addEventListener('drop',e=>{ if(!hasFiles(e)||skip())return; e.preventDefault(); dc=0; const z=dz(); if(z)z.classList.remove('on'); const files=[...((e.dataTransfer&&e.dataTransfer.files)||[])]; if(files.length)handleDroppedFiles(files); });
+})();
+
+async function handleDroppedFiles(list){ for(const f of list){ await handleDroppedFile(f); } }
+
+async function handleDroppedFile(f){
+  composeMode(true);
+  if(isMobile()&&view!=='home')setView('home');
+  addMsg('me','Bestand: '+f.name);
+  chatHistory.push({role:'user',content:'(bestand toegevoegd: '+f.name+')'});
+  // origineel bewaren onder Bronnen
+  let src=null;
+  try{ const r=await sb.from('sources').insert({channel:'drop',sender:who||'Sleep',body:f.name,processed:true}).select().single(); src=r.data||null; }catch(_){}
+  pendingSourceId=src?src.id:null;
+  try{const path='drop/'+(src?src.id:Date.now())+'_'+f.name.replace(/[^\w.\-]/g,'_');
+    const up=await sb.storage.from('intake').upload(path,f,{contentType:f.type||'application/octet-stream',upsert:true});
+    if(!up.error&&src){await sb.from('attachments').insert({source_id:src.id,filename:f.name,storage_path:path,mime:f.type,size:f.size});}
+  }catch(_){}
+  const typing=addTyping({phrases:['Bestand bekijken…','Tekst herkennen…','Actiepunten eruit halen…','Bijna klaar…']}); let data=null;
+  try{
+    const b64=await fileToB64(f);
+    const catalog=state.projects.filter(p=>p.id!=='__inbox__').map(p=>({project_id:p.id,client:p.client,project:p.project||''}));
+    const r=await fetch('/api/readdrop',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({name:f.name,mime:f.type||'',b64,catalog,today:iso(TODAY),dates:dateTable(),who,context:_ctxForChat()})});
+    data=await r.json();
+  }catch(_){}
+  if(typing)typing.remove();
+  if(!data||data.error){ addMsg('ai','Het bestand staat onder Bronnen, maar ik kon \'m niet automatisch lezen. Vertel kort wat erin staat?'); return; }
+  if(data.reply){ addMsg('ai',data.reply); chatHistory.push({role:'assistant',content:data.reply}); }
+  if(data.items&&data.items.length){ renderProposal(data); }
+  else { addMsg('ai','Geen concrete actiepunten uit dit bestand — vertel maar wat je ermee wilt.'); }
+  loadUsage();
+}
 
 // ---------- dagelijks complimentje ----------
 const COMPLIMENTS=[
