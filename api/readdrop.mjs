@@ -21,7 +21,7 @@ CATALOGUS (project_id → klant · project):\n${cat}
 Bepaal ook of het bestand over een specifieke KLANT/opdrachtgever gaat. Geef "client" = de klantnaam als die duidelijk is, anders "". Geef "project" = de projectnaam als die expliciet genoemd wordt; staat er geen projectnaam maar wél een duidelijk onderwerp, stel dan een KORTE projectnaam voor (paar woorden); anders "".
 Geef "type" = kort documenttype in 1-2 woorden (bv. "pitchdeck", "offerte", "factuur", "mail", "screenshot", "tekening", "draaiboek"), anders "". Geef "from" = afzender/auteur als die herkenbaar is, anders "".
 Geef "category" = kies de best passende map uit deze VASTE lijst: Concept, Lichtontwerp, Decor, Tekeningen, Plattegronden, Draaiboek, Planning, Leveranciers, Techniek, Offertes, Media. Bij twijfel: "Concept".
-Geef "subject" = kort, concreet onderwerp van het document in 2-5 woorden, ZONDER klantnaam en ZONDER datum, MÉT het documenttype erin verwerkt als dat logisch is (bv. "licht offerte", "Landjuweel concept", "draaiboek opbouw", "factuur huur"). Kleine letters, gewone spaties, geen leestekens.
+Geef "subject" = kort, concreet onderwerp van het document in 2-3 woorden (zo bondig mogelijk), ZONDER klantnaam en ZONDER datum, MÉT het documenttype erin verwerkt als dat logisch is (bv. "licht offerte", "concept", "draaiboek opbouw", "factuur huur"). Geen interne codenamen of projectcodes. Kleine letters, gewone spaties, geen leestekens.
 Antwoord ALLEEN met geldige JSON: {"reply":"korte samenvatting (1 zin)","client":"","project":"","type":"","from":"","category":"","subject":"","items":[{"title":"","owner":"","contact":"","due":null,"status":"todo","project_id":null}]}`;
 }
 
