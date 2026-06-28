@@ -579,7 +579,7 @@
   .modal .foot .btn.danger:hover{background:#241818}
   .datefield{display:flex;align-items:center;justify-content:space-between;cursor:pointer}
   .datefield:hover{border-color:rgba(255,255,255,.25)}
-  .datefield .cal-ic{color:var(--txt)}
+  .datefield .cal-ic{color:var(--mut);display:flex;align-items:center}
   .datefield .ph{color:var(--mut2)}
   .modal input[type=date]::-webkit-calendar-picker-indicator{filter:invert(1);opacity:.92;cursor:pointer}
   .duepop{position:fixed;display:none;z-index:140;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;box-shadow:0 14px 34px rgba(0,0,0,.6);width:300px}
@@ -1002,7 +1002,7 @@
       <div><select id="m_project" onchange="onProjectChange()"></select></div>
     </div>
     <div class="twocol">
-      <div><div class="datefield" id="m_due_field" onclick="openDuePicker(event)"><span id="m_due_label" class="ph">Deadline</span><span class="cal-ic">▦</span></div></div>
+      <div><div class="datefield" id="m_due_field" onclick="openDuePicker(event)"><span id="m_due_label" class="ph">Deadline</span><span class="cal-ic"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z"/><path d="M16 3v4"/><path d="M8 3v4"/><path d="M4 11h16"/></svg></span></div></div>
       <div><select id="m_status"><option value="todo">te doen</option><option value="doing">bezig</option><option value="wait">wacht op</option><option value="done">klaar</option></select></div>
     </div>
     <div id="m_files"></div>
@@ -1019,17 +1019,17 @@
     <div class="appt-head"><h3 id="apptModalTitle">Nieuwe afspraak</h3><div class="appt-who" id="a_whoToggle"></div><button class="modal-close" onclick="closeApptModal()" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
     <input id="a_t" placeholder="Omschrijving" autocomplete="off" />
     <div class="twocol">
-      <div><input type="hidden" id="a_date" /><div class="datefield" id="a_date_f" onclick="openDuePicker(event,'appt')"><span id="a_date_lbl" class="ph">Datum</span><span class="cal-ic">▦</span></div></div>
+      <div><input type="hidden" id="a_date" /><div class="datefield" id="a_date_f" onclick="openDuePicker(event,'appt')"><span id="a_date_lbl" class="ph">Datum</span><span class="cal-ic"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z"/><path d="M16 3v4"/><path d="M8 3v4"/><path d="M4 11h16"/></svg></span></div></div>
       <div><select id="a_kind"><option value="">Type</option><option value="fysiek">Fysiek</option><option value="bel">Telefonisch</option></select></div>
     </div>
     <div class="twocol">
       <div>
         <input type="hidden" id="a_start" />
-        <div class="datefield" id="a_start_f" onclick="openTimePop('a_start')"><span id="a_start_lbl" class="ph">Begintijd</span><span class="cal-ic">◷</span></div>
+        <div class="datefield" id="a_start_f" onclick="openTimePop('a_start')"><span id="a_start_lbl" class="ph">Begintijd</span><span class="cal-ic"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v4.5l3 2"/></svg></span></div>
       </div>
       <div>
         <input type="hidden" id="a_end" />
-        <div class="datefield" id="a_end_f" onclick="openTimePop('a_end')"><span id="a_end_lbl" class="ph">Eindtijd</span><span class="cal-ic">◷</span></div>
+        <div class="datefield" id="a_end_f" onclick="openTimePop('a_end')"><span id="a_end_lbl" class="ph">Eindtijd</span><span class="cal-ic"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v4.5l3 2"/></svg></span></div>
       </div>
     </div>
     <div class="twocol">
