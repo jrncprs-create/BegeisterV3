@@ -15,7 +15,9 @@
 <style>
   :root{
     --bg:#0d0d0d; --side:#151515; --panel:#1a1a1a; --panel2:#212121; --line:#2e2e2e;
-    --txt:#ececec; --mut:#9b9b9b; --mut2:#6a6a6a; --calm:#404040;
+    --txt:#ececec; --mut:#9b9b9b; --mut2:#6a6a6a;
+    /* Monochroom-systeem (tunebaar): --calm = rustgrijs (75% zwart), --ink = actieve witte tekst, --line = lijntjes */
+    --calm:#404040; --ink:#ffffff;
     --primary:#5f5f5f; --primary2:#cfcfcf;   /* geneutraliseerd: geen blauw/paars meer */
     --ok:#e6e6e6;                            /* 'klaar' = neutraal wit, geen groen */
     --warn:#fbbf24; --risk:#fb923c; --late:#f87171;   /* urgentie blijft geel/oranje/rood */
@@ -50,6 +52,9 @@
   .usage-chip{font-size:11.5px;color:var(--mut2,#888);font-weight:600;cursor:pointer;padding:3px 8px;border:1px solid var(--line,#333);border-radius:999px;white-space:nowrap;opacity:.85}
   .usage-chip:hover{opacity:1;color:var(--txt)}
   .usage-chip:empty{display:none}
+  .ver-chip{font-size:10px;color:var(--mut2);opacity:.5;font-weight:600;letter-spacing:.3px;padding:2px 6px;border:1px solid var(--line);border-radius:999px;white-space:nowrap}
+  /* iOS zoomt in op invoervelden < 16px; 16px voorkomt dat (zonder pinch-zoom te blokkeren) */
+  @media(max-width:600px){ input,textarea,select{font-size:16px!important} }
   .usage-pop{position:absolute;top:52px;right:14px;z-index:120;background:var(--side,#1d1d1d);border:1px solid var(--line,#333);border-radius:12px;padding:14px 16px;min-width:220px;box-shadow:0 14px 34px rgba(0,0,0,.5);font-size:13px;color:var(--txt)}
   .usage-pop h4{margin:0 0 8px;font-size:12px;color:var(--mut2,#888);font-weight:700;text-transform:uppercase;letter-spacing:.04em}
   .usage-pop .row{display:flex;justify-content:space-between;gap:18px;padding:3px 0;color:var(--mut,#aaa)}
@@ -972,6 +977,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v16</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
