@@ -130,6 +130,10 @@
   .cdd-row .cdd{flex:1;min-width:0}
   .cdd{display:none;position:relative;margin-bottom:10px}
   .cdd.cdd-form{display:block;margin-bottom:0;width:100%}
+  .appt-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .appt-who{display:flex;gap:12px;align-items:center}
+  .appt-who .tw-opt{font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut2);cursor:pointer;transition:color .15s}
+  .appt-who .tw-opt:hover,.appt-who .tw-opt.on{color:#fff}
   .cdd-btn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;background:transparent;border:1px solid var(--line);border-radius:11px;padding:12px 13px;color:var(--txt);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;text-align:left}
   .cdd-cur{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .cdd-chev{flex:0 0 auto;color:var(--mut2);transition:transform .15s}
@@ -1010,7 +1014,7 @@
 <div class="overlay" id="apptOverlay">
   <div class="modal">
     <button class="modal-close" onclick="closeApptModal()" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
-    <h3 id="apptModalTitle">Nieuwe afspraak</h3>
+    <div class="appt-head"><h3 id="apptModalTitle">Nieuwe afspraak</h3><div class="appt-who" id="a_whoToggle"></div></div>
     <input id="a_t" placeholder="Omschrijving" autocomplete="off" />
     <div class="twocol">
       <div><input type="hidden" id="a_date" /><div class="datefield" id="a_date_f" onclick="openDuePicker(event,'appt')"><span id="a_date_lbl" class="ph">Datum</span><span class="cal-ic">▦</span></div></div>
@@ -1031,8 +1035,8 @@
       <div><input id="a_location" placeholder="Locatie" autocomplete="off" /></div>
     </div>
     <div class="twocol">
-      <div><select id="a_client" onchange="onApptClientChange()"></select></div>
-      <div><select id="a_owner"><option value="">Wie van Begeister</option><option>Jeroen</option><option>Marlon</option></select></div>
+      <div><select id="a_clientk" onchange="onApptClientChange()"></select></div>
+      <div><select id="a_project" onchange="onApptProjectChange()"></select></div>
     </div>
     <textarea id="a_note" rows="2" placeholder="Notitie" autocomplete="off"></textarea>
     <div class="foot">
@@ -1467,7 +1471,7 @@ function clientDropdown(){
   const seen={}, order=[];
   state.projects.filter(p=>p.id!=='__inbox__').forEach(p=>{ if(!(p.client in seen)){seen[p.client]=1;order.push(p.client);} });
   const opts=[{v:'all',l:'Klanten'}];
-  order.forEach(c=>opts.push({v:'c:'+c,l:c}));
+  order.forEach(c=>opts.push({v:'c:'+c,l:c,badge:_formBadge('client',c)}));
   opts.push({v:'__new__',l:'+ Nieuwe klant…',cls:'cdd-act'});
   opts.push({v:'__manage__',l:'Klanten beheren…',cls:'cdd-act'});
   return _cddHTML(opts, filterClient==='all'?'all':('c:'+filterClient), 'setClient');
@@ -1703,10 +1707,12 @@ function openApptModal(id){
   document.getElementById('a_kind').value=a?a.kind:'';
   document.getElementById('a_contact').value=a?a.contact:'';
   document.getElementById('a_location').value=a?a.location:'';
-  document.getElementById('a_owner').value=a?(a.owner||''):'';
   document.getElementById('a_note').value=a?a.note:'';
-  const cs=document.getElementById('a_client');
-  _fillApptClientSelect(cs, a&&a.projectId?a.projectId:'');
+  const _pid=a&&a.projectId?a.projectId:''; const _pp=_pid?projById(_pid):null; const _cv=_pp?_pp.client:'__none__';
+  _fillClientOpts(document.getElementById('a_clientk'), _cv);
+  _fillProjectOpts(document.getElementById('a_project'), _cv, _pid||null);
+  _enhanceSelect('a_clientk','client'); _enhanceSelect('a_project','project');
+  _apptOwner=a?(a.owner||''):(who||''); _renderApptWho();
   document.getElementById('a_del').style.display=apptEditId?'':'none';
   document.getElementById('apptModalTitle').textContent=apptEditId?'Afspraak bewerken':'Nieuwe afspraak';
   const ov=document.getElementById('apptOverlay');
@@ -1727,8 +1733,8 @@ async function saveAppt(){
     kind:document.getElementById('a_kind').value||'fysiek',
     contact:document.getElementById('a_contact').value.trim()||null,
     location:document.getElementById('a_location').value.trim()||null,
-    owner:document.getElementById('a_owner').value||null,
-    project_id:document.getElementById('a_client').value||null,
+    owner:_apptOwner||null,
+    project_id:document.getElementById('a_project').value||null,
     note:document.getElementById('a_note').value.trim()||null,
   };
   if(!rec.title||!rec.date){alert('Vul minimaal een titel en datum in.');return;}
@@ -2628,9 +2634,29 @@ async function onProjectChange(){
   const r=await _newProjectPrompt(client); fillProjectSelect(client, r?r.id:null);
 }
 async function onApptClientChange(){
-  const sel=document.getElementById('a_client'); if(sel.value!=='__new__')return;
-  const r=await _newClientPrompt(); _fillApptClientSelect(sel, r?r.id:'');
+  const sel=document.getElementById('a_clientk'); const v=sel.value;
+  if(v==='__new__'){ const r=await _newClientPrompt(); const cv=r?r.client:'__none__'; _fillClientOpts(sel,cv); _fillProjectOpts(document.getElementById('a_project'),cv); return; }
+  _fillProjectOpts(document.getElementById('a_project'),v);
 }
+async function onApptProjectChange(){
+  const sel=document.getElementById('a_project'); if(sel.value!=='__new__')return;
+  const client=document.getElementById('a_clientk').value;
+  if(client==='__none__'||client==='__new__'||!client){ alert('Kies eerst een klant.'); _fillProjectOpts(sel,'__none__'); return; }
+  const r=await _newProjectPrompt(client); _fillProjectOpts(sel, client, r?r.id:null);
+}
+function _fillClientOpts(sel,selectedClient){
+  sel.innerHTML='<option value="__none__">— Geen klant —</option><option value="__new__">+ Nieuwe klant…</option>'+uniqueClients().map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+  if(selectedClient!=null) sel.value=selectedClient;
+  if(sel._cddWrap)_enhanceSelect(sel,'client');
+}
+function _fillProjectOpts(sel,client,selId){
+  if(!client||client==='__none__'||client==='__new__'){ sel.innerHTML='<option value="">— geen project —</option>'; sel.value=''; }
+  else { sel.innerHTML=state.projects.filter(p=>p.client===client&&p.id!=='__inbox__').map(p=>`<option value="${p.id}">${escapeHtml(p.project||'—')}</option>`).join('')+'<option value="__new__">+ Nieuw project…</option>'; if(selId)sel.value=selId; }
+  if(sel._cddWrap)_enhanceSelect(sel,'project');
+}
+let _apptOwner='';
+function setApptOwner(n){ _apptOwner=(_apptOwner===n)?'':n; _renderApptWho(); }
+function _renderApptWho(){ const el=document.getElementById('a_whoToggle'); if(!el)return; el.innerHTML=`<span class="tw-opt${_apptOwner==='Jeroen'?' on':''}" onclick="setApptOwner('Jeroen')">Jeroen</span><span class="tw-opt${_apptOwner==='Marlon'?' on':''}" onclick="setApptOwner('Marlon')">Marlon</span>`; }
 function newTask(){ openModal(null); }
 function newWait(){ openModal(null,'wachter','wait'); }
 function openModal(id, src, defStatus){
