@@ -193,6 +193,14 @@
   #dropZone.reading .dz-star,#dropZone.summary .dz-star{display:block}
   #dropZone.reading .dz-star{animation:bgStarSpin 1.5s linear infinite;transform-origin:50% 50%}
   @keyframes bgStarSpin{to{transform:rotate(360deg)}}
+  #dropZone .dz-card{position:relative}
+  #dropZone.summary{pointer-events:auto}
+  #dropZone .dz-close{position:absolute;top:10px;right:12px;display:none;align-items:center;justify-content:center;width:30px;height:30px;border:0;background:transparent;color:rgba(255,255,255,.6);cursor:pointer;border-radius:50%}
+  #dropZone .dz-close:hover{color:#fff;background:rgba(255,255,255,.1)}
+  #dropZone.summary .dz-close{display:flex}
+  #dropZone .dz-prev{display:none;max-width:280px;max-height:200px;border-radius:12px;object-fit:contain;box-shadow:0 8px 26px rgba(0,0,0,.5)}
+  #dropZone.hasprev .dz-prev{display:block}
+  #dropZone.hasprev .dz-up,#dropZone.hasprev .dz-star{display:none}
   #dropZone .dz-title{color:#fff;font-size:18px;font-weight:600;letter-spacing:.2px}
   #dropZone .dz-sub{color:var(--mut);font-size:13.5px;max-width:330px;text-align:center;line-height:1.5}
   .main.workspace #view-filespreview{padding:0 24px 40px 24px;height:100%;overflow-y:auto;scrollbar-width:none}
@@ -1049,6 +1057,8 @@
 <!-- GLOBALE SLEEP-ZONE: bestand de app in slepen -> als input verwerken -->
 <div id="dropZone" aria-hidden="true">
   <div class="dz-card">
+    <button class="dz-close" onclick="_dzCloseClick()" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <img class="dz-prev" alt="">
     <svg class="dz-ic dz-up" viewBox="0 0 24 24" width="42" height="42" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/><path d="M7 9l5-5 5 5"/><path d="M12 4v12"/></svg>
     <svg class="dz-ic dz-star" viewBox="0 0 64 64" width="42" height="42" aria-hidden="true"><g stroke="#fff" stroke-width="4.6" stroke-linecap="butt"><line x1="32" y1="6" x2="32" y2="58"/><line x1="9.5" y1="19" x2="54.5" y2="45"/><line x1="9.5" y1="45" x2="54.5" y2="19"/></g></svg>
     <div class="dz-title">Laat los om toe te voegen</div>
@@ -3285,8 +3295,13 @@ async function pasteClip(){closePlus();composeMode(true);const ta=document.getEl
 var _dropFiles=[], _dropQueue=[], _dropSrc=null, _dropAdvancing=false;
 var _DZ_DEF={t:'Laat los om toe te voegen',s:'Foto, PDF, tekst of Word — ik lees het en stel meteen actiepunten voor.'};
 function _dzText(t,s){const z=document.getElementById('dropZone');if(!z)return;const a=z.querySelector('.dz-title'),b=z.querySelector('.dz-sub');if(a)a.textContent=t;if(b)b.textContent=s;}
-function _dzShow(t,s,mode){_dzText(t,s);const z=document.getElementById('dropZone');if(!z)return;z.classList.remove('reading','summary');if(mode)z.classList.add(mode);z.classList.add('on');}
-function _dzHide(){const z=document.getElementById('dropZone');if(z)z.classList.remove('on','reading','summary');_dzText(_DZ_DEF.t,_DZ_DEF.s);}
+var _dzResolve=null;
+function _dzCloseClick(){ if(_dzResolve){ const r=_dzResolve; _dzResolve=null; r(); } }
+function _dzShow(t,s,mode){_dzText(t,s);const z=document.getElementById('dropZone');if(!z)return;z.classList.remove('reading','summary','hasprev');if(mode)z.classList.add(mode);z.classList.add('on');}
+function _dzShowSummary(t,s,previewUrl){_dzText(t,s);const z=document.getElementById('dropZone');if(!z)return;const img=z.querySelector('.dz-prev');
+  if(previewUrl&&img){ img.src=previewUrl; z.classList.add('hasprev'); } else { z.classList.remove('hasprev'); if(img)img.removeAttribute('src'); }
+  z.classList.remove('reading'); z.classList.add('summary','on');}
+function _dzHide(){const z=document.getElementById('dropZone');if(z){z.classList.remove('on','reading','summary','hasprev');const img=z.querySelector('.dz-prev');if(img)img.removeAttribute('src');}_dzText(_DZ_DEF.t,_DZ_DEF.s);}
 
 async function handleDroppedFiles(list){
   _dropFiles=[...list];
@@ -3312,10 +3327,16 @@ async function _dropProcess(f){
     data=await r.json();
   }catch(_){}
   try{ loadUsage(); }catch(_){}
-  if(!data||data.error){ _dzShow('Kon dit bestand niet lezen', f.name, 'summary'); setTimeout(()=>{ _dzHide(); _dropRunNext(); }, 2000); return; }
+  if(!data||data.error){
+    _dzShowSummary('Kon dit bestand niet lezen', f.name, null);
+    await new Promise(res=>{ _dzResolve=res; setTimeout(()=>_dzCloseClick(), 2500); });
+    _dzHide(); _dropRunNext(); return;
+  }
   const summary=data.reply||''; const items=(data.items&&data.items.length)?data.items:[];
-  _dzShow(items.length?('Gevonden — '+items.length+' actiepunt'+(items.length>1?'en':'')):'Bestand gelezen', summary||f.name, 'summary');
-  await new Promise(r=>setTimeout(r,2500));   // samenvatting even tonen
+  const previewUrl=((f.type||'').toLowerCase().startsWith('image/'))?URL.createObjectURL(f):null;
+  _dzShowSummary(items.length?('Gevonden — '+items.length+' actiepunt'+(items.length>1?'en':'')):'Bestand gelezen', summary||f.name, previewUrl);
+  await new Promise(res=>{ _dzResolve=res; });   // blijft staan tot je op × klikt
+  if(previewUrl){ try{URL.revokeObjectURL(previewUrl);}catch(_){} }
   _dzHide();
   _startDropReview(items, summary, src?src.id:null);
 }
