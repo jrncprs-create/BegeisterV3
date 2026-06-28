@@ -158,6 +158,11 @@
   .picon{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#0c0d10;font-size:14px;flex:0 0 auto}
   .picon.empty{background:transparent;border:1.5px solid rgba(255,255,255,.32)}
   /* File manager */
+  .fm-top{display:flex;align-items:center;gap:8px;margin:0 0 14px}
+  .fm-top .fm-search{flex:1;margin:0}
+  .fm-sort{flex:0 0 auto;border:1px solid var(--line);background:transparent;color:var(--mut);border-radius:11px;padding:9px 13px;font-size:12.5px;font-family:inherit;cursor:pointer;white-space:nowrap;transition:color .15s,border-color .15s}
+  .fm-sort:hover{color:#fff;border-color:rgba(255,255,255,.25)}
+  .fm-row.fm-dragover{background:rgba(255,255,255,.12);outline:1px dashed rgba(255,255,255,.3)}
   .fm-search{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:11px;padding:9px 12px;margin:0 0 14px}
   .fm-search .fm-sic{color:var(--mut2);display:flex}
   .fm-search input{flex:1;background:transparent;border:none;outline:none;color:var(--txt);font-size:14px;font-family:inherit}
@@ -2510,13 +2515,15 @@ function _fileProject(f){
 function renderFiles(){
   const wrap=document.getElementById('filesWrap'); if(!wrap) return;
   if(!wrap.querySelector('.fm-search')){
-    wrap.innerHTML='<div class="fm-search"><span class="fm-sic">'+_searchGlyph()+'</span><input id="fmSearch" placeholder="Zoek bestanden…" autocomplete="off" oninput="fmSearch(this.value)"></div><div id="fmTree"></div>';
+    wrap.innerHTML='<div class="fm-top"><div class="fm-search"><span class="fm-sic">'+_searchGlyph()+'</span><input id="fmSearch" placeholder="Zoek bestanden…" autocomplete="off" oninput="fmSearch(this.value)"></div><button class="fm-sort" id="fmSortBtn" onclick="fmSortAI()">Sorteer met AI</button></div><div id="fmTree"></div>';
     const si=document.getElementById('fmSearch'); if(si)si.value=_fmQuery;
   }
   _renderFmTree();
 }
 function fmSearch(v){ _fmQuery=v; _renderFmTree(); }
 function fmToggle(k){ if(_fmOpen.has(k))_fmOpen.delete(k); else _fmOpen.add(k); _renderFmTree(); }
+function _cat(f){ return (f && f.icon || '').trim(); }
+function _fk(s){ return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
 function _renderFmTree(){
   const t=document.getElementById('fmTree'); if(!t) return;
   const q=(_fmQuery||'').trim().toLowerCase();
@@ -2526,28 +2533,65 @@ function _renderFmTree(){
     if(f.owner_type==='client'){ client=f.owner_id||'Geen klant'; pid='__alg__'; pname='Algemeen'; const b=_formBadge('client',client); col=b?b.col:'#888'; }
     else { const p=_fileProject(f); const real=p&&p.id!=='__inbox__';
       client=real?(p.client||'Geen klant'):'Geen klant'; pid=real?p.id:'__none__'; pname=real?(p.project||'—'):'Losse bestanden'; col=real?(PROJCOL[p.id]||'#888'):'#888'; }
-    if(!groups[client]) groups[client]={col, projs:{}, order:[]};
-    if(col&&col!=='#888') groups[client].col=col;
-    if(!groups[client].projs[pid]){ groups[client].projs[pid]={name:pname, files:[]}; groups[client].order.push(pid); }
-    groups[client].projs[pid].files.push(f);
+    const cat=_cat(f)||'Niet gesorteerd';
+    const G=groups[client]||(groups[client]={col,projs:{},order:[]});
+    if(col&&col!=='#888') G.col=col;
+    let P=G.projs[pid]; if(!P){ P={name:pname,cats:{},order:[]}; G.projs[pid]=P; G.order.push(pid); }
+    if(!P.cats[cat]){ P.cats[cat]=[]; P.order.push(cat); }
+    P.cats[cat].push(f);
   });
   const clients=Object.keys(groups).sort((a,b)=> a==='Geen klant'?1:(b==='Geen klant'?-1:a.localeCompare(b)));
   let html='';
   clients.forEach(c=>{
     const g=groups[c]; const projHtml=[];
     g.order.forEach(pid=>{
-      const pr=g.projs[pid];
-      const fl=q?pr.files.filter(f=>(f.name||'').toLowerCase().includes(q)):pr.files;
-      if(!fl.length) return;
-      const key=c+'|'+pid, open=q?true:_fmOpen.has(key);
-      const files=fl.map(f=>`<div class="fm-file" onclick="openFileViewer('${f.id}')"><span class="fm-ic">${_fileGlyph(f.name||'')}</span><span class="fm-name">${escapeHtml(f.name||'bestand')}</span></div>`).join('');
-      projHtml.push(`<div class="fm-row fm-prow${open?' open':''}" onclick="fmToggle('${key.replace(/'/g,"\\'")}')"><span class="fm-tw">▸</span><span class="fm-ic" style="color:${g.col}">${_folderGlyph()}</span><span class="fm-name">${escapeHtml(pr.name)}</span><span class="fm-cnt">${fl.length}</span></div><div class="fm-kids"${open?'':' style="display:none"'}>${files}</div>`);
+      const pr=g.projs[pid]; const catHtml=[];
+      pr.order.forEach(cat=>{
+        const fl=q?pr.cats[cat].filter(f=>(f.name||'').toLowerCase().includes(q)):pr.cats[cat];
+        if(!fl.length) return;
+        const ckey=c+'|'+pid+'|'+cat, copen=q?true:_fmOpen.has(ckey);
+        const files=fl.map(f=>`<div class="fm-file" draggable="true" data-fid="${f.id}" ondragstart="fmDragStart(event,'${f.id}')" onclick="openFileViewer('${f.id}')"><span class="fm-ic">${_fileGlyph(f.name||'')}</span><span class="fm-name">${escapeHtml(f.name||'bestand')}</span></div>`).join('');
+        catHtml.push(`<div class="fm-row fm-catrow${copen?' open':''}" data-drop="1" data-client="${escapeHtml(c)}" data-pid="${escapeHtml(pid)}" data-cat="${escapeHtml(cat)}" ondragover="fmDragOver(event)" ondragleave="fmDragLeave(event)" ondrop="fmDrop(event)" onclick="fmToggle('${_fk(ckey)}')"><span class="fm-tw">▸</span><span class="fm-ic" style="color:${g.col}">${_folderGlyph()}</span><span class="fm-name">${escapeHtml(cat)}</span><span class="fm-cnt">${fl.length}</span></div><div class="fm-kids"${copen?'':' style="display:none"'}>${files}</div>`);
+      });
+      if(!catHtml.length) return;
+      const pkey=c+'|'+pid, popen=q?true:_fmOpen.has(pkey);
+      projHtml.push(`<div class="fm-row fm-prow${popen?' open':''}" onclick="fmToggle('${_fk(pkey)}')"><span class="fm-tw">▸</span><span class="fm-ic" style="color:${g.col}">${_folderGlyph()}</span><span class="fm-name">${escapeHtml(pr.name)}</span></div><div class="fm-kids"${popen?'':' style="display:none"'}>${catHtml.join('')}</div>`);
     });
     if(!projHtml.length) return;
     const open=q?true:_fmOpen.has(c);
-    html+=`<div class="fm-client"><div class="fm-row fm-crow${open?' open':''}" onclick="fmToggle('${c.replace(/'/g,"\\'")}')"><span class="fm-tw">▸</span><span class="fm-badge" style="background:${g.col}"></span><span class="fm-name" style="color:${g.col}">${escapeHtml(c)}</span></div><div class="fm-kids"${open?'':' style="display:none"'}>${projHtml.join('')}</div></div>`;
+    html+=`<div class="fm-client"><div class="fm-row fm-crow${open?' open':''}" onclick="fmToggle('${_fk(c)}')"><span class="fm-tw">▸</span><span class="fm-badge" style="background:${g.col}"></span><span class="fm-name" style="color:${g.col}">${escapeHtml(c)}</span></div><div class="fm-kids"${open?'':' style="display:none"'}>${projHtml.join('')}</div></div>`;
   });
-  t.innerHTML=html||'<div class="hint">Nog geen bestanden.</div>';
+  t.innerHTML=html||'<div class="hint">Nog geen bestanden — of nog niet gesorteerd. Klik “Sorteer met AI”.</div>';
+}
+let _fmDragId=null;
+function fmDragStart(e,id){ _fmDragId=id; try{e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',id);}catch(_){}}
+function fmDragOver(e){ if(!_fmDragId)return; e.preventDefault(); e.currentTarget.classList.add('fm-dragover'); }
+function fmDragLeave(e){ e.currentTarget.classList.remove('fm-dragover'); }
+async function fmDrop(e){
+  e.preventDefault(); const row=e.currentTarget; row.classList.remove('fm-dragover');
+  const id=_fmDragId; _fmDragId=null; if(!id) return;
+  const client=row.getAttribute('data-client'), pid=row.getAttribute('data-pid'), cat=row.getAttribute('data-cat');
+  const f=(state.files||[]).find(x=>x.id===id); if(!f) return;
+  const patch={ icon: cat };
+  if(pid==='__alg__'){ patch.owner_type='client'; patch.owner_id=client; }
+  else if(pid==='__none__'){ /* losse bestanden: laat owner staan */ }
+  else { patch.owner_type='project'; patch.owner_id=pid; }
+  Object.assign(f,patch);
+  try{ await sb.from('files').update(patch).eq('id',id); }catch(_){}
+  _renderFmTree();
+}
+async function fmSortAI(){
+  const todo=(state.files||[]).filter(f=>!_cat(f)).map(f=>({id:f.id,name:f.name||'',scope:f.owner_type==='client'?'client':'project'}));
+  const btn=document.getElementById('fmSortBtn');
+  if(!todo.length){ if(btn){btn.textContent='Alles al gesorteerd';setTimeout(()=>{btn.textContent='Sorteer met AI';},1600);} return; }
+  if(btn){ btn.disabled=true; btn.textContent='Sorteren…'; }
+  try{
+    const r=await fetch('/api/sortfiles',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({files:todo})});
+    const d=await r.json(); const map=(d&&d.map)||{};
+    for(const id of Object.keys(map)){ try{ await sb.from('files').update({icon:map[id]}).eq('id',id); }catch(_){ } const f=(state.files||[]).find(x=>x.id===id); if(f)f.icon=map[id]; }
+    _renderFmTree();
+  }catch(_){}
+  if(btn){ btn.disabled=false; btn.textContent='Sorteer met AI'; }
 }
 function renderArchief(){
   const wrap=document.getElementById('archiefWrap'); if(!wrap)return;
