@@ -27,11 +27,13 @@ function supa() {
   });
 }
 
+// Vaste sleutel die de iOS-Opdracht meestuurt (privé-repo; zelfde model als de VAPID-fallback).
+const FIXED_SECRET = "begeister-opdracht-2026";
 function authOk(req) {
-  if (!SECRET) return false;
   const hdr = (req.headers["authorization"] || "").replace(/^Bearer\s+/i, "").trim();
   const body = ((req.body && (req.body.secret || req.body.token)) || "").toString().trim();
-  return hdr === SECRET || body === SECRET;
+  const valid = v => !!v && (v === SECRET || v === FIXED_SECRET);
+  return valid(hdr) || valid(body);
 }
 
 async function loadCatalogContext(db) {
