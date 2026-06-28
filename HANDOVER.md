@@ -5,6 +5,33 @@
 
 ---
 
+## 0. LEES DIT EERST (samenvatting voor een nieuwe sessie)
+
+**Wat:** één-bestand PWA (`public/index.html`) + Express-server (`server.mjs`) + losse
+`api/*.mjs`-handlers. Database = Supabase, bestanden = Dropbox, AI = Anthropic.
+Gebruikers: **Jeroen** (vormgever) & **Marlon** (event manager, **zij/haar**).
+
+**Zo werk je veilig in deze repo — de 5 regels die fouten voorkomen:**
+
+1. **Bewerk in de workspace** (`/Users/jeroencuypers/Projects/BegeisterV3/…`), bij voorkeur
+   met Edit/Write (betrouwbaarder dan via bash).
+2. **Deploy = git push.** Kopieer wijzigingen naar `/tmp/bg`, commit met auteur
+   `jrncprs@gmail.com`, `git push origin main`. Railway bouwt en deployt automatisch.
+3. **Pull eerst als je een "rejected (fetch first)" krijgt** — een andere sessie kan al
+   gepusht hebben. `git reset --hard origin/main` na een `fetch`, dan je wijziging
+   opnieuw toepassen. (Dit overkwam ons al; zie §3.)
+4. **Verifiëren doe je in de BROWSER, nooit met curl uit de sandbox** (egress is dicht).
+   En geef Railway 1–3 min: "not found" vlak na een push = nog aan het bouwen, geen bug.
+   **Blijf niet pollen in een lus.** Zie §12 → "Deploy verifiëren".
+5. **Server-wijzigingen** (`server.mjs`, `api/*.mjs`) vereisen een restart (~60–90s);
+   statische wijzigingen (`public/index.html`) zijn sneller live.
+
+**Waar dingen staan:** §2 architectuur · §2b alle invoerkanalen · §3 deploy · §4 datamodel ·
+§4b env-variabelen · §4c API-routes · §5–10 UI · §9 file manager · §11 WhatsApp · §12 valkuilen ·
+§14 openstaand.
+
+---
+
 ## 1. Wat is Begeister
 
 Een gedeelde AI-werkplek (PWA) voor **Jeroen** en **Marlon** — hun bedrijf doet licht,
@@ -45,16 +72,22 @@ geen build-stap, geen framework). Bewust zo gehouden.
    - **Status:** keten werkt, maar draait nog op Meta's **testnummer** (+1 555 672-8022). Een **echt, eigen telefoonnummer** is nog niet geregistreerd (Step 2 "Production setup" → "Register your WhatsApp phone number" staat open). Business-verificatie ("Cprs") is wél door (Verified, 28 jun 2026) en de webhook is geconfigureerd. Media (foto/doc/voice) wordt nu nog als placeholder-tekst opgeslagen, niet gedownload/getranscribeerd.
 3. **In-app chat** → typen, **plakken**, of **inspreken** (mic → transcriptie). `sources.channel = 'chat'` (`api/chat.mjs`).
 4. **Foto's in de chat** → vision: foto wordt samengevat + actiepunten voorgesteld (`api/vision.mjs`).
+5. **iOS-Opdracht (Shortcut)** → `POST /api/opdracht` met tekst en/of een foto (base64).
+   Draait dezelfde pijplijn als mail/WhatsApp (bron opslaan → Claude-extractie → taken + push).
+   `sources.channel = 'opdracht'` (`api/opdracht.mjs`). Beveiligd met een geheime sleutel
+   (`OPDRACHT_SECRET`/`CRON_SECRET`) in de Authorization-header (Bearer) of JSON-veld `secret`.
+   Hiermee kun je vanaf je iPhone (deelmenu/Shortcut) tekst of een foto rechtstreeks de
+   intake in sturen — onafhankelijk van WhatsApp.
 
 **Bestanden:**
 
-5. **Bijlage toevoegen in de chat** (bijlage-knop) → upload naar Dropbox + gekoppeld.
-6. **Bestanden slepen in de Files-view** (desktop) → Dropbox (drag-to-upload).
-7. **Bestaande Dropbox-bestanden koppelen** (linken vanuit de app).
+6. **Bijlage toevoegen in de chat** (bijlage-knop) → upload naar Dropbox + gekoppeld.
+7. **Bestanden slepen in de Files-view** (desktop) → Dropbox (drag-to-upload).
+8. **Bestaande Dropbox-bestanden koppelen** (linken vanuit de app).
 
 **Handmatig (zonder AI):**
 
-8. **+ knoppen** → zelf een wacht-item, taak of afspraak aanmaken.
+9. **+ knoppen** → zelf een wacht-item, taak of afspraak aanmaken.
 
 ---
 
@@ -99,6 +132,51 @@ commit -q -m "..." && git push -q origin main
   icon, created_at`.
   - **Let op:** de kolom **`icon` is herbestemd** als de **AI-categorie/mapnaam**
     (bv. "Lichtontwerp", "Facturen"). Er was géén migratie nodig. `icon` leeg = "Niet gesorteerd".
+- **sources** — ruwe binnenkomende berichten (e-mail/WhatsApp/opdracht), origineel bewaard;
+  `channel` = `'email' | 'whatsapp' | 'opdracht' | 'chat'`.
+- **app_context** — vaste AI-context (`key` = `begeister|jeroen|marlon`, `body` = tekst).
+  Wordt in elke extractie meegegeven. Ook losse contextbestanden in de repo:
+  `context_begeister.md`, `context_jeroen.md`, `context_marlon.md`.
+
+---
+
+## 4b. Omgevingsvariabelen (Railway → Variables)
+
+| Var | Waarvoor |
+|---|---|
+| `ANTHROPIC_API_KEY` | Alle AI-calls |
+| `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Database/Storage server-side |
+| `IMAP_HOST`, `IMAP_PORT`, `IMAP_USER`, `IMAP_PASSWORD` | Mail-intake (`intake@begeister.nl`) |
+| `WHATSAPP_VERIFY_TOKEN` | Webhook-verificatie Meta |
+| `OPDRACHT_SECRET` (of `CRON_SECRET`) | Auth voor de iOS-Opdracht-route |
+| `CRON_SECRET` | Auth voor `/api/intake` (handmatig triggeren) |
+| `DROPBOX_APP_KEY`, `DROPBOX_APP_SECRET`, `DROPBOX_REDIRECT_URI` | Dropbox OAuth |
+| `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | Web-push |
+| `RUN_INTAKE` | Zet de interne intake-cron aan/uit |
+| `PORT` | Poort (Railway zet 'm zelf) |
+
+> Dropbox-**access/refresh-token** staat in Supabase (zie `lib/dropbox.mjs` → `getAccessToken`),
+> niet in env.
+
+---
+
+## 4c. API-routes (gemount in `server.mjs`)
+
+| Route | Doel |
+|---|---|
+| `/api/intake` | Mail- + WhatsApp-webhook (GET=verify, POST=event); auth via `CRON_SECRET` |
+| `/api/opdracht` | iOS-Opdracht/Shortcut: tekst+foto → actiepunten; auth via `OPDRACHT_SECRET` |
+| `/api/chat` | In-app AI-chat → taken/afspraken (tool-use-loop) |
+| `/api/vision` | Foto in chat → samenvatting + actiepunten |
+| `/api/readfile` | Gekoppeld Dropbox-bestand samenvatten |
+| `/api/spark` | Quote/spark (haiku) |
+| `/api/sortfiles` | AI file-categorisatie (vaste mappen) |
+| `/api/fileproxy` | Inline-bestandsproxy (preview-fix) |
+| `/api/usage` | Token-/kostenlogboek |
+| `/api/notify`, `/api/push` | Web-push |
+| `/api/backfill-contacts` | Eenmalige contact-extractie uit oude bronnen |
+| `/api/dropbox/connect`, `/api/dropbox/callback` | Dropbox OAuth |
+| `/api/dropbox/list` | Dropbox: list/search/link/scan/apply/sync/**upload** |
 
 ---
 
@@ -244,12 +322,15 @@ Bestandstype- en UI-iconen via de eigen set (`icongen.py` / `art-samples`).
   Meta's Test-knop + Railway-logs.
 - `api/intake.mjs`: de WhatsApp-POST antwoordt direct 200 en verwerkt daarna async
   (`Promise.resolve(handleEvent(req.body)).catch(...)`).
-- **Enige blokkade:** de Meta-app is **nog niet gepubliceerd** → er stroomt geen
-  productie-data tot de app live is. Vereist **Business Verification**.
-  - Legal name moest matchen met KvK: **"Cprs"** (niet "Begeister"). Ingevuld, mail bevestigd,
-    staat **"in review"** (~2–10 werkdagen).
-  - Er staat een geplande herinnering om de verificatie te checken (30 juni 10:00).
-- Na publicatie/verificatie stromen echte berichten binnen.
+- **Business-verificatie is DOOR** (legal name "Cprs", Verified 28 jun 2026). Webhook geconfigureerd.
+- **Resterende blokkade:** draait nog op Meta's **testnummer** (+1 555 672-8022). Een
+  **eigen telefoonnummer** is nog niet geregistreerd — Step 2 "Production setup" →
+  "Register your WhatsApp phone number" staat open. Zodra dat eigen nummer geregistreerd
+  is, stromen echte berichten binnen.
+- Media (foto/doc/voice) wordt nu nog als placeholder-tekst opgeslagen — niet
+  gedownload/getranscribeerd. (Zie `intake/whatsapp.mjs` → `msgToText`.)
+- **Tussenoplossing die al wérkt:** de iOS-Opdracht-route (§2b nr. 5) — daarmee kun je
+  nu al vanaf je iPhone tekst/foto's de intake in sturen zonder op WhatsApp te wachten.
 
 ---
 
@@ -263,6 +344,21 @@ Bestandstype- en UI-iconen via de eigen set (`icongen.py` / `art-samples`).
 - Bij live-verificatie via Chrome MCP: de **welkom-overlay** moet elke load gesloten worden.
 - Server-restart (~60–90s) nodig na wijzigingen in `server.mjs` / `api/*.mjs`.
 
+### Deploy verifiëren — LEES DIT (hier liep een sessie op vast)
+- **De sandbox kan NIET naar buiten** (egress geblokkeerd; alleen `git push` werkt via
+  een eigen route). Dus **niet** met `curl`/`fetch` vanuit bash de live-route testen —
+  dat faalt altijd, ongeacht of de deploy goed is. **Verifieer via de browser (Chrome MCP).**
+- **Geef Railway de tijd.** Direct na een push draait de oude code nog. Een route die
+  **"not found"** geeft vlak na de push = vrijwel zeker **Railway is nog aan het bouwen**
+  (de catch-all serveert nog de oude versie) — dat is **geen** code-bug. Wacht 1–3 min
+  en check opnieuw. Een nieuw gemounte route hoort, zodra live, op een GET
+  **"method not allowed"** of **"unauthorized"** te geven, niet "not found".
+- Snelle "is de nieuwe code er al?"-check zonder side effects: open in de browser een
+  bestaande route (bv. `/api/intake`) — geeft die "unauthorized", dan draait de server;
+  geeft je nieuwe route dán nog "not found", wacht langer.
+- **Blijf niet in een lus hangen** op het controleren — bouw af, push, en check één keer
+  rustig na een paar minuten. Niet 5× achter elkaar dezelfde route pollen.
+
 ---
 
 ## 13. Belangrijkste bestanden
@@ -272,6 +368,8 @@ Bestandstype- en UI-iconen via de eigen set (`icongen.py` / `art-samples`).
 | `public/index.html` | Hele frontend |
 | `server.mjs` | Express-server, route-mounts, intake-cron |
 | `api/intake.mjs` | Mail/WhatsApp-intake + AI-extractie |
+| `api/opdracht.mjs` | iOS-Opdracht-route (tekst+foto → actiepunten) |
+| `intake/poller.mjs`, `intake/whatsapp.mjs`, `intake/extract.mjs` | IMAP-poller, WhatsApp-parser, AI-extractie |
 | `api/chat.mjs` | Chat → taken/afspraken |
 | `api/spark.mjs` | Quote/spark (haiku) |
 | `api/sortfiles.mjs` | AI file-categorisatie (vaste mappen) |
@@ -286,7 +384,9 @@ Bestandstype- en UI-iconen via de eigen set (`icongen.py` / `art-samples`).
 
 - **Drag-to-upload**: opgeleverd en gedeployd — **nog live testen met één bestand**
   (binaire pipeline kon blind niet getest worden).
-- **WhatsApp**: wachten op Business Verification → daarna app publiceren.
+- **iOS-Opdracht-route**: gebouwd (`api/opdracht.mjs`) — nog **de Shortcut op de iPhone
+  bouwen** (POST naar `/api/opdracht` met de `OPDRACHT_SECRET`) en één keer testen.
+- **WhatsApp**: verificatie is door; nog **eigen telefoonnummer registreren** (testnummer nu).
 - **Begeister-PDF's**: er staan PDF's fysiek in de Dropbox `/Begeister`-map die nog
   niet in de app gekoppeld zijn; verschijnen pas na koppelen/uploaden.
 - Klein: sluit-×'jes overal exact gelijk uitlijnen (taak #31).
