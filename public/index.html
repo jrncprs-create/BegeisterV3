@@ -258,7 +258,9 @@
   .main.workspace #view-filespreview::-webkit-scrollbar{display:none}
   .fmp-head{display:flex;align-items:center;gap:8px;height:26px;padding-top:18px;margin:0 0 16px;font-size:13px;color:var(--txt)}
   .fmp-head .fmp-ic{display:flex;align-items:center;color:var(--mut)}
-  .fmp-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .fmp-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
+  .fmp-x{flex:0 0 auto;margin-left:8px;background:transparent;border:none;color:var(--mut);cursor:pointer;display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;padding:0;transition:color .15s,background .15s}
+  .fmp-x:hover{color:#fff;background:rgba(255,255,255,.06)}
   .fmp-stage{height:calc(100% - 130px);min-height:320px;border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#0c0c0c}
   .fmp-img{max-width:100%;max-height:100%;object-fit:contain}
   .fmp-frame{width:100%;height:100%;border:none}
@@ -878,6 +880,19 @@
     #nav button[data-v="contacten"]{order:6}
     #nav button[data-v="archief"]{order:7}
     #nav #pushBtn{order:8}
+    /* mobiel: preview compact (thumbnail) i.p.v. fullscreen-bleed; close-knop vast rechtsboven */
+    .fv-bar{position:relative;flex-wrap:wrap;gap:8px;row-gap:8px;padding:11px 52px 11px 14px}
+    .fv-name{flex:1 1 auto}
+    .fv-count{flex:0 0 auto}
+    .fv-x{position:absolute;top:9px;right:10px;width:34px;height:34px;border:1px solid var(--line);border-radius:9px;align-items:center;justify-content:center;color:var(--txt);background:rgba(255,255,255,.04)}
+    .fv-actions{flex:1 1 100%;gap:8px}
+    .fv-actions .fv-btn{flex:1}
+    .fv-stage{padding:14px;align-items:center}
+    .fv-stage .fv-img{max-width:100%;max-height:46vh}
+    .fv-stage .fv-frame{width:100%;height:46vh;flex:0 0 auto}
+    .pvw-frame{width:92vw;height:58vh}
+    .pvw-img{max-width:92vw;max-height:58vh}
+    .pvw-x{width:40px;height:40px;top:calc(env(safe-area-inset-top,0px) + 10px);right:12px}
   }
   @media(min-width:601px){
     #nav button[data-v="home"],#nav button[data-v="wachter"]{display:none}
@@ -1003,7 +1018,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v30</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v31</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -3046,6 +3061,7 @@ async function fmSyncDropbox(){
 }
 let _fmPrevId=null;
 function fmFileClick(id){ if(isDesk3()) fmPreview(id); else openFileViewer(id); }
+function fmClosePreview(){ _fmPrevId=null; const pane=document.getElementById('view-filespreview'); if(pane)pane.innerHTML='<div class="fmp-empty">Kies een bestand</div>'; document.querySelectorAll('#fmTree .fm-file.sel').forEach(e=>e.classList.remove('sel')); }
 function fmPreview(id){
   _fmPrevId=id;
   const pane=document.getElementById('view-filespreview'); if(!pane) return;
@@ -3059,7 +3075,7 @@ function fmPreview(id){
   if(['png','jpg','jpeg','gif','webp','bmp','svg','heic','heif'].includes(ext)) body='<img class="fmp-img" src="'+escapeHtml(url)+'" alt="">';
   else if(ext==='pdf') body='<iframe class="fmp-frame" src="'+escapeHtml(url)+'#toolbar=0&navpanes=0&view=FitH" title="PDF"></iframe>';
   else body='<div class="fmp-none">'+_fileGlyph(f.name)+'<p>Geen voorvertoning</p></div>';
-  pane.innerHTML='<div class="fmp-head"><span class="fmp-ic">'+_fileGlyph(f.name)+'</span><span class="fmp-name">'+escapeHtml(f.name||'bestand')+'</span></div><div class="fmp-stage">'+body+'</div><div class="fmp-foot"><button class="fv-btn" onclick="window.open(\''+_fvDl(f.link)+'\',\'_blank\',\'noopener\')">Download origineel</button><button class="fv-btn" onclick="window.open(\''+(f.link||'')+'\',\'_blank\',\'noopener\')">Open in Dropbox</button></div>';
+  pane.innerHTML='<div class="fmp-head"><span class="fmp-ic">'+_fileGlyph(f.name)+'</span><span class="fmp-name">'+escapeHtml(f.name||'bestand')+'</span><button class="fmp-x" onclick="fmClosePreview()" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><div class="fmp-stage">'+body+'</div><div class="fmp-foot"><button class="fv-btn" onclick="window.open(\''+_fvDl(f.link)+'\',\'_blank\',\'noopener\')">Download origineel</button><button class="fv-btn" onclick="window.open(\''+(f.link||'')+'\',\'_blank\',\'noopener\')">Open in Dropbox</button></div>';
 }
 function renderArchief(){
   const wrap=document.getElementById('archiefWrap'); if(!wrap)return;
