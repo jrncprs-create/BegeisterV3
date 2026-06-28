@@ -2944,7 +2944,7 @@ function updateDueLabel(){const el=document.getElementById('m_due_label');if(!el
   el.textContent=mDue?d(mDue).toLocaleDateString('nl-NL',{weekday:'short',day:'numeric',month:'long',year:'numeric'}):'Deadline';
   el.classList.toggle('ph',!mDue);}
 function closeModal(){const ov=document.getElementById('overlay');ov.classList.remove('open');document.getElementById('duepop').classList.remove('open');
-  if(!_dropAdvancing){ _dropFiles=[]; _dropQueue=[]; _dropSrc=null; if(typeof _dzHide==='function')_dzHide(); }   // handmatig sluiten = drop-review afbreken
+  if(!_dropAdvancing){ _dropFiles=[]; _dropQueue=[]; _dropSrc=null; _dropFileObj=null; _dropFileDone=false; if(typeof _dzHide==='function')_dzHide(); }   // handmatig sluiten = drop-review afbreken
   setTimeout(()=>{if(!ov.classList.contains('open')){editingId=null;ov.classList.remove('incol');ov.classList.remove('incol-left');ov.style.top='';}},560);}
 function saveModal(){const r=findItem(editingId);if(!r)return;const np=document.getElementById('m_project').value;
   r.it.t=document.getElementById('m_t').value.trim()||r.it.t;
@@ -3141,6 +3141,8 @@ saveModal = async function(){
       source_id:_dropSrc||null};
     const ins=await sb.from('items').insert(rec).select('id').single();
     if(ins&&ins.data) lastAddedIds=[ins.data.id];
+    // gedropt bestand: bij opslaan naar Dropbox /In afwachting/ (verhuist bij goedkeuren naar Klant/Project/categorie)
+    if(_dropFileObj && !_dropFileDone && ins && ins.data){ _dropFileDone=true; try{ const b64=await fileToB64(_dropFileObj); await fetch('/api/dropbox/list',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'upload',name:_dropFileObj.name,b64,target:'In afwachting',owner_type:'task',owner_id:ins.data.id,cat:_dropCat||'Concept'})}); }catch(_){}}
     if(rec.project_id && activeTab!=='all') activeTab=rec.project_id;
     notifyPartner((who||'Iemand')+' voegde een taak toe: '+title);
     _animateNext=true;
@@ -3312,7 +3314,7 @@ async function pasteClip(){closePlus();composeMode(true);const ta=document.getEl
 })();
 
 // Drop -> bestand lezen -> chat sluit -> per gevonden punt het Nieuwe-taak-venster (vooraf ingevuld).
-var _dropFiles=[], _dropQueue=[], _dropSrc=null, _dropAdvancing=false;
+var _dropFiles=[], _dropQueue=[], _dropSrc=null, _dropAdvancing=false, _dropFileObj=null, _dropCat='', _dropFileDone=false;
 var _DZ_DEF={t:'Laat los om toe te voegen',s:'Foto, PDF, tekst of Word — ik lees het en stel meteen actiepunten voor.'};
 function _dzText(t,s){const z=document.getElementById('dropZone');if(!z)return;const a=z.querySelector('.dz-title'),b=z.querySelector('.dz-sub');if(a)a.textContent=t;if(b)b.textContent=s;}
 var _dzResolve=null, _fileProjectId=null;
@@ -3365,10 +3367,7 @@ async function _dropProcess(f){
   _dzShow('Bestand lezen…', f.name, 'reading');
   let src=null;
   try{ const r=await sb.from('sources').insert({channel:'drop',sender:who||'Sleep',body:f.name,processed:true}).select().single(); src=r.data||null; }catch(_){}
-  try{const path='drop/'+(src?src.id:Date.now())+'_'+f.name.replace(/[^\w.\-]/g,'_');
-    const up=await sb.storage.from('intake').upload(path,f,{contentType:f.type||'application/octet-stream',upsert:true});
-    if(!up.error&&src){await sb.from('attachments').insert({source_id:src.id,filename:f.name,storage_path:path,mime:f.type,size:f.size});}
-  }catch(_){}
+  _dropFileObj=f; _dropFileDone=false;   // bestand vasthouden; pas bij opslaan naar Dropbox /In afwachting/
   let data=null;
   try{
     const b64=await fileToB64(f);
@@ -3396,6 +3395,7 @@ async function _dropProcess(f){
   let previewUrl=null, _prevObj=false; const _mime=(f.type||'').toLowerCase();
   if(_mime.startsWith('image/')){ previewUrl=URL.createObjectURL(f); _prevObj=true; }
   else if(_mime==='application/pdf'||/\.pdf$/i.test(f.name)){ try{ previewUrl=await _pdfFirstPagePreview(f); }catch(_){ previewUrl=null; } }
+  _dropCat=((data.category||'').trim())||'Concept';
   const facts=[];
   if((data.type||'').trim()) facts.push({k:'Type', v:data.type.trim()});
   if((data.from||'').trim()) facts.push({k:'Afzender', v:data.from.trim()});
