@@ -143,6 +143,17 @@ export default async function handler(req, res) {
       const ins = await db.from("files").insert(row).select().single();
       return res.status(200).json({ connected: true, file: (ins && ins.data) ? ins.data : row });
     }
+    if (action === "delete") {
+      // Verwijder opgegeven paden (mappen recursief). Gaat naar Dropbox-prullenbak (30 dagen herstelbaar).
+      const paths = req.body.paths || [];
+      const results = [];
+      for (const p of paths) {
+        if (!p) { results.push({ path: p, ok: false, err: "leeg pad" }); continue; }
+        const r = await call("files/delete_v2", { path: p });
+        results.push({ path: p, ok: !r.error, err: r.error ? JSON.stringify(r.error) : undefined });
+      }
+      return res.status(200).json({ connected: true, results });
+    }
     return res.status(400).json({ error: "unknown action" });
   } catch (e) {
     return res.status(200).json({ connected: true, error: String(e.message || e) });
