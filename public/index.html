@@ -129,6 +129,7 @@
   .cdd-row{display:flex;gap:8px;width:100%}
   .cdd-row .cdd{flex:1;min-width:0}
   .cdd{display:none;position:relative;margin-bottom:10px}
+  .cdd.cdd-form{display:block;margin-bottom:0;width:100%}
   .cdd-btn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;background:transparent;border:1px solid var(--line);border-radius:11px;padding:12px 13px;color:var(--txt);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;text-align:left}
   .cdd-cur{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .cdd-chev{flex:0 0 auto;color:var(--mut2);transition:transform .15s}
@@ -149,6 +150,11 @@
   .t-top{display:flex;align-items:center;gap:11px}
   .picon{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#0c0d10;font-size:14px;flex:0 0 auto}
   .picon.empty{background:transparent;border:1.5px solid rgba(255,255,255,.32)}
+  /* rustiger beeld: items 40% donkerder, behalve waar je overheen hovert of sleept */
+  @media(hover:hover){
+    #list .task,#wachterList .task{filter:brightness(.6);transition:filter .25s}
+    #list .task:hover,#wachterList .task:hover,#list .task.dragging,#wachterList .task.dragging,#list .task.justlanded,#wachterList .task.justlanded{filter:none}
+  }
   /* tijdelijke inkleuring van een bron in klantkleur (na klik op 'bron' bij een taak) */
   .srow.tinted .srow-title,.srow.tinted .srow-sub,.srow.tinted .srow-date,.srow.tinted .doc-ic,.srow.tinted .srow-text,.srow.tinted .srow-derived,.srow.tinted .srow-att .fname,.srow.tinted .srow-att .file-ic{color:var(--scol)!important}
   .t-proj{flex:1;min-width:0;font-size:13.5px;font-weight:600;color:var(--ccol,var(--mut));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -1482,6 +1488,28 @@ function _cddHTML(opts,active,handler){
 function _cddToggle(e){ e.stopPropagation(); const dd=e.currentTarget.closest('.cdd'); const open=dd.classList.contains('open'); document.querySelectorAll('.cdd.open').forEach(x=>x.classList.remove('open')); if(!open)dd.classList.add('open'); }
 function _cddPick(handler,v){ document.querySelectorAll('.cdd.open').forEach(x=>x.classList.remove('open')); if(typeof window[handler]==='function') window[handler](v); }
 if(!window._cddInit){window._cddInit=true; document.addEventListener('click',()=>{document.querySelectorAll('.cdd.open').forEach(x=>x.classList.remove('open'));});}
+// Gestileerde keuzelijst (badge + klantkleur) die een verborgen native <select> aanstuurt.
+function _formBadge(kind,v){
+  if(!v||v==='__new__'||v==='__manage__'||v==='__none__') return null;
+  if(kind==='client'){
+    const p=state.projects.find(x=>x.id!=='__inbox__'&&x.client===v);
+    return {col:(p&&p.color)||'#888', ch:(p&&p.icon)||v.trim().charAt(0).toUpperCase()};
+  }
+  const p=projById(v); return {col:PROJCOL[v]||'#888', ch:(p&&p.icon)||((p&&p.client||'?').trim().charAt(0).toUpperCase())};
+}
+function _enhanceSelect(sel,kind){
+  if(typeof sel==='string') sel=document.getElementById(sel);
+  if(!sel) return;
+  let wrap=sel._cddWrap;
+  if(!wrap){ wrap=document.createElement('div'); wrap.className='cdd cdd-form'; sel.style.display='none'; sel.parentNode.insertBefore(wrap, sel.nextSibling); sel._cddWrap=wrap; }
+  const opts=[...sel.options].map(o=>({v:o.value,l:o.textContent,cls:(o.value==='__new__'||o.value==='__manage__')?'cdd-act':''}));
+  const cur=opts.find(o=>o.v===sel.value)||opts[0]||{l:'',v:''};
+  const cb=_formBadge(kind,cur.v);
+  const items=opts.map(o=>{ const b=_formBadge(kind,o.v); const lead=b?`<span class="cdd-badge" style="background:${b.col}">${escapeHtml(b.ch||'')}</span>`:`<span class="cdd-ck">${o.v===sel.value?'✓':''}</span>`; return `<div class="cdd-opt${o.v===sel.value?' sel':''} ${o.cls}" data-v="${escapeHtml(o.v)}">${lead}<span class="cdd-lbl">${escapeHtml(o.l)}</span></div>`; }).join('');
+  wrap.innerHTML=`<button type="button" class="cdd-btn">${cb?`<span class="cdd-badge" style="background:${cb.col}">${escapeHtml(cb.ch||'')}</span>`:''}<span class="cdd-cur">${escapeHtml(cur.l)}</span><svg class="cdd-chev" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6l6 -6"/></svg></button><div class="cdd-menu">${items}</div>`;
+  wrap.querySelector('.cdd-btn').onclick=e=>{ e.stopPropagation(); const open=wrap.classList.contains('open'); document.querySelectorAll('.cdd.open').forEach(x=>x.classList.remove('open')); if(!open)wrap.classList.add('open'); };
+  wrap.querySelectorAll('.cdd-opt').forEach(el=>{ el.onclick=e=>{ e.stopPropagation(); wrap.classList.remove('open'); sel.value=el.getAttribute('data-v'); sel.dispatchEvent(new Event('change')); _enhanceSelect(sel,kind); }; });
+}
 function renderTaken(){
   const va=document.getElementById('view-taken');
   if(isDesk3()){
@@ -2513,9 +2541,10 @@ const CONTACTS=['Willem','Leon','Joep','Idz','Noa','Hans','Stavros','Len'];
 function uniqueClients(){const seen=[];state.projects.forEach(p=>{if(p.id==='__inbox__')return;if(!seen.includes(p.client))seen.push(p.client);});return seen;}
 function fillProjectSelect(client,selId){
   const sel=document.getElementById('m_project');
-  if(client==='__none__'||client==='__new__'){ sel.innerHTML='<option value="">— geen project —</option>'; sel.value=''; return; }
+  if(client==='__none__'||client==='__new__'){ sel.innerHTML='<option value="">— geen project —</option>'; sel.value=''; if(sel._cddWrap)_enhanceSelect(sel,'project'); return; }
   sel.innerHTML=state.projects.filter(p=>p.client===client&&p.id!=='__inbox__').map(p=>`<option value="${p.id}">${escapeHtml(p.project||'—')}</option>`).join('')+'<option value="__new__">+ Nieuw project…</option>';
   if(selId)sel.value=selId;
+  if(sel._cddWrap)_enhanceSelect(sel,'project');
 }
 function uiPrompt(title, value=''){
   return new Promise(resolve=>{
@@ -2542,6 +2571,7 @@ function uiPrompt(title, value=''){
 function _fillClientSelect(sel,selected){
   sel.innerHTML='<option value="__none__">— Geen klant —</option><option value="__new__">+ Nieuwe klant…</option>'+uniqueClients().map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
   if(selected!=null) sel.value=selected;
+  if(sel._cddWrap)_enhanceSelect(sel,'client');
 }
 function _fillApptClientSelect(sel,selected){
   sel.innerHTML='<option value="">Klant / project</option><option value="__new__">+ Nieuwe klant…</option>'+state.projects.filter(p=>p.id!=='__inbox__').map(p=>`<option value="${p.id}">${escapeHtml(p.client)}${p.project?' · '+escapeHtml(p.project):''}</option>`).join('');
@@ -2609,6 +2639,7 @@ function openModal(id, src, defStatus){
   const clientVal = (isNew||inInbox) ? '__none__' : r.p.client;
   _fillClientSelect(document.getElementById('m_client'), clientVal);
   fillProjectSelect(clientVal,(isNew||inInbox)?null:r.p.id);
+  _enhanceSelect('m_client','client'); _enhanceSelect('m_project','project');
   document.getElementById('m_t').value=isNew?'':r.it.t;
   document.getElementById('m_status').value=isNew?(defStatus||'todo'):r.it.status;
   mDue=isNew?null:(r.it.due||null);duePickerRef=mDue||iso(TODAY);updateDueLabel();
