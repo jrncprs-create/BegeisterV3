@@ -644,6 +644,17 @@
   .fv-actions{display:flex;align-items:center;gap:8px;flex:0 0 auto}
   .fv-btn{background:transparent;border:1px solid var(--line);border-radius:9px;color:var(--txt);font-size:13px;padding:7px 12px;cursor:pointer;font-family:inherit}
   .fv-btn:hover{border-color:#fff}
+  #fmMvList{max-height:46vh;overflow:auto;display:flex;flex-direction:column;gap:8px}
+  .fmmv-row{display:flex;align-items:center;gap:12px;padding:11px 13px;border:1px solid var(--line);border-radius:13px}
+  .fmmv-info{flex:1;min-width:0}
+  .fmmv-name{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .fmmv-path{font-size:12px;color:var(--mut2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .fmmv-to{color:var(--txt)}
+  .fmmv-arr{opacity:.55;margin:0 2px}
+  .fmmv-acts{display:flex;gap:7px;flex-shrink:0}
+  .fmmv-ok,.fmmv-x{width:30px;height:30px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--mut2);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:border-color .15s,color .15s}
+  .fmmv-ok:hover{border-color:#4ad08a;color:#4ad08a}
+  .fmmv-x:hover{border-color:#e0664f;color:#e0664f}
   .fv-x{background:transparent;border:none;color:var(--mut);cursor:pointer;display:flex;padding:4px;margin-left:2px}
   .fv-x:hover{color:#fff}
   .fv-stage{flex:1;display:flex;align-items:center;justify-content:center;overflow:auto;padding:18px;position:relative}
@@ -992,7 +1003,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v27</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v28</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -2854,18 +2865,81 @@ async function fmUploadFiles(list, client, pid, cat){
 function _fmShowDropOverlay(t){ const w=document.getElementById('filesWrap'); if(!w)return; const o=w.querySelector('.fm-drop-overlay'); if(o&&t){const s=o.querySelector('.fm-do-txt'); if(s)s.textContent=t;} w.classList.add('fm-dropping'); }
 function _fmShowUploading(n){ _fmShowDropOverlay('Uploaden… ('+n+')'); }
 function _fmHideDropOverlay(){ const w=document.getElementById('filesWrap'); if(!w)return; w.classList.remove('fm-dropping'); const o=w.querySelector('.fm-drop-overlay .fm-do-txt'); if(o)o.textContent='Sleep bestanden op een map om te uploaden'; }
+function _fmFileLoc(f){
+  // Huidige klant/project van een bestand (voor weergave + AI-context).
+  if(f.folder_id){ const fo=(state.folders||[]).find(x=>String(x.id)===String(f.folder_id)); return {client:fo?('map: '+fo.name):'',project:'',project_id:''}; }
+  if(f.owner_type==='client') return {client:String(f.owner_id||''),project:'',project_id:''};
+  const p=_fileProject(f); return {client:p?p.client:'',project:p?(p.project||''):'',project_id:p?p.id:''};
+}
 async function fmSortAI(){
-  const todo=(state.files||[]).filter(f=>!_cat(f)).map(f=>({id:f.id,name:f.name||'',scope:f.owner_type==='client'?'client':'project'}));
+  const all=(state.files||[]);
+  const todo=all.filter(f=>!_cat(f));
   const btn=document.getElementById('fmSortBtn');
-  if(!todo.length){ if(btn){btn.textContent='Alles al gesorteerd';setTimeout(()=>{btn.textContent='Sorteer met AI';},1600);} return; }
+  if(!all.length){ if(btn){btn.textContent='Geen bestanden';setTimeout(()=>{btn.textContent='Sorteer met AI';},1600);} return; }
   if(btn){ btn.disabled=true; btn.textContent='Sorteren…'; }
+  // Catalogus van bekende klanten/projecten (voor verplaats-voorstel).
+  const catalog=state.projects.filter(p=>p.id!=='__inbox__').map(p=>({client:p.client||'',project:p.project||'',project_id:p.id}));
+  uniqueClients().forEach(c=>{ if(c&&!catalog.some(x=>x.client===c)) catalog.push({client:c,project:'',project_id:''}); });
+  // Stuur ALLE bestanden mee (met huidige locatie) zodat de AI ook foute plaatsingen kan herkennen.
+  const payload=all.map(f=>{ const loc=_fmFileLoc(f); return {id:f.id,name:f.name||'',scope:f.owner_type==='client'?'client':'project',client:loc.client,project:loc.project,project_id:loc.project_id}; });
   try{
-    const r=await fetch('/api/sortfiles',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({files:todo})});
-    const d=await r.json(); const map=(d&&d.map)||{};
-    for(const id of Object.keys(map)){ try{ await sb.from('files').update({icon:map[id]}).eq('id',id); }catch(_){ } const f=(state.files||[]).find(x=>x.id===id); if(f)f.icon=map[id]; }
+    const r=await fetch('/api/sortfiles',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({files:payload,catalog})});
+    const d=await r.json(); const map=(d&&d.map)||{}; const moves=(d&&d.moves)||{};
+    // 1) Categorie alleen zetten voor nog niet-gesorteerde bestanden.
+    const todoIds=new Set(todo.map(f=>f.id));
+    for(const id of Object.keys(map)){ if(!todoIds.has(id))continue; try{ await sb.from('files').update({icon:map[id]}).eq('id',id); }catch(_){ } const f=all.find(x=>x.id===id); if(f)f.icon=map[id]; }
     _renderFmTree();
+    // 2) Verplaats-voorstellen tonen ter bevestiging (nooit stil verschuiven).
+    const proposals=Object.keys(moves).map(id=>({f:all.find(x=>x.id===id),mv:moves[id]})).filter(x=>x.f);
+    if(proposals.length) _fmShowMoveConfirm(proposals);
+    else if(!todo.length && btn){ btn.textContent='Alles al gesorteerd'; setTimeout(()=>{btn.textContent='Sorteer met AI';},1600); }
   }catch(_){}
-  if(btn){ btn.disabled=false; btn.textContent='Sorteer met AI'; }
+  if(btn){ btn.disabled=false; if(btn.textContent==='Sorteren…')btn.textContent='Sorteer met AI'; }
+}
+function _fmMoveTargetLabel(mv){
+  if(mv.project_id){ const p=projById(mv.project_id); if(p) return (p.client||'')+(p.project?' · '+p.project:''); }
+  return mv.client||'';
+}
+function _fmShowMoveConfirm(proposals){
+  document.getElementById('fmMoveOv')?.remove();
+  const ov=document.createElement('div'); ov.id='fmMoveOv'; ov.className='overlay';
+  const rows=proposals.map((p,i)=>{
+    const loc=_fmFileLoc(p.f); const from=(loc.client||'—')+(loc.project?' · '+loc.project:'');
+    const to=_fmMoveTargetLabel(p.mv);
+    return `<div class="fmmv-row" data-i="${i}">
+      <div class="fmmv-info"><div class="fmmv-name">${escapeHtml(p.f.name||'bestand')}</div>
+      <div class="fmmv-path"><span class="fmmv-from">${escapeHtml(from)}</span> <span class="fmmv-arr">→</span> <span class="fmmv-to">${escapeHtml(to)}</span></div></div>
+      <div class="fmmv-acts"><button class="fmmv-x" title="Overslaan" onclick="this.closest('.fmmv-row').remove();_fmMvCheck()">✕</button>
+      <button class="fmmv-ok" title="Verplaatsen" onclick="_fmApplyMove(${i})">✓</button></div></div>`;
+  }).join('');
+  ov.innerHTML=`<div class="modal" style="width:560px">
+    <button class="modal-close" onclick="_fmCloseMoveOv()">✕</button>
+    <h3>AI stelt voor te verplaatsen</h3>
+    <div style="color:var(--mut2);font-size:13px;margin:-12px 0 16px">Deze bestanden lijken bij een andere klant te horen. Bevestig per stuk, of pas alles toe.</div>
+    <div id="fmMvList">${rows}</div>
+    <div style="display:flex;gap:10px;margin-top:18px">
+      <button class="fv-btn" style="flex:1" onclick="_fmApplyAllMoves()">Alles toepassen</button>
+      <button class="fv-btn" onclick="_fmCloseMoveOv()">Sluiten</button>
+    </div></div>`;
+  document.body.appendChild(ov); ov._props=proposals;
+  requestAnimationFrame(()=>ov.classList.add('open'));
+}
+function _fmCloseMoveOv(){ const ov=document.getElementById('fmMoveOv'); if(!ov)return; ov.classList.remove('open'); setTimeout(()=>ov.remove(),250); }
+function _fmMvCheck(){ const l=document.getElementById('fmMvList'); if(l&&!l.querySelector('.fmmv-row')) _fmCloseMoveOv(); }
+async function _applyOneMove(p){
+  const upd=p.mv.project_id?{owner_type:'project',owner_id:String(p.mv.project_id),folder_id:null}:{owner_type:'client',owner_id:String(p.mv.client),folder_id:null};
+  try{ await sb.from('files').update(upd).eq('id',p.f.id); }catch(_){ return false; }
+  Object.assign(p.f,upd); return true;
+}
+async function _fmApplyMove(i){
+  const ov=document.getElementById('fmMoveOv'); if(!ov)return; const p=ov._props[i]; if(!p)return;
+  const row=ov.querySelector(`.fmmv-row[data-i="${i}"]`); if(row)row.style.opacity='.4';
+  await _applyOneMove(p); if(row)row.remove(); _renderFmTree(); _fmMvCheck();
+}
+async function _fmApplyAllMoves(){
+  const ov=document.getElementById('fmMoveOv'); if(!ov)return;
+  for(const r of [...ov.querySelectorAll('.fmmv-row')]){ const i=+r.dataset.i; const p=ov._props[i]; if(p)await _applyOneMove(p); }
+  _renderFmTree(); _fmCloseMoveOv();
 }
 async function fmSyncDropbox(){
   const files=(state.files||[]).filter(f=>f.link);
