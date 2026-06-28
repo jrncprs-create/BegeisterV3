@@ -644,7 +644,7 @@
   .fv-actions{display:flex;align-items:center;gap:8px;flex:0 0 auto}
   .fv-btn{background:transparent;border:1px solid var(--line);border-radius:9px;color:var(--txt);font-size:13px;padding:7px 12px;cursor:pointer;font-family:inherit}
   .fv-btn:hover{border-color:#fff}
-  #fmMvList{max-height:46vh;overflow:auto;display:flex;flex-direction:column;gap:8px}
+  .fmmv-list{max-height:46vh;overflow:auto;display:flex;flex-direction:column;gap:8px}
   .fmmv-row{display:flex;align-items:center;gap:12px;padding:11px 13px;border:1px solid var(--line);border-radius:13px}
   .fmmv-info{flex:1;min-width:0}
   .fmmv-name{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -1003,7 +1003,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v28</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v29</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -2678,7 +2678,7 @@ function _fileProject(f){
 function renderFiles(){
   const wrap=document.getElementById('filesWrap'); if(!wrap) return;
   if(!wrap.querySelector('.fm-search')){
-    wrap.innerHTML='<div class="fm-top"><div class="fm-search"><span class="fm-sic">'+_searchGlyph()+'</span><input id="fmSearch" placeholder="Zoek bestanden…" autocomplete="off" oninput="fmSearch(this.value)"></div><button class="fm-newfolder" onclick="fmNewFolder()" title="Nieuwe map"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5a2 2 0 0 1 2 -2h4l2 2h5a2 2 0 0 1 2 2v3"/><path d="M3 7v11a2 2 0 0 0 2 2h7"/><path d="M16 19h6M19 16v6"/></svg></button></div><div id="fmTree"></div><div class="fm-foot"><button class="fm-sort" id="fmSortBtn" onclick="fmSortAI()">Sorteer met AI</button><button class="fm-sort" id="fmSyncBtn" onclick="fmSyncDropbox()" title="Dropbox-mappen gelijktrekken met deze indeling">Sync naar Dropbox</button></div><div class="fm-drop-overlay"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"/><path d="M7 9l5 -5l5 5"/><path d="M12 4v12"/></svg><div class="fm-do-txt">Sleep bestanden op een map om te uploaden</div></div>';
+    wrap.innerHTML='<div class="fm-top"><div class="fm-search"><span class="fm-sic">'+_searchGlyph()+'</span><input id="fmSearch" placeholder="Zoek bestanden…" autocomplete="off" oninput="fmSearch(this.value)"></div><button class="fm-newfolder" onclick="fmNewFolder()" title="Nieuwe map"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5a2 2 0 0 1 2 -2h4l2 2h5a2 2 0 0 1 2 2v3"/><path d="M3 7v11a2 2 0 0 0 2 2h7"/><path d="M16 19h6M19 16v6"/></svg></button></div><div id="fmTree"></div><div class="fm-foot"><button class="fm-sort" id="fmSortBtn" onclick="fmSortAI()">Sorteer met AI</button><button class="fm-sort" id="fmRenameBtn" onclick="fmRenameAI()" title="Hernoem op inhoud: Klant-Project-onderwerp-datum-vN">Hernoem met AI</button><button class="fm-sort" id="fmSyncBtn" onclick="fmSyncDropbox()" title="Dropbox-mappen gelijktrekken met deze indeling">Sync naar Dropbox</button></div><div class="fm-drop-overlay"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"/><path d="M7 9l5 -5l5 5"/><path d="M12 4v12"/></svg><div class="fm-do-txt">Sleep bestanden op een map om te uploaden</div></div>';
     const si=document.getElementById('fmSearch'); if(si)si.value=_fmQuery;
   }
   if(!wrap._dropWired){ wrap._dropWired=true;
@@ -2916,7 +2916,7 @@ function _fmShowMoveConfirm(proposals){
     <button class="modal-close" onclick="_fmCloseMoveOv()">✕</button>
     <h3>AI stelt voor te verplaatsen</h3>
     <div style="color:var(--mut2);font-size:13px;margin:-12px 0 16px">Deze bestanden lijken bij een andere klant te horen. Bevestig per stuk, of pas alles toe.</div>
-    <div id="fmMvList">${rows}</div>
+    <div id="fmMvList" class="fmmv-list">${rows}</div>
     <div style="display:flex;gap:10px;margin-top:18px">
       <button class="fv-btn" style="flex:1" onclick="_fmApplyAllMoves()">Alles toepassen</button>
       <button class="fv-btn" onclick="_fmCloseMoveOv()">Sluiten</button>
@@ -2940,6 +2940,90 @@ async function _fmApplyAllMoves(){
   const ov=document.getElementById('fmMoveOv'); if(!ov)return;
   for(const r of [...ov.querySelectorAll('.fmmv-row')]){ const i=+r.dataset.i; const p=ov._props[i]; if(p)await _applyOneMove(p); }
   _renderFmTree(); _fmCloseMoveOv();
+}
+// ===== AI-hernoemen: Klant-Project-onderwerp-JJJJMMDD-vN.ext =====
+function _aiSlug(s){ return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/&/g,'en').replace(/[^A-Za-z0-9]+/g,'-').replace(/-+/g,'-').replace(/^-|-$/g,''); }
+function _fileExt(name){ const m=String(name||'').match(/\.([A-Za-z0-9]{1,8})$/); return m?m[1].toLowerCase():''; }
+function _fileDateYMD(f){ const d=f.created_at?new Date(f.created_at):new Date(); if(isNaN(d))return ''; return ''+d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0'); }
+function _aiStem(client,project,subject){ return [client,project,subject].map(_aiSlug).filter(Boolean).join('-'); }
+function _aiBuildName(stem,ymd,ver,ext){ return stem+(ymd?'-'+ymd:'')+'-v'+ver+(ext?'.'+ext:''); }
+function _nextVersionForStem(stem){ if(!stem)return 1; const re=new RegExp('^'+stem.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'-\\d{8}-v(\\d+)','i'); let max=0; (state.files||[]).forEach(f=>{ const m=(f.name||'').match(re); if(m)max=Math.max(max,+m[1]); }); return max+1; }
+function _intakeName(orig){
+  const subject=_dropSubject||((orig.name||'').replace(/\.[^.]+$/,''));
+  const stem=_aiStem(_dropClient,_dropProj,subject);
+  if(!stem) return orig.name;
+  const ymd=_fileDateYMD({created_at:new Date().toISOString()});
+  return _aiBuildName(stem,ymd,_nextVersionForStem(stem),_fileExt(orig.name));
+}
+function _blobB64(blob){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>{const s=String(r.result);res(s.slice(s.indexOf(',')+1));}; r.onerror=rej; r.readAsDataURL(blob); }); }
+function _mimeFromName(n){ const e=_fileExt(n); return ({pdf:'application/pdf',png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg',gif:'image/gif',webp:'image/webp',heic:'image/heic',docx:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',txt:'text/plain',md:'text/plain'})[e]||''; }
+async function fmRenameAI(){
+  const btn=document.getElementById('fmRenameBtn');
+  const files=(state.files||[]).filter(f=>f.link);
+  if(!files.length){ if(btn){btn.textContent='Geen bestanden';setTimeout(()=>btn.textContent='Hernoem met AI',1600);} return; }
+  if(btn){ btn.disabled=true; }
+  const catalog=state.projects.filter(p=>p.id!=='__inbox__').map(p=>({project_id:p.id,client:p.client||'',project:p.project||''}));
+  const today=(new Date()).toISOString().slice(0,10);
+  const props=[]; let done=0;
+  for(const f of files){
+    done++; if(btn)btn.textContent='Leest '+done+'/'+files.length+'…';
+    let subject='';
+    try{
+      const resp=await fetch('/api/fileproxy?u='+encodeURIComponent(_fvRaw(f.link)));
+      const blob=await resp.blob();
+      if(blob.size<=18*1024*1024){
+        const b64=await _blobB64(blob);
+        const mime=blob.type||_mimeFromName(f.name);
+        const rr=await fetch('/api/readdrop',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:f.name,mime,b64,catalog,today,who:''})});
+        const dd=await rr.json(); subject=((dd&&dd.subject)||'').trim();
+      }
+    }catch(_){}
+    if(!subject) subject=(f.name||'').replace(/\.[^.]+$/,'').replace(/[_\-]+/g,' ').trim();
+    const loc=_fmFileLoc(f);
+    const client=(loc.client&&loc.client.indexOf('map:')!==0)?loc.client:'';
+    const project=loc.project||'';
+    props.push({f,stem:_aiStem(client,project,subject),ext:_fileExt(f.name),ymd:_fileDateYMD(f)});
+  }
+  // Versies: groepeer per stam, oudste = v1.
+  const groups={}; props.forEach(p=>{ (groups[p.stem]=groups[p.stem]||[]).push(p); });
+  Object.values(groups).forEach(arr=>{ arr.sort((a,b)=>(a.ymd||'').localeCompare(b.ymd||'')); arr.forEach((p,i)=>{ p.newName=p.stem?_aiBuildName(p.stem,p.ymd,i+1,p.ext):p.f.name; }); });
+  const changes=props.filter(p=>p.newName&&p.newName!==p.f.name);
+  if(btn){ btn.disabled=false; btn.textContent='Hernoem met AI'; }
+  if(!changes.length){ if(btn){btn.textContent='Namen al netjes';setTimeout(()=>btn.textContent='Hernoem met AI',1600);} return; }
+  _fmShowRenameConfirm(changes);
+}
+function _fmShowRenameConfirm(changes){
+  document.getElementById('fmRnOv')?.remove();
+  const ov=document.createElement('div'); ov.id='fmRnOv'; ov.className='overlay';
+  const rows=changes.map((p,i)=>`<div class="fmmv-row" data-i="${i}">
+      <div class="fmmv-info"><div class="fmmv-path"><span class="fmmv-from">${escapeHtml(p.f.name||'')}</span></div>
+      <div class="fmmv-name fmmv-to">${escapeHtml(p.newName)}</div></div>
+      <div class="fmmv-acts"><button class="fmmv-x" title="Overslaan" onclick="this.closest('.fmmv-row').remove();_fmRnCheck()">✕</button>
+      <button class="fmmv-ok" title="Hernoemen" onclick="_fmApplyRename(${i})">✓</button></div></div>`).join('');
+  ov.innerHTML=`<div class="modal" style="width:600px">
+    <button class="modal-close" onclick="_fmCloseRnOv()">✕</button>
+    <h3>AI stelt nieuwe namen voor</h3>
+    <div style="color:var(--mut2);font-size:13px;margin:-12px 0 16px">Op basis van de inhoud. Indeling: Klant-Project-onderwerp-datum-vN. Bevestig per stuk of pas alles toe. (Dropbox volgt bij "Sync naar Dropbox".)</div>
+    <div id="fmRnList" class="fmmv-list">${rows}</div>
+    <div style="display:flex;gap:10px;margin-top:18px">
+      <button class="fv-btn" style="flex:1" onclick="_fmApplyAllRenames()">Alles toepassen</button>
+      <button class="fv-btn" onclick="_fmCloseRnOv()">Sluiten</button>
+    </div></div>`;
+  document.body.appendChild(ov); ov._changes=changes;
+  requestAnimationFrame(()=>ov.classList.add('open'));
+}
+function _fmCloseRnOv(){ const ov=document.getElementById('fmRnOv'); if(!ov)return; ov.classList.remove('open'); setTimeout(()=>ov.remove(),250); }
+function _fmRnCheck(){ const l=document.getElementById('fmRnList'); if(l&&!l.querySelector('.fmmv-row')) _fmCloseRnOv(); }
+async function _applyRename(p){ try{ await sb.from('files').update({name:p.newName}).eq('id',p.f.id); }catch(_){ return false; } p.f.name=p.newName; return true; }
+async function _fmApplyRename(i){
+  const ov=document.getElementById('fmRnOv'); if(!ov)return; const p=ov._changes[i]; if(!p)return;
+  const row=ov.querySelector(`.fmmv-row[data-i="${i}"]`); if(row)row.style.opacity='.4';
+  await _applyRename(p); if(row)row.remove(); _renderFmTree(); _fmRnCheck();
+}
+async function _fmApplyAllRenames(){
+  const ov=document.getElementById('fmRnOv'); if(!ov)return;
+  for(const r of [...ov.querySelectorAll('.fmmv-row')]){ const i=+r.dataset.i; const p=ov._changes[i]; if(p)await _applyRename(p); }
+  _renderFmTree(); _fmCloseRnOv();
 }
 async function fmSyncDropbox(){
   const files=(state.files||[]).filter(f=>f.link);
@@ -3565,7 +3649,7 @@ async function pasteClip(){closePlus();composeMode(true);const ta=document.getEl
 })();
 
 // Drop -> bestand lezen -> chat sluit -> per gevonden punt het Nieuwe-taak-venster (vooraf ingevuld).
-var _dropFiles=[], _dropQueue=[], _dropSrc=null, _dropAdvancing=false, _dropFileObj=null, _dropCat='', _dropFileDone=false;
+var _dropFiles=[], _dropQueue=[], _dropSrc=null, _dropAdvancing=false, _dropFileObj=null, _dropCat='', _dropFileDone=false, _dropSubject='', _dropClient='', _dropProj='';
 var _DZ_DEF={t:'Laat los om toe te voegen',s:'Foto, PDF, tekst of Word — ik lees het en stel meteen actiepunten voor.'};
 function _dzText(t,s){const z=document.getElementById('dropZone');if(!z)return;const a=z.querySelector('.dz-title'),b=z.querySelector('.dz-sub');if(a)a.textContent=t;if(b)b.textContent=s;}
 var _dzResolve=null, _fileProjectId=null;
@@ -3647,6 +3731,7 @@ async function _dropProcess(f){
   if(_mime.startsWith('image/')){ previewUrl=URL.createObjectURL(f); _prevObj=true; }
   else if(_mime==='application/pdf'||/\.pdf$/i.test(f.name)){ try{ previewUrl=await _pdfFirstPagePreview(f); }catch(_){ previewUrl=null; } }
   _dropCat=((data.category||'').trim())||'Concept';
+  _dropSubject=(data.subject||'').trim(); _dropClient=(data.client||'').trim(); _dropProj=(data.project||'').trim();
   const facts=[];
   if((data.type||'').trim()) facts.push({k:'Type', v:data.type.trim()});
   if((data.from||'').trim()) facts.push({k:'Afzender', v:data.from.trim()});
@@ -3675,8 +3760,8 @@ async function _saveDropToWait(items, summary, srcId, fileObj){
       contact: it.contact||null, due: it.due||null, status:'wait' };
     try{ const ins=await sb.from('items').insert(rec).select('id').single(); if(ins&&ins.data&&!firstId)firstId=ins.data.id; }catch(_){}
   }
-  if(fileObj && firstId){ try{ const b64=await fileToB64(fileObj); const up=await fetch('/api/dropbox/list',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'upload',name:fileObj.name,b64,target:'In afwachting',owner_type:'task',owner_id:firstId,cat:_dropCat||'Concept'})}).then(r=>r.json());
-    if(up&&up.file&&up.file.link&&srcId){ try{ await sb.from('attachments').insert({source_id:srcId, filename:fileObj.name, storage_path:'dropbox:'+up.file.link, mime:fileObj.type||''}); }catch(_){} } }catch(_){}}
+  if(fileObj && firstId){ try{ const b64=await fileToB64(fileObj); const aiName=_intakeName(fileObj); const up=await fetch('/api/dropbox/list',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'upload',name:aiName,b64,target:'In afwachting',owner_type:'task',owner_id:firstId,cat:_dropCat||'Concept'})}).then(r=>r.json());
+    if(up&&up.file&&up.file.link&&srcId){ try{ await sb.from('attachments').insert({source_id:srcId, filename:aiName, storage_path:'dropbox:'+up.file.link, mime:fileObj.type||''}); }catch(_){} } }catch(_){}}
   try{ notifyPartner((who||'Iemand')+' zette '+list.length+' punt(en) in afwachting uit een bestand.'); }catch(_){}
   try{ await refresh(); }catch(_){}
 }

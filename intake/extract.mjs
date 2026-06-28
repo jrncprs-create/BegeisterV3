@@ -20,6 +20,7 @@ Regels:
 - contacts = externe personen die EXPLICIET in het bericht voorkomen, met hun gegevens. Wees conservatief: alleen contacten die echt in het bericht staan. Verzin geen e-mailadressen of telefoonnummers. Lege velden laat je leeg (""). Neem GEEN interne Begeister-mensen (Jeroen, Marlon) op.
 - client = de klant/opdrachtgever waar dit bericht duidelijk over gaat (anders ""). project = projectnaam als die expliciet genoemd wordt; staat er geen projectnaam maar wél een duidelijk onderwerp, stel dan een KORTE projectnaam voor (paar woorden); anders "".
 - type = kort documenttype in 1-2 woorden (bv. "mail", "appje", "offerte", "factuur", "pitchdeck", "draaiboek"), anders "". from = afzender/auteur als die herkenbaar is, anders "".
+- subject = kort, concreet onderwerp in 2-5 woorden, ZONDER klantnaam en ZONDER datum, MÉT het documenttype erin verwerkt als dat logisch is (bv. "licht offerte", "Landjuweel concept", "draaiboek opbouw"). Kleine letters, gewone spaties, geen leestekens.
 - category = best passende map uit deze VASTE lijst: Concept, Lichtontwerp, Decor, Tekeningen, Plattegronden, Draaiboek, Planning, Leveranciers, Techniek, Offertes, Media. Bij twijfel: "Concept".
 - Geef ALLEEN geldige JSON terug, geen uitleg eromheen.`;
 
@@ -54,6 +55,7 @@ Geef JSON in exact dit formaat:
   "type": "",
   "from": "",
   "category": "",
+  "subject": "",
   "items": [
     { "title": "...", "owner": "Jeroen|Marlon|", "contact": "", "due": null, "status": "todo", "project_id": null }
   ],
@@ -88,6 +90,7 @@ Geef JSON in exact dit formaat:
       type: (parsed.type || "").toString().trim(),
       from: (parsed.from || "").toString().trim(),
       category: (parsed.category || "").toString().trim(),
+      subject: (parsed.subject || "").toString().trim(),
       usage,
     };
   } catch (e) {
