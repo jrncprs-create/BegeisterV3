@@ -1010,13 +1010,29 @@
   input::placeholder,textarea::placeholder,#chatInput::placeholder{ color:#343434; opacity:1 }
   /* gekleurde tekst-accenten grijs tot hover */
   .t-proj,.srow-title{ color:#343434 }
-  /* oude dim-filters uit — kleur regelen we nu met color */
-  #list .task .picon,#list .task .t-proj,#list .task .t-title,#list .task .chk,#list .task .pill.who,#list .task .wact,
-  #wachterList .task .picon,#wachterList .task .t-proj,#wachterList .task .t-title,#wachterList .task .chk,#wachterList .task .pill.who,#wachterList .task .wact,
+  /* oude dim-filters op TEKST uit — kleur regelen we met color (NIET op .picon) */
+  #list .task .t-proj,#list .task .t-title,#list .task .chk,#list .task .pill.who,#list .task .wact,
+  #wachterList .task .t-proj,#wachterList .task .t-title,#wachterList .task .chk,#wachterList .task .pill.who,#wachterList .task .wact,
   #list .task .t-proj .t-projsub,#wachterList .task .t-proj .t-projsub,
-  .fm-crow .fm-name{ filter:none }
-  /* gekleurde blokjes/avatars/dots grijs tot hover */
-  .picon,.fm-badge,.kdot,.arch-dot,.dotc,.evdot{ filter:grayscale(1) brightness(.5) }
+  .fm-crow .fm-name{ filter:none !important }
+  /* gekleurde avatars/dots grijs tot hover (hoge specificiteit wint van oude regels) */
+  #list .task .picon,#wachterList .task .picon,.picon,.fm-badge,.kdot,.arch-dot,.dotc,.evdot{ filter:grayscale(1) brightness(.5) !important }
+  /* lege/gekleurde blokjes, V/X-rondjes en links → zelfde grijs als de rest */
+  .chk{ border-color:#343434 !important }
+  .wbtn,.wbtn.ok,.wbtn.no{ color:#343434 !important }
+  a.gear{ color:#343434 !important }
+  #list .task:hover .chk,#wachterList .task:hover .chk{ border-color:#686868 !important }
+  /* Bovenbalk: lichter grijs (#686868), hele balk wit op hover */
+  .topbar, .topbar *{ color:#686868 !important }
+  .topbar svg{ stroke:#686868 !important }
+  .topbar:hover *{ color:#fff !important }
+  .topbar:hover svg{ stroke:#fff !important }
+  /* Kolomkoppen lichter grijs, wit op hover van de kolom */
+  .cb-title,.rail-coltitle,.colbar .cb-toggle,.agenda-toggle{ color:#686868 !important }
+  #view-taken:hover .cb-title,.rail:hover .rail-coltitle,#view-agenda:hover .cb-title,#view-agenda:hover .cb-toggle{ color:#fff !important }
+  /* Agenda: lichter grijs, hele agenda wit op hover */
+  #view-agenda, #view-agenda *{ color:#686868 !important }
+  #view-agenda:hover, #view-agenda:hover *{ color:#fff !important }
   /* HOVER van een kaart/rij → alle tekst #686868 */
   #list .task:hover,#list .task:hover *,#wachterList .task:hover,#wachterList .task:hover *,
   .srow:hover,.srow:hover *,.srow.open,.srow.open *{ color:#686868 }
@@ -1059,7 +1075,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v35</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v36</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
