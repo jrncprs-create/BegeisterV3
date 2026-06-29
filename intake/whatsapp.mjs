@@ -179,11 +179,9 @@ export async function handleEvent(body) {
               status: ["todo", "doing", "wait", "done"].includes(it.status) ? it.status : "todo",
             })));
           }
-          try {
-            const msgProject = (items.find(it => it.project_id) || {}).project_id || null;
-            await saveContacts(db, contacts, source.id, msgProject);
-          } catch (_) {}
-          await db.from("sources").update({ processed: true, summary: summary || null }).eq("id", source.id);
+          const msgProject = (items.find(it => it.project_id) || {}).project_id || null;
+          try { await saveContacts(db, contacts, source.id, msgProject); } catch (_) {}
+          await db.from("sources").update({ processed: true, summary: summary || null, ...(msgProject ? { project_id: msgProject } : {}) }).eq("id", source.id);
           try {
             const raw = (summary || text || "WhatsApp-bericht").trim();
             const pb = raw.length > 70 ? raw.slice(0, 69).trimEnd() + "…" : raw;

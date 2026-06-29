@@ -157,6 +157,7 @@ export async function run() {
         try {
           // project_id van dit bericht: het eerste item dat een eenduidig project kreeg
           const msgProject = (items.find(it => it.project_id) || {}).project_id || null;
+          if (msgProject) await db.from("sources").update({ project_id: msgProject }).eq("id", source.id);
           await saveContacts(db, contacts, source.id, msgProject);
         } catch (e) { console.error("contact-fout:", e.message); }
 
