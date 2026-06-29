@@ -1106,7 +1106,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v39</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v40</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -3745,7 +3745,7 @@ function renderDayOverview(){
   const dateTxt=TODAY.toLocaleDateString('nl-NL',{weekday:'long',day:'numeric',month:'long'});
   const rowItem=({it,p})=>`<div class="dov-row"><span class="dov-dot" style="background:${_projColor(p)}"></span><span class="tt">${esc(it.t||'')}</span>${it.owner?`<span class="meta">${esc(it.owner)}</span>`:''}${_dovPill(it.status)?`<span class="dov-pill">${_dovPill(it.status)}</span>`:''}</div>`;
   const todayHtml=D.today.length?D.today.slice(0,8).map(rowItem).join(''):'<div class="dov-empty">Niets met deadline vandaag.</div>';
-  const netHtml=D.net.length?D.net.slice(0,6).map(({it})=>`<div class="dov-row"><span class="dov-dot" style="background:#686868"></span><span class="tt">${esc(it.t||'')}</span>${it.owner?`<span class="meta">${esc(it.owner)}</span>`:''}</div>`).join(''):'<div class="dov-empty">Geen nieuwe binnenkomers.</div>';
+  const netHtml=D.net.length?D.net.slice(0,6).map((it)=>`<div class="dov-row"><span class="dov-dot" style="background:#686868"></span><span class="tt">${esc(it.t||'')}</span>${it.owner?`<span class="meta">${esc(it.owner)}</span>`:''}</div>`).join(''):'<div class="dov-empty">Geen nieuwe binnenkomers.</div>';
   const clients=Object.keys(D.perClient).sort((a,b)=>D.perClient[b]-D.perClient[a]);
   const clientHtml=clients.length?clients.slice(0,6).map(c=>`<button class="dov-row" onclick="dovOpenClient('${esc(c).replace(/'/g,"\\'")}')"><span class="dov-dot" style="background:${_clientColor(c)}"></span><span class="tt">${esc(c)}</span><span class="meta">${D.perClient[c]} open</span></button>`).join(''):'<div class="dov-empty">Geen open punten.</div>';
   body.innerHTML=`<div class="dov-head"><div class="dov-greet">Goedemorgen${who?', '+esc(who):''}</div><div class="dov-date">${esc(dateTxt)}</div></div>`+
