@@ -913,8 +913,9 @@
     .welcome-overlay #chatThread{padding-bottom:88px}
     .welcome-overlay.chatting #homeIntro{display:none}
     .welcome-overlay.chatting #welcomeChat{transform:none}
-    /* mobiel menu: In afwachting > Taken > Afspraken > Agenda > Contacten > Archief > Meldingen; AI/Bronnen/Klanten weg */
-    #nav button[data-v="home"],#nav button[data-v="bronnen"],#nav button[data-v="beheer"]{display:none}
+    /* mobiel menu: Klanten bovenaan > In afwachting > Taken > Afspraken > Agenda > Bestanden > Contacten > Archief; AI/Bronnen weg */
+    #nav button[data-v="home"],#nav button[data-v="bronnen"]{display:none}
+    #nav button[data-v="beheer"]{order:0}
     #nav button[data-v="wachter"]{order:1}
     #nav button[data-v="taken"]{order:2}
     #nav button[data-v="afspraken"]{order:3}
@@ -1209,7 +1210,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v59</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v60</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
