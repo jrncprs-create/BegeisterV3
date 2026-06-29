@@ -1056,7 +1056,10 @@
   .fm-row:hover .fm-badge,.fm-crow:hover .fm-badge,.fm-crow.open .fm-badge,
   .kli:hover .kdot,.arch-row:hover .arch-dot,.agenda-group:hover .dotc{ filter:none !important }
   #list .task:hover .t-proj,#wachterList .task:hover .t-proj{ color:var(--ccol,var(--s2)) !important }
-  .srow:hover .srow-title,.srow.open .srow-title{ color:var(--scol,var(--s2)) !important }
+  .srow:hover .srow-title,.srow.open .srow-title,
+  .srow:hover .srow-sub,.srow.open .srow-sub,
+  .srow:hover .doc-ic,.srow.open .doc-ic{ color:var(--scol,var(--s4)) !important }
+  .srow:hover .doc-ic svg,.srow.open .doc-ic svg{ stroke:var(--scol,var(--s4)) !important }
   .fm-crow:hover .fm-name,.fm-crow.open .fm-name{ color:var(--ccol,var(--s2)) !important }
   #list .task:hover .chk,#wachterList .task:hover .chk{ border-color:var(--s2) !important }
 
@@ -1144,7 +1147,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v51</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v52</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -2171,7 +2174,8 @@ function _waBubbles(text){
   return '<div class="wa">'+html+'</div>';
 }
 function _srcRowHTML(s){
-  const col=PROJCOL[s.proj]||'var(--primary2)';
+  const scol=PROJCOL[s.proj]||'';            // alleen een klantkleur als de bron écht aan een klant hangt
+  const col=scol||'var(--primary2)';          // voor autolink in de body
   const derived=[];state.projects.forEach(p=>p.items.forEach(it=>{if(it.src===s.id)derived.push(it);}));
   const dateTxt=s.date?d(s.date).toLocaleDateString('nl-NL',{day:'numeric',month:'short'}):'';
   const title=_srcTitle(s);
@@ -2181,7 +2185,7 @@ function _srcRowHTML(s){
   const atts=allAtts;
   const attHTML=atts.map((a)=>{const gi=allAtts.indexOf(a);return `<div class="srow-att" onclick="openAttachment('${s.id}',${gi})"><span class="file-ic">${_fileGlyph(a.filename)}</span><span class="fname">${escapeHtml(a.filename)}</span></div>`;}).join('');
   const derHTML=derived.length?`<div class="srow-derived">${derived.length} actiepunt(en) hieruit gehaald</div>`:'';
-  return `<div class="srow" id="card_${s.id}" style="--scol:${col}">
+  return `<div class="srow" id="card_${s.id}"${scol?` style="--scol:${scol}"`:''}>
     <div class="srow-head" onclick="toggleSrc('${s.id}')">
       <span class="doc-ic">${_chanGlyph(s.channel)}</span>
       <span class="srow-main">
