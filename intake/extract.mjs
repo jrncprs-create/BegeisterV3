@@ -5,6 +5,34 @@ const KEY = (process.env.ANTHROPIC_API_KEY || "").trim();
 const anthropic = KEY ? new Anthropic({ apiKey: KEY }) : null;
 const MODEL = "claude-sonnet-4-6";
 
+// --- Links in een bericht ophalen en als leesbare tekst meegeven aan Claude ---
+const URL_RE = /https?:\/\/[^\s<>()"']+/gi;
+async function fetchPageText(url) {
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 8000);
+    const r = await fetch(url, { signal: ctrl.signal, redirect: "follow", headers: { "User-Agent": "Mozilla/5.0 (BegeisterBot)" } });
+    clearTimeout(t);
+    const ct = (r.headers.get("content-type") || "").toLowerCase();
+    if (!ct.includes("text/html") && !ct.includes("text/plain")) return "";
+    let html = (await r.text()).slice(0, 300000);
+    html = html.replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<style[\s\S]*?<\/style>/gi, " ").replace(/<!--[\s\S]*?-->/g, " ");
+    const titleM = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+    const title = titleM ? titleM[1].replace(/\s+/g, " ").trim() : "";
+    let text = html.replace(/<[^>]+>/g, " ")
+      .replace(/&nbsp;/gi, " ").replace(/&amp;/gi, "&").replace(/&lt;/gi, "<").replace(/&gt;/gi, ">")
+      .replace(/&#39;/gi, "'").replace(/&quot;/gi, '"').replace(/\s+/g, " ").trim().slice(0, 6000);
+    return (title ? "TITEL: " + title + "\n" : "") + text;
+  } catch (_) { return ""; }
+}
+async function fetchLinkContext(text) {
+  const urls = [...new Set((String(text).match(URL_RE) || []).map(u => u.replace(/[.,;)]+$/, "")))].slice(0, 2);
+  if (!urls.length) return "";
+  const parts = [];
+  for (const u of urls) { const t = await fetchPageText(u); if (t) parts.push("URL: " + u + "\n" + t); }
+  return parts.length ? "\n\nINHOUD VAN GELINKTE PAGINA('S) (automatisch opgehaald — gebruik dit om samen te vatten, de klant/het project te bepalen en actiepunten te halen):\n" + parts.join("\n\n---\n\n") : "";
+}
+
 const SYSTEM = `Je bent de intake-assistent van Begeister (licht, decor en event-productie).
 Je krijgt een ruw binnengekomen bericht (mail of doorgestuurd appje) en een catalogus
 van bekende klanten/projecten. Je taak: haal er concrete, losse ACTIEPUNTEN uit.
@@ -64,11 +92,14 @@ Geef JSON in exact dit formaat:
   ]
 }`;
 
+  // Links in het bericht ophalen en als context meegeven (pagina samenvatten + koppelen + actiepunten).
+  const linkCtx = await fetchLinkContext(text);
+
   const resp = await anthropic.messages.create({
     model: MODEL,
     max_tokens: 1800,
     system: SYSTEM + (context ? "\n\nVASTE CONTEXT (team/bedrijf — gebruik dit om beter te koppelen):\n" + context : ""),
-    messages: [{ role: "user", content: user }],
+    messages: [{ role: "user", content: user + linkCtx }],
   });
 
   const usage = {
