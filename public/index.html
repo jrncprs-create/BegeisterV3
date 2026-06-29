@@ -1156,6 +1156,35 @@
   button.dov-row:hover .tt{color:#fff}
   .dov-empty{color:#5a5a5a;font-size:13px;padding:8px 0}
   @media(max-width:600px){ .dov-metrics{grid-template-columns:repeat(2,1fr)} }
+  /* ====================================================================
+     MOBIEL — geen muis, dus geen hover: toon de leesbare, gekleurde staat
+     meteen. Lichtere basiskleuren + klantkleuren staan standaard aan.
+     ==================================================================== */
+  @media (max-width:1000px){
+    :root{ --s1:#c0c0c0; --s2:#d2d2d2; }
+    /* gekleurde blokjes/bolletjes tonen hun kleur (niet meer uitgegrijsd) */
+    .picon,.kdot,.arch-dot,.dotc,.evdot{ filter:none !important }
+    /* Taken & In afwachting: tekst in klantkleur, leesbaar */
+    #list .task .t-proj,#list .task .t-projsub,#list .task .t-title,#list .task .t-due,
+    #wachterList .task .t-proj,#wachterList .task .t-projsub,#wachterList .task .t-title,#wachterList .task .t-due{ color:var(--ccol,var(--s2)) !important }
+    #list .task .picon,#wachterList .task .picon{ color:#000 !important }
+    #list .task .chk,#wachterList .task .chk{ border-color:var(--s2) !important }
+    /* Bronnen: titel, sublabel en icoon leesbaar + klantkleur waar gekoppeld */
+    .srow .srow-title,.srow .srow-sub,.srow .doc-ic{ color:var(--scol,var(--s4)) !important }
+    .srow .doc-ic svg{ stroke:var(--scol,var(--s4)) !important }
+    /* Bestanden-boom: namen leesbaar/klantkleur */
+    .fm-crow .fm-name,.fm-name{ color:var(--ccol,var(--s2)) !important }
+    /* Chrome-koppen iets lichter zodat ze leesbaar zijn */
+    .cb-title,.rail-coltitle,.chdr-t,.afgroup,.colbar .cb-toggle,.agenda-toggle{ color:var(--s2) !important }
+  }
+  /* Mobiele kolom-pijltjes (In afwachting · Taken · Agenda) */
+  .mob-arrow{ display:none }
+  @media (max-width:1000px){
+    .mob-arrow{ display:flex; position:fixed; top:50%; transform:translateY(-50%); width:32px; height:56px; align-items:center; justify-content:center; background:rgba(20,20,20,.66); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); border:1px solid var(--line); color:#d2d2d2; z-index:52; cursor:pointer; font-size:24px; line-height:1; padding:0 }
+    .mob-arrow.left{ left:0; border-left:none; border-radius:0 13px 13px 0 }
+    .mob-arrow.right{ right:0; border-right:none; border-radius:13px 0 0 13px }
+    .mob-arrow.hidden{ display:none }
+  }
 </style>
 </head>
 <body>
@@ -1180,7 +1209,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v58</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v59</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -1701,7 +1730,20 @@ function setView(v){
   _animateNext=true;
   render();
   window.scrollTo({top:0,behavior:'instant'});
+  if(typeof _updateMobArrows==='function') _updateMobArrows();
 }
+// ---- Mobiele kolom-navigatie: pijltjes tussen In afwachting · Taken · Agenda ----
+const MOBCOLS=['wachter','taken','agenda'];
+function mobColShift(dir){ const i=MOBCOLS.indexOf(view); const ni=(i<0)?1:Math.min(MOBCOLS.length-1,Math.max(0,i+dir)); if(MOBCOLS[ni]!==view) setView(MOBCOLS[ni]); }
+function _initMobArrows(){ if(document.getElementById('mobPrev'))return;
+  const mk=(id,cls,ch,dir)=>{ const b=document.createElement('button'); b.id=id; b.className='mob-arrow '+cls; b.setAttribute('aria-label', dir<0?'Vorige kolom':'Volgende kolom'); b.innerHTML=ch; b.onclick=()=>mobColShift(dir); document.body.appendChild(b); };
+  mk('mobPrev','left hidden','‹',-1); mk('mobNext','right hidden','›',1);
+}
+function _updateMobArrows(){ _initMobArrows(); const p=document.getElementById('mobPrev'),n=document.getElementById('mobNext'); if(!p||!n)return;
+  const show=(typeof isMobile==='function'&&isMobile())&&MOBCOLS.includes(view); const i=MOBCOLS.indexOf(view);
+  p.classList.toggle('hidden', !show||i<=0); n.classList.toggle('hidden', !show||i>=MOBCOLS.length-1);
+}
+_initMobArrows();
 function toggleNav(e){if(e)e.stopPropagation();const n=document.getElementById('nav');n.classList.toggle('open');if(n.classList.contains('open'))composeMode(true);}
 document.addEventListener('click',e=>{const nav=document.getElementById('nav');if(nav&&nav.classList.contains('open')&&!nav.contains(e.target)&&e.target.id!=='hbtn')nav.classList.remove('open');});
 function setWho(){who=document.getElementById('who').value;document.getElementById('userAv').textContent=who[0];}
@@ -3837,6 +3879,7 @@ function applyLayout(){
   else if(main){ if(vBron)main.appendChild(vBron); if(vBeh)main.appendChild(vBeh); if(vCon)main.appendChild(vCon); if(vArch)main.appendChild(vArch); if(vFiles)main.appendChild(vFiles); }
   if(!mob && (view==='home')) setView('taken');
   _ensureRailCloses();
+  if(typeof _updateMobArrows==='function') _updateMobArrows();
   _lastMob=mob;
 }
 // sluitkruis + kop in elke rail-view (Bronnen/Klanten/Contacten) op desktop; weg op mobiel
