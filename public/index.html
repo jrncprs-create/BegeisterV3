@@ -4,6 +4,9 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>Begeister — Workflow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100;200;300;400;500&display=swap" rel="stylesheet" />
 <link rel="icon" href="/favicon-32.png" type="image/png" />
 <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 <link rel="manifest" href="/manifest.webmanifest" />
@@ -25,12 +28,14 @@
     --r:14px;
   }
   *{box-sizing:border-box}
+  /* Geist ultralight overal */
   html,body{margin:0;background:var(--bg);color:var(--txt);
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    font-size:14.5px;line-height:1.5;-webkit-font-smoothing:antialiased}
+    font-family:'Geist',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:14.5px;line-height:1.5;font-weight:100;-webkit-font-smoothing:antialiased}
+  *{font-weight:100!important}
   a{color:inherit}
-  input,textarea,select,button,option,optgroup{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
-  select,option{font-family:Arial,Helvetica,"Helvetica Neue",sans-serif}
+  input,textarea,select,button,option,optgroup{font-family:'Geist',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  select,option{font-family:'Geist',Arial,Helvetica,"Helvetica Neue",sans-serif}
   input,textarea,select{accent-color:#fff}
   input:focus,textarea:focus,select:focus{outline:none;border-color:rgba(255,255,255,.32);box-shadow:0 0 0 2px rgba(255,255,255,.06)}
   .shell{display:flex;flex-direction:column;min-height:100vh}
@@ -420,8 +425,11 @@
   /* BRONNEN — strakke icoon-lijst (monochroom, donker) */
   .src-group{margin-bottom:18px}
   .src-group-h{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut2);margin:0 0 8px;font-weight:600}
-  .srow{border-bottom:1px solid var(--line)}
+  .srow{border-bottom:1px solid var(--line);scroll-margin-top:64px}
   .srow-head{display:flex;align-items:center;gap:11px;padding:11px 2px;cursor:pointer}
+  .srow-x{flex:0 0 auto;background:transparent;border:none;color:var(--mut2);cursor:pointer;display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:7px;padding:0;opacity:.4;transition:opacity .15s,color .15s,background .15s}
+  .srow-head:hover .srow-x{opacity:.75}
+  .srow-x:hover{opacity:1;color:#e0664f;background:rgba(255,255,255,.05)}
   .srow-head:hover{background:rgba(255,255,255,.025)}
   .doc-ic{flex:0 0 auto;width:22px;height:22px;position:relative;color:var(--mut)}
   .doc-ic svg{width:22px;height:22px;display:block}
@@ -949,12 +957,12 @@
     /* Bronnen & Klanten: één kolom breed i.p.v. volle breedte */
     #view-bronnen,#view-beheer,#view-contacten{max-width:34vw}
     /* Bronnen / Klanten / Contacten wonen in de eerste kolom (#rail) met eigen scroll */
-    .rail #view-bronnen,.rail #view-beheer,.rail #view-contacten,.rail #view-files,.rail #view-archief{display:block;max-width:none;position:relative;padding:18px 16px 60px}
+    .rail #view-bronnen,.rail #view-beheer,.rail #view-contacten,.rail #view-files,.rail #view-archief{display:block;max-width:none;position:relative;padding:0 16px 60px}
     .rail #view-bronnen.hidden,.rail #view-beheer.hidden,.rail #view-contacten.hidden{display:none!important}
     /* sluitkruis rechtsboven in een rail-kolom */
-    .rail .rail-close{position:absolute;top:14px;right:12px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;background:transparent;border:none;color:rgba(255,255,255,.6);cursor:pointer;padding:0;z-index:5;transition:color .15s}
+    .rail .rail-close{position:absolute;top:18px;right:12px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;background:transparent;border:none;color:rgba(255,255,255,.6);cursor:pointer;padding:0;z-index:5;transition:color .15s}
     .rail .rail-close:hover{color:#fff}
-    .rail .rail-coltitle{position:sticky;top:0;z-index:4;background:var(--bg);display:flex;align-items:center;height:26px;box-sizing:content-box;font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut2);margin:0 0 16px;padding-right:34px}
+    .rail .rail-coltitle{position:sticky;top:0;z-index:4;background:var(--bg);display:flex;align-items:center;height:26px;padding-top:18px;padding-bottom:16px;box-sizing:content-box;font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut2);margin:0;padding-right:34px}
     /* AFSPRAKEN-knop: tekstknop links naast de +-knop, op kophoogte */
     .agenda-toggle{position:absolute;top:0;right:34px;height:26px;display:flex;align-items:center;border:none;background:transparent;color:var(--mut2);font-size:12px;letter-spacing:1.2px;text-transform:uppercase;cursor:pointer;padding:0;z-index:3;transition:color .15s}
     .agenda-toggle:hover{color:#fff}
@@ -1018,7 +1026,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v31</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v32</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -2061,6 +2069,7 @@ function _srcRowHTML(s){
         <span class="srow-sub">${_srcChanLabel(s.channel)}${atts.length?' · '+atts.length+' bijlage(n)':''}</span>
       </span>
       <span class="srow-date">${dateTxt}</span>
+      <button class="srow-x" title="Verwijder bron" aria-label="Verwijder bron" onclick="event.stopPropagation();srcDelete('${s.id}')"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </div>
     <div class="srow-body" id="body_${s.id}">
       ${(()=>{ const raw=s.full||s.text||s.summary||''; if(s.channel==='whatsapp'){ const b=_waBubbles(raw); if(b) return b; } return `<div class="srow-text">${autolink(escapeHtml(raw),col)}</div>`; })()}
