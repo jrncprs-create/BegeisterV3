@@ -1215,7 +1215,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v63</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v64</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -2617,7 +2617,7 @@ function _fileRow(f){
     +`<button class="kfile-ai" title="AI leest dit bestand" onclick="event.stopPropagation();summarizeFile('${f.id}')">${_tIc(_TABCHAN.asterisk,16,1.7)}</button>`
     +`<button class="kfile-ai kfile-collapse" title="Samenvatting inklappen" onclick="event.stopPropagation();var s=document.getElementById('fsum_${f.id}');if(s)s.classList.remove('on')">${_tIc('<path d="M6 9l6 6l6 -6"/>',16,1.7)}</button>`
     +`<button class="kfile-del" title="Bestand verwijderen" onclick="event.stopPropagation();deleteFile('${f.id}')">${_tIc('<path d="M18 6l-12 12"/><path d="M6 6l12 12"/>',16,1.7)}</button>`
-    +`<div class="kfile-sum" id="fsum_${f.id}"></div></div>`;
+    +`<div class="kfile-sum" id="fsum_${f.id}">${escapeHtml(f.summary||'')}</div></div>`;
 }
 function _filesHTML(type,id){
   if(!id) return '<div class="kfiles-hint">Sla eerst op om bestanden te koppelen.</div>';
@@ -2766,16 +2766,21 @@ function fvRender(){
 if(!window._fvKeyInit){window._fvKeyInit=true; document.addEventListener('keydown',e=>{ const v=document.getElementById('fileViewer'); if(!v||!v.classList.contains('open'))return; if(e.key==='Escape')closeFileViewer(); else if(e.key==='ArrowLeft')fvNav(-1); else if(e.key==='ArrowRight')fvNav(1); });}
 async function summarizeFile(fid){
   const f=(state.files||[]).find(x=>x.id===fid); if(!f)return;
-  const el=document.getElementById('fsum_'+fid); if(el){el.classList.add('on');el.textContent='Even lezen…';}
+  const el=document.getElementById('fsum_'+fid); if(!el)return;
+  // Al een opgeslagen samenvatting? Alleen tonen/verbergen — geen nieuwe (betaalde) AI-run.
+  if(f.summary && String(f.summary).trim()){ el.textContent=f.summary; el.classList.toggle('on'); return; }
+  el.classList.add('on'); el.textContent='Even lezen…';
   const btn=document.querySelector(`.kfile-ai[onclick*="'${fid}'"]`);
   const _orig=btn?btn.innerHTML:null;
   if(btn){ btn.innerHTML='<img class="kfile-aianim" src="/thinking.webp" alt="">'; btn.disabled=true; }
   try{
     const r=await fetch('/api/readfile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({link:f.link,name:f.name})});
     const d=await r.json();
-    if(el) el.textContent = d&&d.summary ? d.summary : (d&&d.error ? ('Lukt niet: '+d.error) : 'Kon het bestand niet lezen.');
+    const sum = d&&d.summary ? d.summary : (d&&d.error ? ('Lukt niet: '+d.error) : 'Kon het bestand niet lezen.');
+    el.textContent=sum;
+    if(d&&d.summary){ f.summary=d.summary; try{ await sb.from('files').update({summary:d.summary}).eq('id',fid); }catch(_){} }   // bewaren → niet opnieuw laten lezen
     if(typeof loadUsage==='function') loadUsage();
-  }catch(e){ if(el)el.textContent='Kon het bestand niet lezen.'; }
+  }catch(e){ el.textContent='Kon het bestand niet lezen.'; }
   if(btn){ btn.innerHTML=_orig; btn.disabled=false; }
 }
 
