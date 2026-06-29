@@ -1028,7 +1028,7 @@
   /* 2 · LICHT — chrome (dropdowns, topbalk, koppen, agenda, kalender, modals, "Net binnen") */
   select,.cdd-btn,.cdd-btn *,.afgroup{ color:var(--s2) !important }
   .topbar,.topbar *{ color:var(--s2) !important }  .topbar svg{ stroke:var(--s2) !important }
-  .cb-title,.rail-coltitle,.colbar .cb-toggle,.agenda-toggle{ color:var(--s2) !important }
+  .cb-title,.rail-coltitle,.colbar .cb-toggle,.agenda-toggle,.chdr-t{ color:var(--s2) !important }
   #view-agenda,#view-agenda *,#duepop,#duepop *,.modal,.modal *{ color:var(--s2) !important }
   .modal .picon{ filter:grayscale(1) brightness(.6) !important }
   .modal .btn.danger,.modal .danger{ color:var(--late) !important }
@@ -1050,14 +1050,23 @@
   #list .task:hover .chk,#wachterList .task:hover .chk{ border-color:var(--s2) !important }
 
   /* Klant-letter in het icoontje: altijd zwart + vet (kaart, dropdown, hover) */
-  .picon,.cdd-badge{ color:#000 !important; font-weight:700 !important }
+  .picon,.cdd-badge,.kbadge{ color:#000 !important; font-weight:700 !important }
   #list .task:hover .picon,#wachterList .task:hover .picon{ color:#000 !important }
+  /* Bestanden-tree: klantnaam grijs tot hover (badge al grijs → kleur bij hover) */
+  .fm-crow .fm-name{ color:var(--s1) !important }
+  /* Taakkaart-hover: alle tekst in klantkleur (buttons/iconen blijven grijs) */
+  #list .task:hover .t-proj,#list .task:hover .t-projsub,#list .task:hover .t-title,#list .task:hover .t-due,
+  #wachterList .task:hover .t-proj,#wachterList .task:hover .t-projsub,#wachterList .task:hover .t-title,#wachterList .task:hover .t-due{ color:var(--ccol,var(--s2)) !important }
+  /* Klanten-beheer: icoon vóór naam; naam + project + divider in klantkleur */
+  .kbadge{ width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:13px;flex:0 0 auto }
+  .kname,.ksub{ color:var(--ccol,var(--s1)) !important }
+  .kclient{ border-bottom-color:var(--ccol,var(--line)) !important }
 
   /* 4 · WIT — chrome-hover, "vandaag"-cel, welkomstscherm */
   .topbar:hover *{ color:var(--s4) !important }  .topbar:hover svg{ stroke:var(--s4) !important }
   #view-taken:hover .cb-title,.rail:hover .rail-coltitle,#view-agenda:hover .cb-title,#view-agenda:hover .cb-toggle{ color:var(--s4) !important }
   #view-agenda:hover,#view-agenda:hover *{ color:var(--s4) !important }
-  .iocell.sel .ionum,#view-agenda:hover .iocell.sel .ionum,#duepop .dpc.sel{ color:#000 !important }
+  .iocell.sel .ionum,#view-agenda:hover .iocell.sel .ionum,#duepop .dpc.sel{ color:#000 !important; opacity:1 !important }
   .welcome-overlay,.welcome-overlay *{ color:var(--s4) !important }
   .welcome-overlay svg{ stroke:var(--s4) !important }
   .welcome-overlay .home-compliment{ font-weight:400 !important }
@@ -1115,7 +1124,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v44</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v45</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -2754,7 +2763,9 @@ function renderProjecten(){
   const html=order.map(client=>{
     const projs=byClient[client];
     const total=projs.reduce((n,p)=>n+p.items.filter(i=>i.status!=='done').length,0);
+    const ccol=(projs[0]&&projs[0].color)||'#888'; const initial=(String(client).trim()[0]||'?').toUpperCase();
     const head=`<div class="kclient">
+      <span class="kbadge" style="background:${ccol}">${escapeHtml(initial)}</span>
       <input class="kname" value="${escapeHtml(client)}" placeholder="Klant" onchange="renameClient('${esc(client)}',this.value)" />
       <span class="kcnt">${total}</span>
       <button class="kicon kadd" onclick="addProjectTo('${esc(client)}')" title="Project toevoegen"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 5v14M5 12h14"/></svg></button>
@@ -2768,7 +2779,7 @@ function renderProjecten(){
         <button class="kicon" onclick="deleteProject('${p.id}')" title="Verwijderen"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/></svg></button>
         </div>${_filesHTML('project',p.id)}
       </div>`;}).join('');
-    return `<div class="kgroup">${head}${items}</div>`;
+    return `<div class="kgroup" style="--ccol:${ccol}">${head}${items}</div>`;
   }).join('');
   const orgBar='<div class="org-bar"><button class="kfiles-add" onclick="newClientFromHeader()" title="Nieuwe klant"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg> Nieuwe klant</button><button class="kfiles-add" onclick="openOrganize()" title="Losse Dropbox-bestanden opruimen"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M6 1.8 0 5.7l6 3.9 6-3.9-6-3.9zm12 0-6 3.9 6 3.9 6-3.9-6-3.9zM0 13.5l6 3.9 6-3.9-6-3.9-6 3.9zm18-3.9-6 3.9 6 3.9 6-3.9-6-3.9zM6 18.6l6 3.9 6-3.9-6-3.9-6 3.9z"/></svg> Opruimen</button></div>';
   document.getElementById('beheerWrap').innerHTML=orgBar+(html||'<div class="hint">Nog geen klanten.</div>');
