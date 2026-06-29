@@ -292,7 +292,7 @@
   .chk:hover{border-color:#fff}
   .chk.on{background:#34d399;border-color:#34d399;color:#0c0c0c}
   .t-due{font-size:13px;font-variant-numeric:tabular-nums;color:var(--mut);margin-top:11px}
-  .t-due.warn{color:var(--warn)} .t-due.risk{color:var(--risk)} .t-due.late{color:var(--late);font-weight:600}
+  .t-due.warn,.t-due.risk{color:var(--mut) !important} .t-due.late{color:var(--late);font-weight:600}
   .t-title{font-size:14px;line-height:1.4;margin-top:8px;cursor:pointer;color:var(--txt)}
   .t-title:hover{color:var(--primary2)}
   .t-pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px;align-items:center}
@@ -1149,7 +1149,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v54</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v55</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
