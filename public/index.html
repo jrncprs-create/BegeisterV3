@@ -1059,6 +1059,8 @@
   .fm-badge{ filter:none !important; width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#000;font-weight:700;font-size:11px }
   /* Klanten-beheer: project-bolletje in klantkleur */
   .kgroup .kli .kdot{ filter:none !important; background:var(--ccol) !important }
+  /* Bestandsnaam + samenvatting in klantkleur */
+  .kfile-name,.kfile-sum{ color:var(--ccol,var(--s1)) !important }
   /* Taakkaart-hover: alle tekst in klantkleur (buttons/iconen blijven grijs) */
   #list .task:hover .t-proj,#list .task:hover .t-projsub,#list .task:hover .t-title,#list .task:hover .t-due,
   #wachterList .task:hover .t-proj,#wachterList .task:hover .t-projsub,#wachterList .task:hover .t-title,#wachterList .task:hover .t-due{ color:var(--ccol,var(--s2)) !important }
@@ -1129,7 +1131,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v46</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v47</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -2400,6 +2402,7 @@ function _fileRow(f){
   const ic=_fileGlyph(f.name||'');
   return `<div class="kfile"><div class="kfile-main" onclick="event.stopPropagation();openFileViewer('${f.id}')" title="Voorvertonen"><span class="kfile-ic">${ic}</span><span class="kfile-name">${escapeHtml(f.name||'bestand')}</span></div>`
     +`<button class="kfile-ai" title="AI leest dit bestand" onclick="event.stopPropagation();summarizeFile('${f.id}')">${_tIc(_TABCHAN.asterisk,16,1.7)}</button>`
+    +`<button class="kfile-ai kfile-collapse" title="Samenvatting inklappen" onclick="event.stopPropagation();var s=document.getElementById('fsum_${f.id}');if(s)s.classList.remove('on')">${_tIc('<path d="M6 9l6 6l6 -6"/>',16,1.7)}</button>`
     +`<button class="kfile-del" title="Bestand verwijderen" onclick="event.stopPropagation();deleteFile('${f.id}')">${_tIc('<path d="M18 6l-12 12"/><path d="M6 6l12 12"/>',16,1.7)}</button>`
     +`<div class="kfile-sum" id="fsum_${f.id}"></div></div>`;
 }
