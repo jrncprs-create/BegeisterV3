@@ -14,6 +14,8 @@ const AKEY = (process.env.ANTHROPIC_API_KEY || "").trim();
 const anthropic = AKEY ? new Anthropic({ apiKey: AKEY }) : null;
 const VISION_MODEL = "claude-sonnet-4-6";
 const GRAPH = "https://graph.facebook.com/v21.0/";
+// Alleen Jeroen en Marlon appen naar het Begeister-nummer; koppel hun WhatsApp-nummer aan hun naam.
+const WHO_BY_NUMBER = { "31628777056": "Jeroen", "31642634901": "Marlon" };
 
 // WhatsApp-media (foto/document) ophalen: eerst de media-URL, dan de bytes. Vereist WHATSAPP_TOKEN.
 async function fetchMedia(mediaId) {
@@ -125,7 +127,9 @@ export async function handleEvent(body) {
       for (const msg of (val.messages || [])) {
         try {
           const waId = msg.from || "";
-          const sender = (nameByWa[waId] || waId) + (waId ? ` (${waId})` : "");
+          // Alleen Jeroen en Marlon sturen naar het Begeister-nummer → herken ze aan hun nummer.
+          const who = WHO_BY_NUMBER[waId] || "";
+          const sender = who || ((nameByWa[waId] || waId) + (waId ? ` (${waId})` : ""));
           const text = msgToText(msg);
           const messageId = "wa-" + (msg.id || crypto.createHash("sha1").update(waId + "|" + (msg.timestamp || "") + "|" + text).digest("hex"));
 
