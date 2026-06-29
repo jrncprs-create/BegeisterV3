@@ -470,6 +470,10 @@
   .srow-thumb-wrap{padding:8px 0 2px;cursor:pointer}
   .srow-thumb{max-width:200px;max-height:200px;width:auto;height:auto;border-radius:11px;display:block;border:1px solid var(--line)}
   .srow-thumb.ph{width:140px;height:96px;background:rgba(255,255,255,.04)}
+  /* WhatsApp-gesprek (geclusterde berichten): bubbels in de bron */
+  .srow-conv .wa{padding:2px 0 2px}
+  .srow-conv .wa-bub .wa-img{max-width:170px;max-height:170px;border-radius:9px;display:block;margin-bottom:4px}
+  .srow-conv .wa-tx{font-size:13.5px;line-height:1.45}
 
   /* RAIL */
   .rail{background:var(--bg);border-right:1px solid var(--line);width:360px;flex:0 0 360px;position:sticky;top:0;height:100dvh;align-self:flex-start;overflow-y:auto;overflow-x:hidden;padding-bottom:150px;scrollbar-width:none;-ms-overflow-style:none}
@@ -1210,7 +1214,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v60</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v61</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -2300,6 +2304,48 @@ function _waBubbles(text){
   }).join('');
   return '<div class="wa">'+html+'</div>';
 }
+// Opeenvolgende WhatsApp-berichten van dezelfde afzender (kort na elkaar) als één gesprek tonen.
+function _srcSameSender(a,b){ return String(a.from||'').trim().toLowerCase()===String(b.from||'').trim().toLowerCase(); }
+function _srcCloseTime(a,b){ const ta=Date.parse(a.ts||a.date||''),tb=Date.parse(b.ts||b.date||''); if(isNaN(ta)||isNaN(tb)) return a.date===b.date; return Math.abs(ta-tb)<20*60*1000; }
+function _renderSrcList(list){
+  const out=[]; let i=0;
+  while(i<list.length){
+    const s=list[i];
+    if(s.channel==='whatsapp'){
+      const cl=[s]; let j=i+1;
+      while(j<list.length && list[j].channel==='whatsapp' && _srcSameSender(list[j],cl[cl.length-1]) && _srcCloseTime(list[j],cl[cl.length-1])){ cl.push(list[j]); j++; }
+      if(cl.length>=2){ out.push(_srcConvHTML(cl)); i=j; continue; }
+    }
+    out.push(_srcRowHTML(s)); i++;
+  }
+  return out.join('');
+}
+function _srcConvHTML(cl){
+  const s0=cl[0]; const col=PROJCOL[s0.proj]||''; const cid='conv_'+s0.id;
+  const dateTxt=s0.date?d3date(s0.date):''; const sender=s0.from||'WhatsApp';
+  const imgRe=/\.(png|jpe?g|gif|webp|heic|heif|bmp|tiff?|svg)$/i;
+  const bubbles=cl.slice().reverse().map(s=>{   // oudste eerst → chronologisch
+    const atts=(s.attachFull&&s.attachFull.length)?s.attachFull:[];
+    const ia=atts.find(a=>imgRe.test(a.filename||'')||/^image\//i.test(a.mime||''));
+    let inner='';
+    if(ia&&ia.storage_path){ const gi=atts.indexOf(ia); inner+=`<img class="srow-thumb ph wa-img" data-sp="${escapeHtml(ia.storage_path)}" alt="" onclick="event.stopPropagation();openAttachment('${s.id}',${gi})">`; }
+    const txt=String(s.text||'').replace(/^\[afbeelding via WhatsApp\]:?\s*/i,'').trim();
+    const body=txt||(!ia?(s.summary||'Bericht'):'');
+    if(body) inner+=`<div class="wa-tx">${autolink(escapeHtml(body),col||'var(--primary2)')}</div>`;
+    return `<div class="wa-msg them"><div class="wa-bub">${inner}</div></div>`;
+  }).join('');
+  const cstyle=col?` style="--scol:${col}"`:'';
+  return `<div class="srow srow-conv" id="card_${cid}"${cstyle}>
+    <div class="srow-head" onclick="toggleSrc('${cid}')">
+      <span class="doc-ic">${_chanGlyph('whatsapp')}</span>
+      <span class="srow-main"><span class="srow-title">${escapeHtml(sender)}</span><span class="srow-sub">WhatsApp · ${cl.length} berichten</span></span>
+      <span class="srow-date">${dateTxt}</span>
+      <button class="srow-x" title="Gesprek verwijderen" aria-label="Gesprek verwijderen" onclick="event.stopPropagation();srcDeleteMany('${cl.map(s=>s.id).join(',')}')"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="srow-body" id="body_${cid}"><div class="wa">${bubbles}</div></div>
+  </div>`;
+}
+async function srcDeleteMany(ids){ const arr=String(ids).split(',').filter(Boolean); if(!arr.length)return; if(!(await uiConfirm('Dit hele gesprek ('+arr.length+' berichten) verwijderen?')))return; try{ await sb.from('sources').delete().in('id',arr); }catch(_){} await refresh(); }
 function _srcRowHTML(s){
   const scol=PROJCOL[s.proj]||'';            // alleen een klantkleur als de bron écht aan een klant hangt
   const col=scol||'var(--primary2)';          // voor autolink in de body
@@ -2348,14 +2394,14 @@ function renderBronnen(){
   // Recent: de nieuwste ~6
   const recent=sorted.slice(0,6);
   if(recent.length){
-    html+='<div class="src-group"><div class="src-group-h">Recent</div>'+recent.map(_srcRowHTML).join('')+'</div>';
+    html+='<div class="src-group"><div class="src-group-h">Recent</div>'+_renderSrcList(recent)+'</div>';
   }
   // Daaronder: gegroepeerd per klant/opdracht (kop in klantkleur)
   const groups={}, order={}, list=[];
   sorted.forEach(s=>{ const name=s.proj?(projName(s.proj)||'Geen klant'):'Geen klant'; if(!groups[name]){groups[name]=[];order[name]=s.proj||null;list.push(name);} groups[name].push(s); });
   list.sort((a,b)=> a==='Geen klant'?1:(b==='Geen klant'?-1:a.localeCompare(b)));
   html+=list.map(name=>{const col=(order[name]&&PROJCOL[order[name]])||'var(--mut2)';
-    return `<div class="src-group"><div class="src-group-h" style="color:${col}">${escapeHtml(name)}</div>${groups[name].map(_srcRowHTML).join('')}</div>`;}).join('');
+    return `<div class="src-group"><div class="src-group-h" style="color:${col}">${escapeHtml(name)}</div>${_renderSrcList(groups[name])}</div>`;}).join('');
   wrap.innerHTML=html||'<div class="hint">Nog geen bronnen.</div>';
   _fillSrcThumbs();
 }
@@ -2415,9 +2461,9 @@ async function openAttachment(id,i){
   if(!sp){ return; }
   let url='';
   try{
-    const pub=sb.storage.from('intake').getPublicUrl(sp);
-    url=pub&&pub.data?pub.data.publicUrl:'';
-    if(!url){ const signed=await sb.storage.from('intake').createSignedUrl(sp,3600); url=signed&&signed.data?signed.data.signedUrl:''; }
+    const signed=await sb.storage.from('intake').createSignedUrl(sp,3600);
+    url=signed&&signed.data?signed.data.signedUrl:'';
+    if(!url){ const pub=sb.storage.from('intake').getPublicUrl(sp); url=pub&&pub.data?pub.data.publicUrl:''; }
   }catch(_){}
   if(url) _previewOverlay(a.filename, url);
 }
@@ -3685,7 +3731,7 @@ function _mapSource(s,atts){
   const text = s.channel==='email' ? (s.summary||s.body||'') : (s.body||'');
   const full = (s.channel==='email' && s.summary && s.body) ? s.body : null;
   const myAtts=atts.filter(a=>a.source_id===s.id);
-  return {id:s.id,channel:s.channel,from:s.sender||'',subject:s.subject||'',proj:s.project_id,date:(s.received_at||'').slice(0,10),
+  return {id:s.id,channel:s.channel,from:s.sender||'',subject:s.subject||'',proj:s.project_id,date:(s.received_at||'').slice(0,10),ts:(s.received_at||''),
           kind,text,summary:s.summary||'',full,
           attach:myAtts.map(a=>a.filename||'bijlage'),
           attachFull:myAtts.map(a=>({filename:a.filename||'bijlage',storage_path:a.storage_path||'',mime:a.mime||''})),
