@@ -463,9 +463,13 @@
   .wa-msg.me{align-self:flex-end;align-items:flex-end}
   .wa-name{font-size:11px;color:var(--primary2);font-weight:600;margin:2px 0 2px 11px}
   .wa-bub{font-size:13.5px;line-height:1.45;padding:7px 11px 6px;border-radius:14px;white-space:pre-wrap;word-break:break-word;color:var(--txt)}
-  .wa-msg.them .wa-bub{background:rgba(255,255,255,.07);border-bottom-left-radius:5px}
-  .wa-msg.me .wa-bub{background:rgba(52,211,153,.15);border-bottom-right-radius:5px}
+  .wa-msg.them .wa-bub{background:rgba(255,255,255,.06);border-bottom-left-radius:5px}
+  .wa-msg.me .wa-bub{background:color-mix(in srgb, var(--scol, #8a8a8a) 22%, transparent);border-bottom-right-radius:5px}
   .wa-time{display:block;font-size:9.5px;color:var(--mut2);margin-top:3px;text-align:right;opacity:.75}
+  /* Afbeelding-bijlage als thumbnail-preview in de bron */
+  .srow-thumb-wrap{padding:8px 0 2px;cursor:pointer}
+  .srow-thumb{max-width:200px;max-height:200px;width:auto;height:auto;border-radius:11px;display:block;border:1px solid var(--line)}
+  .srow-thumb.ph{width:140px;height:96px;background:rgba(255,255,255,.04)}
 
   /* RAIL */
   .rail{background:var(--bg);border-right:1px solid var(--line);width:360px;flex:0 0 360px;position:sticky;top:0;height:100dvh;align-self:flex-start;overflow-y:auto;overflow-x:hidden;padding-bottom:150px;scrollbar-width:none;-ms-overflow-style:none}
@@ -1149,7 +1153,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v55</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v56</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -2185,7 +2189,12 @@ function _srcRowHTML(s){
   const allAtts=(s.attachFull&&s.attachFull.length)?s.attachFull:((s.attach||[]).map(f=>({filename:f,storage_path:'',mime:''})));
   // alle bijlagen klikbaar (ook afbeeldingen) — inline preview zoals in Bestanden
   const atts=allAtts;
-  const attHTML=atts.map((a)=>{const gi=allAtts.indexOf(a);return `<div class="srow-att" onclick="openAttachment('${s.id}',${gi})"><span class="file-ic">${_fileGlyph(a.filename)}</span><span class="fname">${escapeHtml(a.filename)}</span></div>`;}).join('');
+  const attHTML=atts.map((a)=>{const gi=allAtts.indexOf(a);
+    const isImg=imgRe.test(a.filename||'')||/^image\//i.test(a.mime||'');
+    if(isImg && a.storage_path){
+      return `<div class="srow-thumb-wrap" onclick="openAttachment('${s.id}',${gi})"><img class="srow-thumb ph" data-sp="${escapeHtml(a.storage_path)}" alt="${escapeHtml(a.filename||'afbeelding')}" loading="lazy"></div>`;
+    }
+    return `<div class="srow-att" onclick="openAttachment('${s.id}',${gi})"><span class="file-ic">${_fileGlyph(a.filename)}</span><span class="fname">${escapeHtml(a.filename)}</span></div>`;}).join('');
   const derHTML=derived.length?`<div class="srow-derived">${derived.length} actiepunt(en) hieruit gehaald</div>`:'';
   return `<div class="srow" id="card_${s.id}"${scol?` style="--scol:${scol}"`:''}>
     <div class="srow-head" onclick="toggleSrc('${s.id}')">
@@ -2227,6 +2236,20 @@ function renderBronnen(){
   html+=list.map(name=>{const col=(order[name]&&PROJCOL[order[name]])||'var(--mut2)';
     return `<div class="src-group"><div class="src-group-h" style="color:${col}">${escapeHtml(name)}</div>${groups[name].map(_srcRowHTML).join('')}</div>`;}).join('');
   wrap.innerHTML=html||'<div class="hint">Nog geen bronnen.</div>';
+  _fillSrcThumbs();
+}
+// Thumbnails van afbeeldings-bijlagen laden (intake-bucket of Dropbox) via signed/proxy-URL.
+async function _fillSrcThumbs(){
+  const imgs=document.querySelectorAll('.srow-thumb[data-sp]:not([data-done])');
+  for(const im of imgs){
+    im.setAttribute('data-done','1');
+    const sp=im.getAttribute('data-sp')||''; let url='';
+    try{
+      if(sp.indexOf('dropbox:')===0){ url='/api/fileproxy?u='+encodeURIComponent(_fvRaw(sp.slice(8))); }
+      else { const sg=await sb.storage.from('intake').createSignedUrl(sp,3600); url=sg&&sg.data?sg.data.signedUrl:''; }
+    }catch(_){}
+    if(url){ im.onload=()=>im.classList.remove('ph'); im.src=url; }
+  }
 }
 function toggleSrcMenu(id){
   document.querySelectorAll('.srow-pop.open').forEach(p=>{if(p.id!=='pop_'+id)p.classList.remove('open');});
