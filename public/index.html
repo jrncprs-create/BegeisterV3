@@ -1056,6 +1056,32 @@
   .welcome-overlay .chatrow{ border-color:rgba(255,255,255,.5) !important }
   .welcome-overlay #chatInput:empty:before,.welcome-overlay #chatInput::placeholder{ color:rgba(255,255,255,.6) !important; opacity:1 }
   .welcome-overlay .ci-send{ color:#1a1a1a !important }
+  /* ===== Dagoverzicht-overlay (schuift van boven in/uit, met inertia) ===== */
+  .dayview-ov{position:fixed;inset:0;z-index:95;background:var(--bg);overflow-y:auto;transform:translateY(-100%);transition:transform .62s cubic-bezier(.22,1.12,.36,1);will-change:transform;-webkit-overflow-scrolling:touch}
+  .dayview-ov.open{transform:translateY(0)}
+  .dov-inner{max-width:680px;margin:0 auto;padding:max(48px,calc(env(safe-area-inset-top) + 40px)) 26px 80px;position:relative}
+  .dov-close{position:absolute;top:18px;right:18px;width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:transparent;color:#9b9b9b;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:color .15s,border-color .15s}
+  .dov-close:hover{color:#fff;border-color:#fff}
+  .dov-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:0 0 22px}
+  .dov-greet{font-size:22px;color:#fff;font-weight:400}
+  .dov-date{font-size:13px;color:#686868;white-space:nowrap}
+  .dov-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:0 0 30px}
+  .dov-mc{background:rgba(255,255,255,.03);border-radius:12px;padding:14px}
+  .dov-mc .l{font-size:12.5px;color:#686868}
+  .dov-mc .n{font-size:26px;color:#fff;margin-top:2px}
+  .dov-h{font-size:12px;letter-spacing:1.1px;text-transform:uppercase;color:#686868;margin:0 0 4px}
+  .dov-sec{margin:0 0 28px}
+  .dov-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:.5px solid var(--line)}
+  .dov-row:last-child{border-bottom:none}
+  .dov-dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto}
+  .dov-row .tt{flex:1;min-width:0;color:#cfcfcf;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .dov-row .meta{font-size:12px;color:#686868;flex:0 0 auto}
+  .dov-pill{font-size:11.5px;padding:3px 10px;border-radius:999px;border:1px solid var(--line);color:#9b9b9b;flex:0 0 auto}
+  button.dov-row{width:100%;border:none;border-bottom:.5px solid var(--line);background:transparent;text-align:left;font:inherit;cursor:pointer}
+  button.dov-row:last-child{border-bottom:none}
+  button.dov-row:hover .tt{color:#fff}
+  .dov-empty{color:#5a5a5a;font-size:13px;padding:8px 0}
+  @media(max-width:600px){ .dov-metrics{grid-template-columns:repeat(2,1fr)} }
 </style>
 </head>
 <body>
@@ -1076,10 +1102,11 @@
       <button data-v="files" onclick="setView('files')">Bestanden</button>
       <button data-v="archief" onclick="setView('archief')">Archief</button>
       <button id="pushBtn" onclick="enablePush()" title="Meldingen aanzetten">Meldingen</button>
+      <button id="dayBtn" onclick="openDayOverview()" title="Dagoverzicht">Dagoverzicht</button>
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v38</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v39</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -3693,7 +3720,44 @@ function overlayBackdrop(e){if(e.target.id==='welcomeOverlay')dismissWelcome();}
 function composeMode(on){}
 function updateIntroFade(){const o=document.getElementById('welcomeOverlay');if(!o)return;const ta=document.getElementById('chatInput');const th=document.getElementById('chatThread');const active=(ta&&ta.value.trim())||(th&&th.children.length>0);o.classList.toggle('chatting',!!active);}
 function goHome(){ showWelcome(); }
-function dismissWelcome(){ hideWelcome(); _animateNext=true; render(); }
+function dismissWelcome(){ hideWelcome(); _animateNext=true; render(); try{ setTimeout(maybeShowDayOverview,650); }catch(_){} }
+// ===== Dagoverzicht-overlay =====
+function _projColor(p){ try{ return (PROJCOL&&PROJCOL[p.id])||'#888'; }catch(_){ return '#888'; } }
+function _clientColor(client){ const p=(state.projects||[]).find(x=>x.client===client&&x.id!=='__inbox__'); return p?_projColor(p):'#888'; }
+function _dayData(){
+  const today=[],week=[],waiting=[],perClient={};
+  (state.projects||[]).forEach(p=>{ if(p.id==='__inbox__')return;
+    (p.items||[]).forEach(it=>{ if(it.status==='done')return;
+      const du=it.due?daysUntil(it.due):null;
+      if(du!==null&&du<=0) today.push({it,p}); else if(du!==null&&du<=7) week.push({it,p});
+      if(it.status==='wait') waiting.push({it,p});
+      perClient[p.client]=(perClient[p.client]||0)+1;
+    });
+  });
+  const inbox=projById('__inbox__'); const net=inbox?(inbox.items||[]).filter(it=>it.status!=='done'):[];
+  return {today,week,waiting,net,perClient};
+}
+function _dovPill(st){ return st==='doing'?'bezig':(st==='wait'?'wacht':(st==='todo'?'te doen':'')); }
+function renderDayOverview(){
+  const body=document.getElementById('dayBody'); if(!body)return;
+  const D=_dayData(); const esc=escapeHtml;
+  const who=(document.getElementById('who')&&document.getElementById('who').textContent.trim())||'';
+  const dateTxt=TODAY.toLocaleDateString('nl-NL',{weekday:'long',day:'numeric',month:'long'});
+  const rowItem=({it,p})=>`<div class="dov-row"><span class="dov-dot" style="background:${_projColor(p)}"></span><span class="tt">${esc(it.t||'')}</span>${it.owner?`<span class="meta">${esc(it.owner)}</span>`:''}${_dovPill(it.status)?`<span class="dov-pill">${_dovPill(it.status)}</span>`:''}</div>`;
+  const todayHtml=D.today.length?D.today.slice(0,8).map(rowItem).join(''):'<div class="dov-empty">Niets met deadline vandaag.</div>';
+  const netHtml=D.net.length?D.net.slice(0,6).map(({it})=>`<div class="dov-row"><span class="dov-dot" style="background:#686868"></span><span class="tt">${esc(it.t||'')}</span>${it.owner?`<span class="meta">${esc(it.owner)}</span>`:''}</div>`).join(''):'<div class="dov-empty">Geen nieuwe binnenkomers.</div>';
+  const clients=Object.keys(D.perClient).sort((a,b)=>D.perClient[b]-D.perClient[a]);
+  const clientHtml=clients.length?clients.slice(0,6).map(c=>`<button class="dov-row" onclick="dovOpenClient('${esc(c).replace(/'/g,"\\'")}')"><span class="dov-dot" style="background:${_clientColor(c)}"></span><span class="tt">${esc(c)}</span><span class="meta">${D.perClient[c]} open</span></button>`).join(''):'<div class="dov-empty">Geen open punten.</div>';
+  body.innerHTML=`<div class="dov-head"><div class="dov-greet">Goedemorgen${who?', '+esc(who):''}</div><div class="dov-date">${esc(dateTxt)}</div></div>`+
+    `<div class="dov-metrics"><div class="dov-mc"><div class="l">Vandaag</div><div class="n">${D.today.length}</div></div><div class="dov-mc"><div class="l">Deze week</div><div class="n">${D.week.length}</div></div><div class="dov-mc"><div class="l">Net binnen</div><div class="n">${D.net.length}</div></div><div class="dov-mc"><div class="l">Wacht op</div><div class="n">${D.waiting.length}</div></div></div>`+
+    `<div class="dov-sec"><div class="dov-h">Vandaag</div>${todayHtml}</div>`+
+    `<div class="dov-sec"><div class="dov-h">Net binnen</div>${netHtml}</div>`+
+    `<div class="dov-sec"><div class="dov-h">Per klant</div>${clientHtml}</div>`;
+}
+function openDayOverview(){ renderDayOverview(); const ov=document.getElementById('dayOverlay'); if(!ov)return; ov.setAttribute('aria-hidden','false'); requestAnimationFrame(()=>ov.classList.add('open')); }
+function closeDayOverview(){ const ov=document.getElementById('dayOverlay'); if(!ov)return; ov.classList.remove('open'); ov.setAttribute('aria-hidden','true'); }
+function dovOpenClient(c){ closeDayOverview(); try{ const p=(state.projects||[]).find(x=>x.client===c&&x.id!=='__inbox__'); setView('taken'); if(p){ activeTab=p.id; render(); } }catch(_){} }
+function maybeShowDayOverview(){ try{ const k='dayview_'+iso(TODAY); if(localStorage.getItem(k))return; localStorage.setItem(k,'1'); }catch(_){} openDayOverview(); }
 function togglePlus(e){if(e)e.stopPropagation();const m=document.getElementById('plusMenu');const open=m.classList.contains('hidden');m.classList.toggle('hidden');if(open)composeMode(true);}
 function closePlus(){const m=document.getElementById('plusMenu');if(m)m.classList.add('hidden');}
 document.addEventListener('click',e=>{const m=document.getElementById('plusMenu');if(m&&!m.classList.contains('hidden')&&!m.contains(e.target)&&!(e.target.closest&&e.target.closest('.ci-plus')))m.classList.add('hidden');});
@@ -4438,5 +4502,11 @@ sb.auth.getSession().then(({data})=>{ if(data.session) startApp(data.session); e
 sb.auth.onAuthStateChange((_e,session)=>{ if(session) startApp(session); else showLogin(); });
 ['auth_email','auth_pass'].forEach(id=>document.getElementById(id).addEventListener('keydown',e=>{if(e.key==='Enter')sbLogin();}));
 </script>
+<div id="dayOverlay" class="dayview-ov" aria-hidden="true">
+  <div class="dov-inner">
+    <button class="dov-close" onclick="closeDayOverview()" aria-label="Sluiten" title="Wegschuiven"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+    <div id="dayBody"></div>
+  </div>
+</div>
 </body>
 </html>
