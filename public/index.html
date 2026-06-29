@@ -682,6 +682,10 @@
   .modal{position:relative;background:rgba(22,22,22,.62);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.12);border-radius:20px;width:520px;max-width:100%;padding:30px 28px 24px;box-shadow:0 28px 64px rgba(0,0,0,.55);transform:translateY(46px);transition:transform .55s cubic-bezier(.16,1,.3,1)}
   .overlay.open .modal{transform:translateY(0)}
   .modal h3{margin:0 0 22px;font-size:18px;font-weight:650;letter-spacing:.2px;padding-right:34px}
+  /* uiPrompt-kop: badge + titel + sluitkruis op één regel, netjes uitgelijnd */
+  .uip-head{display:flex;align-items:center;gap:12px;margin:0 0 20px;padding-right:34px;min-height:34px}
+  .uip-head h3{margin:0;padding-right:0;flex:1;min-width:0;font-size:17px;line-height:1.3}
+  .uip-badge{flex:0 0 auto;width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px}
   .modal-close{position:absolute;top:20px;right:22px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;background:transparent;border:none;color:rgba(255,255,255,.6);cursor:pointer;padding:0;transition:color .15s}
   .modal-close:hover{color:#fff}
   .iconbtn{background:transparent;border:none;cursor:pointer;padding:6px;display:flex;align-items:center;justify-content:center;border-radius:11px;color:rgba(255,255,255,.6);transition:color .15s,transform .12s}
@@ -964,6 +968,8 @@
     .rail .rail-close{position:absolute;top:18px;right:12px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;background:transparent;border:none;color:rgba(255,255,255,.6);cursor:pointer;padding:0;z-index:5;transition:color .15s}
     .rail .rail-close:hover{color:#fff}
     .rail .rail-coltitle{position:sticky;top:0;z-index:4;background:var(--bg);display:flex;align-items:center;height:26px;padding-top:18px;padding-bottom:16px;box-sizing:content-box;font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut2);margin:0;padding-right:34px}
+    /* Contacten heeft een eigen kop met +-knop: gelijk uitlijnen met Bronnen/Klanten-titels */
+    .rail #view-contacten .chdr{position:sticky;top:0;z-index:4;background:var(--bg);min-height:26px;padding:18px 34px 16px 0;margin:0;box-sizing:content-box}
     /* AFSPRAKEN-knop: tekstknop links naast de +-knop, op kophoogte */
     .agenda-toggle{position:absolute;top:0;right:34px;height:26px;display:flex;align-items:center;border:none;background:transparent;color:var(--mut2);font-size:12px;letter-spacing:1.2px;text-transform:uppercase;cursor:pointer;padding:0;z-index:3;transition:color .15s}
     .agenda-toggle:hover{color:#fff}
@@ -1053,7 +1059,9 @@
   #list .task:hover .chk,#wachterList .task:hover .chk{ border-color:var(--s2) !important }
 
   /* Klant-letter in het icoontje: altijd zwart + vet (kaart, dropdown, hover) */
-  .picon,.cdd-badge,.kbadge{ color:#000 !important; font-weight:700 !important }
+  .picon,.cdd-badge,.kbadge,.uip-badge{ color:#000 !important; font-weight:700 !important }
+  /* Dialoog-kop: klantnaam in klantkleur (beats .modal *) */
+  .modal .uip-accent{ color:var(--uipc,var(--s2)) !important; font-weight:600 }
   #list .task:hover .picon,#wachterList .task:hover .picon{ color:#000 !important }
   /* Bestanden-tree: klant-icoon (gekleurd + letter) en naam altijd in klantkleur */
   .fm-badge{ filter:none !important; width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#000;font-weight:700;font-size:11px }
@@ -1131,7 +1139,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v48</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v49</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -2853,16 +2861,18 @@ async function fmDelete(btn){
 async function fmRename(btn){
   const k=btn.dataset.kind;
   if(k==='file'){ const id=btn.dataset.fid; const f=(state.files||[]).find(x=>String(x.id)===String(id)); if(!f)return;
-    const nv=((await uiPrompt('Nieuwe bestandsnaam:', f.name||''))||'').trim(); if(!nv||nv===f.name)return;
+    const fc=(function(){const p=_fileProject(f);if(p&&p.color)return p.color;return f.owner_type==='client'?_clientColor(f.owner_id):'';})();
+    const nv=((await uiPrompt('Nieuwe bestandsnaam:', f.name||'', fc?{accent:fc}:{}))||'').trim(); if(!nv||nv===f.name)return;
     try{ await sb.from('files').update({name:nv}).eq('id',id); f.name=nv; }catch(_){} _renderFmTree(); return; }
   if(k==='project'){ const pid=btn.dataset.pid; const p=projById(pid); if(!p)return;
-    const nv=((await uiPrompt('Nieuwe projectnaam:', p.project||''))||'').trim(); if(!nv||nv===p.project)return;
+    const nv=((await uiPrompt('Nieuwe projectnaam:', p.project||'', p.color?{accent:p.color}:{}))||'').trim(); if(!nv||nv===p.project)return;
     try{ await sb.from('projects').update({project:nv}).eq('id',pid); }catch(_){} await refresh(); return; }
   if(k==='client'){ const client=btn.dataset.client;
-    const nv=((await uiPrompt('Nieuwe klantnaam:', client||''))||'').trim(); if(!nv||nv===client)return;
+    const nv=((await uiPrompt('Nieuwe klantnaam:', client||'', {accent:_clientColor(client)}))||'').trim(); if(!nv||nv===client)return;
     try{ await renameClient(client, nv); }catch(_){} _renderFmTree(); return; }
   if(k==='cat'){ const client=btn.dataset.client, pid=btn.dataset.pid, cat=btn.dataset.cat;
-    const nv=((await uiPrompt('Nieuwe mapnaam:', cat||''))||'').trim(); if(!nv||nv===cat)return;
+    const cc=(pid==='__alg__')?_clientColor(client):((projById(pid)||{}).color||'');
+    const nv=((await uiPrompt('Nieuwe mapnaam:', cat||'', cc?{accent:cc}:{}))||'').trim(); if(!nv||nv===cat)return;
     try{ let q=sb.from('files').update({icon:nv}).eq('icon',cat||''); if(pid==='__alg__'){ q=q.eq('owner_type','client').eq('owner_id',client); } else { q=q.eq('owner_type','project').eq('owner_id',pid); } await q; }catch(_){} await refresh(); return; }
 }
 function _cat(f){ return (f && f.icon || '').trim(); }
@@ -3218,7 +3228,7 @@ async function renameClient(oldName,newVal){
   await sb.from('projects').update({client:newVal,icon}).eq('client',oldName);
 }
 async function addProjectTo(client){
-  const name=((await uiPrompt('Naam nieuw project voor '+client+':'))||'').trim(); if(!name)return;
+  const name=((await uiPrompt('Nieuw project voor', '', {client, accent:_clientColor(client)}))||'').trim(); if(!name)return;
   const icon=((client||'?')[0]||'?').toUpperCase();
   await sb.from('projects').insert({client,project:name,color:_clientColor(client),icon,sort:state.projects.length+1});
   await refresh();
@@ -3280,12 +3290,20 @@ function fillProjectSelect(client,selId){
   if(selId)sel.value=selId;
   if(sel._cddWrap)_enhanceSelect(sel,'project');
 }
-function uiPrompt(title, value=''){
+function uiPrompt(title, value='', opts={}){
+  opts=opts||{};
+  const accent=(opts.accent||'').toString();
+  const client=(opts.client||'').toString();
+  const badge=(opts.badge||(client?(client.trim()[0]||''):'')).toString().toUpperCase();
+  // Titel met klantnaam in klantkleur; badge (picto) in dezelfde kleur ervoor.
+  const titleHtml=escapeHtml(title)+(client&&accent?' <span class="uip-accent">'+escapeHtml(client)+'</span>':'');
+  const badgeHtml=(badge&&accent)?'<span class="uip-badge" style="background:'+accent+'">'+escapeHtml(badge)+'</span>':'';
+  const accentVar=accent?'--uipc:'+accent+';':'';
   return new Promise(resolve=>{
     const ov=document.createElement('div'); ov.className='overlay';
-    ov.innerHTML='<div class="modal" style="width:420px;max-width:92vw;padding:24px 22px">'
+    ov.innerHTML='<div class="modal" style="'+accentVar+'width:440px;max-width:92vw">'
       +'<button class="modal-close" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>'
-      +'<h3 style="margin:0 0 16px">'+escapeHtml(title)+'</h3>'
+      +'<div class="uip-head">'+badgeHtml+'<h3>'+titleHtml+'</h3></div>'
       +'<input type="text" class="uip-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" name="x'+Date.now()+'" />'
       +'<div class="foot" style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px">'
       +'<button class="btn ghost uip-cancel">Annuleren</button>'
@@ -3340,7 +3358,7 @@ async function _newClientPrompt(){
   await refresh(); return {client:name,id:ins&&ins.data?ins.data.id:null};
 }
 async function _newProjectPrompt(client){
-  const name=((await uiPrompt('Naam nieuw project:'))||'').trim(); if(!name)return null;
+  const name=((await uiPrompt('Nieuw project voor', '', {client, accent:_clientColor(client)}))||'').trim(); if(!name)return null;
   const icon=(client[0]||'?').toUpperCase();
   const ins=await sb.from('projects').insert({client,project:name,color:_clientColor(client),icon,sort:state.projects.length+1}).select('id').single();
   await refresh(); return {id:ins&&ins.data?ins.data.id:null};
