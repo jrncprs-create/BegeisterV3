@@ -1034,6 +1034,8 @@
 
   /* 2 · LICHT — chrome (dropdowns, topbalk, koppen, agenda, kalender, modals, "Net binnen") */
   select,.cdd-btn,.cdd-btn *,.afgroup{ color:var(--s2) !important }
+  /* Keuzelijst-waarde (klant/project) in de klantkleur als die gezet is */
+  .cdd-btn .cdd-cur{ color:var(--cdc,var(--s2)) !important }
   .topbar,.topbar *{ color:var(--s2) !important }  .topbar svg{ stroke:var(--s2) !important }
   .cb-title,.rail-coltitle,.colbar .cb-toggle,.agenda-toggle,.chdr-t{ color:var(--s2) !important }
   #view-agenda,#view-agenda *,#duepop,#duepop *,.modal,.modal *{ color:var(--s2) !important }
@@ -1139,7 +1141,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v49</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v50</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -1800,7 +1802,7 @@ function _enhanceSelect(sel,kind){
   const cur=opts.find(o=>o.v===sel.value)||opts[0]||{l:'',v:''};
   const cb=_formBadge(kind,cur.v);
   const items=opts.map(o=>{ const b=_formBadge(kind,o.v); const lead=b?`<span class="cdd-badge" style="background:${b.col}">${escapeHtml(b.ch||'')}</span>`:`<span class="cdd-ck">${o.v===sel.value?'✓':''}</span>`; return `<div class="cdd-opt${o.v===sel.value?' sel':''} ${o.cls}" data-v="${escapeHtml(o.v)}">${lead}<span class="cdd-lbl"${b?` style="color:${b.col}"`:''}>${escapeHtml(o.l)}</span></div>`; }).join('');
-  wrap.innerHTML=`<button type="button" class="cdd-btn">${cb?`<span class="cdd-badge" style="background:${cb.col}">${escapeHtml(cb.ch||'')}</span>`:''}<span class="cdd-cur"${cb?` style="color:${cb.col}"`:''}>${escapeHtml(cur.l)}</span><svg class="cdd-chev" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6l6 -6"/></svg></button><div class="cdd-menu">${items}</div>`;
+  wrap.innerHTML=`<button type="button" class="cdd-btn">${cb?`<span class="cdd-badge" style="background:${cb.col}">${escapeHtml(cb.ch||'')}</span>`:''}<span class="cdd-cur"${cb?` style="--cdc:${cb.col}"`:''}>${escapeHtml(cur.l)}</span><svg class="cdd-chev" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6l6 -6"/></svg></button><div class="cdd-menu">${items}</div>`;
   wrap.querySelector('.cdd-btn').onclick=e=>{ e.stopPropagation(); const open=wrap.classList.contains('open'); document.querySelectorAll('.cdd.open').forEach(x=>x.classList.remove('open')); if(!open)wrap.classList.add('open'); };
   wrap.querySelectorAll('.cdd-opt').forEach(el=>{ el.onclick=e=>{ e.stopPropagation(); wrap.classList.remove('open'); sel.value=el.getAttribute('data-v'); sel.dispatchEvent(new Event('change')); _enhanceSelect(sel,kind); }; });
 }
