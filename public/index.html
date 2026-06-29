@@ -31,8 +31,8 @@
   /* Geist ultralight overal */
   html,body{margin:0;background:var(--bg);color:var(--txt);
     font-family:'Geist',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    font-size:14.5px;line-height:1.5;font-weight:100;-webkit-font-smoothing:antialiased}
-  *{font-weight:100!important}
+    font-size:14.5px;line-height:1.5;font-weight:300;-webkit-font-smoothing:antialiased}
+  *{font-weight:300!important}
   a{color:inherit}
   input,textarea,select,button,option,optgroup{font-family:'Geist',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
   select,option{font-family:'Geist',Arial,Helvetica,"Helvetica Neue",sans-serif}
@@ -1003,6 +1003,30 @@
     #overlay.incol{left:33.333vw;width:33.333vw}
     #overlay.incol.incol-left{left:0}
   }
+  /* ===== MONOCHROOM v2 — alle tekst/koppen/subkoppen #343434; hover onthult #686868 + kleur ===== */
+  :root{ --txt:#343434; --mut:#343434; --mut2:#343434; --ink:#343434; --primary2:#343434; --ok:#343434; }
+  /* invoervelden leesbaar houden */
+  input,textarea,select,#chatInput,.cdd-btn{ color:#686868 }
+  input::placeholder,textarea::placeholder,#chatInput::placeholder{ color:#343434; opacity:1 }
+  /* gekleurde tekst-accenten grijs tot hover */
+  .t-proj,.srow-title{ color:#343434 }
+  /* oude dim-filters uit — kleur regelen we nu met color */
+  #list .task .picon,#list .task .t-proj,#list .task .t-title,#list .task .chk,#list .task .pill.who,#list .task .wact,
+  #wachterList .task .picon,#wachterList .task .t-proj,#wachterList .task .t-title,#wachterList .task .chk,#wachterList .task .pill.who,#wachterList .task .wact,
+  #list .task .t-proj .t-projsub,#wachterList .task .t-proj .t-projsub,
+  .fm-crow .fm-name{ filter:none }
+  /* gekleurde blokjes/avatars/dots grijs tot hover */
+  .picon,.fm-badge,.kdot,.arch-dot,.dotc,.evdot{ filter:grayscale(1) brightness(.5) }
+  /* HOVER van een kaart/rij → alle tekst #686868 */
+  #list .task:hover,#list .task:hover *,#wachterList .task:hover,#wachterList .task:hover *,
+  .srow:hover,.srow:hover *,.srow.open,.srow.open *{ color:#686868 }
+  /* HOVER → kleuren terug */
+  #list .task:hover .picon,#wachterList .task:hover .picon,.srow:hover .doc-ic,
+  .fm-row:hover .fm-badge,.fm-crow:hover .fm-badge,.fm-crow.open .fm-badge,
+  .kli:hover .kdot,.arch-row:hover .arch-dot,.agenda-group:hover .dotc{ filter:none }
+  #list .task:hover .t-proj,#wachterList .task:hover .t-proj{ color:var(--ccol,#686868) }
+  .srow:hover .srow-title,.srow.open .srow-title{ color:var(--scol,#686868) }
+  .fm-crow:hover .fm-name,.fm-crow.open .fm-name{ color:var(--ccol,#686868) }
 </style>
 </head>
 <body>
@@ -1026,7 +1050,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v32</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v33</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
