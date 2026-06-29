@@ -1080,9 +1080,8 @@
   /* "Net binnen": vers binnengekomen kaarten staan permanent in de klantkleur */
   .task.fresh .t-proj,.task.fresh .t-projsub,.task.fresh .t-title,.task.fresh .t-due{ color:var(--ccol,var(--s2)) !important }
   .task.fresh .picon{ filter:none !important }
-  /* streepje onder elke "Net binnen"-kaart, in de tussenruimte */
-  .task.fresh{ position:relative }
-  .task.fresh::after{ content:""; position:absolute; left:14px; right:14px; bottom:-6px; height:1px; background:var(--line) }
+  /* één separator onder de hele "Net binnen"-groep, met ruimte erboven en eronder */
+  .fresh-sep{ height:1px; background:var(--line); margin:16px 14px 18px }
   /* Klanten-beheer: icoon vóór naam; naam + project + divider in klantkleur */
   .kbadge{ width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:13px;flex:0 0 auto }
   .kname,.ksub{ color:var(--ccol,var(--s1)) !important }
@@ -1150,7 +1149,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v53</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v54</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -1840,7 +1839,7 @@ function renderTaken(){
   const _now=Date.now(), _fresh=x=>(_now-(x.it.created||0))<3600000;
   const _fr=rows.filter(_fresh), _rs=rows.filter(x=>!_fresh(x));
   let _h='', _i=0;
-  if(_fr.length) _h+='<div class="afgroup">Net binnen</div>'+_fr.map(({p,it})=>taskCard(p,it,_i++,'taken',true)).join('');
+  if(_fr.length) _h+='<div class="afgroup">Net binnen</div>'+_fr.map(({p,it})=>taskCard(p,it,_i++,'taken',true)).join('')+(_rs.length?'<div class="fresh-sep"></div>':'');
   _h+=_rs.map(({p,it})=>taskCard(p,it,_i++,'taken')).join('');
   document.getElementById('list').innerHTML=_h||'<div class="hint">Geen actiepunten.</div>';
   if(typeof wireTaskDrag==='function') wireTaskDrag();
@@ -2657,7 +2656,7 @@ function renderRail(){
   const _now=Date.now(), _fresh=f=>(_now-(f.it.created||0))<3600000;
   const _fr=shown.filter(_fresh), _rs=shown.filter(f=>!_fresh(f));
   let _h='', _i=0;
-  if(_fr.length) _h+='<div class="afgroup">Net binnen</div>'+_fr.map(f=>taskCard(f.p,f.it,_i++,'wachter',true)).join('');
+  if(_fr.length) _h+='<div class="afgroup">Net binnen</div>'+_fr.map(f=>taskCard(f.p,f.it,_i++,'wachter',true)).join('')+(_rs.length?'<div class="fresh-sep"></div>':'');
   _h+=_rs.map(f=>taskCard(f.p,f.it,_i++,'wachter')).join('');
   if(list) list.innerHTML = _h || '<div class="hint">Niets dat nu aandacht vraagt ✦</div>';
   const undated=allItems().filter(x=>x.it.status!=='done'&&!x.it.due&&x.it.status!=='wait').length;
