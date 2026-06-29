@@ -6,7 +6,7 @@
 <title>Begeister — Workflow</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100;200;300;400;500&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@100;200;300;400;500;700&display=swap" rel="stylesheet" />
 <link rel="icon" href="/favicon-32.png" type="image/png" />
 <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 <link rel="manifest" href="/manifest.webmanifest" />
@@ -30,12 +30,12 @@
   *{box-sizing:border-box}
   /* Geist ultralight overal */
   html,body{margin:0;background:var(--bg);color:var(--txt);
-    font-family:'Geist',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-family:'Hanken Grotesk',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     font-size:14.5px;line-height:1.5;font-weight:300;-webkit-font-smoothing:antialiased}
   *{font-weight:300!important}
   a{color:inherit}
-  input,textarea,select,button,option,optgroup{font-family:'Geist',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
-  select,option{font-family:'Geist',Arial,Helvetica,"Helvetica Neue",sans-serif}
+  input,textarea,select,button,option,optgroup{font-family:'Hanken Grotesk',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  select,option{font-family:'Hanken Grotesk',Arial,Helvetica,"Helvetica Neue",sans-serif}
   input,textarea,select{accent-color:#fff}
   input:focus,textarea:focus,select:focus{outline:none;border-color:rgba(255,255,255,.32);box-shadow:0 0 0 2px rgba(255,255,255,.06)}
   .shell{display:flex;flex-direction:column;min-height:100vh}
@@ -1003,42 +1003,42 @@
     #overlay.incol{left:33.333vw;width:33.333vw}
     #overlay.incol.incol-left{left:0}
   }
-  /* ===== KLEUR-STATES (centraal — pas alleen hier aan) =====
-     1 = donker (ingetogen standaardtekst) · 2 = licht (chrome + hover-tekst)
-     3 = color (klant/accent via --ccol/--scol) · 4 = wit (welkom + highlights) */
-  :root{ --s1:#555555; --s2:#686868; --s4:#ffffff;
-         --txt:var(--s1); --mut:var(--s1); --mut2:var(--s1); --ink:var(--s1); --primary2:var(--s1); --ok:var(--s1); }
-  /* 1 DONKER — content-accenten die normaal kleur/licht hadden */
+  /* ============================================================
+     KLEUR-STATES — centraal; pas alleen deze waarden aan.
+       1 donker (--s1) ingetogen standaardtekst
+       2 licht  (--s2) chrome (topbalk, agenda, kalender, modals) + hover-tekst
+       3 color  (--ccol/--scol) klant/accent — onthuld bij hover
+       4 wit    (--s4) welkomstscherm + actieve highlights
+       5 input  (--si) ingevulde tekst in velden
+     ============================================================ */
+  :root{
+    --s1:#555555; --s2:#686868; --s4:#ffffff; --si:#ffffff;
+    --txt:var(--s1); --mut:var(--s1); --mut2:var(--s1); --ink:var(--s1); --primary2:var(--s1); --ok:var(--s1);
+  }
+
+  /* 1 · DONKER — standaardtekst loopt via de variabelen hierboven */
   .t-proj,.srow-title{ color:var(--s1) }
   .chk{ border-color:var(--s1) !important }
   .wbtn,.wbtn.ok,.wbtn.no,a.gear{ color:var(--s1) !important }
-  /* avatars/dots grijs (letter vet); oude dim-filters op tekst uit */
-  #list .task .picon,#wachterList .task .picon,.picon,.fm-badge,.kdot,.arch-dot,.dotc,.evdot{ filter:grayscale(1) brightness(.5) !important }
-  .picon{ font-weight:700 !important }
+  .picon,.fm-badge,.kdot,.arch-dot,.dotc,.evdot{ filter:grayscale(1) brightness(.5) !important }
   #list .task .t-proj,#list .task .t-title,#list .task .chk,#list .task .pill.who,#list .task .wact,
   #wachterList .task .t-proj,#wachterList .task .t-title,#wachterList .task .chk,#wachterList .task .pill.who,#wachterList .task .wact,
   #list .task .t-proj .t-projsub,#wachterList .task .t-proj .t-projsub,.fm-crow .fm-name{ filter:none !important }
 
-  /* 2 LICHT — chrome: invoer, topbalk, kolomkoppen, agenda, kalender, modals, "Net binnen" */
-  input,textarea,select,#chatInput,.cdd-btn,.cdd-btn *{ color:var(--s2) !important }
-  input::placeholder,textarea::placeholder,#chatInput::placeholder,#chatInput:empty:before{ color:var(--s1) !important; opacity:1 }
-  .afgroup{ color:var(--s2) !important }
-  .topbar,.topbar *{ color:var(--s2) !important } .topbar svg{ stroke:var(--s2) !important }
+  /* 2 · LICHT — chrome (dropdowns, topbalk, koppen, agenda, kalender, modals, "Net binnen") */
+  select,.cdd-btn,.cdd-btn *,.afgroup{ color:var(--s2) !important }
+  .topbar,.topbar *{ color:var(--s2) !important }  .topbar svg{ stroke:var(--s2) !important }
   .cb-title,.rail-coltitle,.colbar .cb-toggle,.agenda-toggle{ color:var(--s2) !important }
-  #view-agenda,#view-agenda *{ color:var(--s2) !important }
-  #duepop,#duepop *{ color:var(--s2) !important }
-  .modal,.modal *{ color:var(--s2) !important }
+  #view-agenda,#view-agenda *,#duepop,#duepop *,.modal,.modal *{ color:var(--s2) !important }
   .modal .picon{ filter:grayscale(1) brightness(.6) !important }
   .modal .btn.danger,.modal .danger{ color:var(--late) !important }
-  /* "vandaag"/geselecteerde dag = witte cel → zwarte tekst */
-  .iocell.sel .ionum,#view-agenda:hover .iocell.sel .ionum,#duepop .dpc.sel{ color:#000 !important }
 
-  /* 4 WIT op hover van chrome-regio's */
-  .topbar:hover *{ color:var(--s4) !important } .topbar:hover svg{ stroke:var(--s4) !important }
-  #view-taken:hover .cb-title,.rail:hover .rail-coltitle,#view-agenda:hover .cb-title,#view-agenda:hover .cb-toggle{ color:var(--s4) !important }
-  #view-agenda:hover,#view-agenda:hover *{ color:var(--s4) !important }
+  /* 5 · INPUT — ingevulde veldtekst wit, placeholder donker */
+  input,textarea,#chatInput,.modal input,.modal textarea{ color:var(--si) !important }
+  input::placeholder,textarea::placeholder,.modal input::placeholder,.modal textarea::placeholder,
+  #chatInput::placeholder,#chatInput:empty:before{ color:var(--s1) !important; opacity:1 }
 
-  /* HOVER van kaart/rij → tekst state 2, accenten state 3 (kleur) */
+  /* 3 · COLOR — bij hover van een kaart/rij: tekst → state 2, accenten → klantkleur */
   #list .task:hover,#list .task:hover *,#wachterList .task:hover,#wachterList .task:hover *,
   .srow:hover,.srow:hover *,.srow.open,.srow.open *{ color:var(--s2) !important }
   #list .task:hover .picon,#wachterList .task:hover .picon,.srow:hover .doc-ic,
@@ -1049,9 +1049,15 @@
   .fm-crow:hover .fm-name,.fm-crow.open .fm-name{ color:var(--ccol,var(--s2)) !important }
   #list .task:hover .chk,#wachterList .task:hover .chk{ border-color:var(--s2) !important }
 
-  /* 4 WIT — welkomstscherm (tekst, iconen, lijntjes) */
+  /* Klant-letter in het icoontje: altijd zwart + vet (kaart, dropdown, hover) */
   .picon,.cdd-badge{ color:#000 !important; font-weight:700 !important }
   #list .task:hover .picon,#wachterList .task:hover .picon{ color:#000 !important }
+
+  /* 4 · WIT — chrome-hover, "vandaag"-cel, welkomstscherm */
+  .topbar:hover *{ color:var(--s4) !important }  .topbar:hover svg{ stroke:var(--s4) !important }
+  #view-taken:hover .cb-title,.rail:hover .rail-coltitle,#view-agenda:hover .cb-title,#view-agenda:hover .cb-toggle{ color:var(--s4) !important }
+  #view-agenda:hover,#view-agenda:hover *{ color:var(--s4) !important }
+  .iocell.sel .ionum,#view-agenda:hover .iocell.sel .ionum,#duepop .dpc.sel{ color:#000 !important }
   .welcome-overlay,.welcome-overlay *{ color:var(--s4) !important }
   .welcome-overlay svg{ stroke:var(--s4) !important }
   .welcome-overlay .home-compliment{ font-weight:400 !important }
@@ -1062,9 +1068,10 @@
   .dayview-ov{position:fixed;inset:0;z-index:95;background:var(--bg);overflow-y:auto;transform:translateY(-100%);transition:transform .62s cubic-bezier(.22,1.12,.36,1);will-change:transform;-webkit-overflow-scrolling:touch}
   .dayview-ov.open{transform:translateY(0)}
   .dov-inner{max-width:680px;margin:0 auto;padding:max(48px,calc(env(safe-area-inset-top) + 40px)) 26px 80px;position:relative}
-  .dov-close{position:absolute;top:18px;right:18px;width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:transparent;color:#9b9b9b;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:color .15s,border-color .15s}
+  .dov-close{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:transparent;color:#9b9b9b;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto;transition:color .15s,border-color .15s}
   .dov-close:hover{color:#fff;border-color:#fff}
-  .dov-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:0 0 22px}
+  .dov-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0 0 22px}
+  .dov-right{display:flex;align-items:center;gap:16px}
   .dov-greet{font-size:22px;color:#fff;font-weight:400}
   .dov-date{font-size:13px;color:#686868;white-space:nowrap}
   .dov-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:0 0 30px}
@@ -1108,7 +1115,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v42</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v44</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -3748,12 +3755,14 @@ function renderDayOverview(){
   const rowItem=({it,p})=>`<div class="dov-row"><span class="dov-dot" style="background:${_projColor(p)}"></span><span class="tt">${esc(it.t||'')}</span>${it.owner?`<span class="meta">${esc(it.owner)}</span>`:''}${_dovPill(it.status)?`<span class="dov-pill">${_dovPill(it.status)}</span>`:''}</div>`;
   const todayHtml=D.today.length?D.today.slice(0,8).map(rowItem).join(''):'<div class="dov-empty">Niets met deadline vandaag.</div>';
   const netHtml=D.net.length?D.net.slice(0,6).map((it)=>`<div class="dov-row"><span class="dov-dot" style="background:#686868"></span><span class="tt">${esc(it.t||'')}</span>${it.owner?`<span class="meta">${esc(it.owner)}</span>`:''}</div>`).join(''):'<div class="dov-empty">Geen nieuwe binnenkomers.</div>';
+  const waitHtml=D.waiting.length?D.waiting.slice(0,8).map(({it,p})=>`<div class="dov-row"><span class="dov-dot" style="background:${_projColor(p)}"></span><span class="tt">${esc(it.t||'')}</span>${it.contact?`<span class="meta">↳ ${esc(it.contact)}</span>`:(it.owner?`<span class="meta">${esc(it.owner)}</span>`:'')}</div>`).join(''):'<div class="dov-empty">Niemand om op te wachten.</div>';
   const clients=Object.keys(D.perClient).sort((a,b)=>D.perClient[b]-D.perClient[a]);
   const clientHtml=clients.length?clients.slice(0,6).map(c=>`<button class="dov-row" onclick="dovOpenClient('${esc(c).replace(/'/g,"\\'")}')"><span class="dov-dot" style="background:${_clientColor(c)}"></span><span class="tt">${esc(c)}</span><span class="meta">${D.perClient[c]} open</span></button>`).join(''):'<div class="dov-empty">Geen open punten.</div>';
-  body.innerHTML=`<div class="dov-head"><div class="dov-greet">Goedemorgen${who?', '+esc(who):''}</div><div class="dov-date">${esc(dateTxt)}</div></div>`+
+  body.innerHTML=`<div class="dov-head"><div class="dov-greet">Goedemorgen${who?', '+esc(who):''}</div><div class="dov-right"><span class="dov-date">${esc(dateTxt)}</span><button class="dov-close" onclick="closeDayOverview()" aria-label="Sluiten" title="Wegschuiven"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button></div></div>`+
     `<div class="dov-metrics"><div class="dov-mc"><div class="l">Vandaag</div><div class="n">${D.today.length}</div></div><div class="dov-mc"><div class="l">Deze week</div><div class="n">${D.week.length}</div></div><div class="dov-mc"><div class="l">Net binnen</div><div class="n">${D.net.length}</div></div><div class="dov-mc"><div class="l">Wacht op</div><div class="n">${D.waiting.length}</div></div></div>`+
     `<div class="dov-sec"><div class="dov-h">Vandaag</div>${todayHtml}</div>`+
     `<div class="dov-sec"><div class="dov-h">Net binnen</div>${netHtml}</div>`+
+    `<div class="dov-sec"><div class="dov-h">Wacht op</div>${waitHtml}</div>`+
     `<div class="dov-sec"><div class="dov-h">Per klant</div>${clientHtml}</div>`;
 }
 function openDayOverview(){ renderDayOverview(); const ov=document.getElementById('dayOverlay'); if(!ov)return; ov.setAttribute('aria-hidden','false'); requestAnimationFrame(()=>ov.classList.add('open')); }
@@ -4506,7 +4515,6 @@ sb.auth.onAuthStateChange((_e,session)=>{ if(session) startApp(session); else sh
 </script>
 <div id="dayOverlay" class="dayview-ov" aria-hidden="true">
   <div class="dov-inner">
-    <button class="dov-close" onclick="closeDayOverview()" aria-label="Sluiten" title="Wegschuiven"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
     <div id="dayBody"></div>
   </div>
 </div>
