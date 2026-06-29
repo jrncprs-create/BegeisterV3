@@ -169,6 +169,8 @@ export default async function handler(req, res) {
     }
     try {
       const msgProject = (items.find(it => it.project_id) || {}).project_id || null;
+      // Tag de bron met hetzelfde project als zijn actiepunten → groepeert mee onder de klant in Bronnen.
+      if (msgProject) await db.from("sources").update({ project_id: msgProject }).eq("id", source.id);
       await saveContacts(db, contacts, source.id, msgProject);
     } catch (_) {}
     if (usage) await logUsage(db, usage);
