@@ -1006,7 +1006,7 @@
   /* ===== KLEUR-STATES (centraal — pas alleen hier aan) =====
      1 = donker (ingetogen standaardtekst) · 2 = licht (chrome + hover-tekst)
      3 = color (klant/accent via --ccol/--scol) · 4 = wit (welkom + highlights) */
-  :root{ --s1:#343434; --s2:#686868; --s4:#ffffff;
+  :root{ --s1:#555555; --s2:#686868; --s4:#ffffff;
          --txt:var(--s1); --mut:var(--s1); --mut2:var(--s1); --ink:var(--s1); --primary2:var(--s1); --ok:var(--s1); }
   /* 1 DONKER — content-accenten die normaal kleur/licht hadden */
   .t-proj,.srow-title{ color:var(--s1) }
@@ -1050,6 +1050,7 @@
   #list .task:hover .chk,#wachterList .task:hover .chk{ border-color:var(--s2) !important }
 
   /* 4 WIT — welkomstscherm (tekst, iconen, lijntjes) */
+  .picon{ color:#000 !important; font-weight:700 !important }
   .welcome-overlay,.welcome-overlay *{ color:var(--s4) !important }
   .welcome-overlay svg{ stroke:var(--s4) !important }
   .welcome-overlay .home-compliment{ font-weight:400 !important }
@@ -1106,7 +1107,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v40</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v41</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
