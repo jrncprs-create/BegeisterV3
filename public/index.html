@@ -1003,64 +1003,58 @@
     #overlay.incol{left:33.333vw;width:33.333vw}
     #overlay.incol.incol-left{left:0}
   }
-  /* ===== MONOCHROOM v2 — alle tekst/koppen/subkoppen #343434; hover onthult #686868 + kleur ===== */
-  :root{ --txt:#343434; --mut:#343434; --mut2:#343434; --ink:#343434; --primary2:#343434; --ok:#343434; }
-  /* invoervelden leesbaar houden */
-  input,textarea,select,#chatInput,.cdd-btn{ color:#686868 }
-  input::placeholder,textarea::placeholder,#chatInput::placeholder{ color:#343434; opacity:1 }
-  /* gekleurde tekst-accenten grijs tot hover */
-  .t-proj,.srow-title{ color:#343434 }
-  /* oude dim-filters op TEKST uit — kleur regelen we met color (NIET op .picon) */
+  /* ===== KLEUR-STATES (centraal — pas alleen hier aan) =====
+     1 = donker (ingetogen standaardtekst) · 2 = licht (chrome + hover-tekst)
+     3 = color (klant/accent via --ccol/--scol) · 4 = wit (welkom + highlights) */
+  :root{ --s1:#343434; --s2:#686868; --s4:#ffffff;
+         --txt:var(--s1); --mut:var(--s1); --mut2:var(--s1); --ink:var(--s1); --primary2:var(--s1); --ok:var(--s1); }
+  /* 1 DONKER — content-accenten die normaal kleur/licht hadden */
+  .t-proj,.srow-title{ color:var(--s1) }
+  .chk{ border-color:var(--s1) !important }
+  .wbtn,.wbtn.ok,.wbtn.no,a.gear{ color:var(--s1) !important }
+  /* avatars/dots grijs (letter vet); oude dim-filters op tekst uit */
+  #list .task .picon,#wachterList .task .picon,.picon,.fm-badge,.kdot,.arch-dot,.dotc,.evdot{ filter:grayscale(1) brightness(.5) !important }
+  .picon{ font-weight:700 !important }
   #list .task .t-proj,#list .task .t-title,#list .task .chk,#list .task .pill.who,#list .task .wact,
   #wachterList .task .t-proj,#wachterList .task .t-title,#wachterList .task .chk,#wachterList .task .pill.who,#wachterList .task .wact,
-  #list .task .t-proj .t-projsub,#wachterList .task .t-proj .t-projsub,
-  .fm-crow .fm-name{ filter:none !important }
-  /* gekleurde avatars/dots grijs tot hover (hoge specificiteit wint van oude regels) */
-  #list .task .picon,#wachterList .task .picon,.picon,.fm-badge,.kdot,.arch-dot,.dotc,.evdot{ filter:grayscale(1) brightness(.5) !important }
-  /* lege/gekleurde blokjes, V/X-rondjes en links → zelfde grijs als de rest */
-  .chk{ border-color:#343434 !important }
-  .wbtn,.wbtn.ok,.wbtn.no{ color:#343434 !important }
-  a.gear{ color:#343434 !important }
-  #list .task:hover .chk,#wachterList .task:hover .chk{ border-color:#686868 !important }
-  /* Bovenbalk: lichter grijs (#686868), hele balk wit op hover */
-  .topbar, .topbar *{ color:#686868 !important }
-  .topbar svg{ stroke:#686868 !important }
-  .topbar:hover *{ color:#fff !important }
-  .topbar:hover svg{ stroke:#fff !important }
-  /* Kolomkoppen lichter grijs, wit op hover van de kolom */
-  .cb-title,.rail-coltitle,.colbar .cb-toggle,.agenda-toggle{ color:#686868 !important }
-  #view-taken:hover .cb-title,.rail:hover .rail-coltitle,#view-agenda:hover .cb-title,#view-agenda:hover .cb-toggle{ color:#fff !important }
-  /* Agenda: lichter grijs, hele agenda wit op hover */
-  #view-agenda, #view-agenda *{ color:#686868 !important }
-  #view-agenda:hover, #view-agenda:hover *{ color:#fff !important }
-  /* HOVER van een kaart/rij → alle tekst #686868 */
+  #list .task .t-proj .t-projsub,#wachterList .task .t-proj .t-projsub,.fm-crow .fm-name{ filter:none !important }
+
+  /* 2 LICHT — chrome: invoer, topbalk, kolomkoppen, agenda, kalender, modals, "Net binnen" */
+  input,textarea,select,#chatInput,.cdd-btn,.cdd-btn *{ color:var(--s2) !important }
+  input::placeholder,textarea::placeholder,#chatInput::placeholder,#chatInput:empty:before{ color:var(--s1) !important; opacity:1 }
+  .afgroup{ color:var(--s2) !important }
+  .topbar,.topbar *{ color:var(--s2) !important } .topbar svg{ stroke:var(--s2) !important }
+  .cb-title,.rail-coltitle,.colbar .cb-toggle,.agenda-toggle{ color:var(--s2) !important }
+  #view-agenda,#view-agenda *{ color:var(--s2) !important }
+  #duepop,#duepop *{ color:var(--s2) !important }
+  .modal,.modal *{ color:var(--s2) !important }
+  .modal .picon{ filter:grayscale(1) brightness(.6) !important }
+  .modal .btn.danger,.modal .danger{ color:var(--late) !important }
+  /* "vandaag"/geselecteerde dag = witte cel → zwarte tekst */
+  .iocell.sel .ionum,#view-agenda:hover .iocell.sel .ionum,#duepop .dpc.sel{ color:#000 !important }
+
+  /* 4 WIT op hover van chrome-regio's */
+  .topbar:hover *{ color:var(--s4) !important } .topbar:hover svg{ stroke:var(--s4) !important }
+  #view-taken:hover .cb-title,.rail:hover .rail-coltitle,#view-agenda:hover .cb-title,#view-agenda:hover .cb-toggle{ color:var(--s4) !important }
+  #view-agenda:hover,#view-agenda:hover *{ color:var(--s4) !important }
+
+  /* HOVER van kaart/rij → tekst state 2, accenten state 3 (kleur) */
   #list .task:hover,#list .task:hover *,#wachterList .task:hover,#wachterList .task:hover *,
-  .srow:hover,.srow:hover *,.srow.open,.srow.open *{ color:#686868 }
-  /* HOVER → kleuren terug */
+  .srow:hover,.srow:hover *,.srow.open,.srow.open *{ color:var(--s2) !important }
   #list .task:hover .picon,#wachterList .task:hover .picon,.srow:hover .doc-ic,
   .fm-row:hover .fm-badge,.fm-crow:hover .fm-badge,.fm-crow.open .fm-badge,
-  .kli:hover .kdot,.arch-row:hover .arch-dot,.agenda-group:hover .dotc{ filter:none }
-  #list .task:hover .t-proj,#wachterList .task:hover .t-proj{ color:var(--ccol,#686868) }
-  .srow:hover .srow-title,.srow.open .srow-title{ color:var(--scol,#686868) }
-  .fm-crow:hover .fm-name,.fm-crow.open .fm-name{ color:var(--ccol,#686868) }
-  /* "Net binnen"-kop lichter dan normaal */
-  .afgroup{ color:#686868 !important }
-  /* Klant-avatar: letter vet; bij hover kleur terug */
-  .picon{ font-weight:700 !important }
-  #list .task:hover .picon,#wachterList .task:hover .picon{ filter:none !important }
-  /* Modals & dialogen: alle tekst lichtgrijs (rode danger-knop blijft rood) */
-  .cdd-btn,.cdd-btn *{ color:#686868 !important }
-  .modal,.modal *{ color:#686868 !important }
-  .modal .btn.danger,.modal .danger{ color:var(--late) !important }
-  .modal .picon{ filter:grayscale(1) brightness(.6) !important }
-  /* Welkomstscherm: alle tekst, iconen en lijntjes wit (uitzondering op monochroom) */
-  .welcome-overlay, .welcome-overlay *{ color:#fff !important }
-  .welcome-overlay svg{ stroke:#fff !important }
+  .kli:hover .kdot,.arch-row:hover .arch-dot,.agenda-group:hover .dotc{ filter:none !important }
+  #list .task:hover .t-proj,#wachterList .task:hover .t-proj{ color:var(--ccol,var(--s2)) !important }
+  .srow:hover .srow-title,.srow.open .srow-title{ color:var(--scol,var(--s2)) !important }
+  .fm-crow:hover .fm-name,.fm-crow.open .fm-name{ color:var(--ccol,var(--s2)) !important }
+  #list .task:hover .chk,#wachterList .task:hover .chk{ border-color:var(--s2) !important }
+
+  /* 4 WIT — welkomstscherm (tekst, iconen, lijntjes) */
+  .welcome-overlay,.welcome-overlay *{ color:var(--s4) !important }
+  .welcome-overlay svg{ stroke:var(--s4) !important }
   .welcome-overlay .home-compliment{ font-weight:400 !important }
   .welcome-overlay .chatrow{ border-color:rgba(255,255,255,.5) !important }
-  .welcome-overlay #chatInput:empty:before{ color:rgba(255,255,255,.6) !important }
-  .welcome-overlay #chatInput::placeholder{ color:rgba(255,255,255,.6) !important; opacity:1 }
-  /* verzendknop blijft witte cirkel met donkere pijl */
+  .welcome-overlay #chatInput:empty:before,.welcome-overlay #chatInput::placeholder{ color:rgba(255,255,255,.6) !important; opacity:1 }
   .welcome-overlay .ci-send{ color:#1a1a1a !important }
 </style>
 </head>
@@ -1085,7 +1079,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v37</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v38</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
