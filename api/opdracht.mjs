@@ -31,9 +31,10 @@ function supa() {
 const FIXED_SECRET = "begeister-opdracht-2026";
 function authOk(req) {
   const hdr = (req.headers["authorization"] || "").replace(/^Bearer\s+/i, "").trim();
-  const body = ((req.body && (req.body.secret || req.body.token)) || "").toString().trim();
+  const q = ((req.query && (req.query.secret || req.query.token)) || "").toString().trim();
+  const body = ((req.body && !Buffer.isBuffer(req.body) && (req.body.secret || req.body.token)) || "").toString().trim();
   const valid = v => !!v && (v === SECRET || v === FIXED_SECRET);
-  return valid(hdr) || valid(body);
+  return valid(hdr) || valid(q) || valid(body);
 }
 
 async function loadCatalogContext(db) {
@@ -113,12 +114,25 @@ export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "method not allowed" });
   if (!authOk(req)) return res.status(401).json({ error: "unauthorized" });
 
-  const body = req.body || {};
-  const text = (body.text || "").toString().trim();
-  const image = body.image ? String(body.image).replace(/^data:[^;]+;base64,/, "") : "";
-  const media_type = body.media_type || "image/jpeg";
-  const filename = (body.filename || "").toString();
-  const who = (body.who || "").toString().trim();
+  // Twee manieren van aanleveren:
+  //  A) JSON  → { text, image(base64), media_type, who, secret }
+  //  B) Ruw bestand (Opdracht "Verzoektekst: Bestand") → binaire body; velden via querystring (?who=…)
+  const rawBuf = Buffer.isBuffer(req.body) ? req.body : null;
+  const body = rawBuf ? {} : (req.body || {});
+  const q = req.query || {};
+  const ctype = (req.headers["content-type"] || "").toLowerCase();
+
+  const text = (rawBuf ? (q.text || "") : (body.text || "")).toString().trim();
+  let image = "", media_type = (body.media_type || q.media_type || "image/jpeg").toString();
+  if (rawBuf) {
+    // ruw bestand: alleen afbeeldingen worden door vision gelezen
+    image = rawBuf.toString("base64");
+    if (ctype.startsWith("image/")) media_type = ctype;
+  } else {
+    image = body.image ? String(body.image).replace(/^data:[^;]+;base64,/, "") : "";
+  }
+  const filename = (rawBuf ? (q.filename || "") : (body.filename || "")).toString();
+  const who = (rawBuf ? (q.who || "") : (body.who || "")).toString().trim();
   if (!text && !image) return res.status(400).json({ error: "geen tekst of foto meegestuurd" });
 
   const db = supa();
