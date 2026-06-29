@@ -596,7 +596,8 @@
   .pb-sec{border-top:1px solid var(--line);padding:13px 0 5px}
   .pb-sec:first-of-type{border-top:none;padding-top:2px}
   .pb-h{display:flex;align-items:center;justify-content:space-between;font-size:11.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut);font-weight:600;margin:0 0 7px}
-  .pb-ai{background:transparent;border:1px solid var(--line);color:var(--mut);border-radius:8px;padding:3px 10px;font-size:12px;cursor:pointer;letter-spacing:0;text-transform:none}
+  .pb-ai{display:inline-flex;align-items:center;gap:5px;background:transparent;border:1px solid var(--line);color:var(--mut);border-radius:8px;padding:3px 10px;font-size:12px;cursor:pointer;letter-spacing:0;text-transform:none}
+  .pb-ai .kfile-aianim{width:16px;height:16px}
   .pb-ai:hover{color:#fff;border-color:var(--mut2)}
   .pb-row{display:flex;align-items:center;gap:11px;padding:6px 0;cursor:pointer}
   .pb-row input[type=checkbox]{width:17px;height:17px;flex:0 0 auto;accent-color:var(--scol,#888);cursor:pointer}
@@ -1179,7 +1180,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v57</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v58</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -2041,8 +2042,9 @@ function openApptModal(id, presetPid){
   document.getElementById('a_del').style.display=apptEditId?'':'none';
   document.getElementById('apptModalTitle').textContent=apptEditId?'Afspraak bewerken':'Nieuwe afspraak';
   const ov=document.getElementById('apptOverlay');
-  const incol = isDesk3() && (view==='taken'||view==='agenda');
-  ov.classList.toggle('incol', incol);   // desktop-werkblad: in de rechterkolom
+  const _pbOpen = !!(document.getElementById('projOverlay') && document.getElementById('projOverlay').classList.contains('open'));
+  const incol = isDesk3() && (view==='taken'||view==='agenda'||_pbOpen);
+  ov.classList.toggle('incol', incol);   // desktop-werkblad: in de rechterkolom (3e kolom)
   if(incol){ const tb=document.querySelector('.topbar'); ov.style.top=(tb?Math.round(tb.getBoundingClientRect().height):0)+'px'; }
   else { ov.style.top=''; }
   ov.classList.add('open');
@@ -2076,7 +2078,7 @@ function _renderProjBoard(){
     <button class="modal-close" onclick="closeProjectBoard()" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     <div class="pb-head"><span class="kbadge" style="background:${col}">${esc(initial)}</span><div class="pb-title"><b>${esc(p.client||'')}</b>${p.project?'<span> · '+esc(p.project)+'</span>':''}</div></div>
     <div class="pb-sec"><div class="pb-h">Taken</div>${tasks.length?tasks.map(taskRow).join(''):'<div class="pb-empty">Geen actiepunten.</div>'}</div>
-    <div class="pb-sec"><div class="pb-h">Checklist <button class="pb-ai" onclick="pbAiTodos(this)" title="AI-startchecklist">✦ AI</button></div>${todos.map(cbRow).join('')}<div class="pb-add"><input class="pb-in" data-kind="todo" placeholder="+ todo toevoegen…" onkeydown="pbAddKey(event,'todo')"></div></div>
+    <div class="pb-sec"><div class="pb-h">Checklist <button class="pb-ai" onclick="pbAiTodos(this)" title="AI-startchecklist">${_tIc(_TABCHAN.asterisk,15,1.7)}<span>AI</span></button></div>${todos.map(cbRow).join('')}<div class="pb-add"><input class="pb-in" data-kind="todo" placeholder="+ todo toevoegen…" onkeydown="pbAddKey(event,'todo')"></div></div>
     <div class="pb-sec"><div class="pb-h">Inkopen</div>${inkopen.map(cbRow).join('')}<div class="pb-add"><input class="pb-in" data-kind="inkoop" placeholder="+ inkoop toevoegen…" onkeydown="pbAddKey(event,'inkoop')"></div></div>
     <div class="pb-sec"><div class="pb-h">Afspraken <button class="pb-ai" onclick="pbNewAppt()" title="Nieuwe afspraak">+ nieuw</button></div>${appts.length?appts.map(apptRow).join(''):'<div class="pb-empty">Nog geen afspraken.</div>'}</div>
     <div class="pb-sec"><div class="pb-h">Notities</div><textarea class="pb-notes" placeholder="Vrije notities voor dit project…" onblur="pbSaveNotes(this.value)">${esc(p.notes||'')}</textarea></div>
@@ -2090,7 +2092,7 @@ async function pbToggle(id,done){ const x=_pbItems.find(i=>i.id===id); if(x)x.do
 async function pbDel(id){ _pbItems=_pbItems.filter(i=>i.id!==id); try{ await sb.from('project_board').delete().eq('id',id); }catch(_){} _renderProjBoard(); }
 async function pbSaveNotes(val){ const p=projById(_pbPid); if(p)p.notes=val; try{ await sb.from('projects').update({notes:val}).eq('id',_pbPid); }catch(_){} }
 async function pbNewAppt(){ openApptModal(null,_pbPid); }
-async function pbAiTodos(btn){ const p=projById(_pbPid); if(!p)return; if(btn){btn.disabled=true;btn.textContent='✦ …';}
+async function pbAiTodos(btn){ const p=projById(_pbPid); if(!p)return; if(btn){btn.disabled=true;btn.innerHTML='<img class="kfile-aianim" src="/thinking.webp" alt="">';}
   const existing=(p.items||[]).map(i=>i.t).filter(Boolean).concat(_pbItems.filter(x=>x.kind==='todo').map(x=>x.text));
   try{ const r=await fetch('/api/projtodos',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({client:p.client,project:p.project,context:(typeof _ctxForChat==='function'?_ctxForChat():''),existing})});
     const d=await r.json(); const todos=(d&&d.todos)||[];
