@@ -1027,11 +1027,15 @@
   #list .task:hover .t-proj,#wachterList .task:hover .t-proj{ color:var(--ccol,#686868) }
   .srow:hover .srow-title,.srow.open .srow-title{ color:var(--scol,#686868) }
   .fm-crow:hover .fm-name,.fm-crow.open .fm-name{ color:var(--ccol,#686868) }
-  /* Welkomstscherm: tekst wit, quote normaal gewicht (uitzondering op monochroom) */
-  .welcome-overlay .home-compliment{ color:#fff !important; font-weight:400 !important }
-  .welcome-overlay .home-author{ color:rgba(255,255,255,.72) !important }
-  .welcome-overlay #chatInput{ color:#fff !important }
-  .welcome-overlay #chatInput::placeholder{ color:rgba(255,255,255,.55) !important; opacity:1 }
+  /* Welkomstscherm: alle tekst, iconen en lijntjes wit (uitzondering op monochroom) */
+  .welcome-overlay, .welcome-overlay *{ color:#fff !important }
+  .welcome-overlay svg{ stroke:#fff !important }
+  .welcome-overlay .home-compliment{ font-weight:400 !important }
+  .welcome-overlay .chatrow{ border-color:rgba(255,255,255,.5) !important }
+  .welcome-overlay #chatInput:empty:before{ color:rgba(255,255,255,.6) !important }
+  .welcome-overlay #chatInput::placeholder{ color:rgba(255,255,255,.6) !important; opacity:1 }
+  /* verzendknop blijft witte cirkel met donkere pijl */
+  .welcome-overlay .ci-send{ color:#1a1a1a !important }
 </style>
 </head>
 <body>
@@ -1055,7 +1059,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v34</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v35</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
