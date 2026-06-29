@@ -731,13 +731,14 @@
   /* tijdkiezer */
   .time-overlay{position:fixed;inset:0;z-index:150;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:20px}
   .time-overlay.open{display:flex}
+  @media(min-width:1001px){ .time-overlay{justify-content:flex-end;padding-right:calc(16.65vw - 140px)} }
   .timepop{background:var(--panel);border:1px solid var(--line);border-radius:16px;width:280px;max-width:100%;padding:16px;box-shadow:0 24px 60px rgba(0,0,0,.55)}
   .timepop .tphd{font-size:13px;color:var(--mut2);letter-spacing:.5px;margin-bottom:12px;text-align:center}
   .timepop .tpcols{display:flex;gap:10px}
   .timepop .tpcol{flex:1;min-width:0}
   .timepop .tpcol h5{margin:0 0 6px;font-size:10.5px;letter-spacing:.8px;text-transform:uppercase;color:var(--mut2);text-align:center}
   .timepop .tplist{height:184px;overflow-y:auto;border:1px solid var(--line);border-radius:11px;background:var(--panel2);padding:5px;scrollbar-width:thin}
-  .timepop .tpv{height:38px;display:flex;align-items:center;justify-content:center;font-size:15px;border-radius:9px;cursor:pointer;font-variant-numeric:tabular-nums;color:var(--txt)}
+  .timepop .tpv{height:38px;display:flex;align-items:center;justify-content:center;font-size:15px;border-radius:9px;cursor:pointer;font-variant-numeric:tabular-nums;color:#fff}
   .timepop .tpv:hover{background:var(--panel)}
   .timepop .tpv.sel{background:#fff;color:#000;font-weight:700}
   .timepop .tpfoot{display:flex;justify-content:space-between;align-items:center;margin-top:14px}
@@ -1020,7 +1021,7 @@
   .t-proj,.srow-title{ color:var(--s1) }
   .chk{ border-color:var(--s1) !important }
   .wbtn,.wbtn.ok,.wbtn.no,a.gear{ color:var(--s1) !important }
-  .picon,.fm-badge,.kdot,.arch-dot,.dotc,.evdot{ filter:grayscale(1) brightness(.5) !important }
+  .picon,.kdot,.arch-dot,.dotc,.evdot{ filter:grayscale(1) brightness(.5) !important }
   #list .task .t-proj,#list .task .t-title,#list .task .chk,#list .task .pill.who,#list .task .wact,
   #wachterList .task .t-proj,#wachterList .task .t-title,#wachterList .task .chk,#wachterList .task .pill.who,#wachterList .task .wact,
   #list .task .t-proj .t-projsub,#wachterList .task .t-proj .t-projsub,.fm-crow .fm-name{ filter:none !important }
@@ -1032,6 +1033,8 @@
   #view-agenda,#view-agenda *,#duepop,#duepop *,.modal,.modal *{ color:var(--s2) !important }
   .modal .picon{ filter:grayscale(1) brightness(.6) !important }
   .modal .btn.danger,.modal .danger{ color:var(--late) !important }
+  .modal .foot .btn:not(.ghost):not(.danger){ background:rgba(255,255,255,.14) !important; color:#fff !important; border:none !important }
+  .modal .foot .btn:not(.ghost):not(.danger):hover{ background:rgba(255,255,255,.24) !important }
 
   /* 5 · INPUT — ingevulde veldtekst wit, placeholder donker */
   input,textarea,#chatInput,.modal input,.modal textarea{ color:var(--si) !important }
@@ -1052,8 +1055,10 @@
   /* Klant-letter in het icoontje: altijd zwart + vet (kaart, dropdown, hover) */
   .picon,.cdd-badge,.kbadge{ color:#000 !important; font-weight:700 !important }
   #list .task:hover .picon,#wachterList .task:hover .picon{ color:#000 !important }
-  /* Bestanden-tree: klantnaam grijs tot hover (badge al grijs → kleur bij hover) */
-  .fm-crow .fm-name{ color:var(--s1) !important }
+  /* Bestanden-tree: klant-icoon (gekleurd + letter) en naam altijd in klantkleur */
+  .fm-badge{ filter:none !important; width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#000;font-weight:700;font-size:11px }
+  /* Klanten-beheer: project-bolletje in klantkleur */
+  .kgroup .kli .kdot{ filter:none !important; background:var(--ccol) !important }
   /* Taakkaart-hover: alle tekst in klantkleur (buttons/iconen blijven grijs) */
   #list .task:hover .t-proj,#list .task:hover .t-projsub,#list .task:hover .t-title,#list .task:hover .t-due,
   #wachterList .task:hover .t-proj,#wachterList .task:hover .t-projsub,#wachterList .task:hover .t-title,#wachterList .task:hover .t-due{ color:var(--ccol,var(--s2)) !important }
@@ -1124,7 +1129,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v45</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v46</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -1750,6 +1755,8 @@ function projectDropdown(){
   if(!projs.length) return '';
   const opts=[{v:'all',l:'Projecten'}];
   projs.forEach(p=>opts.push({v:p.id,l:(p.project||'—'),badge:{col:PROJCOL[p.id]||'#888',ch:p.icon||(p.client||'?').trim().charAt(0).toUpperCase()}}));
+  opts.push({v:'__newproj__',l:'+ Nieuw project…',cls:'cdd-act'});
+  opts.push({v:'__manageproj__',l:'Projecten beheren…',cls:'cdd-act'});
   return _cddHTML(opts, activeTab, 'setTab');
 }
 async function setClient(v){
@@ -1817,7 +1824,7 @@ function renderTaken(){
   document.getElementById('list').innerHTML=_h||'<div class="hint">Geen actiepunten.</div>';
   if(typeof wireTaskDrag==='function') wireTaskDrag();
 }
-async function setTab(t){if(t==='__new__'){const r=await _newClientPrompt();if(r&&r.id)activeTab=r.id;render();return;}if(t==='__manage__'){setView('beheer');return;}activeTab=t;_animateNext=true;render();}
+async function setTab(t){if(t==='__new__'){const r=await _newClientPrompt();if(r&&r.id)activeTab=r.id;render();return;}if(t==='__manage__'){setView('beheer');return;}if(t==='__newproj__'){const cl=(filterClient&&filterClient!=='all')?filterClient:null;if(cl){await addProjectTo(cl);}else{setView('beheer');}return;}if(t==='__manageproj__'){setView('beheer');return;}activeTab=t;_animateNext=true;render();}
 function setWhoFilter(name){ whoFilter=(whoFilter===name)?'all':name; _animateNext=false; render(); }
 
 // ---------- agenda ----------
@@ -2918,7 +2925,7 @@ function _renderFmTree(){
     });
     if(!projHtml.length && c==='Geen klant') return;
     const open=q?true:_fmOpen.has(c);
-    html+=`<div class="fm-client"><div class="fm-row fm-crow${open?' open':''}" data-drop="1" data-client="${escapeHtml(c)}" data-pid="__alg__" data-cat="" ondragover="fmDragOver(event)" ondragleave="fmDragLeave(event)" ondrop="fmDrop(event)" onclick="fmToggle('${_fk(c)}')"><span class="fm-tw">▸</span><span class="fm-badge" style="background:${g.col}"></span><span class="fm-name" style="color:${g.col}">${escapeHtml(c)}</span><button class="fm-edit" style="margin-left:auto" data-kind="client" data-client="${escapeHtml(c)}" onclick="event.stopPropagation();fmRename(this)" title="Naam wijzigen">${_penGlyph()}</button></div><div class="fm-kids"${open?'':' style="display:none"'}>${projHtml.join('')}</div></div>`;
+    html+=`<div class="fm-client"><div class="fm-row fm-crow${open?' open':''}" data-drop="1" data-client="${escapeHtml(c)}" data-pid="__alg__" data-cat="" ondragover="fmDragOver(event)" ondragleave="fmDragLeave(event)" ondrop="fmDrop(event)" onclick="fmToggle('${_fk(c)}')"><span class="fm-tw">▸</span><span class="fm-badge" style="background:${g.col}">${escapeHtml((String(c).trim()[0]||'?').toUpperCase())}</span><span class="fm-name" style="color:${g.col}">${escapeHtml(c)}</span><button class="fm-edit" style="margin-left:auto" data-kind="client" data-client="${escapeHtml(c)}" onclick="event.stopPropagation();fmRename(this)" title="Naam wijzigen">${_penGlyph()}</button></div><div class="fm-kids"${open?'':' style="display:none"'}>${projHtml.join('')}</div></div>`;
   });
   const rootF=(state.folders||[]).filter(x=>(x.parent_kind||'root')==='root').map(_folderHTML).join('');
   t.innerHTML=(rootF+html)||'<div class="hint">Nog geen bestanden — of nog niet gesorteerd. Klik “Sorteer met AI”.</div>';
@@ -3276,7 +3283,7 @@ function uiPrompt(title, value=''){
     ov.innerHTML='<div class="modal" style="width:420px;max-width:92vw;padding:24px 22px">'
       +'<button class="modal-close" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>'
       +'<h3 style="margin:0 0 16px">'+escapeHtml(title)+'</h3>'
-      +'<input type="text" class="uip-input" autocomplete="off" />'
+      +'<input type="text" class="uip-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" name="x'+Date.now()+'" />'
       +'<div class="foot" style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px">'
       +'<button class="btn ghost uip-cancel">Annuleren</button>'
       +'<button class="btn uip-ok">OK</button></div></div>';
@@ -3780,6 +3787,10 @@ function openDayOverview(){ renderDayOverview(); const ov=document.getElementByI
 function closeDayOverview(){ const ov=document.getElementById('dayOverlay'); if(!ov)return; ov.classList.remove('open'); ov.setAttribute('aria-hidden','true'); }
 function dovOpenClient(c){ closeDayOverview(); try{ const p=(state.projects||[]).find(x=>x.client===c&&x.id!=='__inbox__'); setView('taken'); if(p){ activeTab=p.id; render(); } }catch(_){} }
 function maybeShowDayOverview(){ try{ const k='dayview_'+iso(TODAY); if(localStorage.getItem(k))return; localStorage.setItem(k,'1'); }catch(_){} openDayOverview(); }
+// Autofill/AutoFill-suggesties overal uitzetten
+function _killAutofill(root){ try{ (root||document).querySelectorAll('input,textarea').forEach(el=>{ if(el.dataset.naf)return; el.dataset.naf='1'; el.setAttribute('autocomplete','off'); el.setAttribute('autocorrect','off'); el.setAttribute('autocapitalize','off'); el.setAttribute('spellcheck','false'); }); }catch(_){} }
+try{ new MutationObserver(ms=>{ for(const m of ms){ for(const n of m.addedNodes){ if(n&&n.nodeType===1){ if(n.matches&&n.matches('input,textarea')) _killAutofill(n.parentNode||document); else if(n.querySelector&&n.querySelector('input,textarea')) _killAutofill(n); } } } }).observe(document.body,{childList:true,subtree:true}); }catch(_){}
+_killAutofill();
 function togglePlus(e){if(e)e.stopPropagation();const m=document.getElementById('plusMenu');const open=m.classList.contains('hidden');m.classList.toggle('hidden');if(open)composeMode(true);}
 function closePlus(){const m=document.getElementById('plusMenu');if(m)m.classList.add('hidden');}
 document.addEventListener('click',e=>{const m=document.getElementById('plusMenu');if(m&&!m.classList.contains('hidden')&&!m.contains(e.target)&&!(e.target.closest&&e.target.closest('.ci-plus')))m.classList.add('hidden');});
