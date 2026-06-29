@@ -28,6 +28,15 @@ async function mount(route, modPath) {
 }
 
 await mount("/api/intake", "./api/intake.mjs");
+// iOS-Opdracht mag een foto óók als ruw bestand sturen (Get Contents of URL → Verzoektekst: Bestand).
+// Dan komt de afbeelding als binaire body binnen i.p.v. base64-in-JSON.
+app.use("/api/opdracht", express.raw({
+  type: req => {
+    const ct = (req.headers["content-type"] || "").toLowerCase();
+    return ct.startsWith("image/") || ct === "application/pdf" || ct === "application/octet-stream";
+  },
+  limit: "25mb",
+}));
 await mount("/api/opdracht", "./api/opdracht.mjs");
 await mount("/api/readdrop", "./api/readdrop.mjs");
 await mount("/api/chat", "./api/chat.mjs");
