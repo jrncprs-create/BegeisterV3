@@ -1080,6 +1080,9 @@
   /* "Net binnen": vers binnengekomen kaarten staan permanent in de klantkleur */
   .task.fresh .t-proj,.task.fresh .t-projsub,.task.fresh .t-title,.task.fresh .t-due{ color:var(--ccol,var(--s2)) !important }
   .task.fresh .picon{ filter:none !important }
+  /* streepje onder elke "Net binnen"-kaart, in de tussenruimte */
+  .task.fresh{ position:relative }
+  .task.fresh::after{ content:""; position:absolute; left:14px; right:14px; bottom:-6px; height:1px; background:var(--line) }
   /* Klanten-beheer: icoon vóór naam; naam + project + divider in klantkleur */
   .kbadge{ width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:13px;flex:0 0 auto }
   .kname,.ksub{ color:var(--ccol,var(--s1)) !important }
@@ -1147,7 +1150,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v52</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v53</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
