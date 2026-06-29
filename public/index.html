@@ -1043,6 +1043,16 @@
   #list .task:hover .t-proj,#wachterList .task:hover .t-proj{ color:var(--ccol,#686868) }
   .srow:hover .srow-title,.srow.open .srow-title{ color:var(--scol,#686868) }
   .fm-crow:hover .fm-name,.fm-crow.open .fm-name{ color:var(--ccol,#686868) }
+  /* "Net binnen"-kop lichter dan normaal */
+  .afgroup{ color:#686868 !important }
+  /* Klant-avatar: letter vet; bij hover kleur terug */
+  .picon{ font-weight:700 !important }
+  #list .task:hover .picon,#wachterList .task:hover .picon{ filter:none !important }
+  /* Modals & dialogen: alle tekst lichtgrijs (rode danger-knop blijft rood) */
+  .cdd-btn,.cdd-btn *{ color:#686868 !important }
+  .modal,.modal *{ color:#686868 !important }
+  .modal .btn.danger,.modal .danger{ color:var(--late) !important }
+  .modal .picon{ filter:grayscale(1) brightness(.6) !important }
   /* Welkomstscherm: alle tekst, iconen en lijntjes wit (uitzondering op monochroom) */
   .welcome-overlay, .welcome-overlay *{ color:#fff !important }
   .welcome-overlay svg{ stroke:#fff !important }
@@ -1075,7 +1085,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v36</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v37</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
