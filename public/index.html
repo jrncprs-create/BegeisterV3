@@ -588,6 +588,31 @@
   .kfiles-add{display:flex;align-items:center;gap:5px;background:transparent;border:1px solid var(--line);color:var(--mut);border-radius:8px;padding:5px 9px;font-size:12px;cursor:pointer}
   .kfiles-add:hover{color:#fff;border-color:var(--mut2)}
   .kfiles-hint{font-size:12px;color:var(--mut2);margin-top:8px}
+  /* ===== Project-werkblad (todo's, inkopen, afspraken, notities) ===== */
+  #projOverlay.incol{left:33.333vw;width:33.333vw}
+  .pb-head{display:flex;align-items:center;gap:11px;margin:0 0 14px;padding-right:34px}
+  .pb-title{font-size:17px;line-height:1.3}
+  .pb-title b{font-weight:600} .pb-title span{color:var(--mut)}
+  .pb-sec{border-top:1px solid var(--line);padding:13px 0 5px}
+  .pb-sec:first-of-type{border-top:none;padding-top:2px}
+  .pb-h{display:flex;align-items:center;justify-content:space-between;font-size:11.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut);font-weight:600;margin:0 0 7px}
+  .pb-ai{background:transparent;border:1px solid var(--line);color:var(--mut);border-radius:8px;padding:3px 10px;font-size:12px;cursor:pointer;letter-spacing:0;text-transform:none}
+  .pb-ai:hover{color:#fff;border-color:var(--mut2)}
+  .pb-row{display:flex;align-items:center;gap:11px;padding:6px 0;cursor:pointer}
+  .pb-row input[type=checkbox]{width:17px;height:17px;flex:0 0 auto;accent-color:var(--scol,#888);cursor:pointer}
+  .pb-tx{flex:1;font-size:14px}
+  .pb-tx.done{text-decoration:line-through;opacity:.55}
+  .pb-del{background:transparent;border:none;cursor:pointer;font-size:17px;line-height:1;padding:0 3px;opacity:.6}
+  .pb-del:hover{opacity:1}
+  .pb-appt{justify-content:space-between}
+  .pb-when{font-size:12.5px;color:var(--mut);flex:0 0 auto;margin-left:10px}
+  .pb-add{padding:3px 0 2px}
+  .pb-in{width:100%;background:transparent;border:none;border-bottom:1px solid var(--line);padding:7px 2px;font-size:14px;font-family:inherit}
+  .pb-in:focus{outline:none;border-bottom-color:var(--mut2)}
+  .pb-notes{width:100%;min-height:88px;background:transparent;border:1px solid var(--line);border-radius:11px;padding:11px 12px;font-size:14px;font-family:inherit;resize:vertical;margin-top:2px}
+  .pb-notes:focus{outline:none;border-color:var(--mut2)}
+  .pb-empty{font-size:13px;color:var(--mut2);padding:3px 0 5px}
+  .kicon.kboard:hover{color:#fff}
   .arch-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 2px;border-bottom:1px solid var(--line)}
   .arch-main{display:flex;align-items:center;gap:10px;min-width:0}
   .arch-dot{width:10px;height:10px;border-radius:50%;flex:0 0 auto}
@@ -1043,6 +1068,7 @@
   .topbar,.topbar *{ color:var(--s2) !important }  .topbar svg{ stroke:var(--s2) !important }
   .cb-title,.rail-coltitle,.colbar .cb-toggle,.agenda-toggle,.chdr-t{ color:var(--s2) !important }
   #view-agenda,#view-agenda *,#duepop,#duepop *,.modal,.modal *{ color:var(--s2) !important }
+  .modal .pb-title b{ color:var(--scol,var(--s2)) !important }
   .modal .picon{ filter:grayscale(1) brightness(.6) !important }
   .modal .btn.danger,.modal .danger{ color:var(--late) !important }
   .modal .foot .btn:not(.ghost):not(.danger){ background:rgba(255,255,255,.14) !important; color:#fff !important; border:none !important }
@@ -1153,7 +1179,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v56</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v57</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -1996,7 +2022,7 @@ function afsprakenGroupsHTML(){
 
 // afspraken-modal + opslag
 let apptEditId=null;
-function openApptModal(id){
+function openApptModal(id, presetPid){
   const a = id ? (state.appointments||[]).find(x=>x.id===id) : null;
   apptEditId = a?a.id:null;
   document.getElementById('a_t').value=a?a.t:'';
@@ -2007,7 +2033,7 @@ function openApptModal(id){
   document.getElementById('a_contact').value=a?a.contact:'';
   document.getElementById('a_location').value=a?a.location:'';
   document.getElementById('a_note').value=a?a.note:'';
-  const _pid=a&&a.projectId?a.projectId:''; const _pp=_pid?projById(_pid):null; const _cv=_pp?_pp.client:'__none__';
+  const _pid=(a&&a.projectId)?a.projectId:(!a&&presetPid?presetPid:''); const _pp=_pid?projById(_pid):null; const _cv=_pp?_pp.client:'__none__';
   _fillClientOpts(document.getElementById('a_clientk'), _cv);
   _fillProjectOpts(document.getElementById('a_project'), _cv, _pid||null);
   _enhanceSelect('a_clientk','client'); _enhanceSelect('a_project','project');
@@ -2021,7 +2047,57 @@ function openApptModal(id){
   else { ov.style.top=''; }
   ov.classList.add('open');
 }
-function closeApptModal(){const ov=document.getElementById('apptOverlay');ov.classList.remove('open');setTimeout(()=>{if(!ov.classList.contains('open')){ov.classList.remove('incol');ov.style.top='';apptEditId=null;}},560);}
+function closeApptModal(){const ov=document.getElementById('apptOverlay');ov.classList.remove('open');setTimeout(()=>{if(!ov.classList.contains('open')){ov.classList.remove('incol');ov.style.top='';apptEditId=null;}},560);
+  try{ const pb=document.getElementById('projOverlay'); if(pb&&pb.classList.contains('open')) setTimeout(_renderProjBoard,80); }catch(_){}
+}
+// ===== Project-werkblad: bestaande taken + eigen checklist + inkopen + afspraken + notities =====
+let _pbPid=null, _pbItems=[];
+async function openProjectBoard(pid){
+  const p=projById(pid); if(!p)return; _pbPid=pid;
+  try{ const r=await sb.from('project_board').select('*').eq('project_id',pid).order('kind').order('sort').order('created_at'); _pbItems=(r&&r.data)?r.data:[]; }catch(_){ _pbItems=[]; }
+  let ov=document.getElementById('projOverlay');
+  if(!ov){ ov=document.createElement('div'); ov.id='projOverlay'; ov.className='overlay'; document.body.appendChild(ov); ov.addEventListener('click',e=>{ if(e.target===ov) closeProjectBoard(); }); }
+  const incol=isDesk3(); ov.classList.toggle('incol',incol);
+  if(incol){ const tb=document.querySelector('.topbar'); ov.style.top=(tb?Math.round(tb.getBoundingClientRect().height):0)+'px'; } else ov.style.top='';
+  _renderProjBoard(); requestAnimationFrame(()=>ov.classList.add('open'));
+}
+function closeProjectBoard(){ const ov=document.getElementById('projOverlay'); if(!ov)return; ov.classList.remove('open'); setTimeout(()=>{ if(!ov.classList.contains('open')){ ov.classList.remove('incol'); ov.style.top=''; } },420); _pbPid=null; }
+function _renderProjBoard(){
+  const ov=document.getElementById('projOverlay'); if(!ov||!_pbPid)return;
+  const p=projById(_pbPid); if(!p)return; const col=p.color||'#888'; const esc=escapeHtml;
+  const tasks=(p.items||[]).slice().sort((a,b)=>(a.status==='done')-(b.status==='done'));
+  const todos=_pbItems.filter(x=>x.kind==='todo'), inkopen=_pbItems.filter(x=>x.kind==='inkoop');
+  const appts=(state.appointments||[]).filter(a=>String(a.projectId)===String(_pbPid)).sort((a,b)=>String(a.date||'').localeCompare(String(b.date||'')));
+  const initial=(p.icon||(p.client||'?').trim()[0]||'?').toUpperCase();
+  const taskRow=(it)=>`<label class="pb-row"><input type="checkbox" ${it.status==='done'?'checked':''} onchange="pbToggleTask('${it.id}',this.checked)"><span class="pb-tx${it.status==='done'?' done':''}">${esc(it.t||'')}</span></label>`;
+  const cbRow=(x)=>`<label class="pb-row"><input type="checkbox" ${x.done?'checked':''} onchange="pbToggle('${x.id}',this.checked)"><span class="pb-tx${x.done?' done':''}">${esc(x.text)}</span><button class="pb-del" onclick="event.preventDefault();pbDel('${x.id}')" title="Verwijderen">×</button></label>`;
+  const apptRow=(a)=>{ const d=a.date?d3date(a.date):''; return `<div class="pb-row pb-appt" onclick="openApptModal('${a.id}')"><span class="pb-tx">${esc(a.t||'Afspraak')}</span><span class="pb-when">${esc(d)}${a.start?' · '+esc(String(a.start).slice(0,5)):''}</span></div>`; };
+  ov.innerHTML=`<div class="modal pb-modal" style="--scol:${col};width:100%;max-width:none">
+    <button class="modal-close" onclick="closeProjectBoard()" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <div class="pb-head"><span class="kbadge" style="background:${col}">${esc(initial)}</span><div class="pb-title"><b>${esc(p.client||'')}</b>${p.project?'<span> · '+esc(p.project)+'</span>':''}</div></div>
+    <div class="pb-sec"><div class="pb-h">Taken</div>${tasks.length?tasks.map(taskRow).join(''):'<div class="pb-empty">Geen actiepunten.</div>'}</div>
+    <div class="pb-sec"><div class="pb-h">Checklist <button class="pb-ai" onclick="pbAiTodos(this)" title="AI-startchecklist">✦ AI</button></div>${todos.map(cbRow).join('')}<div class="pb-add"><input class="pb-in" data-kind="todo" placeholder="+ todo toevoegen…" onkeydown="pbAddKey(event,'todo')"></div></div>
+    <div class="pb-sec"><div class="pb-h">Inkopen</div>${inkopen.map(cbRow).join('')}<div class="pb-add"><input class="pb-in" data-kind="inkoop" placeholder="+ inkoop toevoegen…" onkeydown="pbAddKey(event,'inkoop')"></div></div>
+    <div class="pb-sec"><div class="pb-h">Afspraken <button class="pb-ai" onclick="pbNewAppt()" title="Nieuwe afspraak">+ nieuw</button></div>${appts.length?appts.map(apptRow).join(''):'<div class="pb-empty">Nog geen afspraken.</div>'}</div>
+    <div class="pb-sec"><div class="pb-h">Notities</div><textarea class="pb-notes" placeholder="Vrije notities voor dit project…" onblur="pbSaveNotes(this.value)">${esc(p.notes||'')}</textarea></div>
+  </div>`;
+}
+function d3date(s){ try{ return new Date(s).toLocaleDateString('nl-NL',{day:'numeric',month:'short'}); }catch(_){ return String(s||''); } }
+function _pbFocus(kind){ setTimeout(()=>{ const inp=document.querySelector('#projOverlay .pb-in[data-kind="'+kind+'"]'); if(inp)inp.focus(); },0); }
+async function pbToggleTask(id,checked){ const r=findItem(id); if(r&&r.it){ r.it.status=checked?'done':'todo'; } try{ await sb.from('items').update({status:checked?'done':'todo'}).eq('id',id); }catch(_){} _renderProjBoard(); try{render();}catch(_){} }
+async function pbAddKey(e,kind){ if(e.key!=='Enter')return; e.preventDefault(); const v=(e.target.value||'').trim(); if(!v)return; e.target.value=''; try{ const r=await sb.from('project_board').insert({project_id:_pbPid,kind,text:v,sort:_pbItems.length}).select().single(); if(r&&r.data)_pbItems.push(r.data); }catch(_){} _renderProjBoard(); _pbFocus(kind); }
+async function pbToggle(id,done){ const x=_pbItems.find(i=>i.id===id); if(x)x.done=done; try{ await sb.from('project_board').update({done}).eq('id',id); }catch(_){} _renderProjBoard(); }
+async function pbDel(id){ _pbItems=_pbItems.filter(i=>i.id!==id); try{ await sb.from('project_board').delete().eq('id',id); }catch(_){} _renderProjBoard(); }
+async function pbSaveNotes(val){ const p=projById(_pbPid); if(p)p.notes=val; try{ await sb.from('projects').update({notes:val}).eq('id',_pbPid); }catch(_){} }
+async function pbNewAppt(){ openApptModal(null,_pbPid); }
+async function pbAiTodos(btn){ const p=projById(_pbPid); if(!p)return; if(btn){btn.disabled=true;btn.textContent='✦ …';}
+  const existing=(p.items||[]).map(i=>i.t).filter(Boolean).concat(_pbItems.filter(x=>x.kind==='todo').map(x=>x.text));
+  try{ const r=await fetch('/api/projtodos',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({client:p.client,project:p.project,context:(typeof _ctxForChat==='function'?_ctxForChat():''),existing})});
+    const d=await r.json(); const todos=(d&&d.todos)||[];
+    for(const t0 of todos){ const t=String(t0).trim(); if(!t)continue; const ins=await sb.from('project_board').insert({project_id:_pbPid,kind:'todo',text:t,sort:_pbItems.length}).select().single(); if(ins&&ins.data)_pbItems.push(ins.data); }
+  }catch(_){}
+  _renderProjBoard();
+}
 function _apptWhen(rec){const dt=rec.date?d(rec.date).toLocaleDateString('nl-NL',{weekday:'short',day:'numeric',month:'short'}):'';return dt?(' — '+dt+(rec.start_time?' '+rec.start_time:'')):'';}
 async function saveAppt(){
   const rec={
@@ -2828,6 +2904,7 @@ function renderProjecten(){
         <button class="kdot" style="background:${p.color}" onclick="openColorPicker(event,'proj','${p.id}')" title="Kleur"></button>
         <input class="ksub" value="${escapeHtml(p.project||'')}" placeholder="Project / event" onchange="updateProject('${p.id}','project',this.value)" />
         <span class="kcnt">${open}</span>
+        <button class="kicon kboard" onclick="openProjectBoard('${p.id}')" title="Werkblad openen"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01"/></svg></button>
         <button class="kicon" onclick="deleteProject('${p.id}')" title="Verwijderen"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/></svg></button>
         </div>${_filesHTML('project',p.id)}
       </div>`;}).join('');
