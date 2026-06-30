@@ -657,6 +657,20 @@
   #financienWrap .fin-proj{padding-left:30px;background:rgba(255,255,255,.012)}
   #financienWrap .fin-proj .fin-nm{font-size:13.5px}
   #financienWrap .fin-pdot{width:8px;height:8px;border-radius:50%;flex:0 0 auto}
+  .fin-mid-hint{padding:40px 24px;color:var(--mut2);font-size:13.5px;text-align:center;max-width:320px;margin:60px auto 0}
+  #finRightWrap{padding:22px 22px}
+  #finRightWrap .finr-tot{padding:0 0 18px;border-bottom:1px solid var(--line);margin-bottom:18px}
+  #finRightWrap .finr-tlabel{font-size:11.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut2)}
+  #finRightWrap .finr-tbig{font-size:34px;font-weight:700;color:#5dcaa5;margin-top:6px;line-height:1}
+  #finRightWrap .finr-tbig.neg{color:#e0726f}
+  #finRightWrap .finr-tsub{font-size:12.5px;color:var(--mut2);margin-top:8px}
+  #finRightWrap .finr-card{border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  #finRightWrap .finr-h{font-size:14px;font-weight:600;margin-bottom:10px}
+  #finRightWrap .finr-line{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--mut);padding:5px 0}
+  #finRightWrap .finr-line b{color:var(--s4);font-weight:600}
+  #finRightWrap .finr-line.marge{border-top:1px solid var(--line);margin-top:6px;padding-top:10px}
+  #finRightWrap .finr-line.marge b{color:#5dcaa5}
+  #finRightWrap .finr-line.marge.neg b{color:#e0726f}
   .pb-notes:focus{outline:none;border-color:var(--mut2)}
   .pb-empty{font-size:13px;color:var(--mut2);padding:3px 0 5px}
   .kicon.kboard:hover{color:#fff}
@@ -1337,7 +1351,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v70</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v71</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -1372,6 +1386,9 @@
       <div id="view-filespreview" class="hidden"></div>
 
       <div id="view-agenda" class="hidden"></div>
+
+      <div id="view-finmid" class="hidden"><div class="fin-mid-hint">Kies links een project om de inkoop te zien en te bewerken.</div></div>
+      <div id="view-finright" class="hidden"><div id="finRightWrap"></div></div>
 
       <div id="view-afspraken" class="hidden"></div>
 
@@ -1858,6 +1875,7 @@ function setView(v){
   const main=document.querySelector('.main'); if(main) main.classList.toggle('workspace',ws);
   if(ws){ document.getElementById('view-taken').classList.remove('hidden'); document.getElementById('view-agenda').classList.remove('hidden'); }
   if(ws){ const fp=document.getElementById('view-filespreview'); if(v==='files'){ document.getElementById('view-taken').classList.add('hidden'); if(fp)fp.classList.remove('hidden'); } else { if(fp)fp.classList.add('hidden'); } }
+  { const finOn=(ws && v==='financien'); const fm=document.getElementById('view-finmid'),frt=document.getElementById('view-finright'); if(fm)fm.classList.toggle('hidden',!finOn); if(frt)frt.classList.toggle('hidden',!finOn); if(finOn){ document.getElementById('view-taken').classList.add('hidden'); document.getElementById('view-agenda').classList.add('hidden'); } }
   const mh=document.querySelector('.main-head'); if(mh) mh.style.display = (v==='home'||ws) ? 'none' : 'flex';
   if(typeof closePlus==='function') closePlus();
   if(typeof hideWelcome==='function') hideWelcome();
@@ -2243,6 +2261,7 @@ async function openProjectBoard(pid, mode){
   const incol=isDesk3(); ov.classList.toggle('incol',incol);
   if(incol){ const tb=document.querySelector('.topbar'); ov.style.top=(tb?Math.round(tb.getBoundingClientRect().height):0)+'px'; } else ov.style.top='';
   _renderProjBoard(); requestAnimationFrame(()=>ov.classList.add('open'));
+  try{ if(view==='financien')renderFinancien(); }catch(_){}
 }
 function closeProjectBoard(){ const ov=document.getElementById('projOverlay'); if(!ov)return; ov.classList.remove('open'); setTimeout(()=>{ if(!ov.classList.contains('open')){ ov.classList.remove('incol'); ov.style.top=''; } },420); _pbPid=null; try{ _finInk=null; if(view==='financien')renderFinancien(); }catch(_){} }
 function _renderProjBoard(){
@@ -2321,6 +2340,14 @@ async function renderFinancien(){
   }).join('');
   const tMarge=tOm-tInEx;
   w.innerHTML=`<div class="fin-list">${groups||'<div class="hint">Nog geen projecten.</div>'}</div><div class="fin-totrow"><div class="fin-main"><div class="fin-nm">Totaal</div><div class="fin-sub">omzet €${fmtEur(tOm)} · inkoop excl. €${fmtEur(tInEx)}</div></div><div class="fin-marge ${tMarge<0?'neg':''}">€${fmtEur(tMarge)}</div></div>`;
+  const fr=document.getElementById('finRightWrap');
+  if(fr){
+    const sel=_pbPid?projById(_pbPid):null; let detail='';
+    if(sel){ const btw=(sel.btw!=null&&sel.btw!=='')?Number(sel.btw):21; const om=(sel.projectprijs!=null&&sel.projectprijs!=='')?Number(sel.projectprijs):null; const ink=_finInk[String(sel.id)]||0; const inkEx=ink/(1+btw/100); const marge=om!=null?(om-inkEx):null; const col=sel.color||'#888';
+      detail=`<div class="finr-card"><div class="finr-h" style="color:${col}">${escapeHtml(sel.client||'')}${sel.project?' · '+escapeHtml(sel.project):''}</div><div class="finr-line"><span>Omzet (excl. btw)</span><b>${om!=null?'€'+fmtEur(om):'—'}</b></div><div class="finr-line"><span>Inkoop incl. btw</span><b>€${fmtEur(ink)}</b></div><div class="finr-line"><span>Inkoop excl. btw</span><b>€${fmtEur(inkEx)}</b></div><div class="finr-line marge ${marge!=null&&marge<0?'neg':''}"><span>Marge</span><b>${marge!=null?'€'+fmtEur(marge):'—'}</b></div></div>`;
+    }
+    fr.innerHTML=`<div class="finr-tot"><div class="finr-tlabel">Totale marge</div><div class="finr-tbig ${tMarge<0?'neg':''}">€${fmtEur(tMarge)}</div><div class="finr-tsub">omzet €${fmtEur(tOm)} · uitgegeven €${fmtEur(tInEx)}</div></div>${detail}`;
+  }
 }
 async function pbInkLink(){ const url=((await uiPrompt('Plak een productlink (Amazon of web):'))||'').trim(); if(!/^https?:\/\//i.test(url))return; let meta={}; try{ meta=await fetch('/api/linkmeta',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url})}).then(r=>r.json()); }catch(_){} const name=(meta&&meta.title)?String(meta.title).slice(0,140):url; try{ const ins=await sb.from('project_board').insert({project_id:_pbPid,kind:'inkoop',text:name,qty:1,url,sort:_pbItems.length}).select().single(); if(ins&&ins.data)_pbItems.push(ins.data); }catch(_){} _renderProjBoard(); }
 function pbInkPaste(){ const ov=document.createElement('div'); ov.className='overlay';
