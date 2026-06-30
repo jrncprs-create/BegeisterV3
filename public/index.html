@@ -526,10 +526,13 @@
   .ksub{background:transparent;border:none;color:var(--mut2);font-size:12.5px;padding:2px 0;width:100%;border-bottom:1px solid transparent}
   .kname:focus,.ksub:focus,.kclient .kname:focus{outline:none;background:transparent;border:none;border-bottom:1px solid var(--line);box-shadow:none}
   .kname::placeholder,.ksub::placeholder{color:var(--mut2)}
-  .kname-btn{background:transparent;border:none;color:var(--txt);font-size:16px;font-weight:700;padding:3px 0;flex:1;min-width:0;text-align:left;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .ksub-btn{background:transparent;border:none;color:var(--mut2);font-size:12.5px;padding:2px 0;flex:1;min-width:0;text-align:left;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .kname-btn:hover,.ksub-btn:hover{color:var(--ccol,var(--txt))}
-  .kedit-input{flex:1;min-width:0}
+  .kname-btn{background:transparent;border:none;color:var(--s1);font-size:16px;font-weight:700;padding:3px 0;flex:0 1 auto;min-width:0;text-align:left;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ksub-btn{background:transparent;border:none;color:var(--s1);font-size:12.5px;padding:2px 0;flex:0 1 auto;min-width:0;text-align:left;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .kname-btn:hover,.ksub-btn:hover{color:var(--ccol)}
+  .kgroup:hover .kname-btn,.kgroup.kactive .kname-btn{color:var(--ccol)}
+  .kli.kproj:hover .ksub-btn,.kli.kproj.on .ksub-btn{color:var(--ccol)}
+  .kspring{flex:1 1 auto;min-width:4px}
+  .kedit-input{flex:1 1 auto;min-width:0}
   .kicon.kpen{opacity:0;transition:opacity .15s}
   .kclient:hover .kicon.kpen,.kli.kproj:hover .kicon.kpen{opacity:1}
   .kicon.kchev svg{transition:transform .15s;transform:rotate(180deg)}
@@ -539,12 +542,14 @@
   .kicon:hover{color:var(--txt);background:var(--panel2)}
   /* Klanten gegroepeerd: kop per klant, projecten eronder */
   .kgroup{border:1px solid var(--line);border-radius:14px;padding:4px 14px 8px;margin-bottom:14px}
+  .kgroup.kcollapsed{padding-bottom:0}
+  .kgroup.kcollapsed .kclient{padding-bottom:11px}
   .kclient{display:flex;align-items:center;gap:12px;padding:11px 2px 9px;border-bottom:1px solid var(--line)}
   .kclient .kname{font-size:16px;font-weight:700}
   .kgroup .kli{border-bottom:1px solid var(--line)}
   .kgroup .kli:last-child{border-bottom:none}
-  .kgroup .kli.kproj{padding-left:6px;border-bottom:none}
-  .kprojblock{border-bottom:1px solid var(--line);padding-bottom:11px}
+  .kgroup .kli.kproj{padding:2px 0 2px 6px;border-bottom:none}
+  .kprojblock{border-bottom:none;padding-bottom:0}
   .kprojblock.last{border-bottom:none;padding-bottom:2px}
   .proj-row{display:grid;grid-template-columns:42px minmax(0,1.5fr) minmax(0,1.5fr) 56px auto;gap:12px;align-items:center;padding:10px 4px;border-bottom:1px solid var(--line)}
   .proj-row input[type=text]{width:100%;min-width:0;background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:9px 11px;font-size:14px}
@@ -685,7 +690,11 @@
   .pb-board-inline .pb-in{color:var(--scol);border-bottom-color:color-mix(in srgb,var(--scol) 30%,transparent)}
   .pb-board-inline .pb-in::placeholder{color:var(--scol);opacity:.55}
   .pb-board-inline .pb-bud{color:var(--scol);border-bottom-color:color-mix(in srgb,var(--scol) 40%,transparent)}
-  .pb-board-inline .pb-head{border-bottom:1px solid color-mix(in srgb,var(--scol) 34%,transparent);padding-bottom:12px}
+  .pb-board-inline .pb-head{border-top:1px solid color-mix(in srgb,var(--scol) 34%,transparent);border-bottom:none;padding-top:16px;padding-bottom:14px;margin-bottom:4px}
+  .pb-board-inline .pb-chk{background:transparent;border:none;padding:0;cursor:pointer;color:var(--scol);flex:0 0 auto;margin-top:1px;display:inline-flex;line-height:0;opacity:.92}
+  .pb-board-inline .pb-chk:hover{opacity:1}
+  .pb-board-inline .pb-donerow .pb-chk{color:var(--mut2)}
+  .pb-board-inline .pb-trow,.pb-board-inline .pb-wait,.pb-board-inline .pb-donerow{cursor:default}
   .pb-hadd{background:transparent;border:none;color:var(--scol,var(--mut2));font-size:21px;line-height:1;cursor:pointer;padding:0 2px;display:inline-flex;align-items:center;justify-content:center;margin-left:auto;opacity:.85}
   .pb-hadd:hover{opacity:1}
   .pb-board-inline .pb-h{display:flex;align-items:center;gap:8px}
@@ -1279,7 +1288,8 @@
   /* Klanten-beheer: icoon vóór naam; naam + project + divider in klantkleur */
   .kbadge{ width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:13px;flex:0 0 auto }
   .kname,.ksub{ color:var(--ccol,var(--s1)) !important }
-  .kclient{ border-bottom-color:var(--ccol,var(--line)) !important }
+  .kclient{ border-bottom-color:var(--line) !important }
+  .kgroup:hover .kclient,.kgroup.kactive .kclient{ border-bottom-color:var(--ccol) !important }
 
   /* 4 · WIT — chrome-hover, "vandaag"-cel, welkomstscherm */
   .topbar *:hover{ color:var(--s4) !important }  .topbar *:hover svg,.topbar *:hover>svg{ stroke:var(--s4) !important }
@@ -1440,7 +1450,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v80</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v81</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -2418,12 +2428,13 @@ function _renderProjBoard(){
   const marge=omzetEx!=null?(omzetEx-inkExcl):null;                                          // marge excl. btw op beide kanten
   const appts=(state.appointments||[]).filter(a=>String(a.projectId)===String(_pbPid)).sort((a,b)=>String(a.date||'').localeCompare(String(b.date||'')));
   const initial=(p.icon||(p.client||'?').trim()[0]||'?').toUpperCase();
-  const taskRow=(it)=>`<label class="pb-row" data-tid="${it.id}"><input type="checkbox" onchange="pbArchiveTask('${it.id}')"><span class="pb-tx">${esc(it.t||'')}</span></label>`;
-  const waitRow=(it)=>`<label class="pb-row pb-wait" data-tid="${it.id}"><input type="checkbox" onchange="pbArchiveTask('${it.id}')"><span class="pb-tx">${esc(it.t||'')}</span></label>`;
+  const _pbChk=(checked)=>`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="5.5"/>${checked?'<path d="M8 12.4l2.7 2.7L16.5 9"/>':''}</svg>`;
+  const taskRow=(it)=>`<div class="pb-row pb-trow" data-tid="${it.id}"><button class="pb-chk" onclick="pbArchiveTask('${it.id}')" title="Afvinken">${_pbChk(false)}</button><span class="pb-tx">${esc(it.t||'')}</span></div>`;
+  const waitRow=(it)=>`<div class="pb-row pb-wait" data-tid="${it.id}"><button class="pb-chk" onclick="pbArchiveTask('${it.id}')" title="Afvinken">${_pbChk(false)}</button><span class="pb-tx">${esc(it.t||'')}</span></div>`;
   const waitT=(p.items||[]).filter(i=>i.status==='wait');
   const takenT=(p.items||[]).filter(i=>i.status!=='done'&&i.status!=='wait');
   const doneT=(p.items||[]).filter(i=>i.status==='done');
-  const doneRow=(it)=>`<label class="pb-row pb-donerow"><input type="checkbox" checked onchange="pbUncheckTask('${it.id}')"><span class="pb-tx done">${esc(it.t||'')}</span></label>`;
+  const doneRow=(it)=>`<div class="pb-row pb-donerow"><button class="pb-chk" onclick="pbUncheckTask('${it.id}')" title="Terugzetten">${_pbChk(true)}</button><span class="pb-tx done">${esc(it.t||'')}</span></div>`;
   const cbRow=(x)=>`<label class="pb-row"><input type="checkbox" ${x.done?'checked':''} onchange="pbToggle('${x.id}',this.checked)"><span class="pb-tx${x.done?' done':''}">${esc(x.text)}</span><button class="pb-del" onclick="event.preventDefault();pbDel('${x.id}')" title="Verwijderen">×</button></label>`;
   const _lnkIc='<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 15l6-6"/><path d="M11 6l1-1a3.5 3.5 0 015 5l-1 1"/><path d="M13 18l-1 1a3.5 3.5 0 01-5-5l1-1"/></svg>';
   const _stCol={'te bestellen':['rgba(186,117,23,.16)','#d8a64a'],'besteld':['rgba(24,95,165,.2)','#7db0e6']};
@@ -3452,12 +3463,12 @@ function renderProjecten(){
     const head=`<div class="kclient">
       <span class="kbadge" style="background:${ccol}">${escapeHtml(initial)}</span>
       ${nameEl}
-      <span class="kcnt">${total}</span>
       <button class="kicon kpen" onclick="event.stopPropagation();kEditStart('c:${esc(client)}')" title="Naam bewerken">${_penIc}</button>
+      <span class="kspring"></span>
       <button class="kicon kadd" onclick="event.stopPropagation();addProjectTo('${esc(client)}')" title="Project toevoegen"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 5v14M5 12h14"/></svg></button>
       <button class="kicon kchev${isOpen?' open':''}" onclick="event.stopPropagation();toggleKClient('${esc(client)}')" title="Projecten in-/uitklappen">${_chevIc}</button>
     </div>`;
-    const items=!isOpen?'':projs.map((p,idx)=>{const open=p.items.filter(i=>i.status!=='done').length; const last=idx===projs.length-1; const editingP=(_kEdit===p.id); const selOn=(_pbPid===p.id&&_pbTarget==='beheer')?' on':'';
+    const items=!isOpen?'':projs.map((p,idx)=>{const last=idx===projs.length-1; const editingP=(_kEdit===p.id); const selOn=(_pbPid===p.id&&_pbTarget==='beheer')?' on':'';
       const pname=editingP
         ? `<input class="ksub kedit-input" value="${escapeHtml(p.project||'')}" onblur="kProjSave('${p.id}',this.value)" onkeydown="if(event.key==='Enter')this.blur();else if(event.key==='Escape')kEditCancel()" />`
         : `<button class="ksub-btn" onclick="selectBeheerProj('${p.id}')" title="Open werkblad">${escapeHtml(p.project||'Project / event')}</button>`;
@@ -3465,12 +3476,12 @@ function renderProjecten(){
         <div class="kli kproj${selOn}">
         <button class="kdot" style="background:${p.color}" onclick="event.stopPropagation();openColorPicker(event,'proj','${p.id}')" title="Kleur"></button>
         ${pname}
-        <span class="kcnt">${open}</span>
         <button class="kicon kpen" onclick="event.stopPropagation();kEditStart('${p.id}')" title="Naam bewerken">${_penIc}</button>
+        <span class="kspring"></span>
         <button class="kicon" onclick="event.stopPropagation();deleteProject('${p.id}')" title="Verwijderen"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/></svg></button>
         </div>
       </div>`;}).join('');
-    return `<div class="kgroup${client===_actClient?' kactive':''}" style="--ccol:${ccol}">${head}${items}</div>`;
+    return `<div class="kgroup${client===_actClient?' kactive':''}${isOpen?'':' kcollapsed'}" style="--ccol:${ccol}">${head}${items}</div>`;
   }).join('');
   document.getElementById('beheerWrap').innerHTML=(html||'<div class="hint">Nog geen klanten. Maak er een aan met + rechtsboven.</div>');
 }
