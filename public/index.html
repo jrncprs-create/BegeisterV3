@@ -1486,7 +1486,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v92</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v93</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -2555,7 +2555,7 @@ async function pbInkCheck(id,done){ const x=_pbItems.find(i=>i.id===id); if(x)x.
       setTimeout(()=>{ _renderProjBoard(); try{render();}catch(_){} }, 560); return; } }
   _renderProjBoard(); try{render();}catch(_){}
 }
-async function pbCheckAllInk(){ const open=_pbItems.filter(x=>x.kind==='inkoop'&&!x.done); if(!open.length)return; for(const x of open){ x.done=true; try{ sb.from('project_board').update({done:true}).eq('id',x.id); }catch(_){} } _finInk=null; _renderProjBoard(); try{render();}catch(_){} }
+async function pbCheckAllInk(){ const open=_pbItems.filter(x=>x.kind==='inkoop'&&!x.done); if(!open.length)return; if(!(await uiConfirm('De hele bestellijst afvinken? Ze schuiven dan naar Afgevinkt — je kunt ze daar weer terugzetten.',{ok:'Afvinken',danger:false})))return; for(const x of open){ x.done=true; try{ sb.from('project_board').update({done:true}).eq('id',x.id); }catch(_){} } _pbDoneOpen=true; _finInk=null; _renderProjBoard(); try{render();}catch(_){} }
 async function pbDelBestel(){ if(!(await uiConfirm('De hele bestellijst verwijderen? Dit kan niet ongedaan worden gemaakt.')))return; const ink=_pbItems.filter(x=>x.kind==='inkoop'); for(const x of ink){ try{ await sb.from('project_board').delete().eq('id',x.id); }catch(_){} } _pbItems=_pbItems.filter(x=>x.kind!=='inkoop'); _finInk=null; _renderProjBoard(); try{render();}catch(_){} }
 async function pbSaveNotes(val){ const p=projById(_pbPid); if(p)p.notes=val; try{ await sb.from('projects').update({notes:val}).eq('id',_pbPid); }catch(_){} }
 function fmtEur(n){ n=Number(n)||0; return n.toLocaleString('nl-NL',{minimumFractionDigits:2,maximumFractionDigits:2}); }
