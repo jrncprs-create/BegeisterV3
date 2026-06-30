@@ -693,7 +693,8 @@
   .pb-board-inline .pb-in{color:var(--scol);border-bottom-color:color-mix(in srgb,var(--scol) 30%,transparent)}
   .pb-board-inline .pb-in::placeholder{color:var(--scol);opacity:.55}
   .pb-board-inline .pb-bud{color:var(--scol);border-bottom-color:color-mix(in srgb,var(--scol) 40%,transparent)}
-  .pb-board-inline .pb-head{border-top:1px solid color-mix(in srgb,var(--scol) 34%,transparent);border-bottom:none;padding-top:16px;padding-bottom:14px;margin-bottom:4px}
+  .pb-board-inline{padding-top:0}
+  .pb-board-inline .pb-head{border-top:none;border-bottom:1px solid color-mix(in srgb,var(--scol) 34%,transparent);height:60px;box-sizing:border-box;align-items:center;padding-top:0;padding-bottom:0;margin:0}
   .pb-board-inline .pb-chk{background:transparent;border:none;padding:0;cursor:pointer;color:var(--scol);flex:0 0 auto;margin-top:1px;display:inline-flex;line-height:0;opacity:.92}
   .pb-board-inline .pb-chk:hover{opacity:1}
   .pb-board-inline .pb-donerow .pb-chk{color:var(--mut2)}
@@ -1457,7 +1458,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v83</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v84</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
