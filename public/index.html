@@ -704,6 +704,10 @@
   .pb-board-inline .pb-row:hover .pb-edit{opacity:.75}
   .pb-edit:hover{opacity:1 !important}
   .pb-board-inline .pb-colL .pb-sec:first-child,.pb-board-inline .pb-colR .pb-sec:first-child{border-top:none}
+  .pb-listlink{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;color:var(--scol);text-decoration:none;border:1px solid color-mix(in srgb,var(--scol) 30%,transparent);border-radius:8px;padding:6px 11px;margin:2px 0 12px;cursor:pointer;background:transparent}
+  .pb-listlink:hover{background:color-mix(in srgb,var(--scol) 12%,transparent)}
+  .pb-besteltot{margin-top:12px;font-size:13px;color:var(--scol)}
+  .pb-besteltot b{font-weight:600}
   .pb-hadd{background:transparent;border:none;color:var(--scol,var(--mut2));font-size:21px;line-height:1;cursor:pointer;padding:0 2px;display:inline-flex;align-items:center;justify-content:center;margin-left:auto;opacity:.85}
   .pb-hadd:hover{opacity:1}
   .pb-board-inline .pb-h{display:flex;align-items:center;gap:8px}
@@ -1280,7 +1284,8 @@
   /* Bestanden-tree: klant-icoon (gekleurd + letter) en naam altijd in klantkleur */
   .fm-badge{ filter:none !important; width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#000;font-weight:700;font-size:11px }
   /* Klanten-beheer: project-bolletje in klantkleur */
-  .kgroup .kli .kdot{ filter:none !important; background:var(--ccol) !important }
+  .kgroup .kli .kdot{ filter:none !important; background:#5a5a5a !important }
+  .kgroup:hover .kli .kdot,.kgroup.kactive .kli .kdot{ background:var(--ccol) !important }
   /* Bestandsnaam + icoon + samenvatting in klantkleur */
   .kfile-name,.kfile-sum,.kfile-ic{ color:var(--ccol,var(--s1)) !important }
   /* Taakkaart-hover: alle tekst in klantkleur (buttons/iconen blijven grijs) */
@@ -1467,7 +1472,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v88</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v89</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -2471,10 +2476,18 @@ function _renderProjBoard(){
   const secAppt=`<div class="pb-sec"><div class="pb-h">Afspraken <button class="pb-hadd" onclick="openApptModal(null,'${_pbPid}')" title="Afspraak toevoegen">+</button></div>${appts.length?appts.map(apptRow).join(''):'<div class="pb-empty">Nog geen afspraken.</div>'}</div>`;
   const secNotes=`<div class="pb-sec"><div class="pb-h">Notities</div><textarea class="pb-notes" placeholder="Vrije notities voor dit project…" onblur="pbSaveNotes(this.value)">${esc(p.notes||'')}</textarea></div>`;
   const secFiles=`<div class="pb-sec"><div class="pb-h">Bestanden <button class="pb-hadd" onclick="dropboxPick('project','${_pbPid}')" title="Bestand koppelen">+</button></div>${_filesFor('project',_pbPid).map(_fileRow).join('')||'<div class="pb-empty">Nog geen bestanden.</div>'}</div>`;
-  const _body=(_pbMode==='financien')?secInk:(secWait+secTaken+secDone+secAppt+secFiles+secPrijs+secNotes);
+  // Bestellijst — dezelfde inkoop-items als 'Inkopen' in Financiën, met masterlink naar de hele verlanglijst
+  const _inkSrcCnt={}; inkopen.forEach(x=>{ if(x.source_id)_inkSrcCnt[x.source_id]=(_inkSrcCnt[x.source_id]||0)+1; });
+  const _listSid=Object.keys(_inkSrcCnt).find(sid=>_inkSrcCnt[sid]>=2);
+  let _masterLink='';
+  if(_listSid){ const _src=(state.sources||[]).find(s=>String(s.id)===String(_listSid)); const _u=_src&&_src.url;
+    _masterLink = _u ? `<a class="pb-listlink" href="${esc(_u)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">↗ Open hele verlanglijst</a>`
+      : `<button class="pb-listlink ghost" onclick="pbSetListUrl('${_listSid}')" title="Plak de link naar de hele lijst">🔗 Verlanglijst-link koppelen</button>`; }
+  const secBestel=`<div class="pb-sec"><div class="pb-h"><span>Bestellijst</span><span class="pb-hbtns"><button class="pb-ai" onclick="pbInkPaste()" title="Plak een verlanglijst of winkelwagen — AI maakt er regels van">${_tIc(_TABCHAN.asterisk,15,1.7)}<span>lijst</span></button><button class="pb-ai" onclick="pbInkLink()" title="Toevoegen via productlink">+ link</button></span></div>${_masterLink}${inkopen.length?inkopen.map(inkRow).join(''):'<div class="pb-empty">Nog geen bestellingen.</div>'}<div class="pb-add"><input class="pb-in" data-kind="inkoop" placeholder="+ artikel toevoegen…" onkeydown="pbAddKey(event,'inkoop')"></div>${inkopen.length?`<div class="pb-besteltot">Totaal <b>€${fmtEur(inkTotal)}</b></div>`:''}</div>`;
+  const _body=(_pbMode==='financien')?secInk:(secWait+secTaken+secBestel+secDone+secAppt+secFiles+secPrijs+secNotes);
   const _head=`<div class="pb-head"><span class="kbadge" style="background:${col}">${esc(initial)}</span><div class="pb-title"><b>${esc(p.client||'')}</b>${p.project?'<span> · '+esc(p.project)+'</span>':''}${_pbMode==='financien'?'<span style="color:'+col+'"> · inkoop</span>':''}</div></div>`;
   if(_pbTarget==='finmid'){ const el=document.getElementById('finMidWrap'); if(el)el.innerHTML=`<div class="pb-inline" style="--scol:${col}">${_head}${_body}</div>`; return; }
-  if(_pbTarget==='beheer'){ const el=document.getElementById('beheerBoardWrap'); if(el)el.innerHTML=`<div class="pb-inline pb-board-inline" style="--scol:${col}">${_head}<div class="pb-grid"><div class="pb-colL">${secWait}${secTaken}${secDone}</div><div class="pb-colR">${secAppt}${secFiles}${secPrijs}${secNotes}</div></div></div>`; return; }
+  if(_pbTarget==='beheer'){ const el=document.getElementById('beheerBoardWrap'); if(el)el.innerHTML=`<div class="pb-inline pb-board-inline" style="--scol:${col}">${_head}<div class="pb-grid"><div class="pb-colL">${secWait}${secTaken}${secBestel}${secDone}</div><div class="pb-colR">${secAppt}${secFiles}${secPrijs}${secNotes}</div></div></div>`; return; }
   if(!ov)return;
   ov.innerHTML=`<div class="modal pb-modal" style="--scol:${col};width:100%;max-width:none">
     <button class="modal-close" onclick="closeProjectBoard()" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
@@ -2506,6 +2519,7 @@ async function pbAddProjTask(kind,e){ if(e.key!=='Enter')return; e.preventDefaul
   _renderProjBoard(); try{render();}catch(_){} pbFocusAdd(kind);
 }
 async function pbUncheckTask(id){ const r=findItem(id); if(r&&r.it)r.it.status='todo'; try{ sb.from('items').update({status:'todo'}).eq('id',id); }catch(_){} _renderProjBoard(); try{render();}catch(_){} }
+async function pbSetListUrl(sid){ const u=((await uiPrompt('Plak de link naar de hele verlanglijst:'))||'').trim(); if(!/^https?:\/\//i.test(u))return; try{ await sb.from('sources').update({url:u}).eq('id',sid); const s=(state.sources||[]).find(x=>String(x.id)===String(sid)); if(s)s.url=u; }catch(_){} _renderProjBoard(); }
 async function pbAddAppt(e){ if(e.key!=='Enter')return; e.preventDefault(); const v=(e.target.value||'').trim(); if(!v)return; e.target.value='';
   const rec={title:v,date:iso(TODAY),kind:'fysiek',owner:(who||null),project_id:_pbPid};
   try{ const ins=await sb.from('appointments').insert(rec).select('*').single(); if(ins&&ins.data){ state.appointments=state.appointments||[]; state.appointments.push(_mapAppt(ins.data)); } }catch(_){}
