@@ -651,6 +651,12 @@
   #financienWrap .fin-marge.neg{color:#e0726f}
   #financienWrap .fin-totrow{border-top:1px solid var(--line);border-bottom:none;margin-top:4px}
   #financienWrap .fin-totrow .fin-nm{color:var(--s4)}
+  #financienWrap .fin-group{margin-bottom:2px}
+  #financienWrap .fin-chead{display:flex;align-items:center;gap:12px;padding:12px 14px 9px;border-bottom:1px solid var(--line)}
+  #financienWrap .fin-chead .fin-nm{font-size:14px;font-weight:600}
+  #financienWrap .fin-proj{padding-left:30px;background:rgba(255,255,255,.012)}
+  #financienWrap .fin-proj .fin-nm{font-size:13.5px}
+  #financienWrap .fin-pdot{width:8px;height:8px;border-radius:50%;flex:0 0 auto}
   .pb-notes:focus{outline:none;border-color:var(--mut2)}
   .pb-empty{font-size:13px;color:var(--mut2);padding:3px 0 5px}
   .kicon.kboard:hover{color:#fff}
@@ -1331,7 +1337,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v69</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v70</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -2297,17 +2303,24 @@ async function renderFinancien(){
     try{ const r=await sb.from('project_board').select('project_id,price,qty').eq('kind','inkoop'); _finInk={}; (r&&r.data||[]).forEach(x=>{ const k=String(x.project_id); _finInk[k]=(_finInk[k]||0)+((x.price!=null&&x.price!=='')?Number(x.price):0)*(x.qty||1); }); }catch(_){ _finInk={}; }
   }
   const projs=(state.projects||[]).filter(p=>p.id!=='__inbox__');
+  const byClient={}, order=[];
+  projs.forEach(p=>{ const c=p.client||''; if(!byClient[c]){byClient[c]=[];order.push(c);} byClient[c].push(p); });
   let tOm=0,tInEx=0;
-  const rows=projs.map(p=>{
-    const col=p.color||'#888'; const btw=(p.btw!=null&&p.btw!=='')?Number(p.btw):21;
-    const om=(p.projectprijs!=null&&p.projectprijs!=='')?Number(p.projectprijs):null;
-    const ink=_finInk[String(p.id)]||0; const inkEx=ink/(1+btw/100);
-    const marge=om!=null?(om-inkEx):null; tOm+=om||0; tInEx+=inkEx;
-    const ic=escapeHtml((p.icon||(p.client||'?').toString().trim()[0]||'?').toString().toUpperCase());
-    return `<div class="fin-row" onclick="openProjectBoard('${p.id}')"><span class="fin-dot" style="background:${col}">${ic}</span><div class="fin-main"><div class="fin-nm" style="color:${col}">${escapeHtml(p.client||'')}${p.project?' · '+escapeHtml(p.project):''}</div><div class="fin-sub">${om!=null?'omzet €'+fmtEur(om):'<span class="fin-noprice">geen projectprijs</span>'} · inkoop €${fmtEur(ink)}</div></div><div class="fin-marge ${marge!=null&&marge<0?'neg':''}">${marge!=null?'€'+fmtEur(marge):'—'}</div></div>`;
+  const groups=order.map(client=>{
+    const arr=byClient[client]; const ccol=(arr[0]&&arr[0].color)||'#888';
+    let cOm=0,cInEx=0;
+    const rows=arr.map(p=>{
+      const col=p.color||ccol; const btw=(p.btw!=null&&p.btw!=='')?Number(p.btw):21;
+      const om=(p.projectprijs!=null&&p.projectprijs!=='')?Number(p.projectprijs):null;
+      const ink=_finInk[String(p.id)]||0; const inkEx=ink/(1+btw/100);
+      const marge=om!=null?(om-inkEx):null; cOm+=om||0; cInEx+=inkEx; tOm+=om||0; tInEx+=inkEx;
+      return `<div class="fin-row fin-proj" onclick="openProjectBoard('${p.id}','financien')"><span class="fin-pdot" style="background:${col}"></span><div class="fin-main"><div class="fin-nm" style="color:${col}">${escapeHtml(p.project||'—')}</div><div class="fin-sub">${om!=null?'prijs €'+fmtEur(om):'<span class="fin-noprice">geen prijs</span>'} · uitgegeven €${fmtEur(inkEx)}</div></div><div class="fin-marge ${marge!=null&&marge<0?'neg':''}">${marge!=null?'€'+fmtEur(marge):'—'}</div></div>`;
+    }).join('');
+    const cMarge=cOm-cInEx; const ic=escapeHtml(((client||'?').toString().trim()[0]||'?').toUpperCase());
+    return `<div class="fin-group"><div class="fin-chead"><span class="fin-dot" style="background:${ccol}">${ic}</span><div class="fin-main"><div class="fin-nm" style="color:${ccol}">${escapeHtml(client||'—')}</div><div class="fin-sub">omzet €${fmtEur(cOm)} · uitgegeven €${fmtEur(cInEx)}</div></div><div class="fin-marge ${cMarge<0?'neg':''}">€${fmtEur(cMarge)}</div></div>${rows}</div>`;
   }).join('');
   const tMarge=tOm-tInEx;
-  w.innerHTML=`<div class="fin-list">${rows||'<div class="hint">Nog geen projecten.</div>'}</div><div class="fin-totrow"><div class="fin-main"><div class="fin-nm">Totaal</div><div class="fin-sub">omzet €${fmtEur(tOm)} · inkoop excl. €${fmtEur(tInEx)}</div></div><div class="fin-marge ${tMarge<0?'neg':''}">€${fmtEur(tMarge)}</div></div>`;
+  w.innerHTML=`<div class="fin-list">${groups||'<div class="hint">Nog geen projecten.</div>'}</div><div class="fin-totrow"><div class="fin-main"><div class="fin-nm">Totaal</div><div class="fin-sub">omzet €${fmtEur(tOm)} · inkoop excl. €${fmtEur(tInEx)}</div></div><div class="fin-marge ${tMarge<0?'neg':''}">€${fmtEur(tMarge)}</div></div>`;
 }
 async function pbInkLink(){ const url=((await uiPrompt('Plak een productlink (Amazon of web):'))||'').trim(); if(!/^https?:\/\//i.test(url))return; let meta={}; try{ meta=await fetch('/api/linkmeta',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url})}).then(r=>r.json()); }catch(_){} const name=(meta&&meta.title)?String(meta.title).slice(0,140):url; try{ const ins=await sb.from('project_board').insert({project_id:_pbPid,kind:'inkoop',text:name,qty:1,url,sort:_pbItems.length}).select().single(); if(ins&&ins.data)_pbItems.push(ins.data); }catch(_){} _renderProjBoard(); }
 function pbInkPaste(){ const ov=document.createElement('div'); ov.className='overlay';
