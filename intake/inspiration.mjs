@@ -63,20 +63,27 @@ async function aiThemeImage(db, b64, mime) {
   } catch (_) { return "Inspiratie"; }
 }
 
-// Een afbeelding (bv. een gedeelde Instagram-post) ophalen, AI laat thema bepalen, opslaan op het board.
+// Een afbeelding-buffer (bv. een via WhatsApp doorgestuurde foto): AI bepaalt thema, opslaan op board.
+export async function addInspirationImageBuffer(db, { buf, mime, title, fallbackThumb }) {
+  try {
+    const b64 = Buffer.from(buf).toString("base64");
+    const m = (mime || "image/jpeg").split(";")[0];
+    const theme = await aiThemeImage(db, b64, m);
+    const boardId = await ensureBoard(db, theme);
+    const ext = m.indexOf("png") >= 0 ? "png" : (m.indexOf("webp") >= 0 ? "webp" : "jpg");
+    const path = "inspiratie/" + (boardId || "los") + "/wa-" + Date.now() + "-" + Math.random().toString(36).slice(2, 7) + "." + ext;
+    const up = await db.storage.from(BUCKET).upload(path, Buffer.from(b64, "base64"), { contentType: m, upsert: true });
+    const row = { board_id: boardId, type: "image", title: title || "", sort: 0 };
+    if (!up.error) row.storage_path = path; else if (fallbackThumb) row.thumb = fallbackThumb;
+    await db.from("insp_items").insert(row);
+    return { ok: true, theme };
+  } catch (e) { return { ok: false, error: String(e.message || e) }; }
+}
+// Een afbeelding via URL ophalen (gedeelde Instagram-post e.d.), AI laat thema bepalen, opslaan op het board.
 export async function addInspirationImageUrl(db, { url, title }) {
   try {
     const buf = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0 (BegeisterBot/1.0)" } }).then(r => r.arrayBuffer());
-    const b64 = Buffer.from(buf).toString("base64");
-    const mime = "image/jpeg";
-    const theme = await aiThemeImage(db, b64, mime);
-    const boardId = await ensureBoard(db, theme);
-    const path = "inspiratie/" + (boardId || "los") + "/insta-" + Date.now() + "-" + Math.random().toString(36).slice(2, 7) + ".jpg";
-    const up = await db.storage.from(BUCKET).upload(path, Buffer.from(b64, "base64"), { contentType: mime, upsert: true });
-    const row = { board_id: boardId, type: "image", title: title || "", sort: 0 };
-    if (!up.error) row.storage_path = path; else row.thumb = url;
-    await db.from("insp_items").insert(row);
-    return { ok: true, theme };
+    return await addInspirationImageBuffer(db, { buf: Buffer.from(buf), mime: "image/jpeg", title, fallbackThumb: url });
   } catch (e) { return { ok: false, error: String(e.message || e) }; }
 }
 // Een link (Instagram/web): og:image ophalen, AI laat thema bepalen, als linktegel opslaan.
