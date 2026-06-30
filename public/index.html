@@ -657,6 +657,12 @@
   #financienWrap .fin-proj{padding-left:30px;background:rgba(255,255,255,.012)}
   #financienWrap .fin-proj .fin-nm{font-size:13.5px}
   #financienWrap .fin-pdot{width:8px;height:8px;border-radius:50%;flex:0 0 auto}
+  #financienWrap .fin-row.fin-proj.on{background:rgba(255,255,255,.06)}
+  .pb-inline{padding:18px 20px 36px}
+  @media(min-width:1001px){
+    #view-finmid,#view-finright,#view-conmid,#view-conright{height:calc(100dvh - var(--tbh,52px));overflow-y:auto;scrollbar-width:none}
+    #view-finmid::-webkit-scrollbar,#view-finright::-webkit-scrollbar,#view-conmid::-webkit-scrollbar,#view-conright::-webkit-scrollbar{display:none}
+  }
   .fin-mid-hint{padding:40px 24px;color:var(--mut2);font-size:13.5px;text-align:center;max-width:320px;margin:60px auto 0}
   #finRightWrap{padding:22px 22px}
   #finRightWrap .finr-tot{padding:0 0 18px;border-bottom:1px solid var(--line);margin-bottom:18px}
@@ -1383,7 +1389,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v73</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v74</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -1419,7 +1425,7 @@
 
       <div id="view-agenda" class="hidden"></div>
 
-      <div id="view-finmid" class="hidden"><div class="fin-mid-hint">Kies links een project om de inkoop te zien en te bewerken.</div></div>
+      <div id="view-finmid" class="hidden"><div id="finMidWrap"><div class="fin-mid-hint">Kies links een project om de inkoop te zien en te bewerken.</div></div></div>
       <div id="view-finright" class="hidden"><div id="finRightWrap"></div></div>
       <div id="view-railhint" class="hidden"><div class="fin-mid-hint" id="railHintTxt">Kies links een item om de details te zien.</div></div>
       <div id="view-conmid" class="hidden"><div id="conMidWrap"></div></div>
@@ -1883,6 +1889,11 @@ function chipTip(x){const di=dueInfo(x.it.due);return (escapeHtml(x.it.t)+' — 
 const RAILVIEWS=['bronnen','beheer','financien','contacten','archief','files'];
 function openPlanning(){ const n=document.getElementById('nav'); if(n)n.classList.remove('open'); setView(isDesk3()?'taken':'wachter'); }
 function setView(v){
+  // Sluit zwevende incol-overlays zodat ze niet in een kolom blijven hangen bij menu-wissel
+  try{ const po=document.getElementById('projOverlay'); if(po&&po.classList.contains('open')) closeProjectBoard(); }catch(_){}
+  try{ const ao=document.getElementById('apptOverlay'); if(ao&&ao.classList.contains('open')) closeApptModal(); }catch(_){}
+  // Financiën-inkoopselectie geldt alleen binnen Financiën
+  if(v!=='financien' && _pbTarget==='finmid'){ _pbTarget=null; _pbPid=null; }
   view=v;
   document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('active',b.dataset.v===v));
   // Planning is de paraplu over In afwachting · Taken · Agenda · Afspraken
@@ -2301,9 +2312,15 @@ function closeApptModal(){const ov=document.getElementById('apptOverlay');ov.cla
   try{ const pb=document.getElementById('projOverlay'); if(pb&&pb.classList.contains('open')) setTimeout(_renderProjBoard,80); }catch(_){}
 }
 // ===== Project-werkblad: bestaande taken + eigen checklist + inkopen + afspraken + notities =====
-let _pbPid=null, _pbItems=[], _pbMode='klanten';
+let _pbPid=null, _pbItems=[], _pbMode='klanten', _pbTarget=null;
+// Financiën: render het inkoopbord INLINE in kolom 2 (geen overlay)
+async function selectFinProj(pid){
+  const p=projById(pid); if(!p)return; _pbPid=pid; _pbMode='financien'; _pbTarget='finmid';
+  try{ const r=await sb.from('project_board').select('*').eq('project_id',pid).order('kind').order('sort').order('created_at'); _pbItems=(r&&r.data)?r.data:[]; }catch(_){ _pbItems=[]; }
+  _renderProjBoard(); try{ renderFinancien(); }catch(_){}
+}
 async function openProjectBoard(pid, mode){
-  const p=projById(pid); if(!p)return; _pbPid=pid;
+  const p=projById(pid); if(!p)return; _pbPid=pid; _pbTarget=null;
   _pbMode=mode||((typeof view!=='undefined'&&view==='financien')?'financien':'klanten');
   try{ const r=await sb.from('project_board').select('*').eq('project_id',pid).order('kind').order('sort').order('created_at'); _pbItems=(r&&r.data)?r.data:[]; }catch(_){ _pbItems=[]; }
   let ov=document.getElementById('projOverlay');
@@ -2315,7 +2332,9 @@ async function openProjectBoard(pid, mode){
 }
 function closeProjectBoard(){ const ov=document.getElementById('projOverlay'); if(!ov)return; ov.classList.remove('open'); setTimeout(()=>{ if(!ov.classList.contains('open')){ ov.classList.remove('incol'); ov.style.top=''; } },420); _pbPid=null; try{ _finInk=null; if(view==='financien')renderFinancien(); }catch(_){} }
 function _renderProjBoard(){
-  const ov=document.getElementById('projOverlay'); if(!ov||!_pbPid)return;
+  if(!_pbPid)return;
+  const ov=document.getElementById('projOverlay');
+  if(_pbTarget!=='finmid' && !ov)return;
   const p=projById(_pbPid); if(!p)return; const col=p.color||'#888'; const esc=escapeHtml;
   const tasks=(p.items||[]).slice().sort((a,b)=>(a.status==='done')-(b.status==='done'));
   const todos=_pbItems.filter(x=>x.kind==='todo'), inkopen=_pbItems.filter(x=>x.kind==='inkoop');
@@ -2345,14 +2364,17 @@ function _renderProjBoard(){
   const secAppt=`<div class="pb-sec"><div class="pb-h">Afspraken <button class="pb-ai" onclick="pbNewAppt()" title="Nieuwe afspraak">+ nieuw</button></div>${appts.length?appts.map(apptRow).join(''):'<div class="pb-empty">Nog geen afspraken.</div>'}</div>`;
   const secNotes=`<div class="pb-sec"><div class="pb-h">Notities</div><textarea class="pb-notes" placeholder="Vrije notities voor dit project…" onblur="pbSaveNotes(this.value)">${esc(p.notes||'')}</textarea></div>`;
   const _body=(_pbMode==='financien')?secInk:(secTaken+secCheck+secAppt+secNotes);
+  const _head=`<div class="pb-head"><span class="kbadge" style="background:${col}">${esc(initial)}</span><div class="pb-title"><b>${esc(p.client||'')}</b>${p.project?'<span> · '+esc(p.project)+'</span>':''}${_pbMode==='financien'?'<span style="color:'+col+'"> · inkoop</span>':''}</div></div>`;
+  if(_pbTarget==='finmid'){ const el=document.getElementById('finMidWrap'); if(el)el.innerHTML=`<div class="pb-inline" style="--scol:${col}">${_head}${_body}</div>`; return; }
+  if(!ov)return;
   ov.innerHTML=`<div class="modal pb-modal" style="--scol:${col};width:100%;max-width:none">
     <button class="modal-close" onclick="closeProjectBoard()" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
-    <div class="pb-head"><span class="kbadge" style="background:${col}">${esc(initial)}</span><div class="pb-title"><b>${esc(p.client||'')}</b>${p.project?'<span> · '+esc(p.project)+'</span>':''}${_pbMode==='financien'?'<span style="color:'+col+'"> · inkoop</span>':''}</div></div>
+    ${_head}
     ${_body}
   </div>`;
 }
 function d3date(s){ try{ return new Date(s).toLocaleDateString('nl-NL',{day:'numeric',month:'short'}); }catch(_){ return String(s||''); } }
-function _pbFocus(kind){ setTimeout(()=>{ const inp=document.querySelector('#projOverlay .pb-in[data-kind="'+kind+'"]'); if(inp)inp.focus(); },0); }
+function _pbFocus(kind){ setTimeout(()=>{ const sel=(_pbTarget==='finmid')?'#finMidWrap':'#projOverlay'; const inp=document.querySelector(sel+' .pb-in[data-kind="'+kind+'"]'); if(inp)inp.focus(); },0); }
 async function pbToggleTask(id,checked){ const r=findItem(id); if(r&&r.it){ r.it.status=checked?'done':'todo'; } try{ await sb.from('items').update({status:checked?'done':'todo'}).eq('id',id); }catch(_){} _renderProjBoard(); try{render();}catch(_){} }
 async function pbAddKey(e,kind){ if(e.key!=='Enter')return; e.preventDefault(); const v=(e.target.value||'').trim(); if(!v)return; e.target.value=''; try{ const r=await sb.from('project_board').insert({project_id:_pbPid,kind,text:v,sort:_pbItems.length}).select().single(); if(r&&r.data)_pbItems.push(r.data); }catch(_){} _renderProjBoard(); _pbFocus(kind); }
 async function pbToggle(id,done){ const x=_pbItems.find(i=>i.id===id); if(x)x.done=done; try{ await sb.from('project_board').update({done}).eq('id',id); }catch(_){} _renderProjBoard(); }
@@ -2383,16 +2405,19 @@ async function renderFinancien(){
       const om=(p.projectprijs!=null&&p.projectprijs!=='')?Number(p.projectprijs):null;
       const ink=_finInk[String(p.id)]||0; const inkEx=ink/(1+btw/100);
       const marge=om!=null?(om-inkEx):null; cOm+=om||0; cInEx+=inkEx; tOm+=om||0; tInEx+=inkEx;
-      return `<div class="fin-row fin-proj" onclick="openProjectBoard('${p.id}','financien')"><span class="fin-pdot" style="background:${col}"></span><div class="fin-main"><div class="fin-nm" style="color:${col}">${escapeHtml(p.project||'—')}</div><div class="fin-sub">${om!=null?'prijs €'+fmtEur(om):'<span class="fin-noprice">geen prijs</span>'} · uitgegeven €${fmtEur(inkEx)}</div></div><div class="fin-marge ${marge!=null&&marge<0?'neg':''}">${marge!=null?'€'+fmtEur(marge):'—'}</div></div>`;
+      const psel=(_pbPid===p.id&&_pbTarget==='finmid')?' on':'';
+      return `<div class="fin-row fin-proj${psel}" onclick="selectFinProj('${p.id}')"><span class="fin-pdot" style="background:${col}"></span><div class="fin-main"><div class="fin-nm" style="color:${col}">${escapeHtml(p.project||'—')}</div><div class="fin-sub">${om!=null?'prijs €'+fmtEur(om):'<span class="fin-noprice">geen prijs</span>'} · uitgegeven €${fmtEur(inkEx)}</div></div><div class="fin-marge ${marge!=null&&marge<0?'neg':''}">${marge!=null?'€'+fmtEur(marge):'—'}</div></div>`;
     }).join('');
     const cMarge=cOm-cInEx; const ic=escapeHtml(((client||'?').toString().trim()[0]||'?').toUpperCase());
     return `<div class="fin-group"><div class="fin-chead"><span class="fin-dot" style="background:${ccol}">${ic}</span><div class="fin-main"><div class="fin-nm" style="color:${ccol}">${escapeHtml(client||'—')}</div><div class="fin-sub">omzet €${fmtEur(cOm)} · uitgegeven €${fmtEur(cInEx)}</div></div><div class="fin-marge ${cMarge<0?'neg':''}">€${fmtEur(cMarge)}</div></div>${rows}</div>`;
   }).join('');
   const tMarge=tOm-tInEx;
   w.innerHTML=`<div class="fin-list">${groups||'<div class="hint">Nog geen projecten.</div>'}</div><div class="fin-totrow"><div class="fin-main"><div class="fin-nm">Totaal</div><div class="fin-sub">omzet €${fmtEur(tOm)} · inkoop excl. €${fmtEur(tInEx)}</div></div><div class="fin-marge ${tMarge<0?'neg':''}">€${fmtEur(tMarge)}</div></div>`;
+  const fmw=document.getElementById('finMidWrap');
+  if(fmw && _pbTarget!=='finmid'){ fmw.innerHTML='<div class="fin-mid-hint">Kies links een project om de inkoop te zien en te bewerken.</div>'; }
   const fr=document.getElementById('finRightWrap');
   if(fr){
-    const sel=_pbPid?projById(_pbPid):null; let detail='';
+    const sel=(_pbTarget==='finmid'&&_pbPid)?projById(_pbPid):null; let detail='';
     if(sel){ const btw=(sel.btw!=null&&sel.btw!=='')?Number(sel.btw):21; const om=(sel.projectprijs!=null&&sel.projectprijs!=='')?Number(sel.projectprijs):null; const ink=_finInk[String(sel.id)]||0; const inkEx=ink/(1+btw/100); const marge=om!=null?(om-inkEx):null; const col=sel.color||'#888';
       detail=`<div class="finr-card"><div class="finr-h" style="color:${col}">${escapeHtml(sel.client||'')}${sel.project?' · '+escapeHtml(sel.project):''}</div><div class="finr-line"><span>Omzet (excl. btw)</span><b>${om!=null?'€'+fmtEur(om):'—'}</b></div><div class="finr-line"><span>Inkoop incl. btw</span><b>€${fmtEur(ink)}</b></div><div class="finr-line"><span>Inkoop excl. btw</span><b>€${fmtEur(inkEx)}</b></div><div class="finr-line marge ${marge!=null&&marge<0?'neg':''}"><span>Marge</span><b>${marge!=null?'€'+fmtEur(marge):'—'}</b></div></div>`;
     }
