@@ -1397,7 +1397,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v75</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v76</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -2361,7 +2361,7 @@ function closeProjectBoard(){ const ov=document.getElementById('projOverlay'); i
 function _renderProjBoard(){
   if(!_pbPid)return;
   const ov=document.getElementById('projOverlay');
-  if(_pbTarget!=='finmid' && !ov)return;
+  if(_pbTarget!=='finmid' && _pbTarget!=='beheer' && !ov)return;
   const p=projById(_pbPid); if(!p)return; const col=p.color||'#888'; const esc=escapeHtml;
   const tasks=(p.items||[]).slice().sort((a,b)=>(a.status==='done')-(b.status==='done'));
   const todos=_pbItems.filter(x=>x.kind==='todo'), inkopen=_pbItems.filter(x=>x.kind==='inkoop');
