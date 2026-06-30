@@ -654,6 +654,9 @@
   .pb-notes:focus{outline:none;border-color:var(--mut2)}
   .pb-empty{font-size:13px;color:var(--mut2);padding:3px 0 5px}
   .kicon.kboard:hover{color:#fff}
+  .kli.kproj{cursor:pointer}
+  .kicon.kfctog svg{transition:transform .15s}
+  .kicon.kfctog.open svg{transform:rotate(180deg)}
   /* Project-werkblad op mobiel: beeldvullend, scrollbaar, sluitkruis vast in beeld */
   @media (max-width:1000px){
     #projOverlay{ padding:0; align-items:stretch; justify-content:stretch }
@@ -1326,7 +1329,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v67</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v68</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -3162,6 +3165,8 @@ function persistTaskOrder(){ const ids=[...document.querySelectorAll('#list .tas
 function persistWachterOrder(){ const ids=[...document.querySelectorAll('#wachterList .task')].map(c=>c.dataset.id); ids.forEach((id,i)=>{_wachterOrd[id]=i;}); try{localStorage.setItem('wachter_ord',JSON.stringify(_wachterOrd));}catch(_){} }
 
 // ---------- projectbeheer ----------
+let _kFilesOpen=new Set();
+function toggleKFiles(id){ if(_kFilesOpen.has(id))_kFilesOpen.delete(id); else _kFilesOpen.add(id); renderProjecten(); }
 function renderProjecten(){
   const rows=state.projects.filter(p=>p.id!=='__inbox__');
   const byClient={}, order=[];
@@ -3177,15 +3182,15 @@ function renderProjecten(){
       <span class="kcnt">${total}</span>
       <button class="kicon kadd" onclick="addProjectTo('${esc(client)}')" title="Project toevoegen"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 5v14M5 12h14"/></svg></button>
     </div>`;
-    const items=projs.map((p,idx)=>{const open=p.items.filter(i=>i.status!=='done').length; const last=idx===projs.length-1;
+    const items=projs.map((p,idx)=>{const open=p.items.filter(i=>i.status!=='done').length; const last=idx===projs.length-1; const fOpen=_kFilesOpen.has(p.id);
       return `<div class="kprojblock${last?' last':''}">
-        <div class="kli kproj">
-        <button class="kdot" style="background:${p.color}" onclick="openColorPicker(event,'proj','${p.id}')" title="Kleur"></button>
-        <input class="ksub" value="${escapeHtml(p.project||'')}" placeholder="Project / event" onchange="updateProject('${p.id}','project',this.value)" />
+        <div class="kli kproj" onclick="openProjectBoard('${p.id}')" title="Open werkblad">
+        <button class="kdot" style="background:${p.color}" onclick="event.stopPropagation();openColorPicker(event,'proj','${p.id}')" title="Kleur"></button>
+        <input class="ksub" value="${escapeHtml(p.project||'')}" placeholder="Project / event" onclick="event.stopPropagation()" onchange="updateProject('${p.id}','project',this.value)" />
         <span class="kcnt">${open}</span>
-        <button class="kicon kboard" onclick="openProjectBoard('${p.id}')" title="Werkblad openen"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01"/></svg></button>
-        <button class="kicon" onclick="deleteProject('${p.id}')" title="Verwijderen"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/></svg></button>
-        </div>${_filesHTML('project',p.id)}
+        <button class="kicon kfctog${fOpen?' open':''}" onclick="event.stopPropagation();toggleKFiles('${p.id}')" title="Bestanden tonen"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6l6 -6"/></svg></button>
+        <button class="kicon" onclick="event.stopPropagation();deleteProject('${p.id}')" title="Verwijderen"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/></svg></button>
+        </div>${fOpen?_filesHTML('project',p.id):''}
       </div>`;}).join('');
     return `<div class="kgroup" style="--ccol:${ccol}">${head}${items}</div>`;
   }).join('');
