@@ -638,6 +638,19 @@
   .pb-bron:hover{color:var(--s4)}
   .pb-itxlink{text-decoration:none}
   .pb-itxlink:hover{color:var(--scol,#fff)!important}
+  /* Financiën-railkolom */
+  #financienWrap .fin-row,#financienWrap .fin-totrow{display:flex;align-items:center;gap:12px;padding:11px 14px;border-bottom:1px solid var(--line)}
+  #financienWrap .fin-row{cursor:pointer}
+  #financienWrap .fin-row:hover{background:rgba(255,255,255,.03)}
+  #financienWrap .fin-dot{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#000;flex:0 0 auto}
+  #financienWrap .fin-main{flex:1;min-width:0}
+  #financienWrap .fin-nm{font-size:14px}
+  #financienWrap .fin-sub{font-size:12px;color:var(--mut2);margin-top:1px}
+  #financienWrap .fin-noprice{opacity:.6}
+  #financienWrap .fin-marge{font-size:14px;color:#5dcaa5;flex:0 0 auto;white-space:nowrap}
+  #financienWrap .fin-marge.neg{color:#e0726f}
+  #financienWrap .fin-totrow{border-top:1px solid var(--line);border-bottom:none;margin-top:4px}
+  #financienWrap .fin-totrow .fin-nm{color:var(--s4)}
   .pb-notes:focus{outline:none;border-color:var(--mut2)}
   .pb-empty{font-size:13px;color:var(--mut2);padding:3px 0 5px}
   .kicon.kboard:hover{color:#fff}
@@ -1302,6 +1315,7 @@
       <button data-v="taken" class="active" onclick="setView('taken')">Taken <span class="badge" id="nb-taken"></span></button>
       <button data-v="wachter" onclick="setView('wachter')">In afwachting <span class="badge" id="nb-wachter"></span></button>
       <button data-v="beheer" onclick="setView('beheer')">Klanten</button>
+      <button data-v="financien" onclick="setView('financien')">Financiën</button>
       <button data-v="contacten" onclick="setView('contacten')">Contacten</button>
       <button data-v="bronnen" onclick="setView('bronnen')">Bronnen <span class="badge" id="nb-bron"></span></button>
       <button data-v="files" onclick="setView('files')">Bestanden</button>
@@ -1356,6 +1370,9 @@
 
       <div id="view-beheer" class="hidden">
         <div id="beheerWrap"></div>
+      </div>
+      <div id="view-financien" class="hidden">
+        <div id="financienWrap"></div>
       </div>
       <div id="view-contacten" class="hidden">
         <div id="contactenWrap"></div>
@@ -1800,7 +1817,7 @@ function chipTip(x){const di=dueInfo(x.it.due);return (escapeHtml(x.it.t)+' — 
 
 // ---------- view switch ----------
 // welke views horen op desktop in de eerste kolom (#rail)
-const RAILVIEWS=['bronnen','beheer','contacten','archief','files'];
+const RAILVIEWS=['bronnen','beheer','financien','contacten','archief','files'];
 function setView(v){
   view=v;
   document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('active',b.dataset.v===v));
@@ -1814,13 +1831,14 @@ function setView(v){
   document.getElementById('view-wachter').classList.toggle('hidden', d3 ? true : v!=='wachter');
   document.getElementById('view-bronnen').classList.toggle('hidden', d3 ? (v!=='bronnen') : v!=='bronnen');
   document.getElementById('view-beheer').classList.toggle('hidden', d3 ? (v!=='beheer') : v!=='beheer');
+  document.getElementById('view-financien').classList.toggle('hidden', v!=='financien');
   document.getElementById('view-contacten').classList.toggle('hidden', d3 ? (v!=='contacten') : v!=='contacten');
   document.getElementById('view-archief').classList.toggle('hidden', v!=='archief');
   document.getElementById('view-files').classList.toggle('hidden', v!=='files');
   // eerste kolom (#wachterBlock) verbergen wanneer er een rail-view getoond wordt
   const wb=document.getElementById('wachterBlock'); if(wb) wb.classList.toggle('hidden', d3 && railView);
   if(typeof _ensureRailCloses==='function') _ensureRailCloses();
-  document.getElementById('viewTitle').textContent={home:'',taken:'Taken',agenda:'Agenda',afspraken:'Afspraken',wachter:'In afwachting',bronnen:'Bronnen',beheer:'Klanten & projecten',contacten:'Contacten',archief:'Archief',files:'Bestanden'}[v];
+  document.getElementById('viewTitle').textContent={home:'',taken:'Taken',agenda:'Agenda',afspraken:'Afspraken',wachter:'In afwachting',bronnen:'Bronnen',beheer:'Klanten & projecten',financien:'Financiën',contacten:'Contacten',archief:'Archief',files:'Bestanden'}[v];
   // desktop-werkblad: Taken (midden) + Agenda (rechts) tegelijk zichtbaar — op desktop ALTIJD aan
   const ws = d3;
   const main=document.querySelector('.main'); if(main) main.classList.toggle('workspace',ws);
@@ -1861,6 +1879,7 @@ function render(){
   if(view==='afspraken')renderAfspraken();
   if(view==='bronnen'||ws)renderBronnen();
   if(view==='beheer'||ws)renderProjecten();
+  if(view==='financien')renderFinancien();
   if(view==='contacten'||ws)renderContacten();
   if(view==='archief')renderArchief();
   if(view==='files')renderFiles();
@@ -2210,7 +2229,7 @@ async function openProjectBoard(pid){
   if(incol){ const tb=document.querySelector('.topbar'); ov.style.top=(tb?Math.round(tb.getBoundingClientRect().height):0)+'px'; } else ov.style.top='';
   _renderProjBoard(); requestAnimationFrame(()=>ov.classList.add('open'));
 }
-function closeProjectBoard(){ const ov=document.getElementById('projOverlay'); if(!ov)return; ov.classList.remove('open'); setTimeout(()=>{ if(!ov.classList.contains('open')){ ov.classList.remove('incol'); ov.style.top=''; } },420); _pbPid=null; }
+function closeProjectBoard(){ const ov=document.getElementById('projOverlay'); if(!ov)return; ov.classList.remove('open'); setTimeout(()=>{ if(!ov.classList.contains('open')){ ov.classList.remove('incol'); ov.style.top=''; } },420); _pbPid=null; try{ _finInk=null; if(view==='financien')renderFinancien(); }catch(_){} }
 function _renderProjBoard(){
   const ov=document.getElementById('projOverlay'); if(!ov||!_pbPid)return;
   const p=projById(_pbPid); if(!p)return; const col=p.color||'#888'; const esc=escapeHtml;
@@ -2258,7 +2277,27 @@ function _parseEur(v){ v=String(v||'').replace(/[^0-9,.\-]/g,'').replace(/\.(?=\
 async function pbSetPrice(id,val){ const price=_parseEur(val); const x=_pbItems.find(i=>i.id===id); if(x)x.price=price; try{ await sb.from('project_board').update({price}).eq('id',id); }catch(_){} _renderProjBoard(); }
 async function pbSetBudget(val){ const budget=_parseEur(val); const p=projById(_pbPid); if(p)p.budget=budget; try{ await sb.from('projects').update({budget}).eq('id',_pbPid); }catch(_){} _renderProjBoard(); }
 async function pbSetProjectprijs(val){ const v=_parseEur(val); const p=projById(_pbPid); if(p)p.projectprijs=v; try{ await sb.from('projects').update({projectprijs:v}).eq('id',_pbPid); }catch(_){} _renderProjBoard(); }
-async function pbCycleStatus(id){ const order=['te bestellen','besteld','binnen']; const x=_pbItems.find(i=>i.id===id); if(!x)return; const ni=(order.indexOf(x.status||'te bestellen')+1)%order.length; const ns=order[ni]; x.status=ns; x.done=(ns==='binnen'); try{ await sb.from('project_board').update({status:ns,done:x.done}).eq('id',id); }catch(_){} _renderProjBoard(); }
+async function pbCycleStatus(id){ const order=['te bestellen','besteld','binnen']; const x=_pbItems.find(i=>i.id===id); if(!x)return; const ni=(order.indexOf(x.status||'te bestellen')+1)%order.length; const ns=order[ni]; x.status=ns; x.done=(ns==='binnen'); try{ await sb.from('project_board').update({status:ns,done:x.done}).eq('id',id); }catch(_){} _finInk=null; _renderProjBoard(); }
+// ===== Financiën-railkolom: per project omzet − inkoop = marge, klik → projectbord =====
+let _finInk=null;
+async function renderFinancien(){
+  const w=document.getElementById('financienWrap'); if(!w)return;
+  if(_finInk===null){
+    try{ const r=await sb.from('project_board').select('project_id,price,qty').eq('kind','inkoop'); _finInk={}; (r&&r.data||[]).forEach(x=>{ const k=String(x.project_id); _finInk[k]=(_finInk[k]||0)+((x.price!=null&&x.price!=='')?Number(x.price):0)*(x.qty||1); }); }catch(_){ _finInk={}; }
+  }
+  const projs=(state.projects||[]).filter(p=>p.id!=='__inbox__');
+  let tOm=0,tInEx=0;
+  const rows=projs.map(p=>{
+    const col=p.color||'#888'; const btw=(p.btw!=null&&p.btw!=='')?Number(p.btw):21;
+    const om=(p.projectprijs!=null&&p.projectprijs!=='')?Number(p.projectprijs):null;
+    const ink=_finInk[String(p.id)]||0; const inkEx=ink/(1+btw/100);
+    const marge=om!=null?(om-inkEx):null; tOm+=om||0; tInEx+=inkEx;
+    const ic=escapeHtml((p.icon||(p.client||'?').toString().trim()[0]||'?').toString().toUpperCase());
+    return `<div class="fin-row" onclick="openProjectBoard('${p.id}')"><span class="fin-dot" style="background:${col}">${ic}</span><div class="fin-main"><div class="fin-nm" style="color:${col}">${escapeHtml(p.client||'')}${p.project?' · '+escapeHtml(p.project):''}</div><div class="fin-sub">${om!=null?'omzet €'+fmtEur(om):'<span class="fin-noprice">geen projectprijs</span>'} · inkoop €${fmtEur(ink)}</div></div><div class="fin-marge ${marge!=null&&marge<0?'neg':''}">${marge!=null?'€'+fmtEur(marge):'—'}</div></div>`;
+  }).join('');
+  const tMarge=tOm-tInEx;
+  w.innerHTML=`<div class="fin-list">${rows||'<div class="hint">Nog geen projecten.</div>'}</div><div class="fin-totrow"><div class="fin-main"><div class="fin-nm">Totaal</div><div class="fin-sub">omzet €${fmtEur(tOm)} · inkoop excl. €${fmtEur(tInEx)}</div></div><div class="fin-marge ${tMarge<0?'neg':''}">€${fmtEur(tMarge)}</div></div>`;
+}
 async function pbInkLink(){ const url=((await uiPrompt('Plak een productlink (Amazon of web):'))||'').trim(); if(!/^https?:\/\//i.test(url))return; let meta={}; try{ meta=await fetch('/api/linkmeta',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url})}).then(r=>r.json()); }catch(_){} const name=(meta&&meta.title)?String(meta.title).slice(0,140):url; try{ const ins=await sb.from('project_board').insert({project_id:_pbPid,kind:'inkoop',text:name,qty:1,url,sort:_pbItems.length}).select().single(); if(ins&&ins.data)_pbItems.push(ins.data); }catch(_){} _renderProjBoard(); }
 function pbInkPaste(){ const ov=document.createElement('div'); ov.className='overlay';
   ov.innerHTML='<div class="modal" style="width:560px;max-width:94vw"><button class="modal-close" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button><h3>Plak je winkelwagen of lijst</h3><div style="font-size:12.5px;color:var(--mut2);margin:-6px 0 12px">Open je Amazon-lijst, selecteer alles (Cmd/Ctrl+A) en plak het hier — de AI maakt er een bestellijst van.</div><textarea id="pbpaste" class="pb-notes" style="min-height:170px" placeholder="Plak hier…"></textarea><div class="foot" style="display:flex;justify-content:flex-end;gap:10px;margin-top:16px"><button class="btn ghost" id="pbpcancel">Annuleren</button><button class="btn" id="pbpok">Maak bestellijst</button></div></div>';
@@ -4131,14 +4170,15 @@ function applyLayout(){
   const main=document.querySelector('.main');
   const vBron=document.getElementById('view-bronnen');
   const vBeh=document.getElementById('view-beheer');
+  const vFin=document.getElementById('view-financien');
   const vCon=document.getElementById('view-contacten');
   const vArch=document.getElementById('view-archief');
   const vFiles=document.getElementById('view-files');
   if(mob){ wview.appendChild(wb); }
   else { rail.appendChild(wb); }
-  // Bronnen/Klanten/Contacten: desktop → eerste kolom (#rail), mobiel → terug in #main
-  if(d3){ if(vBron)rail.appendChild(vBron); if(vBeh)rail.appendChild(vBeh); if(vCon)rail.appendChild(vCon); if(vArch)rail.appendChild(vArch); if(vFiles)rail.appendChild(vFiles); }
-  else if(main){ if(vBron)main.appendChild(vBron); if(vBeh)main.appendChild(vBeh); if(vCon)main.appendChild(vCon); if(vArch)main.appendChild(vArch); if(vFiles)main.appendChild(vFiles); }
+  // Bronnen/Klanten/Financiën/Contacten: desktop → eerste kolom (#rail), mobiel → terug in #main
+  if(d3){ if(vBron)rail.appendChild(vBron); if(vBeh)rail.appendChild(vBeh); if(vFin)rail.appendChild(vFin); if(vCon)rail.appendChild(vCon); if(vArch)rail.appendChild(vArch); if(vFiles)rail.appendChild(vFiles); }
+  else if(main){ if(vBron)main.appendChild(vBron); if(vBeh)main.appendChild(vBeh); if(vFin)main.appendChild(vFin); if(vCon)main.appendChild(vCon); if(vArch)main.appendChild(vArch); if(vFiles)main.appendChild(vFiles); }
   if(!mob && (view==='home')) setView('taken');
   _ensureRailCloses();
   if(typeof _updateMobArrows==='function') _updateMobArrows();
@@ -4147,7 +4187,7 @@ function applyLayout(){
 // sluitkruis + kop in elke rail-view (Bronnen/Klanten/Contacten) op desktop; weg op mobiel
 function _ensureRailCloses(){
   const _xIc='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
-  const spec=[['view-bronnen','Bronnen'],['view-beheer','Klanten & projecten'],['view-contacten',''],['view-archief','Archief'],['view-files','Bestanden']];
+  const spec=[['view-bronnen','Bronnen'],['view-beheer','Klanten & projecten'],['view-financien','Financiën'],['view-contacten',''],['view-archief','Archief'],['view-files','Bestanden']];
   const d3=isDesk3();
   spec.forEach(([vid,label])=>{
     const v=document.getElementById(vid); if(!v)return;
