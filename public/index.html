@@ -686,7 +686,10 @@
   .pb-board-inline .pb-sec{border-top:1px solid color-mix(in srgb,var(--scol) 34%,transparent);padding-top:14px;margin-bottom:18px}
   .pb-board-inline .pb-row{align-items:flex-start;border-bottom-color:color-mix(in srgb,var(--scol) 26%,transparent)}
   .pb-board-inline .pb-row input[type=checkbox]{accent-color:var(--scol);flex:0 0 auto;margin-top:2px;width:18px;height:18px}
-  .pb-board-inline .pb-notes{color:var(--scol);border-color:color-mix(in srgb,var(--scol) 34%,transparent)}
+  .pb-board-inline .pb-notes{color:var(--scol) !important;border-color:color-mix(in srgb,var(--scol) 34%,transparent)}
+  .pb-board-inline .pb-notes::placeholder{color:var(--scol) !important;opacity:.5}
+  .pb-board-inline .pb-in{color:var(--scol) !important}
+  .pb-board-inline .pb-bud{color:var(--scol) !important}
   .pb-board-inline .pb-in{color:var(--scol);border-bottom-color:color-mix(in srgb,var(--scol) 30%,transparent)}
   .pb-board-inline .pb-in::placeholder{color:var(--scol);opacity:.55}
   .pb-board-inline .pb-bud{color:var(--scol);border-bottom-color:color-mix(in srgb,var(--scol) 40%,transparent)}
@@ -1291,6 +1294,9 @@
   .kclient{ border-bottom-color:transparent !important }
   .kgroup:not(.kcollapsed) .kclient{ border-bottom-color:var(--line) !important }
   .kgroup.kactive .kclient{ border-bottom-color:var(--ccol) !important }
+  .kgroup:hover{ border-color:var(--ccol) }
+  .kgroup:hover .kclient{ border-bottom-color:var(--ccol) !important }
+  .kgroup:hover .kname-btn,.kgroup:hover .ksub-btn,.kgroup:hover .kicon{ color:var(--ccol) !important }
 
   /* 4 · WIT — chrome-hover, "vandaag"-cel, welkomstscherm */
   .topbar *:hover{ color:var(--s4) !important }  .topbar *:hover svg,.topbar *:hover>svg{ stroke:var(--s4) !important }
@@ -1451,7 +1457,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v82</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v83</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -3467,7 +3473,6 @@ function renderProjecten(){
       <button class="kicon kpen" onclick="event.stopPropagation();kEditStart('c:${esc(client)}')" title="Naam bewerken">${_penIc}</button>
       <span class="kspring"></span>
       <button class="kicon kadd" onclick="event.stopPropagation();addProjectTo('${esc(client)}')" title="Project toevoegen"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 5v14M5 12h14"/></svg></button>
-      <button class="kicon kchev${isOpen?' open':''}" onclick="event.stopPropagation();toggleKClient('${esc(client)}')" title="Projecten in-/uitklappen">${_chevIc}</button>
     </div>`;
     const items=!isOpen?'':projs.map((p,idx)=>{const last=idx===projs.length-1; const editingP=(_kEdit===p.id); const selOn=(_pbPid===p.id&&_pbTarget==='beheer')?' on':'';
       const pname=editingP
