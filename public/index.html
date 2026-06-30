@@ -2887,6 +2887,8 @@ async function summarizeFile(fid){
   const el=document.getElementById('fsum_'+fid); if(!el)return;
   // Al een opgeslagen samenvatting? Alleen tonen/verbergen — geen nieuwe (betaalde) AI-run.
   if(f.summary && String(f.summary).trim()){ el.textContent=f.summary; el.classList.toggle('on'); return; }
+  // Google-snelkoppelingen en andere onleesbare types: niet (vergeefs) lezen — scheelt tokens.
+  if(!_isReadableForAI(f.name)){ el.classList.add('on'); el.textContent = _gLink(f.name) ? 'Google-document — geen leesbare inhoud. Open ’m via de link in Drive.' : 'Dit bestandstype kan ik (nog) niet lezen.'; return; }
   el.classList.add('on'); el.textContent='Even lezen…';
   const btn=document.querySelector(`.kfile-ai[onclick*="'${fid}'"]`);
   const _orig=btn?btn.innerHTML:null;
@@ -3417,6 +3419,12 @@ async function _fmApplyAllMoves(){
 // ===== AI-hernoemen: Klant-Project-onderwerp-JJJJMMDD-vN.ext =====
 function _aiSlug(s){ return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/&/g,'en').replace(/[^A-Za-z0-9]+/g,'-').replace(/-+/g,'-').replace(/^-|-$/g,''); }
 function _fileExt(name){ const m=String(name||'').match(/\.([A-Za-z0-9]{1,8})$/); return m?m[1].toLowerCase():''; }
+// Al door AI hernoemd (…-JJJJMMDD-vN.ext)? Dan niet opnieuw lezen.
+function _isAiNamed(name){ return /-\d{8}-v\d+\.[A-Za-z0-9]{1,8}$/.test(String(name||'')); }
+// Google-snelkoppelingen bevatten geen inhoud.
+function _gLink(name){ return /\.(gdoc|gsheet|gslides|gdraw|gform|gmap|gjam|gtable)$/i.test(String(name||'')); }
+// Alleen deze types kan de AI daadwerkelijk lezen — de rest niet downloaden/lezen (scheelt tokens).
+function _isReadableForAI(name){ return ['pdf','txt','md','rtf','csv','docx','png','jpg','jpeg','gif','webp','heic'].includes(_fileExt(name)); }
 function _fileDateYMD(f){ const d=f.created_at?new Date(f.created_at):new Date(); if(isNaN(d))return ''; return ''+d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0'); }
 function _aiStem(client,project,subject){ return [client,project,subject].map(_aiSlug).filter(Boolean).join('-'); }
 function _aiBuildName(stem,ymd,ver,ext){ return stem+(ymd?'-'+ymd:'')+'-v'+ver+(ext?'.'+ext:''); }
@@ -3432,8 +3440,9 @@ function _blobB64(blob){ return new Promise((res,rej)=>{ const r=new FileReader(
 function _mimeFromName(n){ const e=_fileExt(n); return ({pdf:'application/pdf',png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg',gif:'image/gif',webp:'image/webp',heic:'image/heic',docx:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',txt:'text/plain',md:'text/plain'})[e]||''; }
 async function fmRenameAI(){
   const btn=document.getElementById('fmRenameBtn');
-  const files=(state.files||[]).filter(f=>f.link);
-  if(!files.length){ if(btn){btn.textContent='Geen bestanden';setTimeout(()=>btn.textContent='Hernoem met AI',1600);} return; }
+  // Alleen nog niet AI-hernoemde bestanden — al verwerkte slaan we over (geen herhaald lezen).
+  const files=(state.files||[]).filter(f=>f.link && !_isAiNamed(f.name));
+  if(!files.length){ if(btn){btn.textContent='Namen al netjes';setTimeout(()=>btn.textContent='Hernoem met AI',1600);} return; }
   if(btn){ btn.disabled=true; }
   const catalog=state.projects.filter(p=>p.id!=='__inbox__').map(p=>({project_id:p.id,client:p.client||'',project:p.project||''}));
   const today=(new Date()).toISOString().slice(0,10);
@@ -3441,7 +3450,7 @@ async function fmRenameAI(){
   for(const f of files){
     done++; if(btn)btn.textContent='Leest '+done+'/'+files.length+'…';
     let subject='';
-    try{
+    if(_isReadableForAI(f.name)) try{
       const resp=await fetch('/api/fileproxy?u='+encodeURIComponent(_fvRaw(f.link)));
       const blob=await resp.blob();
       if(blob.size<=18*1024*1024){
