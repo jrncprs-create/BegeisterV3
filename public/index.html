@@ -159,7 +159,7 @@
   .cdd-cur{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .cdd-chev{flex:0 0 auto;color:var(--mut2);transition:transform .15s}
   .cdd.open .cdd-chev{transform:rotate(180deg)}
-  .cdd-menu{position:absolute;top:calc(100% + 6px);left:0;right:0;background:#161616;border:1px solid var(--line);border-radius:12px;padding:6px;z-index:60;box-shadow:0 14px 38px rgba(0,0,0,.6);display:none;max-height:62vh;overflow:auto;scrollbar-width:none}
+  .cdd-menu{position:absolute;top:calc(100% + 6px);left:0;right:0;background:#2a2a2a;border:1px solid #3a3a3a;border-radius:12px;padding:6px;z-index:60;box-shadow:0 14px 38px rgba(0,0,0,.6);display:none;max-height:62vh;overflow:auto;scrollbar-width:none}
   .cdd-menu::-webkit-scrollbar{display:none}
   .cdd.open .cdd-menu{display:block}
   .cdd-opt{display:flex;align-items:center;gap:8px;padding:9px 9px;border-radius:8px;font-size:14px;font-weight:400;color:var(--txt);cursor:pointer}
@@ -721,7 +721,7 @@
   .fv-prev{left:18px}.fv-next{right:18px}
 
   /* MODAL */
-  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:20px;z-index:60;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .35s ease,visibility 0s linear .55s}
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:20px;z-index:1000;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .35s ease,visibility 0s linear .55s}
   .overlay.open{opacity:1;visibility:visible;pointer-events:auto;transition:opacity .35s ease}
   .modal{position:relative;background:rgba(22,22,22,.62);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.12);border-radius:20px;width:520px;max-width:100%;padding:30px 28px 24px;box-shadow:0 28px 64px rgba(0,0,0,.55);transform:translateY(46px);transition:transform .55s cubic-bezier(.16,1,.3,1)}
   .overlay.open .modal{transform:translateY(0)}
@@ -1128,13 +1128,16 @@
   .task.fresh .picon{ filter:none !important }
   /* één separator onder de hele "Net binnen"-groep, met ruimte erboven en eronder */
   .fresh-sep{ height:1px; background:var(--line); margin:16px 14px 18px }
+  /* "Vandaag" / te laat: urgente taken staan bovenaan (sortering) én permanent in de klantkleur — niet dim */
+  .task.urgent .t-proj,.task.urgent .t-projsub,.task.urgent .t-title,.task.urgent .t-due{ color:var(--ccol,var(--s2)) !important }
+  .task.urgent .picon{ filter:none !important }
   /* Klanten-beheer: icoon vóór naam; naam + project + divider in klantkleur */
   .kbadge{ width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:13px;flex:0 0 auto }
   .kname,.ksub{ color:var(--ccol,var(--s1)) !important }
   .kclient{ border-bottom-color:var(--ccol,var(--line)) !important }
 
   /* 4 · WIT — chrome-hover, "vandaag"-cel, welkomstscherm */
-  .topbar:hover *{ color:var(--s4) !important }  .topbar:hover svg{ stroke:var(--s4) !important }
+  .topbar *:hover{ color:var(--s4) !important }  .topbar *:hover svg,.topbar *:hover>svg{ stroke:var(--s4) !important }
   #view-taken:hover .cb-title,.rail:hover .rail-coltitle,#view-agenda:hover .cb-title,#view-agenda:hover .cb-toggle{ color:var(--s4) !important }
   #view-agenda:hover,#view-agenda:hover *{ color:var(--s4) !important }
   .iocell.sel .ionum,#view-agenda:hover .iocell.sel .ionum,#duepop .dpc.sel{ color:#000 !important; opacity:1 !important }
@@ -1882,6 +1885,7 @@ const _SVG_OK='<svg viewBox="0 0 24 24" width="22" height="22" fill="none" strok
 const _SVG_NO='<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10.4"/><path d="M9 9l6 6M15 9l-6 6"/></svg>';
 function taskCard(p,it,idx,mode,fresh){
   const di=dueInfo(it.due);const done=it.status==='done';const col=PROJCOL[p.id]||'#888';
+  const urgent=(!done && it.due!=null && daysUntil(it.due)<=0);   // vandaag of te laat → bovenaan + normale kleur
   const piconHTML = p.id==='__inbox__' ? '<div class="picon empty"></div>' : ('<div class="picon" style="background:'+col+'">'+escapeHtml(p.icon||'')+'</div>');
   const stPill=it.status==='doing'?'<span class="pill doing">bezig</span>':(it.status==='wait'?'<span class="pill wait">wacht op</span>':(it.status==='todo'?'<span class="pill">te doen</span>':'<span class="pill">klaar</span>'));
   const srcPill=it.src?`<span class="pill src" onclick="event.stopPropagation();gotoSource('${it.src}')">↪ bron</span>`:'';
@@ -1892,7 +1896,7 @@ function taskCard(p,it,idx,mode,fresh){
     : `<div class="chk${done?' on':''}" onclick="event.stopPropagation();toggle('${it.id}')">✓</div>`;
   const drag = (mode==='taken'||mode==='wachter') ? ' draggable="true"' : '';
   const oc = mode==='wachter' ? `openModal('${it.id}','wachter')` : `openModal('${it.id}')`;
-  return `<div class="task${done?' done':''}${_animateNext?' in':''}${mode==='taken'?' tdrag':''}${mode==='wachter'?' wdrag':''}${fresh?' fresh':''}" data-id="${it.id}"${drag} style="${style}">
+  return `<div class="task${done?' done':''}${_animateNext?' in':''}${mode==='taken'?' tdrag':''}${mode==='wachter'?' wdrag':''}${fresh?' fresh':''}${urgent?' urgent':''}" data-id="${it.id}"${drag} style="${style}">
     <div class="t-top">
       ${piconHTML}
       <div class="t-proj">${escapeHtml(proj)}${psub?`<span class="t-projsub">${escapeHtml(psub)}</span>`:''}</div>
@@ -4272,8 +4276,19 @@ function _inspPreview(it){
 }
 function inspOnClientChange(){ const c=document.getElementById('insp_client').value; _fillProjectOpts(document.getElementById('insp_project'), c, null); _enhanceSelect('insp_project','project'); if(_inspPvwItem) inspOnProjectChange(_inspPvwItem.id); }
 async function inspOnProjectChange(id){ const sel=document.getElementById('insp_project'); const pid=sel?sel.value:''; const real=(pid&&pid!=='__none__'&&pid!=='__new__'&&pid!=='')?pid:null; const it=_inspItems.find(x=>String(x.id)===String(id)); if(it)it.project_id=real; try{ await sb.from('insp_items').update({project_id:real}).eq('id',id); }catch(_){} }
-function _fillInspBoardOpts(sel,boardId){ if(!sel)return; sel.innerHTML=_inspBoards.map(b=>`<option value="${b.id}">${escapeHtml(b.name||'—')}</option>`).join(''); if(boardId!=null)sel.value=boardId; _enhanceSelect(sel,'board'); }
-async function inspOnBoardChange(id){ const sel=document.getElementById('insp_board'); const bid=sel?sel.value:''; if(!bid)return; const it=_inspItems.find(x=>String(x.id)===String(id)); if(!it||String(it.board_id)===String(bid))return; it.board_id=bid; try{ await sb.from('insp_items').update({board_id:bid}).eq('id',id); }catch(_){} renderInsp(); }
+function _fillInspBoardOpts(sel,boardId){ if(!sel)return; sel.innerHTML=_inspBoards.map(b=>`<option value="${b.id}">${escapeHtml(b.name||'—')}</option>`).join('')+'<option value="__newcat__">+ Nieuwe categorie…</option>'; if(boardId!=null)sel.value=boardId; _enhanceSelect(sel,'board'); }
+async function inspOnBoardChange(id){
+  const sel=document.getElementById('insp_board'); const bid=sel?sel.value:''; const it=_inspItems.find(x=>String(x.id)===String(id)); if(!it)return;
+  if(bid==='__newcat__'){
+    const name=((await uiPrompt('Naam nieuwe categorie:'))||'').trim();
+    if(!name){ _fillInspBoardOpts(sel, it.board_id); return; }
+    let nb=null; try{ const r=await sb.from('insp_boards').insert({name,sort:_inspBoards.length}).select().single(); if(r&&r.data){ nb=r.data; _inspBoards.push(nb); } }catch(_){}
+    if(nb){ it.board_id=nb.id; try{ await sb.from('insp_items').update({board_id:nb.id}).eq('id',id); }catch(_){} _fillInspBoardOpts(sel, nb.id); renderInsp(); }
+    else { _fillInspBoardOpts(sel, it.board_id); }
+    return;
+  }
+  if(!bid||String(it.board_id)===String(bid))return; it.board_id=bid; try{ await sb.from('insp_items').update({board_id:bid}).eq('id',id); }catch(_){} renderInsp();
+}
 async function inspDelItem(id){ _inspItems=_inspItems.filter(x=>String(x.id)!==String(id)); try{ await sb.from('insp_items').delete().eq('id',id); }catch(_){} renderInsp(); }
 function dovOpenClient(c){ closeDayOverview(); try{ const p=(state.projects||[]).find(x=>x.client===c&&x.id!=='__inbox__'); setView('taken'); if(p){ activeTab=p.id; render(); } }catch(_){} }
 function maybeShowDayOverview(){ try{ const k='dayview_'+iso(TODAY); if(localStorage.getItem(k))return; localStorage.setItem(k,'1'); }catch(_){} openDayOverview(); }
