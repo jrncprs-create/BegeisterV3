@@ -80,19 +80,20 @@ async function aiThemeImage(db, b64, mime) {
 }
 
 // Een afbeelding-buffer (bv. een via WhatsApp doorgestuurde foto): AI bepaalt thema, opslaan op board.
-export async function addInspirationImageBuffer(db, { buf, mime, title, fallbackThumb }) {
+export async function addInspirationImageBuffer(db, { buf, mime, title, fallbackThumb, theme }) {
   try {
     const b64 = Buffer.from(buf).toString("base64");
     const m = (mime || "image/jpeg").split(";")[0];
-    const theme = await aiThemeImage(db, b64, m);
-    const boardId = await ensureBoard(db, theme);
+    // Meegegeven thema (los woord bij de drop) krijgt voorrang; anders laat AI het bepalen.
+    const th = (theme && String(theme).trim()) ? String(theme).trim() : await aiThemeImage(db, b64, m);
+    const boardId = await ensureBoard(db, th);
     const ext = m.indexOf("png") >= 0 ? "png" : (m.indexOf("webp") >= 0 ? "webp" : "jpg");
     const path = "inspiratie/" + (boardId || "los") + "/wa-" + Date.now() + "-" + Math.random().toString(36).slice(2, 7) + "." + ext;
     const up = await db.storage.from(BUCKET).upload(path, Buffer.from(b64, "base64"), { contentType: m, upsert: true });
     const row = { board_id: boardId, type: "image", title: title || "", sort: 0 };
     if (!up.error) row.storage_path = path; else if (fallbackThumb) row.thumb = fallbackThumb;
     await db.from("insp_items").insert(row);
-    return { ok: true, theme };
+    return { ok: true, theme: th };
   } catch (e) { return { ok: false, error: String(e.message || e) }; }
 }
 // Een afbeelding via URL ophalen (gedeelde Instagram-post e.d.), AI laat thema bepalen, opslaan op het board.
@@ -103,14 +104,15 @@ export async function addInspirationImageUrl(db, { url, title }) {
   } catch (e) { return { ok: false, error: String(e.message || e) }; }
 }
 // Een link (Instagram/web): og:image ophalen, AI laat thema bepalen, als linktegel opslaan.
-export async function addInspirationLink(db, { url }) {
+export async function addInspirationLink(db, { url, theme }) {
   try {
     const meta = await fetchOg(url);
-    const theme = await aiThemeText(db, ((meta.title || "") + " " + url).trim());
-    const boardId = await ensureBoard(db, theme);
+    // Meegegeven thema (los woord bij de drop) krijgt voorrang; anders laat AI het bepalen.
+    const th = (theme && String(theme).trim()) ? String(theme).trim() : await aiThemeText(db, ((meta.title || "") + " " + url).trim());
+    const boardId = await ensureBoard(db, th);
     const isVideo = !!meta.video || /\/(reel|tv)\//i.test(url);
     const imgs = (meta.images && meta.images.length > 1) ? meta.images : null;
     await db.from("insp_items").insert({ board_id: boardId, type: "link", url, thumb: meta.image || "", title: meta.title || url, images: imgs, video: isVideo, sort: 0 });
-    return { ok: true, theme };
+    return { ok: true, theme: th };
   } catch (e) { return { ok: false, error: String(e.message || e) }; }
 }

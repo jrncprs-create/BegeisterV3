@@ -161,17 +161,19 @@ export async function handleEvent(body) {
           if (INSP_RE.test(rawCap) || INSTA_RE.test(rawCap)) {
             let theme = "Inspiratie";
             const inspUrl = (rawCap.match(INSTA_RE) || rawCap.match(URL_RE) || [])[0] || "";
-            const inspTitle = rawCap.replace(/(^|[\s#@.,;:!?])insp\w*/ig, " ").replace(/\s+/g, " ").trim();
+            // Los woord dat je meestuurt (zonder de "insp"-trigger en zonder de link) wordt het thema/de map.
+            let themeHint = rawCap.replace(/https?:\/\/[^\s<>()"']+/ig, " ").replace(/(^|[\s#@.,;:!?])insp\w*/ig, " ").replace(/[#@]/g, " ").replace(/\s+/g, " ").trim();
+            if (themeHint) themeHint = themeHint.charAt(0).toUpperCase() + themeHint.slice(1);
             const inspMediaId = msg.type === "image" ? (msg.image && msg.image.id)
               : msg.type === "document" ? (msg.document && msg.document.id)
               : msg.type === "video" ? (msg.video && msg.video.id) : null;
             try {
               const media = (inspMediaId && WA_TOKEN) ? await fetchMedia(inspMediaId) : null;
               if (media && /^image\//.test(media.mime)) {
-                const r = await addInspirationImageBuffer(db, { buf: Buffer.from(media.b64, "base64"), mime: media.mime, title: inspTitle });
+                const r = await addInspirationImageBuffer(db, { buf: Buffer.from(media.b64, "base64"), mime: media.mime, title: themeHint || "", theme: themeHint || null });
                 theme = (r && r.theme) || theme;
               } else if (inspUrl) {
-                const r = await addInspirationLink(db, { url: inspUrl });
+                const r = await addInspirationLink(db, { url: inspUrl, theme: themeHint || null });
                 theme = (r && r.theme) || theme;
               }
             } catch (e) { console.error("wa-insp:", e.message); }
