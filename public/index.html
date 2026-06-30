@@ -699,6 +699,11 @@
   .pb-board-inline .pb-chk:hover{opacity:1}
   .pb-board-inline .pb-donerow .pb-chk{color:var(--mut2)}
   .pb-board-inline .pb-trow,.pb-board-inline .pb-wait,.pb-board-inline .pb-donerow{cursor:default}
+  .pb-board-inline .pb-tx{flex:1 1 auto;min-width:0}
+  .pb-edit{background:transparent;border:none;color:var(--scol);opacity:0;cursor:pointer;padding:2px;margin-left:8px;flex:0 0 auto;display:inline-flex;line-height:0;transition:opacity .15s}
+  .pb-board-inline .pb-row:hover .pb-edit{opacity:.75}
+  .pb-edit:hover{opacity:1 !important}
+  .pb-board-inline .pb-colL .pb-sec:first-child,.pb-board-inline .pb-colR .pb-sec:first-child{border-top:none;padding-top:2px}
   .pb-hadd{background:transparent;border:none;color:var(--scol,var(--mut2));font-size:21px;line-height:1;cursor:pointer;padding:0 2px;display:inline-flex;align-items:center;justify-content:center;margin-left:auto;opacity:.85}
   .pb-hadd:hover{opacity:1}
   .pb-board-inline .pb-h{display:flex;align-items:center;gap:8px}
@@ -1458,7 +1463,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v84</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v85</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -2437,12 +2442,12 @@ function _renderProjBoard(){
   const appts=(state.appointments||[]).filter(a=>String(a.projectId)===String(_pbPid)).sort((a,b)=>String(a.date||'').localeCompare(String(b.date||'')));
   const initial=(p.icon||(p.client||'?').trim()[0]||'?').toUpperCase();
   const _pbChk=(checked)=>`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="5.5"/>${checked?'<path d="M8 12.4l2.7 2.7L16.5 9"/>':''}</svg>`;
-  const taskRow=(it)=>`<div class="pb-row pb-trow" data-tid="${it.id}"><button class="pb-chk" onclick="pbArchiveTask('${it.id}')" title="Afvinken">${_pbChk(false)}</button><span class="pb-tx">${esc(it.t||'')}</span></div>`;
-  const waitRow=(it)=>`<div class="pb-row pb-wait" data-tid="${it.id}"><button class="pb-chk" onclick="pbArchiveTask('${it.id}')" title="Afvinken">${_pbChk(false)}</button><span class="pb-tx">${esc(it.t||'')}</span></div>`;
+  const taskRow=(it)=>`<div class="pb-row pb-trow" data-tid="${it.id}"><button class="pb-chk" onclick="pbArchiveTask('${it.id}')" title="Afvinken">${_pbChk(false)}</button><span class="pb-tx">${esc(it.t||'')}</span><button class="pb-edit" onclick="openModal('${it.id}')" title="Bewerken">${_penIc}</button></div>`;
+  const waitRow=(it)=>`<div class="pb-row pb-wait" data-tid="${it.id}"><button class="pb-chk" onclick="pbArchiveTask('${it.id}')" title="Afvinken">${_pbChk(false)}</button><span class="pb-tx">${esc(it.t||'')}</span><button class="pb-edit" onclick="openModal('${it.id}','wachter')" title="Bewerken">${_penIc}</button></div>`;
   const waitT=(p.items||[]).filter(i=>i.status==='wait');
   const takenT=(p.items||[]).filter(i=>i.status!=='done'&&i.status!=='wait');
   const doneT=(p.items||[]).filter(i=>i.status==='done');
-  const doneRow=(it)=>`<div class="pb-row pb-donerow"><button class="pb-chk" onclick="pbUncheckTask('${it.id}')" title="Terugzetten">${_pbChk(true)}</button><span class="pb-tx done">${esc(it.t||'')}</span></div>`;
+  const doneRow=(it)=>`<div class="pb-row pb-donerow"><button class="pb-chk" onclick="pbUncheckTask('${it.id}')" title="Terugzetten">${_pbChk(true)}</button><span class="pb-tx done">${esc(it.t||'')}</span><button class="pb-edit" onclick="openModal('${it.id}')" title="Bewerken">${_penIc}</button></div>`;
   const cbRow=(x)=>`<label class="pb-row"><input type="checkbox" ${x.done?'checked':''} onchange="pbToggle('${x.id}',this.checked)"><span class="pb-tx${x.done?' done':''}">${esc(x.text)}</span><button class="pb-del" onclick="event.preventDefault();pbDel('${x.id}')" title="Verwijderen">×</button></label>`;
   const _lnkIc='<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 15l6-6"/><path d="M11 6l1-1a3.5 3.5 0 015 5l-1 1"/><path d="M13 18l-1 1a3.5 3.5 0 01-5-5l1-1"/></svg>';
   const _stCol={'te bestellen':['rgba(186,117,23,.16)','#d8a64a'],'besteld':['rgba(24,95,165,.2)','#7db0e6']};
@@ -2452,7 +2457,7 @@ function _renderProjBoard(){
     const nm=x.url?`<a class="pb-tx${dn} pb-itxlink" href="${esc(x.url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Open bij verkoper">${inner}</a>`:`<span class="pb-tx${dn}">${inner}</span>`;
     const bron=x.source_id?`<button class="pb-bron" title="Naar bron" onclick="event.preventDefault();gotoSource('${x.source_id}')">↳ bron</button>`:'';
     return `<div class="pb-row pb-ink">${nm}${bron}<button class="pb-stat" style="background:${sc[0]};color:${sc[1]}" onclick="event.preventDefault();pbCycleStatus('${x.id}')" title="Klik om status te wijzigen">${st}</button><input class="pb-price" type="text" inputmode="decimal" value="${pr!=null?String(pr).replace('.',','):''}" placeholder="€" onclick="event.stopPropagation()" onchange="pbSetPrice('${x.id}',this.value)"><button class="pb-del" onclick="event.preventDefault();pbDel('${x.id}')" title="Verwijderen">×</button></div>`; };
-  const apptRow=(a)=>{ const d=a.date?d3date(a.date):''; return `<div class="pb-row pb-appt" onclick="openApptModal('${a.id}')"><span class="pb-tx">${esc(a.t||'Afspraak')}</span><span class="pb-when">${esc(d)}${a.start?' · '+esc(String(a.start).slice(0,5)):''}</span></div>`; };
+  const apptRow=(a)=>{ const d=a.date?d3date(a.date):''; return `<div class="pb-row pb-appt"><span class="pb-tx">${esc(a.t||'Afspraak')}</span><span class="pb-when">${esc(d)}${a.start?' · '+esc(String(a.start).slice(0,5)):''}</span><button class="pb-edit" onclick="openApptModal('${a.id}')" title="Bewerken">${_penIc}</button></div>`; };
   const secWait=`<div class="pb-sec"><div class="pb-h">In afwachting <button class="pb-hadd" onclick="openModal(null,'wachter','wait','${_pbPid}')" title="Toevoegen">+</button></div>${waitT.length?waitT.map(waitRow).join(''):'<div class="pb-empty">Niets in afwachting.</div>'}</div>`;
   const secTaken=`<div class="pb-sec"><div class="pb-h">Taken <button class="pb-hadd" onclick="openModal(null,null,'todo','${_pbPid}')" title="Toevoegen">+</button></div>${takenT.length?takenT.map(taskRow).join(''):'<div class="pb-empty">Geen actiepunten.</div>'}</div>`;
   const secDone=doneT.length?`<div class="pb-sec pb-donesec"><div class="pb-h pb-doneh${_pbDoneOpen?' open':''}" onclick="pbToggleDone()"><span class="pb-donelead"><span class="pb-donechk">✓</span> Afgevinkt <span class="pb-donecnt">${doneT.length}</span></span><span class="pb-donechev">${_chevIc}</span></div>${_pbDoneOpen?doneT.map(doneRow).join(''):''}</div>`:'';
