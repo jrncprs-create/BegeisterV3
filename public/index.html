@@ -659,9 +659,17 @@
   #financienWrap .fin-pdot{width:8px;height:8px;border-radius:50%;flex:0 0 auto}
   #financienWrap .fin-row.fin-proj.on{background:rgba(255,255,255,.06)}
   .pb-inline{padding:18px 20px 36px}
+  .pb-inline-close{display:inline-flex;align-items:center;gap:5px;background:transparent;border:1px solid var(--line);color:var(--mut2);border-radius:8px;padding:6px 12px;font-size:12.5px;cursor:pointer;margin-bottom:14px}
+  .pb-inline-close:hover{background:rgba(255,255,255,.05);color:var(--txt)}
+  .kli.kproj.on{background:rgba(255,255,255,.05)}
   @media(min-width:1001px){
     #view-finmid,#view-finright,#view-conmid,#view-conright{height:calc(100dvh - var(--tbh,52px));overflow-y:auto;scrollbar-width:none}
     #view-finmid::-webkit-scrollbar,#view-finright::-webkit-scrollbar,#view-conmid::-webkit-scrollbar,#view-conright::-webkit-scrollbar{display:none}
+    #view-beheerboard{grid-column:1 / -1;height:calc(100dvh - var(--tbh,52px));overflow-y:auto;scrollbar-width:none}
+    #view-beheerboard::-webkit-scrollbar{display:none}
+    .pb-board-inline{max-width:1080px}
+    .pb-board-inline .pb-cols{columns:2;column-gap:30px}
+    .pb-board-inline .pb-cols .pb-sec{break-inside:avoid;-webkit-column-break-inside:avoid;margin-bottom:18px}
   }
   .fin-mid-hint{padding:40px 24px;color:var(--mut2);font-size:13.5px;text-align:center;max-width:320px;margin:60px auto 0}
   #finRightWrap{padding:22px 22px}
@@ -1389,7 +1397,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v74</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v75</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -1430,6 +1438,7 @@
       <div id="view-railhint" class="hidden"><div class="fin-mid-hint" id="railHintTxt">Kies links een item om de details te zien.</div></div>
       <div id="view-conmid" class="hidden"><div id="conMidWrap"></div></div>
       <div id="view-conright" class="hidden"><div id="conRightWrap"></div></div>
+      <div id="view-beheerboard" class="hidden"><div id="beheerBoardWrap"></div></div>
 
       <div id="view-afspraken" class="hidden"></div>
 
@@ -1894,6 +1903,7 @@ function setView(v){
   try{ const ao=document.getElementById('apptOverlay'); if(ao&&ao.classList.contains('open')) closeApptModal(); }catch(_){}
   // Financiën-inkoopselectie geldt alleen binnen Financiën
   if(v!=='financien' && _pbTarget==='finmid'){ _pbTarget=null; _pbPid=null; }
+  if(v!=='beheer' && _pbTarget==='beheer'){ _pbTarget=null; _pbPid=null; }
   view=v;
   document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('active',b.dataset.v===v));
   // Planning is de paraplu over In afwachting · Taken · Agenda · Afspraken
@@ -1932,10 +1942,12 @@ function setView(v){
     if(cm)cm.classList.toggle('hidden',v!=='contacten');
     if(crt)crt.classList.toggle('hidden',v!=='contacten');
     const _railHintViews=['beheer','bronnen','archief'];
-    const rh=document.getElementById('view-railhint'); if(rh)rh.classList.toggle('hidden',!_railHintViews.includes(v));
+    const beheerBoardOn=(v==='beheer' && _pbTarget==='beheer' && !!_pbPid);
+    const bb=document.getElementById('view-beheerboard'); if(bb)bb.classList.toggle('hidden',!beheerBoardOn);
+    const rh=document.getElementById('view-railhint'); if(rh)rh.classList.toggle('hidden', !(_railHintViews.includes(v) && !beheerBoardOn));
     const rht=document.getElementById('railHintTxt'); if(rht)rht.textContent=(v==='beheer')?'Kies links een project om het werkblad te openen.':(v==='bronnen')?'Kies links een bron om de preview te zien.':'Kies links een item om de details te zien.';
   } else {
-    ['view-finmid','view-finright','view-railhint','view-conmid','view-conright'].forEach(id=>{const e=document.getElementById(id);if(e)e.classList.add('hidden');});
+    ['view-finmid','view-finright','view-railhint','view-conmid','view-conright','view-beheerboard'].forEach(id=>{const e=document.getElementById(id);if(e)e.classList.add('hidden');});
   }
   const mh=document.querySelector('.main-head'); if(mh) mh.style.display = (v==='home'||ws) ? 'none' : 'flex';
   if(typeof closePlus==='function') closePlus();
@@ -2309,15 +2321,30 @@ function openApptModal(id, presetPid){
   ov.classList.add('open');
 }
 function closeApptModal(){const ov=document.getElementById('apptOverlay');ov.classList.remove('open');setTimeout(()=>{if(!ov.classList.contains('open')){ov.classList.remove('incol');ov.style.top='';apptEditId=null;}},560);
-  try{ const pb=document.getElementById('projOverlay'); if(pb&&pb.classList.contains('open')) setTimeout(_renderProjBoard,80); }catch(_){}
+  try{ const pb=document.getElementById('projOverlay'); if((pb&&pb.classList.contains('open'))||(_pbTarget&&_pbPid)) setTimeout(_renderProjBoard,80); }catch(_){}
 }
 // ===== Project-werkblad: bestaande taken + eigen checklist + inkopen + afspraken + notities =====
 let _pbPid=null, _pbItems=[], _pbMode='klanten', _pbTarget=null;
 // Financiën: render het inkoopbord INLINE in kolom 2 (geen overlay)
 async function selectFinProj(pid){
+  if(!isDesk3()){ return openProjectBoard(pid,'financien'); }
   const p=projById(pid); if(!p)return; _pbPid=pid; _pbMode='financien'; _pbTarget='finmid';
   try{ const r=await sb.from('project_board').select('*').eq('project_id',pid).order('kind').order('sort').order('created_at'); _pbItems=(r&&r.data)?r.data:[]; }catch(_){ _pbItems=[]; }
   _renderProjBoard(); try{ renderFinancien(); }catch(_){}
+}
+// Klanten: render het volledige projectbord INLINE over kolom 2+3 (geen overlay)
+async function selectBeheerProj(pid){
+  if(!isDesk3()){ return openProjectBoard(pid,'klanten'); }
+  const p=projById(pid); if(!p)return; _pbPid=pid; _pbMode='klanten'; _pbTarget='beheer';
+  try{ const r=await sb.from('project_board').select('*').eq('project_id',pid).order('kind').order('sort').order('created_at'); _pbItems=(r&&r.data)?r.data:[]; }catch(_){ _pbItems=[]; }
+  const bb=document.getElementById('view-beheerboard'); if(bb)bb.classList.remove('hidden');
+  const rh=document.getElementById('view-railhint'); if(rh)rh.classList.add('hidden');
+  _renderProjBoard(); try{ renderProjecten(); }catch(_){}
+}
+function closeBeheerBoard(){ _pbTarget=null; _pbPid=null;
+  const bb=document.getElementById('view-beheerboard'); if(bb)bb.classList.add('hidden');
+  if(isDesk3()){ const rh=document.getElementById('view-railhint'); if(rh&&view==='beheer')rh.classList.remove('hidden'); }
+  try{ renderProjecten(); }catch(_){}
 }
 async function openProjectBoard(pid, mode){
   const p=projById(pid); if(!p)return; _pbPid=pid; _pbTarget=null;
@@ -2366,6 +2393,7 @@ function _renderProjBoard(){
   const _body=(_pbMode==='financien')?secInk:(secTaken+secCheck+secAppt+secNotes);
   const _head=`<div class="pb-head"><span class="kbadge" style="background:${col}">${esc(initial)}</span><div class="pb-title"><b>${esc(p.client||'')}</b>${p.project?'<span> · '+esc(p.project)+'</span>':''}${_pbMode==='financien'?'<span style="color:'+col+'"> · inkoop</span>':''}</div></div>`;
   if(_pbTarget==='finmid'){ const el=document.getElementById('finMidWrap'); if(el)el.innerHTML=`<div class="pb-inline" style="--scol:${col}">${_head}${_body}</div>`; return; }
+  if(_pbTarget==='beheer'){ const el=document.getElementById('beheerBoardWrap'); if(el)el.innerHTML=`<div class="pb-inline pb-board-inline" style="--scol:${col}"><button class="pb-inline-close" onclick="closeBeheerBoard()" title="Terug naar projecten"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6l6 6"/></svg> projecten</button>${_head}<div class="pb-cols">${_body}</div></div>`; return; }
   if(!ov)return;
   ov.innerHTML=`<div class="modal pb-modal" style="--scol:${col};width:100%;max-width:none">
     <button class="modal-close" onclick="closeProjectBoard()" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
@@ -3339,7 +3367,7 @@ function renderProjecten(){
     </div>`;
     const items=projs.map((p,idx)=>{const open=p.items.filter(i=>i.status!=='done').length; const last=idx===projs.length-1; const fOpen=_kFilesOpen.has(p.id);
       return `<div class="kprojblock${last?' last':''}">
-        <div class="kli kproj" onclick="openProjectBoard('${p.id}')" title="Open werkblad">
+        <div class="kli kproj${(_pbPid===p.id&&_pbTarget==='beheer')?' on':''}" onclick="selectBeheerProj('${p.id}')" title="Open werkblad">
         <button class="kdot" style="background:${p.color}" onclick="event.stopPropagation();openColorPicker(event,'proj','${p.id}')" title="Kleur"></button>
         <input class="ksub" value="${escapeHtml(p.project||'')}" placeholder="Project / event" onclick="event.stopPropagation()" onchange="updateProject('${p.id}','project',this.value)" />
         <span class="kcnt">${open}</span>
