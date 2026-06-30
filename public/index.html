@@ -962,17 +962,18 @@
     .welcome-overlay #chatThread{padding-bottom:88px}
     .welcome-overlay.chatting #homeIntro{display:none}
     .welcome-overlay.chatting #welcomeChat{transform:none}
-    /* mobiel menu: Klanten bovenaan > In afwachting > Taken > Afspraken > Agenda > Bestanden > Contacten > Archief; AI/Bronnen weg */
-    #nav button[data-v="home"],#nav button[data-v="bronnen"]{display:none}
-    #nav button[data-v="beheer"]{order:0}
-    #nav button[data-v="wachter"]{order:1}
-    #nav button[data-v="taken"]{order:2}
-    #nav button[data-v="afspraken"]{order:3}
-    #nav button[data-v="agenda"]{order:4}
-    #nav button[data-v="files"]{order:5}
-    #nav button[data-v="contacten"]{order:6}
-    #nav button[data-v="archief"]{order:7}
+    /* mobiel menu: Planning (paraplu: In afwachting · Taken · Agenda) · Klanten · Financiën · Bestanden · Contacten · Bronnen | Dagoverzicht · Inspiratie · Meldingen. Losse kolom-knoppen weg — Planning + swipe vervangt ze. */
+    #nav button[data-v="home"],#nav button[data-v="wachter"],#nav button[data-v="taken"],#nav button[data-v="agenda"],#nav button[data-v="afspraken"]{display:none}
+    #nav button[data-v="planning"]{order:0}
+    #nav button[data-v="beheer"]{order:1}
+    #nav button[data-v="financien"]{order:2}
+    #nav button[data-v="files"]{order:3}
+    #nav button[data-v="contacten"]{order:4}
+    #nav button[data-v="bronnen"]{order:5}
+    #nav #dayBtn{order:6}
+    #nav #inspBtn{order:7}
     #nav #pushBtn{order:8}
+    #nav button[data-v="archief"]{order:9}
     /* mobiel: preview compact (thumbnail) i.p.v. fullscreen-bleed; close-knop vast rechtsboven */
     .fv-bar{position:relative;flex-wrap:wrap;gap:8px;row-gap:8px;padding:11px 52px 11px 14px}
     .fv-name{flex:1 1 auto}
@@ -1312,24 +1313,25 @@
   <header class="topbar">
     <button class="hamburger" id="hbtn" onclick="toggleNav(event)" aria-label="Menu">☰</button>
     <nav class="topnav" id="nav">
+      <button data-v="planning" onclick="openPlanning()" title="Planning — In afwachting · Taken · Agenda">Planning</button>
       <button data-v="home" onclick="goHome()">AI</button>
-      <button data-v="agenda" onclick="setView('agenda')">Agenda</button>
-      <button data-v="afspraken" onclick="setView('afspraken')">Afspraken <span class="badge" id="nb-afspraken"></span></button>
-      <button data-v="taken" class="active" onclick="setView('taken')">Taken <span class="badge" id="nb-taken"></span></button>
       <button data-v="wachter" onclick="setView('wachter')">In afwachting <span class="badge" id="nb-wachter"></span></button>
+      <button data-v="taken" onclick="setView('taken')">Taken <span class="badge" id="nb-taken"></span></button>
+      <button data-v="afspraken" onclick="setView('afspraken')">Afspraken <span class="badge" id="nb-afspraken"></span></button>
+      <button data-v="agenda" onclick="setView('agenda')">Agenda</button>
       <button data-v="beheer" onclick="setView('beheer')">Klanten</button>
       <button data-v="financien" onclick="setView('financien')">Financiën</button>
+      <button data-v="files" onclick="setView('files')">Bestanden</button>
       <button data-v="contacten" onclick="setView('contacten')">Contacten</button>
       <button data-v="bronnen" onclick="setView('bronnen')">Bronnen <span class="badge" id="nb-bron"></span></button>
-      <button data-v="files" onclick="setView('files')">Bestanden</button>
-      <button data-v="archief" onclick="setView('archief')">Archief</button>
-      <button id="pushBtn" onclick="enablePush()" title="Meldingen aanzetten">Meldingen</button>
       <button id="dayBtn" onclick="openDayOverview()" title="Dagoverzicht">Dagoverzicht</button>
       <button id="inspBtn" onclick="openInspiration()" title="Inspiratie">Inspiratie</button>
+      <button id="pushBtn" onclick="enablePush()" title="Meldingen aanzetten">Meldingen</button>
+      <button data-v="archief" onclick="setView('archief')">Archief</button>
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v68</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v69</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -1821,9 +1823,12 @@ function chipTip(x){const di=dueInfo(x.it.due);return (escapeHtml(x.it.t)+' — 
 // ---------- view switch ----------
 // welke views horen op desktop in de eerste kolom (#rail)
 const RAILVIEWS=['bronnen','beheer','financien','contacten','archief','files'];
+function openPlanning(){ const n=document.getElementById('nav'); if(n)n.classList.remove('open'); setView(isDesk3()?'taken':'wachter'); }
 function setView(v){
   view=v;
   document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('active',b.dataset.v===v));
+  // Planning is de paraplu over In afwachting · Taken · Agenda · Afspraken
+  const _pb=document.querySelector('#nav button[data-v="planning"]'); if(_pb)_pb.classList.toggle('active',['wachter','taken','agenda','afspraken'].includes(v));
   const d3=isDesk3();
   // desktop: Taken (midden) + Agenda (rechts) staan ALTIJD; eerste kolom wisselt In afwachting ↔ rail-view
   const railView = d3 && RAILVIEWS.includes(v);     // Bronnen/Klanten/Contacten in de eerste kolom
