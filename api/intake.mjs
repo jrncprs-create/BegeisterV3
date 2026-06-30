@@ -3,6 +3,7 @@
 // vangnet (zie vercel.json). Beveiligd met CRON_SECRET in de Authorization-header.
 import { run } from "../intake/poller.mjs";
 import { verifyChallenge, handleEvent } from "../intake/whatsapp.mjs";
+import { handleInstaEvent } from "../intake/instagram.mjs";
 
 export default async function handler(req, res) {
   // --- WhatsApp Cloud API webhook ---
@@ -18,6 +19,12 @@ export default async function handler(req, res) {
   if (req.method === "POST" && req.body && req.body.object === "whatsapp_business_account") {
     res.status(200).json({ ok: true });
     Promise.resolve(handleEvent(req.body)).catch(e => console.error("whatsapp:", e.message));
+    return;
+  }
+  // --- Instagram-berichten webhook (gedeelde posts → Inspiratie) ---
+  if (req.method === "POST" && req.body && req.body.object === "instagram") {
+    res.status(200).json({ ok: true });
+    Promise.resolve(handleInstaEvent(req.body)).catch(e => console.error("instagram:", e.message));
     return;
   }
 
