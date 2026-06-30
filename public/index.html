@@ -325,6 +325,9 @@
   @keyframes rejectOut{100%{opacity:0;transform:translateX(-32px);max-height:0;margin:0;padding-top:0;padding-bottom:0;border-width:0}}
   /* subtiele stagger bij laden — van onder naar boven */
   @keyframes itemIn{0%{opacity:0;transform:translateY(22px)}100%{opacity:1;transform:translateY(0)}}
+  /* live-update: nieuw item fadet van bovenaf in (de rest schuift met FLIP soepel naar beneden) */
+  @keyframes liveIn{0%{opacity:0;transform:translateY(-26px)}100%{opacity:1;transform:translateY(0)}}
+  .liveIn{animation:liveIn .58s cubic-bezier(.33,0,.2,1) both}
   .task.in{animation:itemIn 1.25s cubic-bezier(.16,1,.3,1) both}
   .addrow{display:flex;gap:9px;margin-top:14px}
   .addrow input{flex:1;background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:10px;padding:10px 13px;font-size:14px}
@@ -2047,7 +2050,7 @@ function dayRows(di){return apptsOn(di).map(apptRow).join('')+itemsOn(di).map(ev
 
 function itemsOn(dayIso){return allItems().filter(x=>x.it.status!=='done'&&x.it.due===dayIso);}
 function evRow(x){const di=dueInfo(x.it.due);
-  return `<div class="evrow" onclick="openModal('${x.it.id}')">
+  return `<div class="evrow" data-id="${x.it.id}" onclick="openModal('${x.it.id}')">
     <span class="evdot" style="background:${PROJCOL[x.p.id]}"></span>
     <div class="evmain"><div class="evtitle">${escapeHtml(x.it.t)}</div>
     <div class="evsub">${escapeHtml(projName(x.p.id))}${projProj(x.p.id)?' — '+escapeHtml(projProj(x.p.id)):''} · ${escapeHtml(ownerText(x.it))}${x.it.due?' · '+escapeHtml(di.txt):''}</div></div>
@@ -2107,7 +2110,7 @@ function apptRow(a){
   const proj=a.projectId?projName(a.projectId):'';
   const sub=[a.kind==='bel'?'Telefonisch':'Fysiek',a.contact,a.location,proj].filter(Boolean).join(' · ');
   const time=a.start?`${escapeHtml(a.start)}${a.end?`<span class="apptend">${escapeHtml(a.end)}</span>`:''}`:'<span class="apptnotime">—</span>';
-  return `<div class="evrow appt" onclick="openApptModal('${a.id}')">
+  return `<div class="evrow appt" data-id="ap-${a.id}" onclick="openApptModal('${a.id}')">
     <div class="apptime">${time}</div>
     <span class="evdot" style="background:${col}"></span>
     <div class="evmain"><div class="evtitle">${apptKindIcon(a.kind)}<span>${escapeHtml(a.t)}</span></div>
@@ -2402,7 +2405,7 @@ function _srcConvHTML(cl){
     return `<div class="wa-msg ${side}"><div class="wa-bub" title="Tik om naar jouw kant te wisselen" onclick="event.stopPropagation();waFlip('${s.id}')">${inner}</div></div>`;
   }).join('');
   const cstyle=col?` style="--scol:${col}"`:'';
-  return `<div class="srow srow-conv" id="card_${cid}"${cstyle}>
+  return `<div class="srow srow-conv" id="card_${cid}" data-id="cv-${s0.id}"${cstyle}>
     <div class="srow-head" onclick="toggleSrc('${cid}')">
       <span class="doc-ic">${_chanGlyph('whatsapp')}</span>
       <span class="srow-main"><span class="srow-title">${escapeHtml(sender)}</span><span class="srow-sub">WhatsApp · ${cl.length} berichten</span></span>
@@ -2432,7 +2435,7 @@ function _srcRowHTML(s){
     }
     return `<div class="srow-att" onclick="openAttachment('${s.id}',${gi})"><span class="file-ic">${_fileGlyph(a.filename)}</span><span class="fname">${escapeHtml(a.filename)}</span></div>`;}).join('');
   const derHTML=derived.length?`<div class="srow-derived">${derived.length} actiepunt(en) hieruit gehaald</div>`:'';
-  return `<div class="srow" id="card_${s.id}"${scol?` style="--scol:${scol}"`:''}>
+  return `<div class="srow" id="card_${s.id}" data-id="sr-${s.id}"${scol?` style="--scol:${scol}"`:''}>
     <div class="srow-head" onclick="toggleSrc('${s.id}')">
       <span class="doc-ic">${_chanGlyph(s.channel)}</span>
       <span class="srow-main">
@@ -3845,6 +3848,68 @@ async function sbLoad(){
   if(activeTab!=='all' && !state.projects.find(x=>x.id===activeTab)) activeTab='all';
 }
 async function refresh(){ await sbLoad(); render(); }
+// ---------- live updates (Supabase Realtime + poll-vangnet) met FLIP-animatie ----------
+// Nieuw item komt vanzelf binnen (geen verversen); bestaande items zakken soepel met
+// trage ease naar beneden (FLIP) terwijl het nieuwe van bovenaf infadet (.liveIn).
+let _liveSeen=null, _liveBusy=false, _liveTimer=null;
+const LIVE_SELS=['#view-taken','#view-wachter','#view-agenda','#bronnenWrap','#inspBody'];
+function _liveCurIds(){
+  let items=[]; try{ items=allItems().map(x=>x.it.id); }catch(_){}
+  const srcs=((typeof state!=='undefined'&&state.sources)||[]).map(s=>s.id);
+  const appts=((typeof state!=='undefined'&&state.appointments)||[]).map(a=>a.id);
+  const insp=((typeof _inspItems!=='undefined'?_inspItems:[])||[]).map(x=>x.id)
+    .concat(((typeof _inspBoards!=='undefined'?_inspBoards:[])||[]).map(b=>b.id));
+  return {items,srcs,appts,insp};
+}
+function _liveCapture(){
+  return LIVE_SELS.map(sel=>{ const c=document.querySelector(sel); const m=new Map();
+    if(c && c.offsetParent!==null){ c.querySelectorAll('[data-id]').forEach(el=>{ m.set(el.getAttribute('data-id'), el.getBoundingClientRect().top); }); }
+    return {c,m}; });
+}
+function _livePlay(caps){
+  caps.forEach(({c,m})=>{ if(!c||c.offsetParent===null)return;
+    c.querySelectorAll('[data-id]').forEach(el=>{
+      const id=el.getAttribute('data-id'); const oldTop=m.get(id);
+      if(oldTop==null){ el.classList.add('liveIn'); el.addEventListener('animationend',()=>el.classList.remove('liveIn'),{once:true}); return; }
+      const dy=oldTop-el.getBoundingClientRect().top;
+      if(Math.abs(dy)>1.5){ el.style.transition='none'; el.style.transform='translateY('+dy+'px)';
+        requestAnimationFrame(()=>{ el.style.transition='transform .62s cubic-bezier(.33,0,.2,1)'; el.style.transform=''; });
+        el.addEventListener('transitionend',function h(){ el.style.transition=''; el.style.transform=''; el.removeEventListener('transitionend',h); }); }
+    });
+  });
+}
+async function liveTick(){
+  if(_liveBusy)return; _liveBusy=true;
+  try{
+    const inspOpen=(()=>{const o=document.getElementById('inspOverlay');return !!(o&&o.classList.contains('open'));})();
+    await sbLoad();
+    if(inspOpen && typeof _inspLoad==='function'){ try{ await _inspLoad(); }catch(_){} }
+    const cur=_liveCurIds();
+    if(!_liveSeen){ _liveSeen={items:new Set(cur.items),srcs:new Set(cur.srcs),appts:new Set(cur.appts),insp:new Set(cur.insp)}; return; }
+    const isNew = cur.items.some(id=>!_liveSeen.items.has(id)) || cur.srcs.some(id=>!_liveSeen.srcs.has(id))
+      || cur.appts.some(id=>!_liveSeen.appts.has(id)) || cur.insp.some(id=>!_liveSeen.insp.has(id));
+    _liveSeen={items:new Set(cur.items),srcs:new Set(cur.srcs),appts:new Set(cur.appts),insp:new Set(cur.insp)};
+    if(!isNew)return;
+    // niet ingrijpen terwijl er een modal open is of gesleept wordt — data is wel ververst, animatie volgt later
+    if(document.querySelector('.overlay.open') || document.querySelector('.task.dragging'))return;
+    const caps=_liveCapture();
+    _animateNext=false; try{ render(); }catch(_){}
+    if(inspOpen && typeof renderInsp==='function'){ try{ renderInsp(); }catch(_){} }
+    _livePlay(caps);
+  }catch(_){}
+  finally{ _liveBusy=false; }
+}
+function liveSoon(){ clearTimeout(_liveTimer); _liveTimer=setTimeout(liveTick, 450); }
+try{
+  sb.channel('begeister-live')
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'items'},liveSoon)
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'sources'},liveSoon)
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'appointments'},liveSoon)
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'insp_items'},liveSoon)
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'insp_boards'},liveSoon)
+    .subscribe();
+}catch(_){}
+setTimeout(()=>{ liveTick(); setInterval(liveTick, 20000); }, 3500);
 // ---------- verbruiksteller ----------
 let _usage=null;
 async function loadUsage(){
@@ -4119,7 +4184,7 @@ function renderInsp(){
       let stack='<div class="insp-stack'+(covers.length<3?' empty':'')+'">';
       layers.forEach((it,j)=>{ stack+= '<div class="sp" style="transform:'+_ispLayerTr(seed,j)+'">'+(it?('<img '+_ispAttr(it)+' alt="" onerror="this.style.display=\'none\'">'):'')+'</div>'; });
       stack+='</div>';
-      grid+=`<div class="insp-board" onclick="inspOpenBoard('${b.id}')">${stack}<div class="insp-bname"><button class="insp-bdel" onclick="event.stopPropagation();inspDelBoard('${b.id}')" title="Verwijderen">×</button>${escapeHtml(b.name)}<span class="insp-bcount">${items.length}</span></div></div>`;
+      grid+=`<div class="insp-board" data-id="ib-${b.id}" onclick="inspOpenBoard('${b.id}')">${stack}<div class="insp-bname"><button class="insp-bdel" onclick="event.stopPropagation();inspDelBoard('${b.id}')" title="Verwijderen">×</button>${escapeHtml(b.name)}<span class="insp-bcount">${items.length}</span></div></div>`;
     });
     grid+='</div>';
   }
@@ -4138,7 +4203,7 @@ function _renderInspGrid(body){
   else{
     grid='<div class="insp-grid">';
     items.forEach(it=>{ const attr=_ispAttr(it);
-      grid+=`<div class="insp-tile" onclick="inspItemClick('${it.id}')">`
+      grid+=`<div class="insp-tile" data-id="it-${it.id}" onclick="inspItemClick('${it.id}')">`
         +(attr?`<img ${attr} alt="" onerror="this.classList.add('ph');this.removeAttribute('src')">`:'<div class="ph"></div>')
         +(it.type==='link'?`<div class="insp-badge">${_ispIc.ig}</div>`:'')
         +`<button class="insp-tdel" onclick="event.stopPropagation();inspDelItem('${it.id}')" title="Verwijderen">×</button></div>`;
