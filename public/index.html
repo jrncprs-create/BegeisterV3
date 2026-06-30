@@ -526,6 +526,14 @@
   .ksub{background:transparent;border:none;color:var(--mut2);font-size:12.5px;padding:2px 0;width:100%;border-bottom:1px solid transparent}
   .kname:focus,.ksub:focus,.kclient .kname:focus{outline:none;background:transparent;border:none;border-bottom:1px solid var(--line);box-shadow:none}
   .kname::placeholder,.ksub::placeholder{color:var(--mut2)}
+  .kname-btn{background:transparent;border:none;color:var(--txt);font-size:16px;font-weight:700;padding:3px 0;flex:1;min-width:0;text-align:left;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ksub-btn{background:transparent;border:none;color:var(--mut2);font-size:12.5px;padding:2px 0;flex:1;min-width:0;text-align:left;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .kname-btn:hover,.ksub-btn:hover{color:var(--ccol,var(--txt))}
+  .kedit-input{flex:1;min-width:0}
+  .kicon.kpen{opacity:0;transition:opacity .15s}
+  .kclient:hover .kicon.kpen,.kli.kproj:hover .kicon.kpen{opacity:1}
+  .kicon.kchev svg{transition:transform .15s}
+  .kicon.kchev.open svg{transform:rotate(180deg)}
   .kcnt{font-size:12.5px;color:var(--mut2);flex:0 0 auto;font-variant-numeric:tabular-nums;min-width:18px;text-align:right}
   .kicon{background:transparent;border:none;color:var(--mut2);cursor:pointer;padding:7px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;border-radius:8px}
   .kicon:hover{color:var(--txt);background:var(--panel2)}
@@ -659,6 +667,10 @@
   #financienWrap .fin-pdot{width:8px;height:8px;border-radius:50%;flex:0 0 auto}
   #financienWrap .fin-row.fin-proj.on{background:rgba(255,255,255,.06)}
   .pb-inline{padding:18px 20px 36px}
+  .pb-row{transition:height .42s ease,opacity .35s ease,margin .42s,padding .42s}
+  .pb-row.archiving{overflow:hidden;position:relative;pointer-events:none}
+  .pb-archtag{position:absolute;right:6px;top:6px;font-size:10.5px;letter-spacing:.4px;color:#5dcaa5;animation:archfade .56s ease forwards}
+  @keyframes archfade{0%{opacity:0;transform:translateY(-2px)}30%{opacity:1}100%{opacity:0}}
   .pb-inline-close{display:inline-flex;align-items:center;gap:5px;background:transparent;border:1px solid var(--line);color:var(--mut2);border-radius:8px;padding:6px 12px;font-size:12.5px;cursor:pointer;margin-bottom:14px}
   .pb-inline-close:hover{background:rgba(255,255,255,.05);color:var(--txt)}
   .kli.kproj.on{background:rgba(255,255,255,.05)}
@@ -1397,7 +1409,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v76</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v77</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -2374,7 +2386,10 @@ function _renderProjBoard(){
   const marge=omzetEx!=null?(omzetEx-inkExcl):null;                                          // marge excl. btw op beide kanten
   const appts=(state.appointments||[]).filter(a=>String(a.projectId)===String(_pbPid)).sort((a,b)=>String(a.date||'').localeCompare(String(b.date||'')));
   const initial=(p.icon||(p.client||'?').trim()[0]||'?').toUpperCase();
-  const taskRow=(it)=>`<label class="pb-row"><input type="checkbox" ${it.status==='done'?'checked':''} onchange="pbToggleTask('${it.id}',this.checked)"><span class="pb-tx${it.status==='done'?' done':''}">${esc(it.t||'')}</span></label>`;
+  const taskRow=(it)=>`<label class="pb-row" data-tid="${it.id}"><input type="checkbox" onchange="pbArchiveTask('${it.id}')"><span class="pb-tx">${esc(it.t||'')}</span></label>`;
+  const waitRow=(it)=>`<label class="pb-row pb-wait" data-tid="${it.id}"><input type="checkbox" onchange="pbArchiveTask('${it.id}')"><span class="pb-tx">${esc(it.t||'')}</span></label>`;
+  const waitT=(p.items||[]).filter(i=>i.status==='wait');
+  const takenT=(p.items||[]).filter(i=>i.status!=='done'&&i.status!=='wait');
   const cbRow=(x)=>`<label class="pb-row"><input type="checkbox" ${x.done?'checked':''} onchange="pbToggle('${x.id}',this.checked)"><span class="pb-tx${x.done?' done':''}">${esc(x.text)}</span><button class="pb-del" onclick="event.preventDefault();pbDel('${x.id}')" title="Verwijderen">×</button></label>`;
   const _lnkIc='<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 15l6-6"/><path d="M11 6l1-1a3.5 3.5 0 015 5l-1 1"/><path d="M13 18l-1 1a3.5 3.5 0 01-5-5l1-1"/></svg>';
   const _stCol={'te bestellen':['rgba(186,117,23,.16)','#d8a64a'],'besteld':['rgba(24,95,165,.2)','#7db0e6']};
@@ -2385,15 +2400,17 @@ function _renderProjBoard(){
     const bron=x.source_id?`<button class="pb-bron" title="Naar bron" onclick="event.preventDefault();gotoSource('${x.source_id}')">↳ bron</button>`:'';
     return `<div class="pb-row pb-ink">${nm}${bron}<button class="pb-stat" style="background:${sc[0]};color:${sc[1]}" onclick="event.preventDefault();pbCycleStatus('${x.id}')" title="Klik om status te wijzigen">${st}</button><input class="pb-price" type="text" inputmode="decimal" value="${pr!=null?String(pr).replace('.',','):''}" placeholder="€" onclick="event.stopPropagation()" onchange="pbSetPrice('${x.id}',this.value)"><button class="pb-del" onclick="event.preventDefault();pbDel('${x.id}')" title="Verwijderen">×</button></div>`; };
   const apptRow=(a)=>{ const d=a.date?d3date(a.date):''; return `<div class="pb-row pb-appt" onclick="openApptModal('${a.id}')"><span class="pb-tx">${esc(a.t||'Afspraak')}</span><span class="pb-when">${esc(d)}${a.start?' · '+esc(String(a.start).slice(0,5)):''}</span></div>`; };
-  const secTaken=`<div class="pb-sec"><div class="pb-h">Taken</div>${tasks.length?tasks.map(taskRow).join(''):'<div class="pb-empty">Geen actiepunten.</div>'}</div>`;
+  const secWait=`<div class="pb-sec"><div class="pb-h">In afwachting</div>${waitT.length?waitT.map(waitRow).join(''):'<div class="pb-empty">Niets in afwachting.</div>'}</div>`;
+  const secTaken=`<div class="pb-sec"><div class="pb-h">Taken</div>${takenT.length?takenT.map(taskRow).join(''):'<div class="pb-empty">Geen actiepunten.</div>'}</div>`;
   const secCheck=`<div class="pb-sec"><div class="pb-h">Checklist <button class="pb-ai" onclick="pbAiTodos(this)" title="AI-startchecklist">${_tIc(_TABCHAN.asterisk,15,1.7)}<span>AI</span></button></div>${todos.map(cbRow).join('')}<div class="pb-add"><input class="pb-in" data-kind="todo" placeholder="+ todo toevoegen…" onkeydown="pbAddKey(event,'todo')"></div></div>`;
   const secInk=`<div class="pb-sec"><div class="pb-h"><span>Inkopen</span><span class="pb-hbtns"><button class="pb-ai" onclick="pbInkPaste()" title="Plak een winkelwagen of lijst — AI maakt er een bestellijst van">${_tIc(_TABCHAN.asterisk,15,1.7)}<span>lijst</span></button><button class="pb-ai" onclick="pbInkLink()" title="Toevoegen via productlink">+ link</button></span></div>${inkopen.map(inkRow).join('')}<div class="pb-add"><input class="pb-in" data-kind="inkoop" placeholder="+ inkoop toevoegen…" onkeydown="pbAddKey(event,'inkoop')"></div><div class="pb-ink-foot"><span class="pb-tot">Inkoop <b>€${fmtEur(inkTotal)}</b></span><span class="pb-budwrap">Projectprijs excl. €<input class="pb-bud" type="text" inputmode="decimal" value="${omzetEx!=null?String(omzetEx).replace('.',','):''}" placeholder="—" onchange="pbSetProjectprijs(this.value)"></span>${omzetEx!=null?`<span class="pb-rest">incl. €${fmtEur(omzetIn)}</span><span class="pb-rest ${marge<0?'over':''}">marge €${fmtEur(marge)}</span>`:''}<span class="pb-budwrap">Klantbudget €<input class="pb-bud" type="text" inputmode="decimal" value="${budget!=null?String(budget).replace('.',','):''}" placeholder="—" onchange="pbSetBudget(this.value)"></span></div></div>`;
   const secAppt=`<div class="pb-sec"><div class="pb-h">Afspraken <button class="pb-ai" onclick="pbNewAppt()" title="Nieuwe afspraak">+ nieuw</button></div>${appts.length?appts.map(apptRow).join(''):'<div class="pb-empty">Nog geen afspraken.</div>'}</div>`;
   const secNotes=`<div class="pb-sec"><div class="pb-h">Notities</div><textarea class="pb-notes" placeholder="Vrije notities voor dit project…" onblur="pbSaveNotes(this.value)">${esc(p.notes||'')}</textarea></div>`;
-  const _body=(_pbMode==='financien')?secInk:(secTaken+secCheck+secAppt+secNotes);
+  const secFiles=`<div class="pb-sec">${_filesHTML('project',_pbPid)}</div>`;
+  const _body=(_pbMode==='financien')?secInk:(secWait+secTaken+secAppt+secFiles+secNotes);
   const _head=`<div class="pb-head"><span class="kbadge" style="background:${col}">${esc(initial)}</span><div class="pb-title"><b>${esc(p.client||'')}</b>${p.project?'<span> · '+esc(p.project)+'</span>':''}${_pbMode==='financien'?'<span style="color:'+col+'"> · inkoop</span>':''}</div></div>`;
   if(_pbTarget==='finmid'){ const el=document.getElementById('finMidWrap'); if(el)el.innerHTML=`<div class="pb-inline" style="--scol:${col}">${_head}${_body}</div>`; return; }
-  if(_pbTarget==='beheer'){ const el=document.getElementById('beheerBoardWrap'); if(el)el.innerHTML=`<div class="pb-inline pb-board-inline" style="--scol:${col}"><button class="pb-inline-close" onclick="closeBeheerBoard()" title="Terug naar projecten"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6l6 6"/></svg> projecten</button>${_head}<div class="pb-cols">${_body}</div></div>`; return; }
+  if(_pbTarget==='beheer'){ const el=document.getElementById('beheerBoardWrap'); if(el)el.innerHTML=`<div class="pb-inline pb-board-inline" style="--scol:${col}">${_head}<div class="pb-cols">${_body}</div></div>`; return; }
   if(!ov)return;
   ov.innerHTML=`<div class="modal pb-modal" style="--scol:${col};width:100%;max-width:none">
     <button class="modal-close" onclick="closeProjectBoard()" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
@@ -2404,6 +2421,18 @@ function _renderProjBoard(){
 function d3date(s){ try{ return new Date(s).toLocaleDateString('nl-NL',{day:'numeric',month:'short'}); }catch(_){ return String(s||''); } }
 function _pbFocus(kind){ setTimeout(()=>{ const sel=(_pbTarget==='finmid')?'#finMidWrap':'#projOverlay'; const inp=document.querySelector(sel+' .pb-in[data-kind="'+kind+'"]'); if(inp)inp.focus(); },0); }
 async function pbToggleTask(id,checked){ const r=findItem(id); if(r&&r.it){ r.it.status=checked?'done':'todo'; } try{ await sb.from('items').update({status:checked?'done':'todo'}).eq('id',id); }catch(_){} _renderProjBoard(); try{render();}catch(_){} }
+// Afvinken op het projectbord = archiveren: korte 'Gearchiveerd'-melding, item fadet weg, de rest sluit soepel aan.
+async function pbArchiveTask(id){
+  const r=findItem(id); if(r&&r.it) r.it.status='done';
+  try{ sb.from('items').update({status:'done'}).eq('id',id); }catch(_){}
+  const sel='[data-tid="'+id+'"]'; const row=(document.querySelector('#beheerBoardWrap '+sel)||document.querySelector('#projOverlay '+sel)||document.querySelector('#finMidWrap '+sel));
+  if(row){
+    const tag=document.createElement('span'); tag.className='pb-archtag'; tag.textContent='Gearchiveerd'; row.appendChild(tag);
+    const h=row.offsetHeight; row.style.height=h+'px'; row.classList.add('archiving'); void row.getBoundingClientRect();
+    requestAnimationFrame(()=>{ row.style.height='0px'; row.style.opacity='0'; row.style.marginTop='0'; row.style.marginBottom='0'; row.style.paddingTop='0'; row.style.paddingBottom='0'; });
+    setTimeout(()=>{ _renderProjBoard(); try{render();}catch(_){} }, 560);
+  } else { _renderProjBoard(); try{render();}catch(_){} }
+}
 async function pbAddKey(e,kind){ if(e.key!=='Enter')return; e.preventDefault(); const v=(e.target.value||'').trim(); if(!v)return; e.target.value=''; try{ const r=await sb.from('project_board').insert({project_id:_pbPid,kind,text:v,sort:_pbItems.length}).select().single(); if(r&&r.data)_pbItems.push(r.data); }catch(_){} _renderProjBoard(); _pbFocus(kind); }
 async function pbToggle(id,done){ const x=_pbItems.find(i=>i.id===id); if(x)x.done=done; try{ await sb.from('project_board').update({done}).eq('id',id); }catch(_){} _renderProjBoard(); }
 async function pbDel(id){ _pbItems=_pbItems.filter(i=>i.id!==id); try{ await sb.from('project_board').delete().eq('id',id); }catch(_){} _renderProjBoard(); }
@@ -3348,8 +3377,14 @@ function persistTaskOrder(){ const ids=[...document.querySelectorAll('#list .tas
 function persistWachterOrder(){ const ids=[...document.querySelectorAll('#wachterList .task')].map(c=>c.dataset.id); ids.forEach((id,i)=>{_wachterOrd[id]=i;}); try{localStorage.setItem('wachter_ord',JSON.stringify(_wachterOrd));}catch(_){} }
 
 // ---------- projectbeheer ----------
-let _kFilesOpen=new Set();
-function toggleKFiles(id){ if(_kFilesOpen.has(id))_kFilesOpen.delete(id); else _kFilesOpen.add(id); renderProjecten(); }
+let _kClientOpen=new Set(), _kEdit=null;
+const _penIc='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4l10.5 -10.5a2.1 2.1 0 0 0 -3 -3l-10.5 10.5v3"/><path d="M13.5 6.5l3 3"/></svg>';
+const _chevIc='<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6l6 -6"/></svg>';
+function toggleKClient(c){ if(_kClientOpen.has(c))_kClientOpen.delete(c); else _kClientOpen.add(c); renderProjecten(); }
+function kEditStart(key){ _kEdit=key; renderProjecten(); setTimeout(()=>{ const el=document.querySelector('#beheerWrap .kedit-input'); if(el){ el.focus(); try{el.select();}catch(_){} } },0); }
+function kEditCancel(){ _kEdit=null; renderProjecten(); }
+async function kClientSave(oldName,val){ _kEdit=null; await renameClient(oldName,val); }
+async function kProjSave(id,val){ _kEdit=null; const v=(val||'').trim(); const p=projById(id); if(v&&p){ p.project=v; rebuildColors(); try{ await sb.from('projects').update({project:v}).eq('id',id); }catch(_){} } renderProjecten(); }
 function renderProjecten(){
   const rows=state.projects.filter(p=>p.id!=='__inbox__');
   const byClient={}, order=[];
@@ -3359,26 +3394,34 @@ function renderProjecten(){
     const projs=byClient[client];
     const total=projs.reduce((n,p)=>n+p.items.filter(i=>i.status!=='done').length,0);
     const ccol=(projs[0]&&projs[0].color)||'#888'; const initial=(String(client).trim()[0]||'?').toUpperCase();
+    const isOpen=_kClientOpen.has(client); const editingC=(_kEdit==='c:'+client);
+    const nameEl=editingC
+      ? `<input class="kname kedit-input" value="${escapeHtml(client)}" onblur="kClientSave('${esc(client)}',this.value)" onkeydown="if(event.key==='Enter')this.blur();else if(event.key==='Escape')kEditCancel()" />`
+      : `<button class="kname-btn" onclick="toggleKClient('${esc(client)}')" title="Projecten in-/uitklappen">${escapeHtml(client||'—')}</button>`;
     const head=`<div class="kclient">
       <span class="kbadge" style="background:${ccol}">${escapeHtml(initial)}</span>
-      <input class="kname" value="${escapeHtml(client)}" placeholder="Klant" onchange="renameClient('${esc(client)}',this.value)" />
+      ${nameEl}
       <span class="kcnt">${total}</span>
-      <button class="kicon kadd" onclick="addProjectTo('${esc(client)}')" title="Project toevoegen"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 5v14M5 12h14"/></svg></button>
+      <button class="kicon kpen" onclick="event.stopPropagation();kEditStart('c:${esc(client)}')" title="Naam bewerken">${_penIc}</button>
+      <button class="kicon kadd" onclick="event.stopPropagation();addProjectTo('${esc(client)}')" title="Project toevoegen"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 5v14M5 12h14"/></svg></button>
+      <button class="kicon kchev${isOpen?' open':''}" onclick="event.stopPropagation();toggleKClient('${esc(client)}')" title="Projecten in-/uitklappen">${_chevIc}</button>
     </div>`;
-    const items=projs.map((p,idx)=>{const open=p.items.filter(i=>i.status!=='done').length; const last=idx===projs.length-1; const fOpen=_kFilesOpen.has(p.id);
+    const items=!isOpen?'':projs.map((p,idx)=>{const open=p.items.filter(i=>i.status!=='done').length; const last=idx===projs.length-1; const editingP=(_kEdit===p.id); const selOn=(_pbPid===p.id&&_pbTarget==='beheer')?' on':'';
+      const pname=editingP
+        ? `<input class="ksub kedit-input" value="${escapeHtml(p.project||'')}" onblur="kProjSave('${p.id}',this.value)" onkeydown="if(event.key==='Enter')this.blur();else if(event.key==='Escape')kEditCancel()" />`
+        : `<button class="ksub-btn" onclick="selectBeheerProj('${p.id}')" title="Open werkblad">${escapeHtml(p.project||'Project / event')}</button>`;
       return `<div class="kprojblock${last?' last':''}">
-        <div class="kli kproj${(_pbPid===p.id&&_pbTarget==='beheer')?' on':''}" onclick="selectBeheerProj('${p.id}')" title="Open werkblad">
+        <div class="kli kproj${selOn}">
         <button class="kdot" style="background:${p.color}" onclick="event.stopPropagation();openColorPicker(event,'proj','${p.id}')" title="Kleur"></button>
-        <input class="ksub" value="${escapeHtml(p.project||'')}" placeholder="Project / event" onclick="event.stopPropagation()" onchange="updateProject('${p.id}','project',this.value)" />
+        ${pname}
         <span class="kcnt">${open}</span>
-        <button class="kicon kfctog${fOpen?' open':''}" onclick="event.stopPropagation();toggleKFiles('${p.id}')" title="Bestanden tonen"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6l6 -6"/></svg></button>
+        <button class="kicon kpen" onclick="event.stopPropagation();kEditStart('${p.id}')" title="Naam bewerken">${_penIc}</button>
         <button class="kicon" onclick="event.stopPropagation();deleteProject('${p.id}')" title="Verwijderen"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/></svg></button>
-        </div>${fOpen?_filesHTML('project',p.id):''}
+        </div>
       </div>`;}).join('');
     return `<div class="kgroup" style="--ccol:${ccol}">${head}${items}</div>`;
   }).join('');
-  const orgBar='<div class="org-bar"><button class="kfiles-add" onclick="newClientFromHeader()" title="Nieuwe klant"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg> Nieuwe klant</button><button class="kfiles-add" onclick="openOrganize()" title="Losse Dropbox-bestanden opruimen"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M6 1.8 0 5.7l6 3.9 6-3.9-6-3.9zm12 0-6 3.9 6 3.9 6-3.9-6-3.9zM0 13.5l6 3.9 6-3.9-6-3.9-6 3.9zm18-3.9-6 3.9 6 3.9 6-3.9-6-3.9zM6 18.6l6 3.9 6-3.9-6-3.9-6 3.9z"/></svg> Opruimen</button></div>';
-  document.getElementById('beheerWrap').innerHTML=orgBar+(html||'<div class="hint">Nog geen klanten.</div>');
+  document.getElementById('beheerWrap').innerHTML=(html||'<div class="hint">Nog geen klanten. Maak er een aan met + rechtsboven.</div>');
 }
 async function newClientFromHeader(){
   const name=((await uiPrompt('Nieuwe klant:'))||'').trim(); if(!name)return;
@@ -4378,13 +4421,17 @@ function applyLayout(){
 // sluitkruis + kop in elke rail-view (Bronnen/Klanten/Contacten) op desktop; weg op mobiel
 function _ensureRailCloses(){
   const _xIc='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+  const _plusIc='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>';
   const spec=[['view-bronnen','Bronnen'],['view-beheer','Klanten & projecten'],['view-financien','Financiën'],['view-contacten',''],['view-archief','Archief'],['view-files','Bestanden']];
   const d3=isDesk3();
   spec.forEach(([vid,label])=>{
     const v=document.getElementById(vid); if(!v)return;
+    const isBeheer=(vid==='view-beheer');
     let cl=v.querySelector(':scope > .rail-close'); let tt=v.querySelector(':scope > .rail-coltitle');
     if(d3){
-      if(!cl){ cl=document.createElement('button'); cl.className='rail-close'; cl.title='Sluiten'; cl.setAttribute('aria-label','Sluiten'); cl.innerHTML=_xIc; cl.onclick=()=>setView('taken'); v.insertBefore(cl,v.firstChild); }
+      if(!cl){ cl=document.createElement('button'); cl.className='rail-close'; v.insertBefore(cl,v.firstChild); }
+      if(isBeheer){ cl.title='Nieuwe klant'; cl.setAttribute('aria-label','Nieuwe klant'); cl.innerHTML=_plusIc; cl.onclick=()=>newClientFromHeader(); }
+      else { cl.title='Sluiten'; cl.setAttribute('aria-label','Sluiten'); cl.innerHTML=_xIc; cl.onclick=()=>setView('taken'); }
       if(label && !tt){ tt=document.createElement('div'); tt.className='rail-coltitle'; tt.textContent=label; v.insertBefore(tt, cl.nextSibling); }
       else if(!label && tt){ tt.remove(); }
     }else{
