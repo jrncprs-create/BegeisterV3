@@ -1106,7 +1106,7 @@
     .agenda-add:hover,.col-add:hover{color:#fff;transform:scale(1.12)}
     /* toevoegen speelt zich af binnen de betreffende kolom */
     .overlay.incol{background:transparent;align-items:flex-start;justify-content:stretch;padding:0;overflow-y:auto;right:auto}
-    .overlay.incol .modal{width:100%;max-width:none;border-radius:0;border:none;border-left:1px solid var(--line);min-height:100%;box-shadow:none;padding:24px 24px 32px}
+    .overlay.incol .modal{width:100%;max-width:none;border-radius:0;border:none;border-left:1px solid var(--line);min-height:100%;box-shadow:none;padding:24px 24px 32px;background:var(--bg)}
     #apptOverlay.incol{left:66.666vw;width:33.334vw}
     #overlay.incol{left:33.333vw;width:33.333vw}
     #overlay.incol.incol-left{left:0}
@@ -1351,7 +1351,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v71</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v72</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -1389,6 +1389,7 @@
 
       <div id="view-finmid" class="hidden"><div class="fin-mid-hint">Kies links een project om de inkoop te zien en te bewerken.</div></div>
       <div id="view-finright" class="hidden"><div id="finRightWrap"></div></div>
+      <div id="view-railhint" class="hidden"><div class="fin-mid-hint" id="railHintTxt">Kies links een item om de details te zien.</div></div>
 
       <div id="view-afspraken" class="hidden"></div>
 
@@ -1873,9 +1874,21 @@ function setView(v){
   // desktop-werkblad: Taken (midden) + Agenda (rechts) tegelijk zichtbaar — op desktop ALTIJD aan
   const ws = d3;
   const main=document.querySelector('.main'); if(main) main.classList.toggle('workspace',ws);
-  if(ws){ document.getElementById('view-taken').classList.remove('hidden'); document.getElementById('view-agenda').classList.remove('hidden'); }
-  if(ws){ const fp=document.getElementById('view-filespreview'); if(v==='files'){ document.getElementById('view-taken').classList.add('hidden'); if(fp)fp.classList.remove('hidden'); } else { if(fp)fp.classList.add('hidden'); } }
-  { const finOn=(ws && v==='financien'); const fm=document.getElementById('view-finmid'),frt=document.getElementById('view-finright'); if(fm)fm.classList.toggle('hidden',!finOn); if(frt)frt.classList.toggle('hidden',!finOn); if(finOn){ document.getElementById('view-taken').classList.add('hidden'); document.getElementById('view-agenda').classList.add('hidden'); } }
+  // Kolom 2/3 horen alleen bij Planning (Taken+Agenda). Elke andere pagina vult ze zelf of laat ze leeg.
+  const _planningView=['taken','agenda','wachter','afspraken'].includes(v);
+  if(ws){
+    const t=document.getElementById('view-taken'),a=document.getElementById('view-agenda'),fp=document.getElementById('view-filespreview'),fm=document.getElementById('view-finmid'),frt=document.getElementById('view-finright');
+    if(t)t.classList.toggle('hidden',!_planningView);
+    if(a)a.classList.toggle('hidden',!_planningView);
+    if(fp)fp.classList.toggle('hidden',v!=='files');
+    if(fm)fm.classList.toggle('hidden',v!=='financien');
+    if(frt)frt.classList.toggle('hidden',v!=='financien');
+    const _railHintViews=['beheer','contacten','bronnen','archief'];
+    const rh=document.getElementById('view-railhint'); if(rh)rh.classList.toggle('hidden',!_railHintViews.includes(v));
+    const rht=document.getElementById('railHintTxt'); if(rht)rht.textContent=(v==='beheer')?'Kies links een project om het werkblad te openen.':(v==='bronnen')?'Kies links een bron om de preview te zien.':(v==='contacten')?'Kies links een contact om de details te zien.':'Kies links een item om de details te zien.';
+  } else {
+    ['view-finmid','view-finright','view-railhint'].forEach(id=>{const e=document.getElementById(id);if(e)e.classList.add('hidden');});
+  }
   const mh=document.querySelector('.main-head'); if(mh) mh.style.display = (v==='home'||ws) ? 'none' : 'flex';
   if(typeof closePlus==='function') closePlus();
   if(typeof hideWelcome==='function') hideWelcome();
