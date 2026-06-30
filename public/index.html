@@ -532,8 +532,8 @@
   .kedit-input{flex:1;min-width:0}
   .kicon.kpen{opacity:0;transition:opacity .15s}
   .kclient:hover .kicon.kpen,.kli.kproj:hover .kicon.kpen{opacity:1}
-  .kicon.kchev svg{transition:transform .15s}
-  .kicon.kchev.open svg{transform:rotate(180deg)}
+  .kicon.kchev svg{transition:transform .15s;transform:rotate(180deg)}
+  .kicon.kchev.open svg{transform:rotate(0deg)}
   .kcnt{font-size:12.5px;color:var(--mut2);flex:0 0 auto;font-variant-numeric:tabular-nums;min-width:18px;text-align:right}
   .kicon{background:transparent;border:none;color:var(--mut2);cursor:pointer;padding:7px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;border-radius:8px}
   .kicon:hover{color:var(--txt);background:var(--panel2)}
@@ -671,17 +671,46 @@
   .pb-row.archiving{overflow:hidden;position:relative;pointer-events:none}
   .pb-archtag{position:absolute;right:6px;top:6px;font-size:10.5px;letter-spacing:.4px;color:#5dcaa5;animation:archfade .56s ease forwards}
   @keyframes archfade{0%{opacity:0;transform:translateY(-2px)}30%{opacity:1}100%{opacity:0}}
+  /* Projectbord — alles in de klantkleur (--scol) */
+  .pb-board-inline .pb-head b{color:var(--scol)}
+  .pb-board-inline .pb-head .pb-title span{color:var(--scol);opacity:.7}
+  .pb-board-inline .pb-h{color:var(--scol);opacity:.92}
+  .pb-board-inline .pb-tx{color:var(--scol)}
+  .pb-board-inline .pb-tx.done{color:var(--scol);opacity:.45;text-decoration:line-through}
+  .pb-board-inline .pb-empty,.pb-board-inline .pb-when,.pb-board-inline .pb-prijssub{color:var(--scol);opacity:.5}
+  .pb-board-inline .pb-sec{border-top:1px solid color-mix(in srgb,var(--scol) 22%,transparent);padding-top:14px;margin-bottom:18px}
+  .pb-board-inline .pb-row{border-bottom-color:color-mix(in srgb,var(--scol) 16%,transparent)}
+  .pb-board-inline input[type=checkbox]{accent-color:var(--scol)}
+  .pb-board-inline .pb-notes{color:var(--scol);border-color:color-mix(in srgb,var(--scol) 28%,transparent)}
+  .pb-board-inline .pb-in{color:var(--scol)}
+  .pb-board-inline .pb-in::placeholder{color:var(--scol);opacity:.4}
+  .pb-board-inline .pb-bud{color:var(--scol);border-bottom-color:color-mix(in srgb,var(--scol) 35%,transparent)}
+  .pb-hadd{background:transparent;border:1px solid color-mix(in srgb,var(--scol,#888) 35%,transparent);color:var(--scol,var(--mut2));width:24px;height:24px;border-radius:7px;font-size:16px;line-height:1;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;margin-left:auto}
+  .pb-hadd:hover{background:color-mix(in srgb,var(--scol,#888) 16%,transparent)}
+  .pb-board-inline .pb-h{display:flex;align-items:center;gap:8px}
+  /* Afgevinkt-sectie: ingeklapt, grijs */
+  .pb-board-inline .pb-donesec .pb-doneh{cursor:pointer;color:var(--mut2);opacity:1}
+  .pb-donelead{display:flex;align-items:center;gap:7px}
+  .pb-donechk{display:inline-flex;width:16px;height:16px;border-radius:4px;background:var(--mut2);color:var(--bg);align-items:center;justify-content:center;font-size:11px}
+  .pb-donecnt{color:var(--mut2);font-variant-numeric:tabular-nums}
+  .pb-donechev{margin-left:auto;color:var(--mut2);display:inline-flex;transform:rotate(180deg);transition:transform .15s}
+  .pb-doneh.open .pb-donechev{transform:rotate(0)}
+  .pb-board-inline .pb-donerow .pb-tx{color:var(--mut2);opacity:.7;text-decoration:line-through}
+  .pb-board-inline .pb-donerow input[type=checkbox]{accent-color:var(--mut2)}
+  .pb-prijsrow{display:flex;align-items:center;gap:8px;color:var(--scol);font-size:14px}
+  .pb-prijsrow .pb-bud{width:120px}
   .pb-inline-close{display:inline-flex;align-items:center;gap:5px;background:transparent;border:1px solid var(--line);color:var(--mut2);border-radius:8px;padding:6px 12px;font-size:12.5px;cursor:pointer;margin-bottom:14px}
   .pb-inline-close:hover{background:rgba(255,255,255,.05);color:var(--txt)}
-  .kli.kproj.on{background:rgba(255,255,255,.05)}
+  .kli.kproj.on .ksub-btn{color:var(--ccol)}
+  .kgroup.kactive{border-color:color-mix(in srgb,var(--ccol) 45%,transparent)}
+  .kgroup.kactive .kname-btn,.kgroup.kactive .kcnt,.kgroup.kactive .kclient .kicon{color:var(--ccol)}
   @media(min-width:1001px){
     #view-finmid,#view-finright,#view-conmid,#view-conright{height:calc(100dvh - var(--tbh,52px));overflow-y:auto;scrollbar-width:none}
     #view-finmid::-webkit-scrollbar,#view-finright::-webkit-scrollbar,#view-conmid::-webkit-scrollbar,#view-conright::-webkit-scrollbar{display:none}
     #view-beheerboard{grid-column:1 / -1;height:calc(100dvh - var(--tbh,52px));overflow-y:auto;scrollbar-width:none}
     #view-beheerboard::-webkit-scrollbar{display:none}
-    .pb-board-inline{max-width:1080px}
-    .pb-board-inline .pb-cols{columns:2;column-gap:30px}
-    .pb-board-inline .pb-cols .pb-sec{break-inside:avoid;-webkit-column-break-inside:avoid;margin-bottom:18px}
+    .pb-board-inline .pb-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 36px;align-items:start}
+    .pb-board-inline .pb-colL,.pb-board-inline .pb-colR{min-width:0}
   }
   .fin-mid-hint{padding:40px 24px;color:var(--mut2);font-size:13.5px;text-align:center;max-width:320px;margin:60px auto 0}
   #finRightWrap{padding:22px 22px}
@@ -1409,7 +1438,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v77</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v78</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -2390,6 +2419,8 @@ function _renderProjBoard(){
   const waitRow=(it)=>`<label class="pb-row pb-wait" data-tid="${it.id}"><input type="checkbox" onchange="pbArchiveTask('${it.id}')"><span class="pb-tx">${esc(it.t||'')}</span></label>`;
   const waitT=(p.items||[]).filter(i=>i.status==='wait');
   const takenT=(p.items||[]).filter(i=>i.status!=='done'&&i.status!=='wait');
+  const doneT=(p.items||[]).filter(i=>i.status==='done');
+  const doneRow=(it)=>`<label class="pb-row pb-donerow"><input type="checkbox" checked onchange="pbUncheckTask('${it.id}')"><span class="pb-tx done">${esc(it.t||'')}</span></label>`;
   const cbRow=(x)=>`<label class="pb-row"><input type="checkbox" ${x.done?'checked':''} onchange="pbToggle('${x.id}',this.checked)"><span class="pb-tx${x.done?' done':''}">${esc(x.text)}</span><button class="pb-del" onclick="event.preventDefault();pbDel('${x.id}')" title="Verwijderen">×</button></label>`;
   const _lnkIc='<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 15l6-6"/><path d="M11 6l1-1a3.5 3.5 0 015 5l-1 1"/><path d="M13 18l-1 1a3.5 3.5 0 01-5-5l1-1"/></svg>';
   const _stCol={'te bestellen':['rgba(186,117,23,.16)','#d8a64a'],'besteld':['rgba(24,95,165,.2)','#7db0e6']};
@@ -2400,17 +2431,19 @@ function _renderProjBoard(){
     const bron=x.source_id?`<button class="pb-bron" title="Naar bron" onclick="event.preventDefault();gotoSource('${x.source_id}')">↳ bron</button>`:'';
     return `<div class="pb-row pb-ink">${nm}${bron}<button class="pb-stat" style="background:${sc[0]};color:${sc[1]}" onclick="event.preventDefault();pbCycleStatus('${x.id}')" title="Klik om status te wijzigen">${st}</button><input class="pb-price" type="text" inputmode="decimal" value="${pr!=null?String(pr).replace('.',','):''}" placeholder="€" onclick="event.stopPropagation()" onchange="pbSetPrice('${x.id}',this.value)"><button class="pb-del" onclick="event.preventDefault();pbDel('${x.id}')" title="Verwijderen">×</button></div>`; };
   const apptRow=(a)=>{ const d=a.date?d3date(a.date):''; return `<div class="pb-row pb-appt" onclick="openApptModal('${a.id}')"><span class="pb-tx">${esc(a.t||'Afspraak')}</span><span class="pb-when">${esc(d)}${a.start?' · '+esc(String(a.start).slice(0,5)):''}</span></div>`; };
-  const secWait=`<div class="pb-sec"><div class="pb-h">In afwachting</div>${waitT.length?waitT.map(waitRow).join(''):'<div class="pb-empty">Niets in afwachting.</div>'}</div>`;
-  const secTaken=`<div class="pb-sec"><div class="pb-h">Taken</div>${takenT.length?takenT.map(taskRow).join(''):'<div class="pb-empty">Geen actiepunten.</div>'}</div>`;
+  const secWait=`<div class="pb-sec"><div class="pb-h">In afwachting <button class="pb-hadd" onclick="pbFocusAdd('wait')" title="Toevoegen">+</button></div>${waitT.length?waitT.map(waitRow).join(''):'<div class="pb-empty">Niets in afwachting.</div>'}<div class="pb-add"><input class="pb-in" data-akind="wait" placeholder="+ in afwachting…" onkeydown="pbAddProjTask('wait',event)"></div></div>`;
+  const secTaken=`<div class="pb-sec"><div class="pb-h">Taken <button class="pb-hadd" onclick="pbFocusAdd('todo')" title="Toevoegen">+</button></div>${takenT.length?takenT.map(taskRow).join(''):'<div class="pb-empty">Geen actiepunten.</div>'}<div class="pb-add"><input class="pb-in" data-akind="todo" placeholder="+ taak toevoegen…" onkeydown="pbAddProjTask('todo',event)"></div></div>`;
+  const secDone=doneT.length?`<div class="pb-sec pb-donesec"><div class="pb-h pb-doneh${_pbDoneOpen?' open':''}" onclick="pbToggleDone()"><span class="pb-donelead"><span class="pb-donechk">✓</span> Afgevinkt <span class="pb-donecnt">${doneT.length}</span></span><span class="pb-donechev">${_chevIc}</span></div>${_pbDoneOpen?doneT.map(doneRow).join(''):''}</div>`:'';
+  const secPrijs=`<div class="pb-sec"><div class="pb-h">Projectprijs</div><div class="pb-prijsrow">€ <input class="pb-bud" type="text" inputmode="decimal" value="${omzetEx!=null?String(omzetEx).replace('.',','):''}" placeholder="—" onchange="pbSetProjectprijs(this.value)"> <span class="pb-prijssub">excl. btw</span></div></div>`;
   const secCheck=`<div class="pb-sec"><div class="pb-h">Checklist <button class="pb-ai" onclick="pbAiTodos(this)" title="AI-startchecklist">${_tIc(_TABCHAN.asterisk,15,1.7)}<span>AI</span></button></div>${todos.map(cbRow).join('')}<div class="pb-add"><input class="pb-in" data-kind="todo" placeholder="+ todo toevoegen…" onkeydown="pbAddKey(event,'todo')"></div></div>`;
   const secInk=`<div class="pb-sec"><div class="pb-h"><span>Inkopen</span><span class="pb-hbtns"><button class="pb-ai" onclick="pbInkPaste()" title="Plak een winkelwagen of lijst — AI maakt er een bestellijst van">${_tIc(_TABCHAN.asterisk,15,1.7)}<span>lijst</span></button><button class="pb-ai" onclick="pbInkLink()" title="Toevoegen via productlink">+ link</button></span></div>${inkopen.map(inkRow).join('')}<div class="pb-add"><input class="pb-in" data-kind="inkoop" placeholder="+ inkoop toevoegen…" onkeydown="pbAddKey(event,'inkoop')"></div><div class="pb-ink-foot"><span class="pb-tot">Inkoop <b>€${fmtEur(inkTotal)}</b></span><span class="pb-budwrap">Projectprijs excl. €<input class="pb-bud" type="text" inputmode="decimal" value="${omzetEx!=null?String(omzetEx).replace('.',','):''}" placeholder="—" onchange="pbSetProjectprijs(this.value)"></span>${omzetEx!=null?`<span class="pb-rest">incl. €${fmtEur(omzetIn)}</span><span class="pb-rest ${marge<0?'over':''}">marge €${fmtEur(marge)}</span>`:''}<span class="pb-budwrap">Klantbudget €<input class="pb-bud" type="text" inputmode="decimal" value="${budget!=null?String(budget).replace('.',','):''}" placeholder="—" onchange="pbSetBudget(this.value)"></span></div></div>`;
-  const secAppt=`<div class="pb-sec"><div class="pb-h">Afspraken <button class="pb-ai" onclick="pbNewAppt()" title="Nieuwe afspraak">+ nieuw</button></div>${appts.length?appts.map(apptRow).join(''):'<div class="pb-empty">Nog geen afspraken.</div>'}</div>`;
+  const secAppt=`<div class="pb-sec"><div class="pb-h">Afspraken <button class="pb-hadd" onclick="pbNewAppt()" title="Nieuwe afspraak">+</button></div>${appts.length?appts.map(apptRow).join(''):'<div class="pb-empty">Nog geen afspraken.</div>'}</div>`;
   const secNotes=`<div class="pb-sec"><div class="pb-h">Notities</div><textarea class="pb-notes" placeholder="Vrije notities voor dit project…" onblur="pbSaveNotes(this.value)">${esc(p.notes||'')}</textarea></div>`;
-  const secFiles=`<div class="pb-sec">${_filesHTML('project',_pbPid)}</div>`;
-  const _body=(_pbMode==='financien')?secInk:(secWait+secTaken+secAppt+secFiles+secNotes);
+  const secFiles=`<div class="pb-sec"><div class="pb-h">Bestanden <button class="pb-hadd" onclick="dropboxPick('project','${_pbPid}')" title="Bestand koppelen">+</button></div>${_filesFor('project',_pbPid).map(_fileRow).join('')||'<div class="pb-empty">Nog geen bestanden.</div>'}</div>`;
+  const _body=(_pbMode==='financien')?secInk:(secWait+secTaken+secDone+secAppt+secFiles+secPrijs+secNotes);
   const _head=`<div class="pb-head"><span class="kbadge" style="background:${col}">${esc(initial)}</span><div class="pb-title"><b>${esc(p.client||'')}</b>${p.project?'<span> · '+esc(p.project)+'</span>':''}${_pbMode==='financien'?'<span style="color:'+col+'"> · inkoop</span>':''}</div></div>`;
   if(_pbTarget==='finmid'){ const el=document.getElementById('finMidWrap'); if(el)el.innerHTML=`<div class="pb-inline" style="--scol:${col}">${_head}${_body}</div>`; return; }
-  if(_pbTarget==='beheer'){ const el=document.getElementById('beheerBoardWrap'); if(el)el.innerHTML=`<div class="pb-inline pb-board-inline" style="--scol:${col}">${_head}<div class="pb-cols">${_body}</div></div>`; return; }
+  if(_pbTarget==='beheer'){ const el=document.getElementById('beheerBoardWrap'); if(el)el.innerHTML=`<div class="pb-inline pb-board-inline" style="--scol:${col}">${_head}<div class="pb-grid"><div class="pb-colL">${secWait}${secTaken}${secDone}</div><div class="pb-colR">${secAppt}${secFiles}${secPrijs}${secNotes}</div></div></div>`; return; }
   if(!ov)return;
   ov.innerHTML=`<div class="modal pb-modal" style="--scol:${col};width:100%;max-width:none">
     <button class="modal-close" onclick="closeProjectBoard()" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
@@ -2433,6 +2466,15 @@ async function pbArchiveTask(id){
     setTimeout(()=>{ _renderProjBoard(); try{render();}catch(_){} }, 560);
   } else { _renderProjBoard(); try{render();}catch(_){} }
 }
+let _pbDoneOpen=false;
+function pbToggleDone(){ _pbDoneOpen=!_pbDoneOpen; _renderProjBoard(); }
+function pbFocusAdd(kind){ const root=document.getElementById('beheerBoardWrap')||document.getElementById('projOverlay')||document; const el=root.querySelector('.pb-in[data-akind="'+kind+'"]'); if(el)el.focus(); }
+async function pbAddProjTask(kind,e){ if(e.key!=='Enter')return; e.preventDefault(); const v=(e.target.value||'').trim(); if(!v)return; e.target.value=''; const p=projById(_pbPid); let id=uid();
+  try{ const ins=await sb.from('items').insert({project_id:_pbPid,title:v,status:kind}).select('*').single(); if(ins&&ins.data&&ins.data.id)id=ins.data.id; }catch(_){}
+  if(p){ p.items=p.items||[]; p.items.push({id,t:v,status:kind,owner:'',contact:'',due:null,src:null}); }
+  _renderProjBoard(); try{render();}catch(_){} pbFocusAdd(kind);
+}
+async function pbUncheckTask(id){ const r=findItem(id); if(r&&r.it)r.it.status='todo'; try{ sb.from('items').update({status:'todo'}).eq('id',id); }catch(_){} _renderProjBoard(); try{render();}catch(_){} }
 async function pbAddKey(e,kind){ if(e.key!=='Enter')return; e.preventDefault(); const v=(e.target.value||'').trim(); if(!v)return; e.target.value=''; try{ const r=await sb.from('project_board').insert({project_id:_pbPid,kind,text:v,sort:_pbItems.length}).select().single(); if(r&&r.data)_pbItems.push(r.data); }catch(_){} _renderProjBoard(); _pbFocus(kind); }
 async function pbToggle(id,done){ const x=_pbItems.find(i=>i.id===id); if(x)x.done=done; try{ await sb.from('project_board').update({done}).eq('id',id); }catch(_){} _renderProjBoard(); }
 async function pbDel(id){ _pbItems=_pbItems.filter(i=>i.id!==id); try{ await sb.from('project_board').delete().eq('id',id); }catch(_){} _renderProjBoard(); }
@@ -3390,6 +3432,7 @@ function renderProjecten(){
   const byClient={}, order=[];
   rows.forEach(p=>{ const c=p.client||''; if(!byClient[c]){byClient[c]=[];order.push(c);} byClient[c].push(p); });
   const esc=s=>String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  const _actProj=(_pbTarget==='beheer'&&_pbPid)?projById(_pbPid):null; const _actClient=_actProj?_actProj.client:null;
   const html=order.map(client=>{
     const projs=byClient[client];
     const total=projs.reduce((n,p)=>n+p.items.filter(i=>i.status!=='done').length,0);
@@ -3419,7 +3462,7 @@ function renderProjecten(){
         <button class="kicon" onclick="event.stopPropagation();deleteProject('${p.id}')" title="Verwijderen"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/></svg></button>
         </div>
       </div>`;}).join('');
-    return `<div class="kgroup" style="--ccol:${ccol}">${head}${items}</div>`;
+    return `<div class="kgroup${client===_actClient?' kactive':''}" style="--ccol:${ccol}">${head}${items}</div>`;
   }).join('');
   document.getElementById('beheerWrap').innerHTML=(html||'<div class="hint">Nog geen klanten. Maak er een aan met + rechtsboven.</div>');
 }
