@@ -1172,6 +1172,9 @@
   .insp-board:hover .insp-stack .sp{box-shadow:0 10px 24px rgba(0,0,0,.55)}
   .insp-bname{margin-top:12px;font-size:14.5px;font-weight:500;color:var(--s4)}
   .insp-bcount{color:var(--mut2);font-weight:400;margin-left:4px}
+  .insp-bnametext{cursor:text;outline:none;border-radius:3px;padding:0 2px;margin:0 -2px}
+  .insp-bnametext:focus{box-shadow:inset 0 -1px 0 var(--s2)}
+  .insp-title[contenteditable]:focus{outline:none;box-shadow:inset 0 -1px 0 var(--s2)}
   .insp-bdel{float:right;background:transparent;border:none;color:var(--mut2);cursor:pointer;font-size:17px;line-height:1;padding:1px 5px;margin:-1px -5px 0 0;opacity:.55;transition:opacity .15s}
   .insp-board:hover .insp-bdel,.insp-bdel:focus,.insp-bdel:hover{opacity:1}
   .insp-grid{column-count:4;column-gap:14px}
@@ -4188,7 +4191,7 @@ function renderInsp(){
       let stack='<div class="insp-stack'+(covers.length<3?' empty':'')+'">';
       layers.forEach((it,j)=>{ stack+= '<div class="sp" style="transform:'+_ispLayerTr(seed,j)+'">'+(it?('<img '+_ispAttr(it)+' alt="" onerror="this.style.display=\'none\'">'):'')+'</div>'; });
       stack+='</div>';
-      grid+=`<div class="insp-board" data-id="ib-${b.id}" onclick="inspOpenBoard('${b.id}')">${stack}<div class="insp-bname"><button class="insp-bdel" onclick="event.stopPropagation();inspDelBoard('${b.id}')" title="Verwijderen">×</button>${escapeHtml(b.name)}<span class="insp-bcount">${items.length}</span></div></div>`;
+      grid+=`<div class="insp-board" data-id="ib-${b.id}" onclick="inspOpenBoard('${b.id}')">${stack}<div class="insp-bname"><button class="insp-bdel" onclick="event.stopPropagation();inspDelBoard('${b.id}')" title="Verwijderen">×</button><span class="insp-bnametext" contenteditable="true" spellcheck="false" onclick="event.stopPropagation()" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}" onblur="inspRenameInline('${b.id}',this)">${escapeHtml(b.name)}</span><span class="insp-bcount">${items.length}</span></div></div>`;
     });
     grid+='</div>';
   }
@@ -4198,7 +4201,7 @@ function _renderInspGrid(body){
   const b=_inspBoards.find(x=>String(x.id)===String(_inspBoard)); if(!b){ _inspBoard=null; return renderInsp(); }
   const items=_inspItems.filter(x=>String(x.board_id)===String(_inspBoard));
   const head=`<div class="insp-head"><button class="insp-back" onclick="inspBack()">${_ispIc.back} boards</button>`
-    +`<div class="insp-title" style="margin-left:6px;cursor:pointer" onclick="inspRenameBoard('${b.id}')" title="Themanaam aanpassen">${escapeHtml(b.name)}</div>`
+    +`<div class="insp-title" style="margin-left:6px;cursor:text" contenteditable="true" spellcheck="false" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}" onblur="inspRenameInline('${b.id}',this)" title="Klik om de themanaam te wijzigen">${escapeHtml(b.name)}</div>`
     +`<button class="insp-btn" onclick="inspAddImage()">${_ispIc.photo} beeld</button>`
     +`<button class="insp-btn" onclick="inspAddLink()">${_ispIc.link} link</button>`
     +`<button class="dov-close" onclick="closeInspiration()" aria-label="Wegschuiven">${_ispIc.close}</button></div>`;
@@ -4237,6 +4240,8 @@ async function inspAddLink(){ if(!_inspBoard)return; const url=((await uiPrompt(
   renderInsp();
 }
 async function inspRenameBoard(id){ const b=_inspBoards.find(x=>String(x.id)===String(id)); if(!b)return; const nv=((await uiPrompt('Themanaam:', b.name||''))||'').trim(); if(!nv||nv===b.name)return; b.name=nv; try{ await sb.from('insp_boards').update({name:nv}).eq('id',id); }catch(_){} renderInsp(); }
+// Inline themanaam wijzigen (geen popup) — opslaan bij blur/Enter.
+async function inspRenameInline(id,el){ const nv=(el.textContent||'').replace(/\s+/g,' ').trim(); const b=_inspBoards.find(x=>String(x.id)===String(id)); if(!b)return; if(!nv){ el.textContent=b.name||''; return; } if(nv===b.name){ el.textContent=b.name; return; } b.name=nv; el.textContent=nv; try{ await sb.from('insp_boards').update({name:nv}).eq('id',id); }catch(_){} }
 function inspItemClick(id){ const it=_inspItems.find(x=>String(x.id)===String(id)); if(it)_inspPreview(it); }
 const _ispX='<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
 const _ispTrash='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/></svg>';
