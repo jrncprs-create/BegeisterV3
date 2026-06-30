@@ -1191,8 +1191,13 @@
   .insp-pvw-x{position:fixed;top:16px;right:18px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;background:transparent;border:none;color:#cfcfcf;cursor:pointer;z-index:2}
   .insp-pvw-x:hover{color:#fff}
   .insp-pvw-inner{display:flex;gap:26px;max-width:1040px;width:100%;max-height:86vh;align-items:flex-start}
-  .insp-pvw-img{flex:0 0 auto;max-width:62%}
+  .insp-pvw-img{flex:0 0 auto;max-width:62%;position:relative}
   .insp-pvw-img img{max-width:100%;max-height:86vh;border-radius:12px;display:block;border:1px solid var(--line)}
+  .insp-pvw-embed{width:520px;max-width:100%;height:74vh;border:0;border-radius:12px;background:#000}
+  .insp-pvw-nav{position:absolute;top:50%;transform:translateY(-50%);width:42px;height:42px;border-radius:50%;border:none;background:rgba(0,0,0,.5);color:#fff;font-size:24px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+  .insp-pvw-nav.prev{left:10px}.insp-pvw-nav.next{right:10px}
+  .insp-pvw-nav:hover{background:rgba(0,0,0,.78)}
+  .insp-pvw-count{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.55);color:#fff;font-size:12px;padding:3px 10px;border-radius:999px}
   .insp-pvw-side{flex:1;min-width:240px;display:flex;flex-direction:column;gap:14px;color:var(--s2)}
   .insp-pvw-ttl{font-size:16px;color:#eee}
   .insp-pvw-link{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--primary2);text-decoration:none;width:fit-content;word-break:break-all}
@@ -4236,7 +4241,9 @@ async function _inspUpload(e){ const files=[...(e.target.files||[])]; e.target.v
 }
 async function inspAddLink(){ if(!_inspBoard)return; const url=((await uiPrompt('Plak een link (Instagram of web):'))||'').trim(); if(!/^https?:\/\//i.test(url))return;
   let meta={}; try{ meta=await fetch('/api/linkmeta',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url})}).then(r=>r.json()); }catch(_){}
-  try{ const r=await sb.from('insp_items').insert({board_id:_inspBoard,type:'link',url,thumb:(meta&&meta.image)||'',title:(meta&&meta.title)||url,sort:_inspItems.length}).select().single(); if(r&&r.data)_inspItems.unshift(r.data); }catch(_){}
+  const _imgs=(meta&&meta.images&&meta.images.length>1)?meta.images:null;
+  const _isVid=!!(meta&&meta.video)|| /\/(reel|tv)\//i.test(url);
+  try{ const r=await sb.from('insp_items').insert({board_id:_inspBoard,type:'link',url,thumb:(meta&&meta.image)||'',title:(meta&&meta.title)||url,images:_imgs,video:_isVid,sort:_inspItems.length}).select().single(); if(r&&r.data)_inspItems.unshift(r.data); }catch(_){}
   renderInsp();
 }
 async function inspRenameBoard(id){ const b=_inspBoards.find(x=>String(x.id)===String(id)); if(!b)return; const nv=((await uiPrompt('Themanaam:', b.name||''))||'').trim(); if(!nv||nv===b.name)return; b.name=nv; try{ await sb.from('insp_boards').update({name:nv}).eq('id',id); }catch(_){} renderInsp(); }
@@ -4251,7 +4258,7 @@ function _inspPreview(it){
   const linkHtml = it.url ? `<a class="insp-pvw-link" href="${escapeHtml(it.url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${_ispIc.link}<span>${escapeHtml((it.url||'').replace(/^https?:\/\//,'').slice(0,52))}</span></a>` : '';
   ov.innerHTML=`<button class="insp-pvw-x" aria-label="Sluiten">${_ispX}</button>
     <div class="insp-pvw-inner">
-      <div class="insp-pvw-img"><img id="ispvwimg" alt=""></div>
+      <div class="insp-pvw-img" id="ispvwmedia"></div>
       <div class="insp-pvw-side">
         ${it.title?`<div class="insp-pvw-ttl">${escapeHtml(it.title)}</div>`:''}
         ${linkHtml}
@@ -4267,7 +4274,22 @@ function _inspPreview(it){
       </div>
     </div>`;
   document.body.appendChild(ov);
-  (async()=>{ let url=it.thumb||''; if(it.storage_path){ try{ const sg=await sb.storage.from('intake').createSignedUrl(it.storage_path,3600); if(sg&&sg.data)url=sg.data.signedUrl; }catch(_){} } const im=ov.querySelector('#ispvwimg'); if(im){ if(url)im.src=url; else im.style.display='none'; } })();
+  // Media: video → Instagram-embed (speelt in de app); carrousel → pijltjes; anders één afbeelding.
+  const _isVid = !!it.video || /\/(reel|tv)\//i.test(it.url||'');
+  let _imgs=[], _idx=0;
+  const _embedUrl=u=>{ try{ return (u||'').split('?')[0].replace(/\/+$/,'')+'/embed/'; }catch(_){ return ''; } };
+  const _resolve=async e=>{ if(e&&e.sp){ try{ const sg=await sb.storage.from('intake').createSignedUrl(e.sp,3600); return sg&&sg.data?sg.data.signedUrl:''; }catch(_){ return ''; } } return e; };
+  const _show=async i=>{ if(!_imgs.length)return; _idx=(i+_imgs.length)%_imgs.length; const u=await _resolve(_imgs[_idx]); const im=ov.querySelector('#ispvwimg'); if(im){ if(u)im.src=u; else im.style.display='none'; } const c=ov.querySelector('#ispvwcount'); if(c)c.textContent=String(_idx+1); };
+  ov._ispNav=d=>_show(_idx+d);
+  (async()=>{ const box=ov.querySelector('#ispvwmedia'); if(!box)return;
+    if(_isVid && it.url){ box.innerHTML='<iframe class="insp-pvw-embed" src="'+_embedUrl(it.url)+'" frameborder="0" scrolling="no" allowtransparency="true" allowfullscreen></iframe>'; return; }
+    if(it.images&&it.images.length){ _imgs=it.images.slice(); }
+    else if(it.storage_path){ _imgs=[{sp:it.storage_path}]; }
+    else if(it.thumb){ _imgs=[it.thumb]; }
+    const multi=_imgs.length>1;
+    box.innerHTML='<img id="ispvwimg" alt="">'+(multi?'<button class="insp-pvw-nav prev" onclick="event.stopPropagation();this.closest(\'.insp-pvw\')._ispNav(-1)">‹</button><button class="insp-pvw-nav next" onclick="event.stopPropagation();this.closest(\'.insp-pvw\')._ispNav(1)">›</button><div class="insp-pvw-count"><span id="ispvwcount">1</span>/'+_imgs.length+'</div>':'');
+    _show(0);
+  })();
   try{ const pp=it.project_id?projById(it.project_id):null; const cv=pp?pp.client:'__none__';
     _fillClientOpts(document.getElementById('insp_client'), cv);
     _fillProjectOpts(document.getElementById('insp_project'), cv, it.project_id||null);
