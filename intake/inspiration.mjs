@@ -24,18 +24,34 @@ function pickMeta(html, props) {
   }
   return "";
 }
+function absUrl(v) { v = decodeEnt(v); if (v && v.indexOf("//") === 0) return "https:" + v; return v; }
+async function fetchHtml(u) {
+  const ctrl = new AbortController(); const t = setTimeout(() => ctrl.abort(), 8000);
+  try { const r = await fetch(u, { signal: ctrl.signal, redirect: "follow", headers: { "User-Agent": "Mozilla/5.0 (compatible; BegeisterBot/1.0)" } }); return (await r.text()).slice(0, 600000); }
+  finally { clearTimeout(t); }
+}
 export async function fetchOg(url) {
   try {
-    const ctrl = new AbortController(); const t = setTimeout(() => ctrl.abort(), 8000);
-    const r = await fetch(url, { signal: ctrl.signal, redirect: "follow", headers: { "User-Agent": "Mozilla/5.0 (compatible; BegeisterBot/1.0)" } });
-    clearTimeout(t);
-    const html = (await r.text()).slice(0, 500000);
-    let image = pickMeta(html, ["og:image:secure_url", "og:image", "twitter:image"]);
-    let title = pickMeta(html, ["og:title", "twitter:title"]) || ((html.match(/<title[^>]*>([\s\S]*?)<\/title>/i) || [])[1] || "");
-    image = decodeEnt(image); title = decodeEnt(title);
-    if (image && image.indexOf("//") === 0) image = "https:" + image;
-    return { image, title };
-  } catch (_) { return { image: "", title: "" }; }
+    const html = await fetchHtml(url);
+    const image = absUrl(pickMeta(html, ["og:image:secure_url", "og:image", "twitter:image"]));
+    const title = decodeEnt(pickMeta(html, ["og:title", "twitter:title"]) || ((html.match(/<title[^>]*>([\s\S]*?)<\/title>/i) || [])[1] || ""));
+    const video = absUrl(pickMeta(html, ["og:video:secure_url", "og:video", "og:video:url"]));
+    let images = image ? [image] : [];
+    if (/instagram\.com\/(p|tv)\//i.test(url)) {
+      try {
+        const seen = new Set(); images = [];
+        for (let idx = 1; idx <= 10; idx++) {
+          let u; try { u = new URL(url); } catch (_) { break; }
+          u.searchParams.set("img_index", String(idx));
+          const im = absUrl(pickMeta(await fetchHtml(u.toString()), ["og:image:secure_url", "og:image", "twitter:image"]));
+          if (!im || seen.has(im)) break;
+          seen.add(im); images.push(im);
+        }
+        if (!images.length && image) images = [image];
+      } catch (_) { if (image) images = [image]; }
+    }
+    return { image: images[0] || image || "", title, video, images };
+  } catch (_) { return { image: "", title: "", video: "", images: [] }; }
 }
 
 async function loadThemes(db) { try { const { data } = await db.from("insp_boards").select("id,name"); return data || []; } catch (_) { return []; } }
@@ -92,7 +108,9 @@ export async function addInspirationLink(db, { url }) {
     const meta = await fetchOg(url);
     const theme = await aiThemeText(db, ((meta.title || "") + " " + url).trim());
     const boardId = await ensureBoard(db, theme);
-    await db.from("insp_items").insert({ board_id: boardId, type: "link", url, thumb: meta.image || "", title: meta.title || url, sort: 0 });
+    const isVideo = !!meta.video || /\/(reel|tv)\//i.test(url);
+    const imgs = (meta.images && meta.images.length > 1) ? meta.images : null;
+    await db.from("insp_items").insert({ board_id: boardId, type: "link", url, thumb: meta.image || "", title: meta.title || url, images: imgs, video: isVideo, sort: 0 });
     return { ok: true, theme };
   } catch (e) { return { ok: false, error: String(e.message || e) }; }
 }
