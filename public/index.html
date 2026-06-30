@@ -252,6 +252,9 @@
   #dropZone .dz-del{color:#f87171}
   #dropZone .dz-save{color:#fff}
   #dropZone.summary .dz-sub{text-align:left;max-width:330px;width:min(330px,80vw)}
+  #dropZone .dz-assign{display:none}
+  #dropZone.summary .dz-assign{display:flex;gap:8px;width:min(330px,80vw);margin-top:11px}
+  #dropZone .dz-sel{flex:1;min-width:0;background:rgba(255,255,255,.07);border:1px solid var(--line);color:#fff;border-radius:9px;padding:9px 11px;font-size:13px;cursor:pointer}
   #dropZone .dz-facts{display:none}
   #dropZone.summary .dz-facts{display:flex;flex-direction:column;gap:5px;width:min(330px,80vw);margin-top:2px}
   #dropZone .dz-facts .f{color:var(--mut);font-size:13px;line-height:1.45;text-align:left}
@@ -1472,7 +1475,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v90</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v91</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -1597,6 +1600,10 @@
     <div class="dz-title">Laat los om toe te voegen</div>
     <div class="dz-sub">Foto, PDF, tekst of Word — ik lees het en stel meteen actiepunten voor.</div>
     <div class="dz-facts"></div>
+    <div class="dz-assign">
+      <select class="dz-sel" id="dz_client" onchange="_dzClientChange()" title="Klant"></select>
+      <select class="dz-sel" id="dz_project" title="Project"></select>
+    </div>
     <div class="dz-q">
       <div class="dz-q-line"></div>
       <input class="dz-q-proj" placeholder="Projectnaam" autocomplete="off">
@@ -4799,11 +4806,14 @@ var _dzResolve=null, _fileProjectId=null;
 function _dzResolveWith(v){ if(_dzResolve){ const r=_dzResolve; _dzResolve=null; r(v); } }
 function _dzCloseClick(){ _dzResolveWith({save:false}); }
 function _dzDiscard(){ _dzResolveWith({save:false}); }
-function _dzSave(){ const inp=document.querySelector('#dropZone .dz-q-proj'); _dzResolveWith({save:true, project:inp?inp.value.trim():''}); }
+function _dzSave(){ const inp=document.querySelector('#dropZone .dz-q-proj'); const ps=document.getElementById('dz_project'); const cs=document.getElementById('dz_client'); _dzResolveWith({save:true, project:inp?inp.value.trim():'', project_id:(ps&&ps.value)||null, client:(cs&&cs.value)||''}); }
+function _dzFillProjects(selId){ const cs=document.getElementById('dz_client'),ps=document.getElementById('dz_project'); if(!cs||!ps)return; const cl=cs.value; const projs=(state.projects||[]).filter(p=>p.id!=='__inbox__'&&p.client===cl); ps.innerHTML='<option value="">— Geen project —</option>'+projs.map(p=>`<option value="${p.id}"${(selId&&String(selId)===String(p.id))?' selected':''}>${escapeHtml(p.project||'(naamloos)')}</option>`).join(''); }
+function _dzClientChange(){ _dzFillProjects(null); }
 function _dzShow(t,s,mode){_dzText(t,s);const z=document.getElementById('dropZone');if(!z)return;z.classList.remove('reading','summary','hasprev','hasq');if(mode)z.classList.add(mode);z.classList.add('on');}
 function _dzShowSummary(t,s,previewUrl,q,facts){_dzText(t,s);const z=document.getElementById('dropZone');if(!z)return;const img=z.querySelector('.dz-prev');
   if(previewUrl&&img){ img.src=previewUrl; z.classList.add('hasprev'); } else { z.classList.remove('hasprev'); if(img)img.removeAttribute('src'); }
-  const fe=z.querySelector('.dz-facts'); if(fe){ fe.innerHTML=(facts||[]).map(x=>`<div class="f">${escapeHtml(x.k)}: <b>${escapeHtml(x.v)}</b></div>`).join(''); }
+  const fe=z.querySelector('.dz-facts'); if(fe){ fe.innerHTML=(facts||[]).filter(x=>x.k!=='Klant'&&x.k!=='Project').map(x=>`<div class="f">${escapeHtml(x.k)}: <b>${escapeHtml(x.v)}</b></div>`).join(''); }
+  try{ const cs=z.querySelector('#dz_client'); if(cs){ const clients=uniqueClients(); const guessC=(_dropClient&&clients.find(c=>c.toLowerCase()===String(_dropClient).toLowerCase()))||''; cs.innerHTML='<option value="">— Geen klant —</option>'+clients.map(c=>`<option value="${escapeHtml(c)}"${c===guessC?' selected':''}>${escapeHtml(c)}</option>`).join(''); _dzFillProjects(_fileProjectId||null); } }catch(_){}
   const ql=z.querySelector('.dz-q-line'), qp=z.querySelector('.dz-q-proj');
   if(q){ if(ql)ql.textContent=(q.kind==='client'?('Nieuwe klant: '+q.client):('Nieuw project onder '+q.client)); if(qp)qp.value=q.project||''; z.classList.add('hasq'); } else { z.classList.remove('hasq'); }
   z.classList.remove('reading'); z.classList.add('summary','on');}
@@ -4888,6 +4898,8 @@ async function _dropProcess(f){
   const res=await new Promise(r=>{ _dzResolve=r; });   // blijft staan tot ✓ opslaan / ✕ sluiten
   if(_prevObj&&previewUrl){ try{URL.revokeObjectURL(previewUrl);}catch(_){} }
   if(!res || !res.save){ _dropFileObj=null; _dropFileDone=false; _dzHide(); _dropRunNext(); return; }   // ✕ niet opslaan
+  if(res.project_id){ _fileProjectId=res.project_id; q=null; }            // gebruiker koos expliciet een project in de dropdown
+  else if(res.client){ _fileProjectId=null; q=null; }                     // klant gekozen zonder project
   if(q){ try{ await _createFromDrop(q, res.project); }catch(_){} }   // nieuwe klant/project aanmaken
   await _saveDropToWait(items, summary, src?src.id:null, _dropFileObj, _wurl);
   _dropFileObj=null; _dropFileDone=false;
