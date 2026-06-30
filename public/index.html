@@ -543,7 +543,7 @@
   /* Klanten gegroepeerd: kop per klant, projecten eronder */
   .kgroup{border:1px solid var(--line);border-radius:14px;padding:4px 14px 8px;margin-bottom:14px}
   .kgroup.kcollapsed{padding-bottom:0}
-  .kgroup.kcollapsed .kclient{padding-bottom:11px}
+  .kgroup.kcollapsed .kclient{padding-bottom:11px;margin-bottom:-1px}
   .kclient{display:flex;align-items:center;gap:12px;padding:11px 2px 9px;border-bottom:1px solid var(--line)}
   .kclient .kname{font-size:16px;font-weight:700}
   .kgroup .kli{border-bottom:1px solid var(--line)}
@@ -1288,8 +1288,9 @@
   /* Klanten-beheer: icoon vóór naam; naam + project + divider in klantkleur */
   .kbadge{ width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:13px;flex:0 0 auto }
   .kname,.ksub{ color:var(--ccol,var(--s1)) !important }
-  .kclient{ border-bottom-color:var(--line) !important }
-  .kgroup:hover .kclient,.kgroup.kactive .kclient{ border-bottom-color:var(--ccol) !important }
+  .kclient{ border-bottom-color:transparent !important }
+  .kgroup:not(.kcollapsed) .kclient{ border-bottom-color:var(--line) !important }
+  .kgroup.kactive .kclient{ border-bottom-color:var(--ccol) !important }
 
   /* 4 · WIT — chrome-hover, "vandaag"-cel, welkomstscherm */
   .topbar *:hover{ color:var(--s4) !important }  .topbar *:hover svg,.topbar *:hover>svg{ stroke:var(--s4) !important }
@@ -1450,7 +1451,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v81</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v82</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
