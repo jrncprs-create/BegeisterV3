@@ -1166,8 +1166,8 @@
   .insp-board:hover .insp-stack .sp{box-shadow:0 10px 24px rgba(0,0,0,.55)}
   .insp-bname{margin-top:12px;font-size:14.5px;font-weight:500;color:var(--s4)}
   .insp-bcount{color:var(--mut2);font-weight:400;margin-left:4px}
-  .insp-bdel{float:right;background:transparent;border:none;color:var(--mut2);cursor:pointer;font-size:14px;opacity:0;transition:opacity .15s}
-  .insp-board:hover .insp-bdel{opacity:1}
+  .insp-bdel{float:right;background:transparent;border:none;color:var(--mut2);cursor:pointer;font-size:17px;line-height:1;padding:1px 5px;margin:-1px -5px 0 0;opacity:.55;transition:opacity .15s}
+  .insp-board:hover .insp-bdel,.insp-bdel:focus,.insp-bdel:hover{opacity:1}
   .insp-grid{column-count:4;column-gap:14px}
   .insp-tile{break-inside:avoid;margin:0 0 14px;position:relative;border-radius:13px;overflow:hidden;border:1px solid var(--line);cursor:pointer;background:var(--card)}
   .insp-tile img{width:100%;display:block}
@@ -1942,6 +1942,7 @@ function _formBadge(kind,v){
     const p=state.projects.find(x=>x.id!=='__inbox__'&&x.client===v);
     return {col:(p&&p.color)||'#888', ch:(p&&p.icon)||v.trim().charAt(0).toUpperCase()};
   }
+  if(kind!=='project') return null;
   const p=projById(v); return {col:PROJCOL[v]||'#888', ch:(p&&p.icon)||((p&&p.client||'?').trim().charAt(0).toUpperCase())};
 }
 function _enhanceSelect(sel,kind){
@@ -4181,10 +4182,11 @@ function _inspPreview(it){
         ${it.title?`<div class="insp-pvw-ttl">${escapeHtml(it.title)}</div>`:''}
         ${linkHtml}
         <div class="insp-pvw-assign">
-          <div class="insp-pvw-lbl">Zet bij project</div>
-          <div style="display:flex;flex-direction:column;gap:10px">
+          <div class="insp-pvw-lbl">Koppelen &amp; verplaatsen</div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;align-items:start">
             <select id="insp_client" onchange="inspOnClientChange()"></select>
             <select id="insp_project" onchange="inspOnProjectChange('${it.id}')"></select>
+            <select id="insp_board" onchange="inspOnBoardChange('${it.id}')"></select>
           </div>
         </div>
         <button class="insp-btn" style="width:fit-content" onclick="inspDelItem('${it.id}');var o=this.closest('.insp-pvw');if(o)o.remove()">${_ispTrash} verwijderen</button>
@@ -4196,6 +4198,7 @@ function _inspPreview(it){
     _fillClientOpts(document.getElementById('insp_client'), cv);
     _fillProjectOpts(document.getElementById('insp_project'), cv, it.project_id||null);
     _enhanceSelect('insp_client','client'); _enhanceSelect('insp_project','project');
+    _fillInspBoardOpts(document.getElementById('insp_board'), it.board_id);
   }catch(_){}
   requestAnimationFrame(()=>ov.classList.add('open'));
   const close=()=>{ ov.classList.remove('open'); setTimeout(()=>ov.remove(),250); };
@@ -4204,6 +4207,8 @@ function _inspPreview(it){
 }
 function inspOnClientChange(){ const c=document.getElementById('insp_client').value; _fillProjectOpts(document.getElementById('insp_project'), c, null); _enhanceSelect('insp_project','project'); if(_inspPvwItem) inspOnProjectChange(_inspPvwItem.id); }
 async function inspOnProjectChange(id){ const sel=document.getElementById('insp_project'); const pid=sel?sel.value:''; const real=(pid&&pid!=='__none__'&&pid!=='__new__'&&pid!=='')?pid:null; const it=_inspItems.find(x=>String(x.id)===String(id)); if(it)it.project_id=real; try{ await sb.from('insp_items').update({project_id:real}).eq('id',id); }catch(_){} }
+function _fillInspBoardOpts(sel,boardId){ if(!sel)return; sel.innerHTML=_inspBoards.map(b=>`<option value="${b.id}">${escapeHtml(b.name||'—')}</option>`).join(''); if(boardId!=null)sel.value=boardId; _enhanceSelect(sel,'board'); }
+async function inspOnBoardChange(id){ const sel=document.getElementById('insp_board'); const bid=sel?sel.value:''; if(!bid)return; const it=_inspItems.find(x=>String(x.id)===String(id)); if(!it||String(it.board_id)===String(bid))return; it.board_id=bid; try{ await sb.from('insp_items').update({board_id:bid}).eq('id',id); }catch(_){} renderInsp(); }
 async function inspDelItem(id){ _inspItems=_inspItems.filter(x=>String(x.id)!==String(id)); try{ await sb.from('insp_items').delete().eq('id',id); }catch(_){} renderInsp(); }
 function dovOpenClient(c){ closeDayOverview(); try{ const p=(state.projects||[]).find(x=>x.client===c&&x.id!=='__inbox__'); setView('taken'); if(p){ activeTab=p.id; render(); } }catch(_){} }
 function maybeShowDayOverview(){ try{ const k='dayview_'+iso(TODAY); if(localStorage.getItem(k))return; localStorage.setItem(k,'1'); }catch(_){} openDayOverview(); }
