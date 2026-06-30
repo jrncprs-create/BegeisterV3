@@ -1472,7 +1472,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v89</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v90</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -4841,10 +4841,13 @@ async function handleDroppedFiles(list){
 }
 function _dropRunNext(){ if(!_dropFiles.length){ _dzHide(); return; } _dropProcess(_dropFiles.shift()); }
 
+// .webloc (mac) / .url (win) = snelkoppeling met een URL erin — die lezen we eruit zodat de masterlink bewaard blijft
+async function _weblocUrl(f){ try{ if(!/\.(webloc|url)$/i.test(f.name||''))return null; const txt=await f.text(); let m=txt.match(/<key>\s*URL\s*<\/key>\s*<string>([^<]+)<\/string>/i); if(m)return m[1].trim(); m=txt.match(/^\s*URL\s*=\s*(\S.+)$/im); if(m)return m[1].trim(); m=txt.match(/https?:\/\/[^\s<"']+/i); return m?m[0].trim():null; }catch(_){ return null; } }
+function _priceFromText(s){ const m=String(s||'').match(/€\s*([0-9]+(?:\.[0-9]{3})*,[0-9]{2}|[0-9]+,[0-9]{2}|[0-9]+)/); if(!m)return null; let v=m[1].replace(/\./g,'').replace(',', '.'); const n=parseFloat(v); return isNaN(n)?null:n; }
 async function _dropProcess(f){
   _dzShow('Bestand lezen…', f.name, 'reading');
-  let src=null;
-  try{ const r=await sb.from('sources').insert({channel:'drop',sender:who||'Sleep',body:f.name,processed:true}).select().single(); src=r.data||null; }catch(_){}
+  let src=null; const _wurl=await _weblocUrl(f);
+  try{ const r=await sb.from('sources').insert({channel:'drop',sender:who||'Sleep',body:f.name,url:_wurl||null,processed:true}).select().single(); src=r.data||null; }catch(_){}
   _dropFileObj=f; _dropFileDone=false;   // bestand vasthouden; pas bij opslaan naar Dropbox /In afwachting/
   let data=null;
   try{
@@ -4886,14 +4889,24 @@ async function _dropProcess(f){
   if(_prevObj&&previewUrl){ try{URL.revokeObjectURL(previewUrl);}catch(_){} }
   if(!res || !res.save){ _dropFileObj=null; _dropFileDone=false; _dzHide(); _dropRunNext(); return; }   // ✕ niet opslaan
   if(q){ try{ await _createFromDrop(q, res.project); }catch(_){} }   // nieuwe klant/project aanmaken
-  await _saveDropToWait(items, summary, src?src.id:null, _dropFileObj);
+  await _saveDropToWait(items, summary, src?src.id:null, _dropFileObj, _wurl);
   _dropFileObj=null; _dropFileDone=false;
   _dzHide(); _dropRunNext();
 }
 
 // ✓ op de samenvatting: alle gevonden punten direct in In-afwachting (status wait) + bestand naar /In afwachting/.
-async function _saveDropToWait(items, summary, srcId, fileObj){
+async function _saveDropToWait(items, summary, srcId, fileObj, listUrl){
   const pid=_fileProjectId||null;
+  // Amazon-(verlang)lijst → bestelregels op de Bestellijst (inkoop), NIET als taken
+  const _isBestel = (items&&items.length>=1) && ( (listUrl&&/amazon\./i.test(listUrl)) || items.filter(it=>/€\s*\d|verlanglijst|winkelwagen|^\s*bestel\b/i.test(it.title||'')).length>=Math.max(2,Math.ceil(items.length*0.6)) );
+  if(_isBestel){
+    let n=0;
+    for(const it of items){ const price=_priceFromText(it.title); const name=((it.title||'').replace(/^\s*bestel\s+/i,'').replace(/\s*via\b[^,]*verlanglijst\s*$/i,'').trim())||(it.title||'Artikel');
+      try{ await sb.from('project_board').insert({project_id:(it.project_id||pid||null), kind:'inkoop', text:name, price:(price!=null?price:null), qty:1, status:'te bestellen', source_id:srcId||null, sort:n++}); }catch(_){} }
+    try{ notifyPartner((who||'Iemand')+' zette een bestellijst ('+items.length+' artikel(en)) klaar.'); }catch(_){}
+    try{ _finInk=null; await refresh(); }catch(_){}
+    return;
+  }
   const list=(items&&items.length)?items:[{title:(summary||'Nieuw bestand'),owner:'',contact:'',due:null,status:'wait',project_id:null}];
   let firstId=null;
   for(const it of list){
