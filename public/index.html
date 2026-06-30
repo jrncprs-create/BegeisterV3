@@ -671,6 +671,38 @@
   #finRightWrap .finr-line.marge{border-top:1px solid var(--line);margin-top:6px;padding-top:10px}
   #finRightWrap .finr-line.marge b{color:#5dcaa5}
   #finRightWrap .finr-line.marge.neg b{color:#e0726f}
+  /* Contacten 3-koloms */
+  #contactenWrap .con-crow{display:flex;align-items:center;gap:12px;padding:11px 14px;border-bottom:1px solid var(--line);cursor:pointer}
+  #contactenWrap .con-crow:hover,#contactenWrap .con-crow.on{background:rgba(255,255,255,.04)}
+  #contactenWrap .con-cdot{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#000;flex:0 0 auto}
+  #contactenWrap .con-cmain{flex:1;min-width:0}
+  #contactenWrap .con-cnm{font-size:14px}
+  #contactenWrap .con-ccnt{font-size:12px;color:var(--mut2);flex:0 0 auto}
+  .con-midhdr{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line)}
+  .con-midhdr input{flex:1;background:transparent;border:0;color:var(--txt);font-size:14px;outline:none}
+  #conMidWrap .con-li{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line);cursor:pointer}
+  #conMidWrap .con-li:hover,#conMidWrap .con-li.on{background:rgba(255,255,255,.04)}
+  #conMidWrap .con-li .cmain{flex:1;min-width:0}
+  #conMidWrap .con-li .cname{font-size:14px}
+  #conMidWrap .con-li .crole{font-size:12px;color:var(--mut2);margin-top:1px}
+  #conMidWrap .con-li .cquick{display:flex;gap:10px;color:var(--mut2);flex:0 0 auto}
+  #conMidWrap .con-li .cquick a{color:var(--mut2)}
+  .con-detail{padding:28px 24px;display:flex;flex-direction:column;align-items:center;text-align:center}
+  .con-av{width:84px;height:84px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;color:#000;margin-bottom:14px}
+  .con-dname{font-size:19px;font-weight:600}
+  .con-drole{font-size:13px;color:var(--mut2);margin-top:3px}
+  .con-aiav{margin-top:14px;background:transparent;border:1px solid var(--line);color:var(--txt);border-radius:20px;padding:7px 14px;font-size:12.5px;cursor:pointer}
+  .con-aiav:hover{background:rgba(255,255,255,.05)}
+  .con-dlines{width:100%;max-width:320px;margin:22px auto 0;text-align:left}
+  .con-dline{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px;color:var(--mut)}
+  .con-dline b{color:var(--s4);font-weight:500}
+  .con-dline a{color:var(--primary2,#7db0e6);text-decoration:none}
+  .con-linked{width:100%;max-width:320px;margin:18px auto 0;text-align:left}
+  .con-linked h4{font-size:11.5px;letter-spacing:1px;text-transform:uppercase;color:var(--mut2);margin:0 0 8px}
+  .con-linked .cl-item{font-size:13px;color:var(--mut);padding:6px 0;cursor:pointer;border-bottom:1px solid var(--line)}
+  .con-linked .cl-empty{font-size:12.5px;color:var(--mut2)}
+  .con-edit{margin-top:22px;background:transparent;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:9px 18px;font-size:13px;cursor:pointer}
+  .con-edit:hover{background:rgba(255,255,255,.05)}
   .pb-notes:focus{outline:none;border-color:var(--mut2)}
   .pb-empty{font-size:13px;color:var(--mut2);padding:3px 0 5px}
   .kicon.kboard:hover{color:#fff}
@@ -1351,7 +1383,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v72</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v73</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -1390,6 +1422,8 @@
       <div id="view-finmid" class="hidden"><div class="fin-mid-hint">Kies links een project om de inkoop te zien en te bewerken.</div></div>
       <div id="view-finright" class="hidden"><div id="finRightWrap"></div></div>
       <div id="view-railhint" class="hidden"><div class="fin-mid-hint" id="railHintTxt">Kies links een item om de details te zien.</div></div>
+      <div id="view-conmid" class="hidden"><div id="conMidWrap"></div></div>
+      <div id="view-conright" class="hidden"><div id="conRightWrap"></div></div>
 
       <div id="view-afspraken" class="hidden"></div>
 
@@ -1883,11 +1917,14 @@ function setView(v){
     if(fp)fp.classList.toggle('hidden',v!=='files');
     if(fm)fm.classList.toggle('hidden',v!=='financien');
     if(frt)frt.classList.toggle('hidden',v!=='financien');
-    const _railHintViews=['beheer','contacten','bronnen','archief'];
+    const cm=document.getElementById('view-conmid'),crt=document.getElementById('view-conright');
+    if(cm)cm.classList.toggle('hidden',v!=='contacten');
+    if(crt)crt.classList.toggle('hidden',v!=='contacten');
+    const _railHintViews=['beheer','bronnen','archief'];
     const rh=document.getElementById('view-railhint'); if(rh)rh.classList.toggle('hidden',!_railHintViews.includes(v));
-    const rht=document.getElementById('railHintTxt'); if(rht)rht.textContent=(v==='beheer')?'Kies links een project om het werkblad te openen.':(v==='bronnen')?'Kies links een bron om de preview te zien.':(v==='contacten')?'Kies links een contact om de details te zien.':'Kies links een item om de details te zien.';
+    const rht=document.getElementById('railHintTxt'); if(rht)rht.textContent=(v==='beheer')?'Kies links een project om het werkblad te openen.':(v==='bronnen')?'Kies links een bron om de preview te zien.':'Kies links een item om de details te zien.';
   } else {
-    ['view-finmid','view-finright','view-railhint'].forEach(id=>{const e=document.getElementById(id);if(e)e.classList.add('hidden');});
+    ['view-finmid','view-finright','view-railhint','view-conmid','view-conright'].forEach(id=>{const e=document.getElementById(id);if(e)e.classList.add('hidden');});
   }
   const mh=document.querySelector('.main-head'); if(mh) mh.style.display = (v==='home'||ws) ? 'none' : 'flex';
   if(typeof closePlus==='function') closePlus();
@@ -2740,39 +2777,74 @@ if(!window._srcTintInit){window._srcTintInit=true;document.addEventListener('cli
 
 // ---------- contacten ----------
 let _contactSearch='';
+function _qs(s){return String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/g,"\\'");}
+function _initials(name){ const p=String(name||'').trim().split(/\s+/).filter(Boolean); if(!p.length)return '?'; return ((p[0][0]||'')+(p.length>1?(p[p.length-1][0]||''):'')).toUpperCase(); }
+let _conClient=null,_conContact=null,_conSearch='';
+function selectConClient(cl){ _conClient=cl; _conContact=null; _conSearch=''; renderContacten(); }
+function selectConContact(id){ _conContact=id; renderConRight(); document.querySelectorAll('#conMidWrap .con-li').forEach(el=>el.classList.toggle('on',el.dataset.id===id)); }
+function _conFilter(q){ _conSearch=q; renderConMid(); const si=document.getElementById('con_search'); if(si){ si.focus(); try{si.setSelectionRange(si.value.length,si.value.length);}catch(_){} } }
+// Kolom 1: klanten met contact-aantal
 function renderContacten(){
   const wrap=document.getElementById('contactenWrap'); if(!wrap)return;
   const contacts=(state.contacts||[]);
-  let html='<div class="chdr"><span class="chdr-t">Contacten</span><button class="chdr-add" onclick="openContactModal()" title="Nieuw contact" aria-label="Nieuw contact">+</button></div>';
-  html+='<div class="csearchrow"><input id="c_search" placeholder="Zoek contact…" autocomplete="off" oninput="_filterContacts(this.value)" /></div>';
+  const cnt={}; contacts.forEach(c=>{ const k=(c.client||'').trim(); if(k)cnt[k]=(cnt[k]||0)+1; });
+  const noneN=contacts.filter(c=>!((c.client||'').trim())).length;
+  const clients=uniqueClients().filter(Boolean);
+  let rows=clients.map(cl=>{ const col=_clientColor(cl)||'#888'; const ic=escapeHtml(((String(cl).trim()[0])||'?').toUpperCase()); const n=cnt[cl]||0; const on=(_conClient===cl)?' on':'';
+    return `<div class="con-crow${on}" onclick="selectConClient('${_qs(cl)}')"><span class="con-cdot" style="background:${col}">${ic}</span><div class="con-cmain"><div class="con-cnm" style="color:${col}">${escapeHtml(cl)}</div></div><span class="con-ccnt">${n}</span></div>`;
+  }).join('');
+  if(noneN){ const on=(_conClient==='__none__')?' on':''; rows+=`<div class="con-crow${on}" onclick="selectConClient('__none__')"><span class="con-cdot" style="background:#555">·</span><div class="con-cmain"><div class="con-cnm">Overig</div></div><span class="con-ccnt">${noneN}</span></div>`; }
   const dup=_countDupContacts();
-  if(dup>0) html+='<button class="cdup" onclick="mergeDupContacts()">'+dup+' mogelijk dubbel — samenvoegen</button>';
-  const groups={}, order=[];
-  contacts.forEach(c=>{ const g=(c.company||'').trim()||'Overig'; if(!groups[g]){groups[g]=[];order.push(g);} groups[g].push(c); });
-  order.sort((a,b)=> a==='Overig'?1:(b==='Overig'?-1:a.localeCompare(b)));
-  if(!contacts.length){
-    html+='<div class="hint">Nog geen contacten. Ze verschijnen hier automatisch uit binnengekomen berichten, of voeg ze handmatig toe met +.</div>';
-  }else{
-    const phoneSvg=_tIc(_TABCHAN.phone||'<path d="M5 4h4l2 5l-2.5 1.5a11 11 0 0 0 5 5l1.5 -2.5l5 2v4a2 2 0 0 1 -2 2a16 16 0 0 1 -15 -15a2 2 0 0 1 2 -2"/>',16,1.4);
-    const mailSvg=_tIc(_TABCHAN.email,16,1.4);
-    html+=order.map(g=>{
-      const rows=groups[g].map(c=>{
-        const s=escapeHtml(((c.name||'')+' '+(c.email||'')+' '+(c.phone||'')+' '+(c.company||'')+' '+(c.role||'')).toLowerCase());
-        const tel=(c.phone||'').replace(/[^+\d]/g,'');
-        const quick=(c.phone?`<a href="tel:${tel}" onclick="event.stopPropagation()" title="Bellen">${phoneSvg}</a>`:'')+(c.email?`<a href="mailto:${escapeHtml(c.email)}" onclick="event.stopPropagation()" title="Mailen">${mailSvg}</a>`:'');
-        return `<div class="cli" data-s="${s}" onclick="openContactModal('${c.id}')"><div class="cmain"><div class="cname">${escapeHtml(c.name||'')}</div>${c.role?`<div class="crole">${escapeHtml(c.role)}</div>`:''}</div><div class="cquick">${quick}</div></div>`;
-      }).join('');
-      return `<div class="cgroup"><div class="cgroup-h">${escapeHtml(g)}</div>${rows}</div>`;
-    }).join('');
-  }
-  wrap.innerHTML=html;
-  if(_contactSearch){ const si=document.getElementById('c_search'); if(si)si.value=_contactSearch; _filterContacts(_contactSearch); }
+  wrap.innerHTML=`<div class="chdr"><span class="chdr-t">Contacten</span><button class="chdr-add" onclick="openContactModal()" title="Nieuw contact" aria-label="Nieuw contact">+</button></div>`
+    +(dup>0?`<button class="cdup" onclick="mergeDupContacts()">${dup} mogelijk dubbel — samenvoegen</button>`:'')
+    +(rows||'<div class="hint">Nog geen contacten. Ze verschijnen hier automatisch uit binnengekomen berichten, of voeg ze toe met +.</div>');
+  renderConMid(); renderConRight();
 }
-function _filterContacts(q){
-  _contactSearch=q; const qq=(q||'').toLowerCase().trim();
-  document.querySelectorAll('#contactenWrap .cli').forEach(el=>{ el.style.display=(!qq||(el.dataset.s||'').includes(qq))?'':'none'; });
-  document.querySelectorAll('#contactenWrap .cgroup').forEach(g=>{ const any=[...g.querySelectorAll('.cli')].some(x=>x.style.display!=='none'); g.style.display=any?'':'none'; });
+function _conQuick(c){
+  const phoneSvg=_tIc(_TABCHAN.phone||'<path d="M5 4h4l2 5l-2.5 1.5a11 11 0 0 0 5 5l1.5 -2.5l5 2v4a2 2 0 0 1 -2 2a16 16 0 0 1 -15 -15a2 2 0 0 1 2 -2"/>',16,1.4);
+  const mailSvg=_tIc(_TABCHAN.email,16,1.4); const tel=(c.phone||'').replace(/[^+\d]/g,'');
+  return (c.phone?`<a href="tel:${tel}" onclick="event.stopPropagation()" title="Bellen">${phoneSvg}</a>`:'')+(c.email?`<a href="mailto:${escapeHtml(c.email)}" onclick="event.stopPropagation()" title="Mailen">${mailSvg}</a>`:'');
 }
+// Kolom 2: contacten van de gekozen klant
+function renderConMid(){
+  const w=document.getElementById('conMidWrap'); if(!w)return;
+  if(!_conClient){ w.innerHTML='<div class="fin-mid-hint">Kies links een klant om de contacten te zien.</div>'; return; }
+  let list=(state.contacts||[]).filter(c=> _conClient==='__none__' ? !((c.client||'').trim()) : (c.client||'').trim()===_conClient );
+  const q=(_conSearch||'').toLowerCase().trim();
+  if(q) list=list.filter(c=> ((c.name||'')+' '+(c.email||'')+' '+(c.phone||'')+' '+(c.role||'')).toLowerCase().includes(q));
+  list.sort((a,b)=>String(a.name||'').localeCompare(String(b.name||'')));
+  const rows=list.map(c=>{ const on=(_conContact===c.id)?' on':'';
+    return `<div class="con-li${on}" data-id="${c.id}" onclick="selectConContact('${c.id}')"><div class="cmain"><div class="cname">${escapeHtml(c.name||'(naamloos)')}</div>${c.role?`<div class="crole">${escapeHtml(c.role)}</div>`:''}</div><div class="cquick">${_conQuick(c)}</div></div>`;
+  }).join('');
+  w.innerHTML=`<div class="con-midhdr"><input id="con_search" placeholder="Zoek in deze klant…" autocomplete="off" value="${escapeHtml(_conSearch||'')}" oninput="_conFilter(this.value)"><button class="chdr-add" onclick="openContactModal()" title="Nieuw contact">+</button></div>`+(rows||'<div class="hint">Geen contacten bij deze klant.</div>');
+}
+// Kolom 3: contactdetail + gekleurde initialen
+function renderConRight(){
+  const w=document.getElementById('conRightWrap'); if(!w)return;
+  const c=_conContact?(state.contacts||[]).find(x=>x.id===_conContact):null;
+  if(!c){ w.innerHTML='<div class="fin-mid-hint">Kies een contact voor de details.</div>'; return; }
+  const col=(c.client&&c.client.trim())?(_clientColor(c.client)||'#888'):'#777';
+  const enough=!!(String(c.name||'').trim() && (c.role||c.company) && (c.email||c.phone));
+  const avBtn=enough?`<button class="con-aiav" onclick="conAiAvatar('${c.id}')">✦ AI-avatar maken</button>`:'';
+  const line=(label,val,href)=> val?`<div class="con-dline"><span>${label}</span>${href?`<a href="${href}" onclick="event.stopPropagation()">${escapeHtml(val)}</a>`:`<b>${escapeHtml(val)}</b>`}</div>`:'';
+  const tel=(c.phone||'').replace(/[^+\d]/g,'');
+  w.innerHTML=`<div class="con-detail">
+    <div class="con-av" style="background:${col}">${escapeHtml(_initials(c.name))}</div>
+    <div class="con-dname">${escapeHtml(c.name||'(naamloos)')}</div>
+    ${c.role?`<div class="con-drole">${escapeHtml(c.role)}</div>`:''}
+    ${avBtn}
+    <div class="con-dlines">
+      ${line('Klant',c.client&&c.client.trim()?c.client:'')}
+      ${line('Bedrijf',c.company)}
+      ${line('Telefoon',c.phone,tel?('tel:'+tel):'')}
+      ${line('E-mail',c.email,c.email?('mailto:'+c.email):'')}
+    </div>
+    <div class="con-linked">${_contactLinkedHTML(c)}</div>
+    <button class="con-edit" onclick="openContactModal('${c.id}')">Bewerken</button>
+  </div>`;
+}
+function conAiAvatar(id){ uiConfirm('Een AI-avatar op basis van wat we over dit contact weten zit er bijna in — dat zet ik als volgende stap aan. Voor nu zie je de gekleurde initialen.'); }
+function _filterContacts(q){ _conSearch=q; renderConMid(); }
 function _fillContactClient(sel,selected){
   const cur=selected||''; const cs=uniqueClients();
   sel.innerHTML='<option value="">— Geen klant —</option>'+cs.map(c=>`<option value="${escapeHtml(c)}"${c===cur?' selected':''}>${escapeHtml(c)}</option>`).join('')+((cur&&!cs.includes(cur))?`<option value="${escapeHtml(cur)}" selected>${escapeHtml(cur)}</option>`:'');
