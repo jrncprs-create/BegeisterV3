@@ -1503,7 +1503,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v124</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v125</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -1654,6 +1654,46 @@
       #finMidWrap .finA-camt{flex:0 0 74px;text-align:right;font-size:12.5px;color:#d7dadd;font-variant-numeric:tabular-nums}
       #finMidWrap .finA-camt.neg{color:#e0726f}
       #finMidWrap .finA-uptot{color:#d7dadd;font-weight:600}
+      #finMidWrap .finA-nprow .finA-npmove{flex:0 0 auto;background:transparent;border:none;color:var(--mut2);cursor:pointer;padding:2px;border-radius:6px;display:flex;opacity:.55;transition:opacity .15s,color .15s}
+      #finMidWrap .finA-nprow:hover .finA-npmove{opacity:1}
+      #finMidWrap .finA-nprow .finA-npmove:hover{color:#e8e8ea;background:rgba(255,255,255,.08)}
+      #finMidWrap .finA-npall{margin-left:auto;font-size:11px;color:var(--mut2);background:transparent;border:1px solid var(--line);border-radius:20px;padding:2px 9px;cursor:pointer}
+      #finMidWrap .finA-npall:hover{color:#e8e8ea;border-color:rgba(232,232,234,.4)}
+      #finMidWrap .finA-noproj .fd-h{display:flex;align-items:center;gap:8px}
+      /* Budget-uit-bronnen scan */
+      #finMidWrap .finB-scan{border-top:1px solid var(--line);padding-top:12px}
+      #finMidWrap .finB-scanbtn,#finMidWrap .finB-scanretry{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:var(--ccol);background:transparent;border:1px solid color-mix(in srgb,var(--ccol) 40%,var(--line));border-radius:20px;padding:6px 13px;cursor:pointer;transition:background .15s}
+      #finMidWrap .finB-scanbtn:hover{background:color-mix(in srgb,var(--ccol) 12%,transparent)}
+      #finMidWrap .finB-scanbusy{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--mut2)}
+      #finMidWrap .finB-scanbusy svg{animation:spin 1.1s linear infinite}
+      @keyframes spin{to{transform:rotate(360deg)}}
+      #finMidWrap .finB-scanmsg{font-size:12px;color:var(--mut2);line-height:1.5}
+      #finMidWrap .finB-scanmsg em{font-style:normal;opacity:.7}
+      #finMidWrap .finB-scanretry{padding:3px 10px;font-size:11.5px;margin-left:4px}
+      #finMidWrap .finB-sghead{display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--ccol);margin-bottom:9px}
+      #finMidWrap .finB-sgrid{display:flex;gap:10px;flex-wrap:wrap}
+      #finMidWrap .finB-sg{flex:1;min-width:150px;background:color-mix(in srgb,var(--ccol) 8%,#141417);border:1px solid color-mix(in srgb,var(--ccol) 30%,var(--line));border-radius:12px;padding:11px 13px;display:flex;flex-direction:column;gap:7px}
+      #finMidWrap .finB-sgtop{display:flex;justify-content:space-between;align-items:baseline}
+      #finMidWrap .finB-sglbl{font-size:11.5px;color:var(--mut2)}
+      #finMidWrap .finB-sgtop b{font-size:17px;font-weight:600;color:#e8e8ea;font-variant-numeric:tabular-nums}
+      #finMidWrap .finB-sgtop .e{color:var(--mut2);font-weight:400;font-size:12px;margin-right:3px}
+      #finMidWrap .finB-sgev{font-size:11.5px;color:var(--mut2);font-style:italic;line-height:1.45}
+      #finMidWrap .finB-sgtake{align-self:flex-start;font-size:12px;color:#111;background:var(--ccol);border:none;border-radius:20px;padding:5px 14px;cursor:pointer;font-weight:600}
+      #finMidWrap .finB-sgtake:hover{filter:brightness(1.08)}
+      /* Per-artikel verplaats-knop in bestellijst */
+      .pb-row.pb-ink .pb-move{flex:0 0 auto;background:transparent;border:none;color:var(--mut2);cursor:pointer;padding:3px;border-radius:6px;display:flex;opacity:0;transition:opacity .15s,color .15s,background .15s}
+      .pb-row.pb-ink:hover .pb-move{opacity:.6}
+      .pb-row.pb-ink .pb-move:hover{opacity:1;color:var(--txt);background:rgba(255,255,255,.08)}
+      /* Verplaats-picker */
+      #pmvOverlay .pmv-modal{width:100%;max-width:420px;background:#161619;border:1px solid var(--line);border-radius:16px;padding:18px 18px 14px;position:relative;max-height:74vh;display:flex;flex-direction:column}
+      #pmvOverlay .pmv-h{font-size:15px;font-weight:600;color:var(--txt);margin:0 30px 14px 2px}
+      #pmvOverlay .pmv-list{overflow:auto;display:flex;flex-direction:column;gap:2px;margin:0 -4px;padding:0 4px}
+      #pmvOverlay .pmv-cli{display:flex;align-items:center;gap:9px;padding:11px 4px 5px;font-size:12px;color:var(--mut2)}
+      #pmvOverlay .pmv-badge{width:22px;height:22px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#111}
+      #pmvOverlay .pmv-cname{font-weight:600;color:var(--txt);font-size:12.5px}
+      #pmvOverlay .pmv-proj{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:transparent;border:none;border-radius:9px;padding:9px 12px 9px 34px;color:var(--txt);font-size:13.5px;cursor:pointer}
+      #pmvOverlay .pmv-proj:hover{background:rgba(255,255,255,.06)}
+      #pmvOverlay .pmv-dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto}
       #finMidWrap .fd-block{background:#141417;border:1px solid var(--line);border-radius:12px;padding:13px 15px}
       #finMidWrap .fd-h{font-size:12.5px;color:var(--mut2);margin-bottom:9px}
       #finMidWrap .fd-donutrow{display:flex;align-items:center;gap:16px}
@@ -2715,7 +2755,7 @@ function closeProjectBoard(){ const ov=document.getElementById('projOverlay'); i
 function _renderProjBoard(){
   if(!_pbPid)return;
   const ov=document.getElementById('projOverlay');
-  if(_pbTarget!=='finmid' && _pbTarget!=='beheer' && !ov)return;
+  if(_pbTarget!=='finmid' && _pbTarget!=='finright' && _pbTarget!=='beheer' && !ov)return;
   const p=projById(_pbPid); if(!p)return; const col=p.color||'#888'; const esc=escapeHtml;
   const tasks=(p.items||[]).slice().sort((a,b)=>(a.status==='done')-(b.status==='done'));
   const todos=_pbItems.filter(x=>x.kind==='todo'), inkopen=_pbItems.filter(x=>x.kind==='inkoop');
@@ -2744,7 +2784,7 @@ function _renderProjBoard(){
     const sub=(qty>1)?`<span class="pb-ink-sub">${qty} × €${pr!=null?fmtEur(pr):'—'}${pr!=null?' = €'+fmtEur(pr*qty):''}</span>`:'';
     const nameCell=`<div class="pb-ink-name"><a class="pb-tx pb-itxlink" href="${href}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="${ttl}">${esc(x.text)}${qty>1?` <span class="pb-qty">×${qty}</span>`:''}</a>${sub}</div>`;
     const thumb=x.image?`<img class="pb-thumb" src="${esc(x.image)}" alt="" loading="lazy" onerror="this.style.display='none'">`:'';
-    return `<div class="pb-row pb-ink" data-tid="${x.id}"><button class="pb-chk" onclick="pbInkCheck('${x.id}',${x.done?'false':'true'})" title="Afvinken">${_pbChk(!!x.done)}</button>${thumb}${nameCell}<span class="pb-pricewrap"><span class="pb-eur">€</span><input class="pb-price" type="text" inputmode="decimal" value="${pr!=null?String(pr).replace('.',','):''}" placeholder="—" onclick="event.stopPropagation()" onchange="pbSetPrice('${x.id}',this.value)" title="Prijs per stuk"></span><button class="pb-del" onclick="event.preventDefault();pbDel('${x.id}')" title="Verwijderen">×</button></div>`; };
+    return `<div class="pb-row pb-ink" data-tid="${x.id}"><button class="pb-chk" onclick="pbInkCheck('${x.id}',${x.done?'false':'true'})" title="Afvinken">${_pbChk(!!x.done)}</button>${thumb}${nameCell}<span class="pb-pricewrap"><span class="pb-eur">€</span><input class="pb-price" type="text" inputmode="decimal" value="${pr!=null?String(pr).replace('.',','):''}" placeholder="—" onclick="event.stopPropagation()" onchange="pbSetPrice('${x.id}',this.value)" title="Prijs per stuk"></span><button class="pb-move" onclick="event.preventDefault();event.stopPropagation();pbMoveOpen('one','${x.id}')" title="Verplaats naar ander project/klant">${_tIc('<path d="M17 3l4 4l-4 4"/><path d="M21 7h-13"/><path d="M7 21l-4 -4l4 -4"/><path d="M3 17h13"/>',15,1.4)}</button><button class="pb-del" onclick="event.preventDefault();pbDel('${x.id}')" title="Verwijderen">×</button></div>`; };
   const doneInkRow=(x)=>`<div class="pb-row pb-donerow"><button class="pb-chk" onclick="pbInkCheck('${x.id}',false)" title="Terugzetten">${_pbChk(true)}</button><span class="pb-tx done">${esc(x.text||'')}</span></div>`;
   const apptRow=(a)=>{ const d=a.date?d3date(a.date):''; return `<div class="pb-row pb-appt"><span class="pb-tx">${esc(a.t||'Afspraak')}</span><span class="pb-when">${esc(d)}${a.start?' · '+esc(String(a.start).slice(0,5)):''}</span><button class="pb-edit" onclick="openApptModal('${a.id}')" title="Bewerken">${_penIc}</button></div>`; };
   const secWait=`<div class="pb-sec"><div class="pb-h">In afwachting <button class="pb-hadd" onclick="openModal(null,'wachter','wait','${_pbPid}')" title="Toevoegen">+</button></div>${waitT.length?waitT.map(waitRow).join(''):'<div class="pb-empty">Niets in afwachting.</div>'}</div>`;
@@ -2766,8 +2806,8 @@ function _renderProjBoard(){
       _masterLink=`<a class="pb-cluster" href="${esc(_u)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Open de hele lijst bij ${esc(_shop)}"><span class="pb-cluster-shop">🛒 ${esc(_shop)}${_pj?' · '+esc(_pj):''}</span><span class="pb-cluster-sub">${_n} items ↗</span></a>`; } }
   const inkopenOpen=inkopen.filter(x=>!x.done);
   const _openTot=inkopenOpen.reduce((s,x)=>s+((x.price!=null&&x.price!=='')?Number(x.price):0)*(x.qty||1),0);
-  const secBestel=`<div class="pb-sec"><div class="pb-h"><span>Bestellijst</span><span class="pb-hbtns">${inkopen.length?`<button class="pb-ai" onclick="pbOrderAll()" title="Zet de hele lijst in één keer in je Amazon-mandje">${_tIc('<path d="M6 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M17 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M17 17h-11v-14h-2"/><path d="M6 5l14 1l-1 7h-13"/>',16,1.7)}</button>`:''}<button class="pb-ai" onclick="pbInkPaste()" title="Plak een verlanglijst of winkelwagen — AI maakt er regels van">${_tIc(_TABCHAN.asterisk,15,1.7)}<span>lijst</span></button>${inkopen.length?`<button class="pb-listdel" onclick="pbDelBestel()" title="Hele bestellijst verwijderen"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/></svg></button>`:''}</span></div>${_masterLink}${inkopenOpen.length?inkopenOpen.map(inkRow).join(''):'<div class="pb-empty">Nog geen bestellingen.</div>'}<div class="pb-add"><input class="pb-in" data-kind="inkoop" placeholder="+ artikel toevoegen…" onkeydown="pbAddKey(event,'inkoop')"></div>${inkopenOpen.length?`<div class="pb-besteltot">Totaal <b>€${fmtEur(_openTot)}</b></div>`:''}</div>`;
-  const _body=(_pbMode==='financien')?secInk:(secWait+secTaken+secBestel+secDone+secAppt+secFiles+secPrijs+secNotes);
+  const secBestel=`<div class="pb-sec"><div class="pb-h"><span>Bestellijst</span><span class="pb-hbtns">${inkopen.length?`<button class="pb-ai" onclick="pbOrderAll()" title="Zet de hele lijst in één keer in je Amazon-mandje">${_tIc('<path d="M6 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M17 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M17 17h-11v-14h-2"/><path d="M6 5l14 1l-1 7h-13"/>',16,1.7)}</button>`:''}<button class="pb-ai" onclick="pbInkPaste()" title="Plak een verlanglijst of winkelwagen — AI maakt er regels van">${_tIc(_TABCHAN.asterisk,15,1.7)}<span>lijst</span></button>${inkopen.length?`<button class="pb-ai" onclick="pbMoveOpen('all')" title="Hele bestellijst naar een ander project/klant verplaatsen">${_tIc('<path d="M17 3l4 4l-4 4"/><path d="M21 7h-13"/><path d="M7 21l-4 -4l4 -4"/><path d="M3 17h13"/>',15,1.5)}</button><button class="pb-listdel" onclick="pbDelBestel()" title="Hele bestellijst verwijderen"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/></svg></button>`:''}</span></div>${_masterLink}${inkopenOpen.length?inkopenOpen.map(inkRow).join(''):'<div class="pb-empty">Nog geen bestellingen.</div>'}<div class="pb-add"><input class="pb-in" data-kind="inkoop" placeholder="+ artikel toevoegen…" onkeydown="pbAddKey(event,'inkoop')"></div>${inkopenOpen.length?`<div class="pb-besteltot">Totaal <b>€${fmtEur(_openTot)}</b></div>`:''}</div>`;
+  const _body=(_pbMode==='financien')?secBestel:(secWait+secTaken+secBestel+secDone+secAppt+secFiles+secPrijs+secNotes);
   const _head=`<div class="pb-head"><span class="kbadge" style="background:${col}">${esc(initial)}</span><div class="pb-title"><b>${esc(p.client||'')}</b>${p.project?'<span> · '+esc(p.project)+'</span>':''}${_pbMode==='financien'?'<span style="color:'+col+'"> · inkoop</span>':''}</div></div>`;
   if(_pbTarget==='finmid'||_pbTarget==='finright'){ const el=document.getElementById(_pbTarget==='finright'?'finRightWrap':'finMidWrap'); if(el)el.innerHTML=`<div class="pb-inline" style="--scol:${col}">${_head}${_body}</div>`; return; }
   if(_pbTarget==='beheer'){ const el=document.getElementById('beheerBoardWrap'); if(el)el.innerHTML=`<div class="pb-inline pb-board-inline" style="--scol:${col}">${_head}<div class="pb-grid"><div class="pb-colL">${secWait}${secTaken}${secBestel}${secDone}</div><div class="pb-colR">${secAppt}${secFiles}${secPrijs}${secNotes}</div></div></div>`; return; }
@@ -2822,6 +2862,33 @@ async function pbInkCheck(id,done){ const x=_pbItems.find(i=>i.id===id); if(x)x.
 async function pbCheckAllInk(){ const open=_pbItems.filter(x=>x.kind==='inkoop'&&!x.done); if(!open.length)return; if(!(await uiConfirm('De hele bestellijst afvinken? Ze schuiven dan naar Afgevinkt — je kunt ze daar weer terugzetten.',{ok:'Afvinken',danger:false})))return; for(const x of open){ x.done=true; try{ sb.from('project_board').update({done:true}).eq('id',x.id); }catch(_){} } _pbDoneOpen=true; _finInk=null; _renderProjBoard(); try{render();}catch(_){} }
 async function pbDelBestel(){ if(!(await uiConfirm('De hele bestellijst verwijderen? Dit kan niet ongedaan worden gemaakt.')))return; const ink=_pbItems.filter(x=>x.kind==='inkoop'); for(const x of ink){ try{ await sb.from('project_board').delete().eq('id',x.id); }catch(_){} } _pbItems=_pbItems.filter(x=>x.kind!=='inkoop'); _finInk=null; _renderProjBoard(); try{render();}catch(_){} }
 async function pbSaveNotes(val){ const p=projById(_pbPid); if(p)p.notes=val; try{ await sb.from('projects').update({notes:val}).eq('id',_pbPid); }catch(_){} }
+// ===== Bestellijst verplaatsen — één artikel of de hele lijst naar een ander project/klant =====
+let _pbMoveCtx=null;
+function pbMoveOpen(mode,id){ _pbMoveCtx={mode,id:id||null};
+  const projs=(state.projects||[]).filter(p=>p.id!=='__inbox__' && !(mode==='all'&&p.id===_pbPid));
+  const byC={}, ord=[]; projs.forEach(p=>{ const c=p.client||'—'; if(!byC[c]){byC[c]=[];ord.push(c);} byC[c].push(p); });
+  const rows=ord.map(c=>{ const arr=byC[c]; const col=(arr[0]&&arr[0].color)||'#888';
+    return `<div class="pmv-cli"><span class="pmv-badge" style="background:${col}">${escapeHtml((String(c).trim()[0]||'?').toUpperCase())}</span><span class="pmv-cname">${escapeHtml(c)}</span></div>`+
+      arr.map(p=>`<button class="pmv-proj" onclick="pbMoveTo('${p.id}')"><span class="pmv-dot" style="background:${p.color||col}"></span><span>${escapeHtml(p.project||'Project / event')}</span></button>`).join(''); }).join('');
+  let ov=document.getElementById('pmvOverlay'); if(!ov){ ov=document.createElement('div'); ov.id='pmvOverlay'; ov.className='overlay'; document.body.appendChild(ov); ov.addEventListener('click',e=>{ if(e.target===ov)pbMoveClose(); }); }
+  const title=(mode==='all'||mode==='orphanall')?'Hele bestellijst verplaatsen naar…':'Artikel verplaatsen naar…';
+  ov.innerHTML=`<div class="modal pmv-modal"><button class="modal-close" onclick="pbMoveClose()" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button><div class="pmv-h">${title}</div><div class="pmv-list">${rows||'<div class="pb-empty">Geen ander project beschikbaar.</div>'}</div></div>`;
+  requestAnimationFrame(()=>ov.classList.add('open'));
+}
+function pbMoveClose(){ const ov=document.getElementById('pmvOverlay'); if(ov){ ov.classList.remove('open'); setTimeout(()=>{ try{ov.remove();}catch(_){} },260); } _pbMoveCtx=null; }
+async function pbMoveTo(targetPid){ if(!_pbMoveCtx){ pbMoveClose(); return; } const {mode,id}=_pbMoveCtx;
+  let ids=[];
+  if(mode==='one') ids=[id];
+  else if(mode==='all') ids=_pbItems.filter(x=>x.kind==='inkoop').map(x=>x.id);
+  else if(mode==='orphanall') ids=(_finRows||[]).filter(x=>!projById(x.project_id)).map(x=>x.id);
+  ids=ids.filter(Boolean);
+  if(!ids.length){ pbMoveClose(); return; }
+  for(const iid of ids){ try{ await sb.from('project_board').update({project_id:targetPid}).eq('id',iid); }catch(_){} }
+  if(Array.isArray(_pbItems)) _pbItems=_pbItems.filter(x=>!ids.includes(x.id));
+  _finInk=null; pbMoveClose();
+  try{ _renderProjBoard(); }catch(_){}
+  try{ renderFinancien(); }catch(_){}
+}
 function fmtEur(n){ n=Number(n)||0; return n.toLocaleString('nl-NL',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function _parseEur(v){ v=String(v||'').replace(/[^0-9,.\-]/g,'').replace(/\.(?=\d{3}(\D|$))/g,'').replace(',', '.'); const n=parseFloat(v); return isNaN(n)?null:n; }
 async function pbSetPrice(id,val){ const price=_parseEur(val); const x=_pbItems.find(i=>i.id===id); if(x)x.price=price; try{ await sb.from('project_board').update({price}).eq('id',id); }catch(_){} _renderProjBoard(); }
@@ -2835,6 +2902,21 @@ async function pbSetInvoiceStatus(st){ const p=projById(_pbPid); if(!p)return; p
   if((st==='gefactureerd'||st==='betaald')&&!p.invoice_date){ p.invoice_date=new Date().toISOString().slice(0,10); patch.invoice_date=p.invoice_date; }
   try{ await sb.from('projects').update(patch).eq('id',_pbPid); }catch(_){}
   try{ renderFinancien(); }catch(_){} }
+// "Budget uit bronnen" — laat de AI de gekoppelde bronnen lezen en projectprijs/klantbudget voorstellen (nooit auto-invullen).
+async function pbScanBudget(btn){
+  const wrap=document.getElementById('finBScan'); if(!wrap)return; const pid=_pbPid;
+  wrap.innerHTML=`<div class="finB-scanbusy">${_tIc(_TABCHAN.asterisk,15,1.7)}<span>Bronnen lezen…</span></div>`;
+  let r={}; try{ r=await fetch('/api/scanbudget',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({project_id:pid})}).then(x=>x.json()); }catch(e){ r={error:String(e&&e.message||e)}; }
+  if(_pbPid!==pid)return; const w=document.getElementById('finBScan'); if(!w)return;
+  if(r.error){ w.innerHTML=`<div class="finB-scanmsg">Kon de bronnen niet lezen${r.message?': '+escapeHtml(r.message):''}. <button class="finB-scanretry" onclick="pbScanBudget(this)">Opnieuw</button></div>`; return; }
+  const _E='<span class="e">€</span>'; const cards=[];
+  if(r.projectprijs!=null) cards.push(`<div class="finB-sg"><div class="finB-sgtop"><span class="finB-sglbl">Projectprijs</span><b>${_E}${fmtEur(r.projectprijs)}</b></div>${r.projectprijs_evidence?`<div class="finB-sgev">"${escapeHtml(r.projectprijs_evidence)}"</div>`:''}<button class="finB-sgtake" onclick="pbTakeSuggest('projectprijs',${r.projectprijs})">Overnemen</button></div>`);
+  if(r.budget!=null) cards.push(`<div class="finB-sg"><div class="finB-sgtop"><span class="finB-sglbl">Klantbudget</span><b>${_E}${fmtEur(r.budget)}</b></div>${r.budget_evidence?`<div class="finB-sgev">"${escapeHtml(r.budget_evidence)}"</div>`:''}<button class="finB-sgtake" onclick="pbTakeSuggest('budget',${r.budget})">Overnemen</button></div>`);
+  if(!cards.length){ w.innerHTML=`<div class="finB-scanmsg">${escapeHtml(r.note||'Geen duidelijk bedrag in de bronnen gevonden.')}${r.sources?` <em>(${r.sources} bron${r.sources>1?'nen':''} gelezen)</em>`:''} <button class="finB-scanretry" onclick="pbScanBudget(this)">Opnieuw</button></div>`; return; }
+  const conf=r.confidence?` · ${escapeHtml(r.confidence)} zekerheid`:'';
+  w.innerHTML=`<div class="finB-sghead">${_tIc(_TABCHAN.asterisk,14,1.7)}<span>Voorstel uit ${r.sources} bron${r.sources>1?'nen':''}${conf}</span></div><div class="finB-sgrid">${cards.join('')}</div>`;
+}
+async function pbTakeSuggest(field,val){ if(field==='projectprijs'){ await pbSetProjectprijs(String(val)); } else { await pbSetBudget(String(val)); } try{ renderFinancien(); }catch(_){} }
 async function pbCycleStatus(id){ const order=['te bestellen','besteld']; const x=_pbItems.find(i=>i.id===id); if(!x)return; const cur=(x.status==='binnen')?'besteld':(x.status||'te bestellen'); const ns=order[(order.indexOf(cur)+1)%order.length]; x.status=ns; try{ await sb.from('project_board').update({status:ns}).eq('id',id); }catch(_){} _finInk=null; _renderProjBoard(); }
 // ===== Financiën-railkolom: per project omzet − inkoop = marge, klik → projectbord =====
 let _finInk=null, _finUp=null, _finRows=null;
@@ -2859,11 +2941,11 @@ async function renderFinancien(){
   const w=document.getElementById('financienWrap'); if(!w)return;
   if(_finInk===null){
     try{
-      const r=await sb.from('project_board').select('project_id,text,price,qty,status,done,created_at').eq('kind','inkoop');
+      const r=await sb.from('project_board').select('id,project_id,text,price,qty,status,done,created_at').eq('kind','inkoop');
       _finInk={}; _finUp=[]; _finRows=[];
       (r&&r.data||[]).forEach(x=>{ const k=String(x.project_id); const price=(x.price!=null&&x.price!=='')?Number(x.price):0; const qty=x.qty||1; const amt=price*qty; _finInk[k]=(_finInk[k]||0)+amt;
-        _finRows.push({project_id:x.project_id,text:x.text||'Artikel',amount:amt,done:!!x.done,status:x.status,created_at:x.created_at});
-        if(!x.done && (x.status==null||x.status==='te bestellen') && amt>0) _finUp.push({project_id:k,text:x.text||'Artikel',amount:amt}); });
+        _finRows.push({id:x.id,project_id:x.project_id,text:x.text||'Artikel',amount:amt,done:!!x.done,status:x.status,created_at:x.created_at});
+        if(!x.done && (x.status==null||x.status==='te bestellen') && amt>0) _finUp.push({id:x.id,project_id:k,text:x.text||'Artikel',amount:amt}); });
     }catch(_){ _finInk={}; _finUp=[]; _finRows=[]; }
   }
   const esc=s=>String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
@@ -2969,6 +3051,7 @@ async function renderFinancien(){
         <label class="finB-field"><span>Klantbudget</span><span class="finB-inwrap">${_E}<input class="finB-in" type="text" inputmode="decimal" value="${budget!=null?String(budget).replace('.',','):''}" placeholder="—" onchange="pbSetBudget(this.value)"></span>${budPct!=null?`<em class="${budPct>100?'over':''}">${budPct}% benut</em>`:''}</label>
       </div>
       ${budPct!=null?`<div class="finB-budbar"><div class="finB-budfill ${budPct>100?'over':''}" style="width:${Math.min(100,budPct)}%"></div></div>`:''}
+      <div class="finB-scan" id="finBScan"><button class="finB-scanbtn" onclick="pbScanBudget(this)">${_tIc(_TABCHAN.asterisk,15,1.7)}<span>Budget uit bronnen halen</span></button></div>
     </div></div>`;
     return;
   }
@@ -2986,7 +3069,8 @@ async function renderFinancien(){
     return `<div class="finA-bcol"><div class="finA-bval">${k?'€'+fmtEur(k):''}</div><div class="finA-bstack">${kH?`<div class="finA-bkos" style="height:${Math.max(4,kH)}px"></div>`:'<div class="finA-bempty"></div>'}</div><div class="finA-blbl">${m.label}</div></div>`; }).join('');
   const dated=(_finRows||[]).filter(x=>x.created_at).sort((a,b)=>String(b.created_at).localeCompare(String(a.created_at)));
   const boek=dated.filter(x=>projById(x.project_id)).slice(0,7).map(x=>`<div class="finA-brow" onclick="selectFinProj('${x.project_id}')"><span class="finA-bdot" style="background:${pjColor(x.project_id)}"></span><span class="finA-btext">${escapeHtml(pjName(x.project_id)||'—')} · ${escapeHtml(_shortName(x.text))}</span><span class="finA-bdate">${_finShortDate(x.created_at)}</span><span class="finA-bamt neg">-€${fmtEur(x.amount)}</span></div>`).join('');
-  const noRows=dated.filter(x=>!projById(x.project_id)).slice(0,10).map(x=>`<div class="finA-nprow"><span class="finA-nptext">${escapeHtml(_shortName(x.text))}</span><span class="finA-npamt">€${fmtEur(x.amount)}</span></div>`).join('');
+  const orphans=dated.filter(x=>!projById(x.project_id));
+  const noRows=orphans.slice(0,12).map(x=>`<div class="finA-nprow"><span class="finA-nptext">${escapeHtml(_shortName(x.text))}</span><span class="finA-npamt">€${fmtEur(x.amount)}</span><button class="finA-npmove" onclick="event.stopPropagation();pbMoveOpen('one','${x.id}')" title="Naar een project/klant verplaatsen">${_tIc('<path d="M17 3l4 4l-4 4"/><path d="M21 7h-13"/><path d="M7 21l-4 -4l4 -4"/><path d="M3 17h13"/>',14,1.4)}</button></div>`).join('');
   // Cashflow-kern
   const cfHtml=`<div class="finA-cf">
     <div class="finA-cfcard todo"><div class="finA-cflbl">Nog te factureren</div><div class="finA-cfval">€${fmtEur(cfTeFact)}</div></div>
@@ -3014,7 +3098,7 @@ async function renderFinancien(){
     </div>
     <div class="finA-blocks">
       <div class="fd-block"><div class="fd-h">Recente boekingen</div>${boek||'<div class="fd-empty">Nog geen boekingen.</div>'}</div>
-      <div class="fd-block finA-noproj"><div class="fd-h">Zonder project · algemeen</div>${noRows||'<div class="fd-empty">Niets zonder project.</div>'}</div>
+      <div class="fd-block finA-noproj"><div class="fd-h">Zonder project · algemeen${orphans.length?` <button class="finA-npall" onclick="pbMoveOpen('orphanall')" title="Alles naar één project/klant verplaatsen">alles verplaatsen</button>`:''}</div>${noRows||'<div class="fd-empty">Niets zonder project.</div>'}</div>
     </div>
   </div>`;
 }
