@@ -1490,7 +1490,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v94</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v95</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -4941,8 +4941,8 @@ async function _saveDropToWait(items, summary, srcId, fileObj, listUrl){
   const _isBestel = (items&&items.length>=1) && ( (listUrl&&/amazon\./i.test(listUrl)) || items.filter(it=>/€\s*\d|verlanglijst|winkelwagen|^\s*bestel\b/i.test(it.title||'')).length>=Math.max(2,Math.ceil(items.length*0.6)) );
   if(_isBestel){
     let n=0;
-    for(const it of items){ const price=_priceFromText(it.title); const name=((it.title||'').replace(/^\s*bestel\s+/i,'').replace(/\s*via\b[^,]*verlanglijst\s*$/i,'').trim())||(it.title||'Artikel');
-      try{ await sb.from('project_board').insert({project_id:(it.project_id||pid||null), kind:'inkoop', text:name, price:(price!=null?price:null), qty:1, status:'te bestellen', source_id:srcId||null, sort:n++}); }catch(_){} }
+    for(const it of items){ const price=_priceFromText(it.title); const name=((it.title||'').replace(/^\s*bestel\s+/i,'').replace(/\s*via\b[^,]*verlanglijst\s*$/i,'').trim())||(it.title||'Artikel'); const purl=(it.url&&/^https?:\/\//i.test(it.url))?it.url:null;
+      try{ await sb.from('project_board').insert({project_id:(it.project_id||pid||null), kind:'inkoop', text:name, price:(price!=null?price:null), qty:1, status:'te bestellen', source_id:srcId||null, url:purl, sort:n++}); }catch(_){} }
     try{ notifyPartner((who||'Iemand')+' zette een bestellijst ('+items.length+' artikel(en)) klaar.'); }catch(_){}
     try{ _finInk=null; await refresh(); }catch(_){}
     return;
