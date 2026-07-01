@@ -1494,7 +1494,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v100</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v101</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -2655,17 +2655,34 @@ function _parsePastedList(txt){
   flush();
   return items.map(x=>({name:x.name.slice(0,200),qty:x.qty||1,price:x.price,url:x.url}));
 }
+// Klembord-HTML (die bij plakken de <a href>-links bevat) omzetten naar tekst-met-links,
+// zodat _parsePastedList de links kan vinden ook al toont de textarea alleen platte tekst.
+function _htmlToLinkText(html){
+  let s=String(html||'');
+  s=s.replace(/<style[\s\S]*?<\/style>/gi,' ').replace(/<script[\s\S]*?<\/script>/gi,' ');
+  s=s.replace(/<span[^>]*aria-hidden=["']true["'][^>]*>[\s\S]*?<\/span>/gi,' '); // dubbele visuele prijs weg, offscreen-prijs blijft
+  s=s.replace(/<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi,(m,href,inner)=>{ const tx=inner.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim(); return ' ['+tx+']('+href.replace(/&amp;/gi,'&')+') '; });
+  s=s.replace(/<\/(p|div|li|tr|h\d)>/gi,'\n').replace(/<br\s*\/?>/gi,'\n');
+  s=s.replace(/<[^>]+>/g,' ');
+  s=s.replace(/&nbsp;/gi,' ').replace(/&amp;/gi,'&').replace(/&euro;/gi,'€').replace(/&#8364;/gi,'€').replace(/&#39;/gi,"'").replace(/&quot;/gi,'"');
+  return s.replace(/[ \t]+/g,' ').replace(/\n{2,}/g,'\n');
+}
 function pbInkPaste(){ const ov=document.createElement('div'); ov.className='overlay';
   ov.innerHTML='<div class="modal" style="width:560px;max-width:94vw"><button class="modal-close" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button><h3>Plak je winkelwagen of lijst</h3><div style="font-size:12.5px;color:var(--mut2);margin:-6px 0 12px">Open je Amazon-lijst, selecteer alles (Cmd/Ctrl+A) en plak het hier — de AI maakt er een bestellijst van.</div><textarea id="pbpaste" class="pb-notes" style="min-height:170px" placeholder="Plak hier…"></textarea><div class="foot" style="display:flex;justify-content:flex-end;gap:10px;margin-top:16px"><button class="btn ghost" id="pbpcancel">Annuleren</button><button class="btn" id="pbpok">Maak bestellijst</button></div></div>';
   document.body.appendChild(ov); requestAnimationFrame(()=>ov.classList.add('open'));
   const close=()=>{ ov.classList.remove('open'); setTimeout(()=>ov.remove(),300); };
   ov.querySelector('.modal-close').onclick=close; ov.querySelector('#pbpcancel').onclick=close;
   ov.addEventListener('click',e=>{ if(e.target===ov) close(); });
+  // Bij plakken óók de HTML-versie van het klembord opvangen — die bevat de <a href>-links
+  // (en img-thumbnails), die de platte textarea-tekst niet heeft.
+  let _pastedHtml='';
+  const _ta0=ov.querySelector('#pbpaste'); if(_ta0){ _ta0.addEventListener('paste',e=>{ try{ const hh=e.clipboardData&&e.clipboardData.getData('text/html'); if(hh)_pastedHtml=hh; }catch(_){} }); }
   const _note=(m)=>{ let n=ov.querySelector('.pbp-note'); if(!n){ n=document.createElement('div'); n.className='pbp-note'; n.style.cssText='color:#f0a;font-size:12.5px;margin-top:12px;line-height:1.4'; const foot=ov.querySelector('.foot'); if(foot)foot.parentNode.insertBefore(n,foot); else ov.querySelector('.modal').appendChild(n); } n.textContent=m; };
   ov.querySelector('#pbpok').onclick=async()=>{ const txt=(ov.querySelector('#pbpaste').value||'').trim(); if(!txt){ _note('Plak eerst de lijst-tekst.'); return; }
     const b=ov.querySelector('#pbpok'); const _orig=b.innerHTML; b.disabled=true; b.innerHTML='<img class="kfile-aianim" src="/thinking.webp" alt="">';
-    let items=[], err=null;
-    const local=_parsePastedList(txt); // regels mét product-links → direct koppelen, zónder AI (werkt ook bij AI-storing)
+    let items=[], err=null, local=[];
+    if(_pastedHtml){ local=_parsePastedList(_htmlToLinkText(_pastedHtml)); } // klembord-HTML → links direct
+    if(!local.length){ local=_parsePastedList(txt); } // anders platte tekst mét evt. links
     if(local.length){ items=local; }
     else { try{ const r=await fetch('/api/bestellijst',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:txt})}); const d=await r.json(); items=(d&&d.items)||[]; err=d&&d.error; }catch(e){ err=String(e&&e.message||e); } }
     if(!items.length){ b.disabled=false; b.innerHTML=_orig; _note(err?('Kon de lijst niet lezen: '+err+' — tip: plak de winkelwagen mét de productlinks erbij, dan gaat het zónder AI.'):'Geen artikelen herkend. Plak het lijst-gedeelte (namen + prijzen), of een winkelwagen mét productlinks.'); return; }
