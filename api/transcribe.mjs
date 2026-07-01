@@ -10,10 +10,7 @@ import crypto from "crypto";
 import { createClient } from "@supabase/supabase-js";
 import { extractItems } from "../intake/extract.mjs";
 import { logUsage } from "../lib/usage.mjs";
-
-const GROQ_KEY = (process.env.GROQ_API_KEY || "").trim();
-const GROQ_URL = "https://api.groq.com/openai/v1/audio/transcriptions";
-const GROQ_MODEL = "whisper-large-v3-turbo";
+import { transcribeAudio, hasTranscription } from "../lib/transcribe.mjs";
 
 function supa() {
   return createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
@@ -32,31 +29,13 @@ function extFromMime(mime) {
   return "m4a";
 }
 
-// De audio naar Groq Whisper sturen en de platte transcriptietekst terugkrijgen.
-async function groqTranscribe(buf, mime, filename) {
-  const form = new FormData();
-  const blob = new Blob([buf], { type: mime || "audio/m4a" });
-  form.append("file", blob, filename || "spraak.m4a");
-  form.append("model", GROQ_MODEL);
-  form.append("language", "nl");
-  form.append("response_format", "json");
-  form.append("temperature", "0");
-  const r = await fetch(GROQ_URL, { method: "POST", headers: { Authorization: "Bearer " + GROQ_KEY }, body: form });
-  if (!r.ok) {
-    const t = await r.text().catch(() => "");
-    throw new Error("Groq " + r.status + ": " + t.slice(0, 300));
-  }
-  const j = await r.json();
-  return (j && typeof j.text === "string") ? j.text.trim() : "";
-}
-
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "method not allowed" });
   try {
     const { b64 = "", mime = "", filename = "", who = "", today = "", dates = "", catalog = [], context = "" } = req.body || {};
     const data = String(b64 || "").replace(/^data:[^;]+;base64,/, "");
     if (!data) return res.status(400).json({ error: "geen audiodata" });
-    if (!GROQ_KEY) {
+    if (!hasTranscription()) {
       return res.status(200).json({
         error: "no-transcription-key",
         message: "Transcriptie staat nog niet aan: zet GROQ_API_KEY in Railway om spraak automatisch uit te werken.",
@@ -93,7 +72,7 @@ export default async function handler(req, res) {
     // 3) Transcriberen.
     let transcript = "";
     try {
-      transcript = await groqTranscribe(buf, mime, fn);
+      transcript = await transcribeAudio(buf, mime, fn);
     } catch (e) {
       console.error("transcribe-groq:", e.message);
       if (sourceId) { try { await db.from("sources").update({ body: "[spraakbericht — transcriptie mislukte]" }).eq("id", sourceId); } catch (_) {} }
