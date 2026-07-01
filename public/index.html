@@ -1496,7 +1496,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v110</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v111</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -1638,17 +1638,18 @@
 
 <!-- SPRAAK-OPNAME (dictafoon) — rode mic + live waveform + meelopende tijd, géén live tekst -->
 <style>
-/* Beeldvullende dictafoon — rood-transparante blur (40%), 3 fasen: opnemen → verwerken → resultaat */
-#voiceRec{position:fixed;inset:0;z-index:1400;display:none;flex-direction:column;align-items:center;justify-content:center;padding:max(24px,env(safe-area-inset-top)) 20px max(24px,env(safe-area-inset-bottom));background:rgba(224,44,44,.4);-webkit-backdrop-filter:blur(26px) saturate(1.08);backdrop-filter:blur(26px) saturate(1.08)}
+/* Beeldvullende dictafoon — 3 fasen (opnemen → verwerken → resultaat). Achtergrond faadt van rood (opnemen) naar donkergrijs. */
+#voiceRec{position:fixed;inset:0;z-index:1400;display:none;flex-direction:column;align-items:center;justify-content:center;padding:max(24px,env(safe-area-inset-top)) 20px max(24px,env(safe-area-inset-bottom));background:rgba(18,18,20,.62);-webkit-backdrop-filter:blur(26px) saturate(1.05);backdrop-filter:blur(26px) saturate(1.05);transition:background .8s ease}
 #voiceRec.on{display:flex}
-.vr-inner{width:min(760px,94vw);color:#fff}
+#voiceRec.rec{background:rgba(224,44,44,.42)}
+.vr-inner{width:min(760px,94vw)}
 #voiceRec .vr-rec,#voiceRec .vr-busy,#voiceRec .vr-review{display:none}
 #voiceRec.rec .vr-rec{display:block}
 #voiceRec.busy .vr-busy{display:flex}
 #voiceRec.review .vr-review{display:flex}
 @keyframes vrSpin{to{transform:rotate(360deg)}}
 @keyframes vrPulse{0%{box-shadow:0 0 0 0 rgba(255,255,255,.6)}70%{box-shadow:0 0 0 12px rgba(255,255,255,0)}100%{box-shadow:0 0 0 0 rgba(255,255,255,0)}}
-.vr-top{display:flex;align-items:center;gap:16px;height:54px}
+.vr-top{display:flex;align-items:center;gap:16px;height:54px;color:#fff}
 .vr-dot{width:13px;height:13px;border-radius:50%;background:#fff;flex:0 0 auto;animation:vrPulse 1.3s infinite}
 #voiceRec.paused .vr-dot{animation:none;background:rgba(255,255,255,.55)}
 .vr-time{font-variant-numeric:tabular-nums;font-size:22px;font-weight:600;color:#fff;letter-spacing:.5px;min-width:58px;flex:0 0 auto}
@@ -1656,30 +1657,34 @@
 .vr-foot{display:flex;align-items:center;justify-content:space-between;margin-top:30px}
 .vr-btn{width:56px;height:56px;border-radius:50%;border:none;background:transparent;color:rgba(255,255,255,.92);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s}
 .vr-btn:hover{background:rgba(255,255,255,.14)}
-#voiceRec.paused .vr-pause{color:#fff}
-.vr-send{width:66px;height:66px;border-radius:50%;border:none;background:#fff;color:#000;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 8px 22px rgba(0,0,0,.3);transition:transform .12s}
+.vr-send{width:66px;height:66px;border-radius:50%;border:none;background:#fff;color:#111;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 8px 22px rgba(0,0,0,.3);transition:transform .12s}
 .vr-send:hover{transform:scale(1.05)}
 .vr-send:active{transform:scale(.96)}
-.vr-busy{flex-direction:column;align-items:center;justify-content:center;gap:18px;min-height:180px}
-.vr-spin{width:38px;height:38px;border-radius:50%;border:3px solid rgba(255,255,255,.35);border-top-color:#fff;animation:vrSpin .8s linear infinite}
-.vr-busy-tx{font-size:15px;color:#fff;letter-spacing:.2px}
-.vr-review{flex-direction:column;max-height:86vh}
-.vr-review h3{margin:0 0 4px;color:#fff;font-size:17px}
-.vr-hint{font-size:12.5px;color:rgba(255,255,255,.85);margin:0 0 12px}
-.vr-ta{width:100%;min-height:30vh;max-height:44vh;resize:vertical;line-height:1.55;font-size:14px;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.35);border-radius:12px;color:#fff;padding:12px 13px}
-.vr-ta::placeholder{color:rgba(255,255,255,.6)}
-.vr-th{font-size:10.5px;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,.8);margin:14px 0 6px}
-.vr-tasks{display:flex;flex-direction:column;gap:8px;overflow:auto}
+.vr-busy{flex-direction:column;align-items:center;justify-content:center;gap:18px;min-height:180px;color:#eaeaec}
+.vr-spin{width:38px;height:38px;border-radius:50%;border:3px solid rgba(255,255,255,.3);border-top-color:#fff;animation:vrSpin .8s linear infinite}
+.vr-busy-tx{font-size:15px;letter-spacing:.2px}
+.vr-review{flex-direction:column;max-height:88vh;color:#eaeaec}
+.vr-review h3{margin:0 0 4px;color:#fff;font-size:17px;font-weight:600}
+.vr-hint{font-size:12.5px;color:rgba(255,255,255,.6);margin:0 0 12px}
+.vr-ta{width:100%;min-height:20vh;max-height:50vh;resize:vertical;line-height:1.6;font-size:14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.16);border-radius:12px;color:#f2f2f4;padding:13px 14px;overflow:auto}
+.vr-ta::placeholder{color:rgba(255,255,255,.4)}
+.vr-th{font-size:10.5px;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,.55);margin:14px 0 6px}
+.vr-tasks{display:flex;flex-direction:column;gap:8px;overflow:auto;max-height:22vh}
 .vr-tasks .vr-tk{display:flex;align-items:center;gap:9px}
-.vr-tasks .vr-tk input[type=checkbox]{width:18px;height:18px;flex:0 0 auto;accent-color:#fff}
-.vr-tasks .vr-tk input[type=text]{flex:1 1 auto;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.35);border-radius:9px;color:#fff;padding:8px 10px;font-size:13px}
-.vr-selrow{display:flex;gap:10px;margin-top:12px}
-.vr-selrow select{flex:1;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:9px;padding:9px 10px;font-size:13px}
-.vr-selrow select option{color:#000}
-.vr-rfoot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:16px}
-.vr-rbtn{border:1px solid rgba(255,255,255,.5);background:transparent;color:#fff;border-radius:10px;padding:10px 16px;font-size:13px;cursor:pointer}
-.vr-rbtn:hover{background:rgba(255,255,255,.14)}
-.vr-rbtn.primary{background:#fff;color:#000;border-color:#fff;font-weight:600}
+.vr-tasks .vr-tk input[type=checkbox]{width:18px;height:18px;flex:0 0 auto;accent-color:#c8a24a}
+.vr-tasks .vr-tk input[type=text]{flex:1 1 auto;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.16);border-radius:9px;color:#f2f2f4;padding:8px 10px;font-size:13px}
+.vr-fields{display:flex;gap:10px;margin-top:12px}
+.vr-field{position:relative;flex:1}
+.vr-field input{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.16);border-radius:10px;color:#f2f2f4;padding:11px 12px;font-size:13.5px}
+.vr-field input::placeholder{color:rgba(255,255,255,.4)}
+.vr-field input:focus{outline:none;border-color:rgba(255,255,255,.4)}
+.vr-new{position:absolute;right:9px;top:50%;transform:translateY(-50%);font-size:9px;letter-spacing:.6px;text-transform:uppercase;background:#c8a24a;color:#151515;font-weight:700;border-radius:999px;padding:2px 7px;pointer-events:none}
+.vr-new[hidden]{display:none}
+.vr-rfoot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:18px}
+.vr-rbtn{display:inline-flex;align-items:center;gap:7px;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.04);color:#eaeaec;border-radius:10px;padding:10px 15px;font-size:13px;cursor:pointer}
+.vr-rbtn:hover{background:rgba(255,255,255,.12)}
+.vr-rbtn.primary{background:#fff;color:#151515;border-color:#fff;font-weight:600}
+.vr-rbtn svg{flex:0 0 auto}
 </style>
 <div id="voiceRec" aria-hidden="true">
   <div class="vr-inner">
@@ -1692,7 +1697,7 @@
       </div>
       <div class="vr-foot">
         <button class="vr-btn vr-del" onclick="vrCancel()" title="Weggooien" aria-label="Weggooien"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13"/></svg></button>
-        <button class="vr-btn vr-pause" id="vrPauseBtn" onclick="vrTogglePause()" title="Pauze" aria-label="Pauze"><svg id="vrPauseIc" viewBox="0 0 24 24" width="30" height="30" fill="currentColor"><rect x="6.5" y="5" width="4" height="14" rx="1.4"/><rect x="13.5" y="5" width="4" height="14" rx="1.4"/></svg></button>
+        <button class="vr-btn vr-pause" id="vrPauseBtn" onclick="vrTogglePause()" title="Pauze" aria-label="Pauze"><svg id="vrPauseIc" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5v14M15 5v14"/></svg></button>
         <button class="vr-send" onclick="vrStop(true)" title="Versturen" aria-label="Versturen"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"/></svg></button>
       </div>
     </div>
@@ -1707,15 +1712,23 @@
       <div class="vr-hint">Dit is het hele gesprek. Pas aan waar nodig. Kies daarna de regels die taken worden — die komen in In afwachting.</div>
       <textarea id="vrTranscript" class="vr-ta" placeholder="Transcript…" autocomplete="off"></textarea>
       <div id="vrTasksWrap" style="display:none"><div class="vr-th">Voorgestelde taken</div><div class="vr-tasks" id="vrTasks"></div></div>
-      <div class="vr-selrow">
-        <select id="vr_client" onchange="vrClientChange()"></select>
-        <select id="vr_project"></select>
+      <div class="vr-fields">
+        <div class="vr-field">
+          <input id="vr_client" list="vr_clientlist" placeholder="Klant" autocomplete="off" oninput="vrClientInput()">
+          <datalist id="vr_clientlist"></datalist>
+          <span class="vr-new" id="vr_client_new" hidden>nieuw</span>
+        </div>
+        <div class="vr-field">
+          <input id="vr_project" list="vr_projectlist" placeholder="Project" autocomplete="off" oninput="vrProjInput()">
+          <datalist id="vr_projectlist"></datalist>
+          <span class="vr-new" id="vr_project_new" hidden>nieuw</span>
+        </div>
       </div>
       <div class="vr-rfoot">
-        <button class="vr-rbtn" type="button" onclick="vrReviewClose()">Sluiten</button>
+        <button class="vr-rbtn" type="button" onclick="vrReviewClose()"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>Sluiten</button>
         <div style="display:flex;gap:10px">
-          <button class="vr-rbtn" type="button" onclick="vrAddTaskLine('')">+ Taakregel</button>
-          <button class="vr-rbtn primary" type="button" onclick="vrSaveReview()">Zet klaar in afwachting</button>
+          <button class="vr-rbtn" type="button" onclick="vrAddTaskLine('')"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Taakregel</button>
+          <button class="vr-rbtn primary" type="button" onclick="vrSaveReview()"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg>Zet klaar in afwachting</button>
         </div>
       </div>
     </div>
@@ -5708,7 +5721,9 @@ async function voiceMode(){
   catch(_){ _vr.rec=new MediaRecorder(stream); }
   if(!_vr.mime) _vr.mime=_vr.rec.mimeType||'audio/webm';
   _vr.rec.ondataavailable=e=>{ if(e.data&&e.data.size)_vr.chunks.push(e.data); };
-  _vr.rec.start();
+  // Timeslice (1s): schrijf de opname in fragmenten weg. Zónder dit zet Safari een foute duur in de
+  // MP4-header, waardoor Whisper maar de eerste seconden transcribeert en de rest "verdwijnt".
+  _vr.rec.start(1000);
   _vr.t0=performance.now();
   // Live waveform via Web Audio
   try{
@@ -5755,8 +5770,8 @@ function _vrDraw(){
 }
 function _vrSetPauseIcon(paused){
   const ic=document.getElementById('vrPauseIc'); const b=document.getElementById('vrPauseBtn'); if(!ic)return;
-  if(paused){ ic.innerHTML='<path d="M8 5.14v13.72a1 1 0 0 0 1.53.85l10.77-6.86a1 1 0 0 0 0-1.7L9.53 4.29A1 1 0 0 0 8 5.14z"/>'; if(b)b.title='Verder'; }
-  else{ ic.innerHTML='<rect x="6.5" y="5" width="4" height="14" rx="1.4"/><rect x="13.5" y="5" width="4" height="14" rx="1.4"/>'; if(b)b.title='Pauze'; }
+  if(paused){ ic.innerHTML='<path d="M8 5l11 7-11 7z"/>'; if(b)b.title='Verder'; }
+  else{ ic.innerHTML='<path d="M9 5v14M15 5v14"/>'; if(b)b.title='Pauze'; }
 }
 function vrTogglePause(){
   if(!_vr.rec)return; const ov=document.getElementById('voiceRec');
@@ -5818,25 +5833,53 @@ function vrReviewOpen(data){
   _vrReview={source_id:data.source_id||null};
   const ta=document.getElementById('vrTranscript'); if(ta)ta.value=data.transcript||'';
   const items=(data.items&&data.items.length)?data.items:[];
-  const wrap=document.getElementById('vrTasksWrap'); const box=document.getElementById('vrTasks');
-  if(box)box.innerHTML='';
+  const box=document.getElementById('vrTasks'); if(box)box.innerHTML='';
+  const wrap=document.getElementById('vrTasksWrap');
   items.forEach(it=>vrAddTaskLine((it&&it.title)||'',true));
   if(wrap)wrap.style.display=items.length?'':'none';
-  // klant/project
+  // klant/project: bestaande in de datalist, AI-suggestie alvast invullen (badge "nieuw" als 't nieuw is)
   try{
-    const cs=document.getElementById('vr_client'); const clients=uniqueClients();
-    const guess=(data.client&&clients.find(c=>c.toLowerCase()===String(data.client).toLowerCase()))||'';
-    if(cs){ cs.innerHTML='<option value="">— Geen klant —</option>'+clients.map(c=>`<option value="${escapeHtml(c)}"${c===guess?' selected':''}>${escapeHtml(c)}</option>`).join(''); }
-    vrFillProjects(null);
+    const dl=document.getElementById('vr_clientlist');
+    if(dl) dl.innerHTML=uniqueClients().map(c=>`<option value="${escapeHtml(c)}"></option>`).join('');
+    const ci=document.getElementById('vr_client'); if(ci) ci.value=((data.client||'').trim());
+    const pi=document.getElementById('vr_project'); if(pi) pi.value=((data.project||'').trim());
+    vrClientInput();
   }catch(_){}
   _vrShow('review');
 }
-function vrFillProjects(selId){
-  const cs=document.getElementById('vr_client'),ps=document.getElementById('vr_project'); if(!cs||!ps)return;
-  const cl=cs.value; const projs=(state.projects||[]).filter(p=>p.id!=='__inbox__'&&p.client===cl);
-  ps.innerHTML='<option value="">— Geen project —</option>'+projs.map(p=>`<option value="${p.id}"${(selId&&String(selId)===String(p.id))?' selected':''}>${escapeHtml(p.project||'(naamloos)')}</option>`).join('');
+// Klant getypt/gevuld → projecten van die klant in de datalist + "nieuw"-badges bijwerken.
+function vrClientInput(){
+  const ci=document.getElementById('vr_client'), pl=document.getElementById('vr_projectlist');
+  const cl=((ci&&ci.value)||'').trim();
+  const exists=uniqueClients().some(c=>c.toLowerCase()===cl.toLowerCase());
+  const cnew=document.getElementById('vr_client_new'); if(cnew) cnew.hidden=!(cl&&!exists);
+  if(pl){ const projs=(state.projects||[]).filter(p=>p.id!=='__inbox__'&&p.client&&p.client.toLowerCase()===cl.toLowerCase()&&p.project); pl.innerHTML=projs.map(p=>`<option value="${escapeHtml(p.project)}"></option>`).join(''); }
+  vrProjInput();
 }
-function vrClientChange(){ vrFillProjects(null); }
+function vrProjInput(){
+  const cl=((document.getElementById('vr_client')||{}).value||'').trim();
+  const pj=((document.getElementById('vr_project')||{}).value||'').trim();
+  const exists=(state.projects||[]).some(p=>p.id!=='__inbox__'&&p.client&&p.client.toLowerCase()===cl.toLowerCase()&&(p.project||'').toLowerCase()===pj.toLowerCase());
+  const pnew=document.getElementById('vr_project_new'); if(pnew) pnew.hidden=!(pj&&!exists);
+}
+// Klant/project omzetten naar een project_id; maakt nieuwe klant/project aan als die nog niet bestaan.
+async function _vrResolveProjectId(clientName, projName){
+  clientName=(clientName||'').trim(); projName=(projName||'').trim();
+  if(!clientName) return null;
+  const existing=uniqueClients().find(c=>c.toLowerCase()===clientName.toLowerCase())||null;
+  if(existing){
+    if(!projName) return null;
+    const p=(state.projects||[]).find(x=>x.client===existing&&(x.project||'').toLowerCase()===projName.toLowerCase());
+    if(p) return p.id;
+    const ins=await sb.from('projects').insert({client:existing,project:projName,color:_clientColor(existing),icon:(existing[0]||'?').toUpperCase(),sort:(state.projects.length||0)+1}).select('id').single();
+    return (ins&&ins.data)?ins.data.id:null;
+  }
+  // nieuwe klant (+ evt. project)
+  const col=_nextClientColor(), icon=(clientName[0]||'?').toUpperCase();
+  await sb.from('projects').insert({client:clientName,project:'',color:col,icon,sort:(state.projects.length||0)+1});
+  if(projName){ const ins=await sb.from('projects').insert({client:clientName,project:projName,color:col,icon,sort:(state.projects.length||0)+2}).select('id').single(); return (ins&&ins.data)?ins.data.id:null; }
+  return null;
+}
 function vrAddTaskLine(text,checked){
   const box=document.getElementById('vrTasks'); if(!box)return;
   const wrap=document.getElementById('vrTasksWrap'); if(wrap)wrap.style.display='';
@@ -5849,15 +5892,17 @@ function vrAddTaskLine(text,checked){
 function vrReviewClose(){ _vrHideOverlay(); }
 async function vrSaveReview(){
   const ta=document.getElementById('vrTranscript'); const transcript=ta?ta.value.trim():'';
-  const ps=document.getElementById('vr_project'); const pid=(ps&&ps.value)||null;
+  const clientVal=((document.getElementById('vr_client')||{}).value||'').trim();
+  const projVal=((document.getElementById('vr_project')||{}).value||'').trim();
   const srcId=_vrReview.source_id||null;
+  // klant/project oplossen (maakt nieuwe aan indien nodig)
+  let pid=null; try{ pid=await _vrResolveProjectId(clientVal,projVal); }catch(_){}
   // 1) volledige (bewerkte) transcript op de bron bewaren
-  if(srcId){ try{ await sb.from('sources').update({body:transcript,processed:true}).eq('id',srcId); }catch(_){} }
+  if(srcId){ try{ await sb.from('sources').update({body:transcript,processed:true,...(pid?{project_id:pid}:{})}).eq('id',srcId); }catch(_){} }
   // 2) aangevinkte regels als taken in 'In afwachting'
   const rows=[...document.querySelectorAll('#vrTasks .vr-tk')].map(r=>({on:r.querySelector('input[type=checkbox]').checked,t:r.querySelector('input[type=text]').value.trim()})).filter(x=>x.on&&x.t);
-  let firstId=null;
   for(const x of rows){
-    try{ const ins=await sb.from('items').insert({project_id:pid||null,source_id:srcId||null,title:x.t,status:'wait'}).select('id').single(); if(ins&&ins.data&&!firstId)firstId=ins.data.id; }catch(_){}
+    try{ await sb.from('items').insert({project_id:pid||null,source_id:srcId||null,title:x.t,status:'wait'}); }catch(_){}
   }
   // geen taakregels gekozen? zet het hele transcript als één in-afwachting-punt zodat het zichtbaar blijft
   if(!rows.length && transcript){
