@@ -10,18 +10,31 @@ const URL_RE = /https?:\/\/[^\s<>()"']+/gi;
 async function fetchPageText(url) {
   try {
     const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), 8000);
-    const r = await fetch(url, { signal: ctrl.signal, redirect: "follow", headers: { "User-Agent": "Mozilla/5.0 (BegeisterBot)" } });
+    const t = setTimeout(() => ctrl.abort(), 9000);
+    const r = await fetch(url, { signal: ctrl.signal, redirect: "follow", headers: {
+      "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+      "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+      "Accept-Language": "nl-NL,nl;q=0.9,en;q=0.8",
+    } });
     clearTimeout(t);
     const ct = (r.headers.get("content-type") || "").toLowerCase();
     if (!ct.includes("text/html") && !ct.includes("text/plain")) return "";
-    let html = (await r.text()).slice(0, 300000);
+    let html = (await r.text()).slice(0, 500000);
     html = html.replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<style[\s\S]*?<\/style>/gi, " ").replace(/<!--[\s\S]*?-->/g, " ");
     const titleM = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
     const title = titleM ? titleM[1].replace(/\s+/g, " ").trim() : "";
+    // Product-links behouden: <a href="…">tekst</a> → "tekst <absolute-url>" zodat Claude per item de link kan koppelen.
+    let base; try { base = new URL(url); } catch (_) { base = null; }
+    const abs = (href) => { try { return base ? new URL(href, base).href : href; } catch (_) { return href; } };
+    html = html.replace(/<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi, (m, href, inner) => {
+      const tx = inner.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+      const u = abs(href.replace(/&amp;/gi, "&"));
+      if (!/^https?:/i.test(u)) return " " + tx + " ";
+      return " " + (tx ? tx + " " : "") + "<" + u + "> ";
+    });
     let text = html.replace(/<[^>]+>/g, " ")
       .replace(/&nbsp;/gi, " ").replace(/&amp;/gi, "&").replace(/&lt;/gi, "<").replace(/&gt;/gi, ">")
-      .replace(/&#39;/gi, "'").replace(/&quot;/gi, '"').replace(/\s+/g, " ").trim().slice(0, 6000);
+      .replace(/&#39;/gi, "'").replace(/&quot;/gi, '"').replace(/\s+/g, " ").trim().slice(0, 9000);
     return (title ? "TITEL: " + title + "\n" : "") + text;
   } catch (_) { return ""; }
 }
@@ -50,6 +63,7 @@ Regels:
 - type = kort documenttype in 1-2 woorden (bv. "mail", "appje", "offerte", "factuur", "pitchdeck", "draaiboek"), anders "". from = afzender/auteur als die herkenbaar is, anders "".
 - subject = kort, concreet onderwerp in 2-3 woorden (zo bondig mogelijk), ZONDER klantnaam en ZONDER datum, MÉT het documenttype erin verwerkt als dat logisch is (bv. "licht offerte", "concept", "draaiboek opbouw"). Geen interne codenamen of projectcodes. Kleine letters, gewone spaties, geen leestekens.
 - category = best passende map uit deze VASTE lijst: Concept, Lichtontwerp, Decor, Tekeningen, Plattegronden, Draaiboek, Planning, Leveranciers, Techniek, Offertes, Media. Bij twijfel: "Concept".
+- BESTELLIJST/WINKELWAGEN/VERLANGLIJST: gaat de gelinkte pagina over een winkelwagen, verlanglijst of productlijst van een webshop (Amazon, Bol, Coolblue, enz.), maak dan van ELK product één item. Zet de prijs in de titel tussen haakjes, bv. "H03VV-F snoer zwart 25m (€21,05)". Geef bij zo'n item "url" = de DIRECTE productlink (de <…>-URL die in de opgehaalde pagina direct bij dat product staat). Kun je de productlink niet vinden, dan url = null. Bij gewone actiepunten (geen product) is url altijd null.
 - Geef ALLEEN geldige JSON terug, geen uitleg eromheen.`;
 
 /**
@@ -85,7 +99,7 @@ Geef JSON in exact dit formaat:
   "category": "",
   "subject": "",
   "items": [
-    { "title": "...", "owner": "Jeroen|Marlon|", "contact": "", "due": null, "status": "todo", "project_id": null }
+    { "title": "...", "owner": "Jeroen|Marlon|", "contact": "", "due": null, "status": "todo", "project_id": null, "url": null }
   ],
   "contacts": [
     { "name": "...", "email": "", "phone": "", "company": "", "role": "" }
