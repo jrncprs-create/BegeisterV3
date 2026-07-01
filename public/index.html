@@ -1498,7 +1498,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v119</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v120</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -2961,6 +2961,13 @@ function _parsePastedList(txt){
   if(out.length && out.every(x=>x.price==null)){ const toks=[]; for(const l of lines){ const t=l.trim(); if(!t||skipRe.test(t))continue; const pm=t.match(priceRe); if(pm){ const n=toNum(pm[1]); if(n!=null) toks.push(n); } } if(toks.length===out.length) out.forEach((it,ix)=>{ it.price=toks[ix]; }); }
   return out.map(x=>({name:_shortName(x.name).slice(0,120),qty:x.qty||1,price:x.price,url:x.url,image:x.image||null}));
 }
+// Robuuste prijs uit vrije tekst: € vóór of ná het bedrag.
+function _anyPrice(s){ s=String(s||'');
+  const m=s.match(/(?:€|eur)\s*([0-9]{1,4}(?:[.,][0-9]{3})*(?:[.,][0-9]{2})?)/i) || s.match(/([0-9]{1,4}(?:[.,][0-9]{3})*[.,][0-9]{2})\s*€/);
+  if(!m) return null; let v=m[1];
+  if(/[.,]\d{2}$/.test(v)){ const dec=v.slice(-3); v=v.slice(0,-3).replace(/[.,]/g,'')+'.'+dec.slice(1); } else { v=v.replace(/[.,]/g,''); }
+  const n=parseFloat(v); return isNaN(n)?null:n;
+}
 // Klembord-HTML (die bij plakken de <a href>-links bevat) omzetten naar tekst-met-links,
 // zodat _parsePastedList de links kan vinden ook al toont de textarea alleen platte tekst.
 function _htmlToLinkText(html){
@@ -2988,8 +2995,15 @@ function pbInkPaste(){ const ov=document.createElement('div'); ov.className='ove
   ov.querySelector('#pbpok').onclick=async()=>{ const txt=(ov.querySelector('#pbpaste').value||'').trim(); if(!txt){ _note('Plak eerst de lijst-tekst.'); return; }
     const b=ov.querySelector('#pbpok'); const _orig=b.innerHTML; b.disabled=true; b.innerHTML='<img class="kfile-aianim" src="/thinking.webp" alt="">';
     let items=[], err=null, local=[];
-    if(_pastedHtml){ local=_parsePastedList(_htmlToLinkText(_pastedHtml)); } // klembord-HTML → links direct
-    if(!local.length){ local=_parsePastedList(txt); } // anders platte tekst mét evt. links
+    if(_pastedHtml){ local=_parsePastedList(_htmlToLinkText(_pastedHtml)); } // klembord-HTML → links + thumbnails
+    const plain=_parsePastedList(txt);                                       // platte tekst → bevat de zichtbare prijzen
+    if(!local.length){ local=plain; }
+    // Amazon verstopt de prijs in een aria-hidden span (die we weghalen) → vul aan uit de platte tekst, op productlink.
+    if(local.length && local.some(x=>x.price==null) && plain.length){
+      const byUrl={}; plain.forEach(p=>{ if(p.url&&p.price!=null)byUrl[p.url]=p.price; });
+      local.forEach((it,ix)=>{ if(it.price==null){ if(it.url&&byUrl[it.url]!=null) it.price=byUrl[it.url]; else if(plain[ix]&&plain[ix].price!=null) it.price=plain[ix].price; } });
+    }
+    local.forEach(it=>{ if(it.price==null){ const pp=_anyPrice(it.name); if(pp!=null) it.price=pp; } }); // vangnet: prijs uit de naam
     if(local.length){ items=local; }
     else { try{ const r=await fetch('/api/bestellijst',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:txt})}); const d=await r.json(); items=(d&&d.items)||[]; err=d&&d.error; }catch(e){ err=String(e&&e.message||e); } }
     if(!items.length){ b.disabled=false; b.innerHTML=_orig; _note(err?('Kon de lijst niet lezen: '+err+' — tip: plak de winkelwagen mét de productlinks erbij, dan gaat het zónder AI.'):'Geen artikelen herkend. Plak het lijst-gedeelte (namen + prijzen), of een winkelwagen mét productlinks.'); return; }
