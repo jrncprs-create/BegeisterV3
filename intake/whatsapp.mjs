@@ -9,6 +9,7 @@ import { logUsage } from "../lib/usage.mjs";
 import { sendToAll } from "../lib/push.mjs";
 import { addInspirationImageBuffer, addInspirationLink } from "./inspiration.mjs";
 import { createMessage } from "../lib/airetry.mjs";
+import { transcribeAudio, hasTranscription } from "../lib/transcribe.mjs";
 
 // Trefwoord waarmee Jeroen/Marlon een appje als INSPIRATIE markeren i.p.v. een taak:
 // elk los woord dat met "insp" begint (insp, inspi, inspo, inspiratie, inspiration, …).
@@ -180,6 +181,53 @@ export async function handleEvent(body) {
             } catch (e) { console.error("wa-insp:", e.message); }
             await db.from("sources").update({ processed: true, summary: "Inspiratie · " + theme }).eq("id", source.id);
             try { await sendToAll(db, { title: "Inspiratie", body: "Toegevoegd · " + theme, url: "/" }); } catch (_) {}
+            processed++;
+            continue;
+          }
+
+          // ── Spraakbericht (voicenote) → audio downloaden + transcriberen (Groq) → zelfde extractie als tekst.
+          //    Taak-suggesties landen in "In afwachting" (status wait) zodat je ze rustig kunt nakijken.
+          if (msg.type === "audio" || msg.type === "voice") {
+            const audioId = (msg.audio && msg.audio.id) || (msg.voice && msg.voice.id) || null;
+            let transcript = "";
+            if (audioId && WA_TOKEN && hasTranscription()) {
+              const media = await fetchMedia(audioId);
+              if (media) {
+                try {
+                  const ext = ((media.mime.split("/")[1] || "ogg").split(";")[0]) || "ogg";
+                  const fn = "spraak-" + (msg.id || Date.now()) + "." + ext;
+                  const bytes = Buffer.from(media.b64, "base64");
+                  const apath = source.id + "/" + fn;
+                  const up = await db.storage.from("intake").upload(apath, bytes, { contentType: media.mime, upsert: true });
+                  try { transcript = await transcribeAudio(bytes, media.mime, fn); } catch (e) { console.error("wa-transcribe:", e.message); }
+                  if (!up.error) { try { await db.from("attachments").insert({ source_id: source.id, filename: fn, storage_path: apath, mime: media.mime, size: bytes.length, transcript: transcript || null }); } catch (_) {} }
+                } catch (e) { console.error("wa-audio:", e.message); }
+              }
+            }
+            if (transcript) {
+              const ex = await extractItems({ text: transcript, sender, subject: "spraakbericht", today, catalog, context });
+              if (ex.usage) { try { await logUsage(db, { source: "whatsapp-voice", ...ex.usage }); } catch (_) {} }
+              if (ex.items && ex.items.length) {
+                await db.from("items").insert(ex.items.map(it => ({
+                  project_id: it.project_id || null, source_id: source.id, title: it.title,
+                  owner: (it.owner === "Jeroen" || it.owner === "Marlon") ? it.owner : null,
+                  contact: it.contact || null, due: it.due || null, status: "wait",
+                })));
+              }
+              const msgProject = (ex.items.find(it => it.project_id) || {}).project_id || null;
+              try { await saveContacts(db, ex.contacts, source.id, msgProject); } catch (_) {}
+              await db.from("sources").update({ processed: true, body: transcript, summary: ex.summary || null, ...(msgProject ? { project_id: msgProject } : {}) }).eq("id", source.id);
+              try {
+                const raw = (ex.summary || transcript).trim();
+                const pb = raw.length > 70 ? raw.slice(0, 69).trimEnd() + "…" : raw;
+                await sendToAll(db, { title: "WhatsApp spraak", body: pb, url: "/" });
+              } catch (_) {}
+            } else {
+              // Geen transcript (geen key, geen token of download mislukt) → bron markeren, niets verzinnen.
+              const note = hasTranscription() ? "Spraakbericht — transcriberen lukte niet" : "Spraakbericht ontvangen (transcriptie staat uit)";
+              await db.from("sources").update({ processed: true, summary: note }).eq("id", source.id);
+              try { await sendToAll(db, { title: "WhatsApp", body: note, url: "/" }); } catch (_) {}
+            }
             processed++;
             continue;
           }
