@@ -1,5 +1,6 @@
 // Haalt met Claude gestructureerde actiepunten uit een binnengekomen bericht.
 import Anthropic from "@anthropic-ai/sdk";
+import { createMessage } from "../lib/airetry.mjs";
 
 const KEY = (process.env.ANTHROPIC_API_KEY || "").trim();
 const anthropic = KEY ? new Anthropic({ apiKey: KEY }) : null;
@@ -109,7 +110,7 @@ Geef JSON in exact dit formaat:
   // Links in het bericht ophalen en als context meegeven (pagina samenvatten + koppelen + actiepunten).
   const linkCtx = await fetchLinkContext(text);
 
-  const resp = await anthropic.messages.create({
+  const resp = await createMessage(anthropic, {
     model: MODEL,
     max_tokens: 1800,
     system: SYSTEM + (context ? "\n\nVASTE CONTEXT (team/bedrijf — gebruik dit om beter te koppelen):\n" + context : ""),

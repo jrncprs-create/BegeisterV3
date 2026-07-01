@@ -8,6 +8,7 @@ import { extractItems } from "./extract.mjs";
 import { logUsage } from "../lib/usage.mjs";
 import { sendToAll } from "../lib/push.mjs";
 import { addInspirationImageBuffer, addInspirationLink } from "./inspiration.mjs";
+import { createMessage } from "../lib/airetry.mjs";
 
 // Trefwoord waarmee Jeroen/Marlon een appje als INSPIRATIE markeren i.p.v. een taak:
 // elk los woord dat met "insp" begint (insp, inspi, inspo, inspiratie, inspiration, …).
@@ -50,7 +51,7 @@ owner = "Jeroen" of "Marlon" of leeg. contact = externe persoon of leeg. due = Y
 ${context ? "VASTE CONTEXT (team/bedrijf — gebruik dit):\n" + context + "\n" : ""}VANDAAG: ${today || ""}.
 CATALOGUS (project_id → klant · project):\n${cat}
 Antwoord ALLEEN met geldige JSON: {"reply":"korte samenvatting","items":[{"title":"","owner":"","contact":"","due":null,"status":"todo","project_id":null}]}`;
-  const resp = await anthropic.messages.create({
+  const resp = await createMessage(anthropic, {
     model: VISION_MODEL, max_tokens: 1400, system: sys,
     messages: [{ role: "user", content: [block, { type: "text", text: `Doorgestuurd via WhatsApp${sender ? " door " + sender : ""}${caption ? ". Onderschrift: " + caption : ""}. Vat samen en stel actiepunten voor.` }] }],
   });
