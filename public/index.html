@@ -1496,7 +1496,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v106</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v108</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -5782,6 +5782,7 @@ async function _vrSend(blob){
   const r=await fetch('/api/transcribe',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({b64,mime:_vr.mime||'audio/webm',filename:'spraak-'+Date.now()+'.'+ext,who,today:iso(TODAY),dates:dateTable(),catalog,context:_ctxForChat()})});
   const data=await r.json();
+  _vrBusy(false);                    // spinner weg zodra het antwoord binnen is (geen overlap met melding/review)
   try{ loadUsage(); }catch(_){}
   if(!data||data.error){
     const msg=(data&&data.message)||'Transcriberen lukte niet.';
