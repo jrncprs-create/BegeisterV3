@@ -709,6 +709,10 @@
   .pb-board-inline .pb-colL .pb-sec:first-child,.pb-board-inline .pb-colR .pb-sec:first-child{border-top:none}
   .pb-listlink{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;color:var(--scol);text-decoration:none;border:1px solid color-mix(in srgb,var(--scol) 30%,transparent);border-radius:8px;padding:6px 11px;margin:2px 0 12px;cursor:pointer;background:transparent}
   .pb-listlink:hover{background:color-mix(in srgb,var(--scol) 12%,transparent)}
+  .pb-cluster{display:flex;align-items:center;justify-content:space-between;gap:10px;text-decoration:none;border:1px solid color-mix(in srgb,var(--scol) 32%,transparent);border-radius:11px;padding:10px 13px;margin:2px 0 13px;color:var(--scol);cursor:pointer;background:color-mix(in srgb,var(--scol) 6%,transparent)}
+  .pb-cluster:hover{background:color-mix(in srgb,var(--scol) 14%,transparent)}
+  .pb-cluster-shop{font-size:13.5px;font-weight:600}
+  .pb-cluster-sub{font-size:12px;opacity:.7;white-space:nowrap}
   .pb-besteltot{margin-top:12px;font-size:13px;color:var(--scol)}
   .pb-besteltot b{font-weight:600}
   .pb-board-inline .pb-del{background:transparent;border:none;color:var(--scol);opacity:0;cursor:pointer;font-size:18px;line-height:1;padding:0 2px;flex:0 0 auto;margin-left:8px;transition:opacity .15s}
@@ -1486,7 +1490,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v93</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v94</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -2499,7 +2503,8 @@ function _renderProjBoard(){
   const _listSid=Object.keys(_inkSrcCnt).find(sid=>_inkSrcCnt[sid]>=2);
   let _masterLink='';
   if(_listSid){ const _src=(state.sources||[]).find(s=>String(s.id)===String(_listSid)); const _u=_src&&_src.url;
-    if(_u) _masterLink = `<a class="pb-listlink" href="${esc(_u)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">↗ Open verlanglijst</a>`; }
+    if(_u){ const _shop=_webshopName(_u); const _pj=(projById(_pbPid)||{}).project||''; const _n=inkopen.filter(x=>String(x.source_id)===String(_listSid)).length;
+      _masterLink=`<a class="pb-cluster" href="${esc(_u)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Open de hele lijst bij ${esc(_shop)}"><span class="pb-cluster-shop">🛒 ${esc(_shop)}${_pj?' · '+esc(_pj):''}</span><span class="pb-cluster-sub">${_n} items ↗</span></a>`; } }
   const inkopenOpen=inkopen.filter(x=>!x.done);
   const _openTot=inkopenOpen.reduce((s,x)=>s+((x.price!=null&&x.price!=='')?Number(x.price):0)*(x.qty||1),0);
   const secBestel=`<div class="pb-sec"><div class="pb-h"><button class="pb-chk pb-chk-list" onclick="pbCheckAllInk()" title="Hele lijst afvinken">${_pbChk(false)}</button><span>Bestellijst</span><span class="pb-hbtns"><button class="pb-ai" onclick="pbInkPaste()" title="Plak een verlanglijst of winkelwagen — AI maakt er regels van">${_tIc(_TABCHAN.asterisk,15,1.7)}<span>lijst</span></button>${inkopen.length?`<button class="pb-listdel" onclick="pbDelBestel()" title="Hele bestellijst verwijderen"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/></svg></button>`:''}</span></div>${_masterLink}${inkopenOpen.length?inkopenOpen.map(inkRow).join(''):'<div class="pb-empty">Nog geen bestellingen.</div>'}<div class="pb-add"><input class="pb-in" data-kind="inkoop" placeholder="+ artikel toevoegen…" onkeydown="pbAddKey(event,'inkoop')"></div>${inkopenOpen.length?`<div class="pb-besteltot">Totaal <b>€${fmtEur(_openTot)}</b></div>`:''}</div>`;
@@ -4876,6 +4881,7 @@ function _dropRunNext(){ if(!_dropFiles.length){ _dzHide(); return; } _dropProce
 // .webloc (mac) / .url (win) = snelkoppeling met een URL erin — die lezen we eruit zodat de masterlink bewaard blijft
 async function _weblocUrl(f){ try{ if(!/\.(webloc|url)$/i.test(f.name||''))return null; const txt=await f.text(); let m=txt.match(/<key>\s*URL\s*<\/key>\s*<string>([^<]+)<\/string>/i); if(m)return m[1].trim(); m=txt.match(/^\s*URL\s*=\s*(\S.+)$/im); if(m)return m[1].trim(); m=txt.match(/https?:\/\/[^\s<"']+/i); return m?m[0].trim():null; }catch(_){ return null; } }
 function _priceFromText(s){ const m=String(s||'').match(/€\s*([0-9]+(?:\.[0-9]{3})*,[0-9]{2}|[0-9]+,[0-9]{2}|[0-9]+)/); if(!m)return null; let v=m[1].replace(/\./g,'').replace(',', '.'); const n=parseFloat(v); return isNaN(n)?null:n; }
+function _webshopName(u){ try{ let h=new URL(u).hostname.replace(/^www\./,''); const base=(h.split('.')[0]||h); return base.charAt(0).toUpperCase()+base.slice(1); }catch(_){ return 'Lijst'; } }
 async function _dropProcess(f){
   _dzShow('Bestand lezen…', f.name, 'reading');
   let src=null; const _wurl=await _weblocUrl(f);
