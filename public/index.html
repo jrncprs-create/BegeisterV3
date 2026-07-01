@@ -1491,7 +1491,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v97</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v98</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -2485,7 +2485,7 @@ function _renderProjBoard(){
   const _stCol={'te bestellen':['rgba(186,117,23,.16)','#d8a64a'],'besteld':['rgba(24,95,165,.2)','#7db0e6']};
   const inkRow=(x)=>{ const pr=(x.price!=null&&x.price!=='')?Number(x.price):null; const qty=x.qty||1;
     const inner=`${esc(x.text)}${qty>1?` <span class="pb-qty">×${qty}</span>`:''}`;
-    const nm=x.url?`<a class="pb-tx pb-itxlink" href="${esc(x.url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Open bij verkoper">${inner}</a>`:`<span class="pb-tx">${inner}</span>`;
+    const nm=x.url?`<a class="pb-tx pb-itxlink" href="${esc(x.url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Open bij verkoper">${inner}</a>`:`<a class="pb-tx pb-itxlink" href="https://www.google.com/search?q=${encodeURIComponent(x.text||'')}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Zoek dit artikel op Google">${inner}</a>`;
     return `<div class="pb-row pb-ink" data-tid="${x.id}"><button class="pb-chk" onclick="pbInkCheck('${x.id}',${x.done?'false':'true'})" title="Afvinken">${_pbChk(!!x.done)}</button>${nm}<input class="pb-price" type="text" inputmode="decimal" value="${pr!=null?String(pr).replace('.',','):''}" placeholder="€" onclick="event.stopPropagation()" onchange="pbSetPrice('${x.id}',this.value)"><button class="pb-del" onclick="event.preventDefault();pbDel('${x.id}')" title="Verwijderen">×</button></div>`; };
   const doneInkRow=(x)=>`<div class="pb-row pb-donerow"><button class="pb-chk" onclick="pbInkCheck('${x.id}',false)" title="Terugzetten">${_pbChk(true)}</button><span class="pb-tx done">${esc(x.text||'')}</span></div>`;
   const apptRow=(a)=>{ const d=a.date?d3date(a.date):''; return `<div class="pb-row pb-appt"><span class="pb-tx">${esc(a.t||'Afspraak')}</span><span class="pb-when">${esc(d)}${a.start?' · '+esc(String(a.start).slice(0,5)):''}</span><button class="pb-edit" onclick="openApptModal('${a.id}')" title="Bewerken">${_penIc}</button></div>`; };
