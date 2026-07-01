@@ -1498,7 +1498,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v118</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v119</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -1587,6 +1587,64 @@
       #finRightWrap .fd-uptext{flex:1;font-size:12.5px;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
       #finRightWrap .fd-upamt{font-size:12.5px;color:var(--txt)}
       #finRightWrap .fd-empty{font-size:12px;color:var(--mut2)}
+      .main.workspace #view-finmid.finfull{grid-column:1 / -1}
+      .main.workspace #view-finmid,.main.workspace #view-finright{padding:0 22px 40px}
+      #finMidWrap .finB{display:flex;flex-direction:column;gap:12px;padding:2px}
+      #finMidWrap .finB-row{display:flex;gap:11px}
+      #finMidWrap .finB-row .fd-card{flex:1}
+      #finMidWrap .fd-card{background:var(--panel2,#17171b);border-radius:11px;padding:12px 14px;border:none;text-align:left;color:var(--txt)}
+      #finMidWrap .fd-clabel{font-size:11px;color:var(--mut2)}
+      #finMidWrap .fd-cval{font-size:20px;font-weight:600;margin-top:3px;color:var(--txt)}
+      #finMidWrap .finB-price{font-size:20px;font-weight:600;margin-top:3px;color:var(--txt);display:flex;align-items:baseline;gap:4px}
+      #finMidWrap .finB-in{background:transparent;border:none;border-bottom:1px solid var(--line);color:var(--txt);font-size:20px;font-weight:600;width:110px;padding:0 0 2px}
+      #finMidWrap .finB-in:focus{outline:none;border-bottom-color:var(--s2)}
+      #finMidWrap .finB-uit{cursor:pointer;transition:background .15s}
+      #finMidWrap .finB-uit:hover{background:#1e1e22}
+      #finMidWrap .fd-block{background:#141417;border:1px solid var(--line);border-radius:12px;padding:13px 15px}
+      #finMidWrap .fd-h{font-size:12.5px;color:var(--mut2);margin-bottom:9px}
+      #finMidWrap .fd-donutrow{display:flex;align-items:center;gap:16px}
+      #finMidWrap .fd-dstats{flex:1;display:flex;flex-direction:column;gap:8px}
+      #finMidWrap .fd-dstat{display:flex;justify-content:space-between;font-size:12.5px;color:var(--mut2)}
+      #finMidWrap .fd-dstat b{color:var(--txt);font-weight:600}
+      #finMidWrap .fd-dstat.marge{border-top:1px solid var(--line);padding-top:8px}
+      #finMidWrap .fd-dstat.marge b{color:#5dcaa5}
+      #finMidWrap .fd-dstat.marge.neg b{color:#e0726f}
+      #finMidWrap .fd-ringnum{fill:#5dcaa5;font-size:19px;font-weight:600}
+      #finMidWrap .fd-ringnum.neg{fill:#e0726f}
+      #finMidWrap .fd-ringlbl{fill:var(--mut2);font-size:11px}
+      #finMidWrap .finA{display:flex;flex-direction:column;gap:14px;padding:2px}
+      #finMidWrap .finA-top{display:flex;gap:14px;align-items:stretch}
+      #finMidWrap .finA-hero{flex:1;min-width:0;background:linear-gradient(160deg,#173a2e,#0f2a22);border-radius:16px;padding:16px 18px;display:flex;flex-direction:column;justify-content:center}
+      #finMidWrap .finA-herolbl{font-size:12px;color:#9fd8c2}
+      #finMidWrap .finA-herobig{font-size:30px;font-weight:600;margin:8px 0 2px;color:#eafff6}
+      #finMidWrap .finA-herosub{font-size:12px;color:#9fd8c2}
+      #finMidWrap .finA-herosub b.pos{color:#8ff0cf}
+      #finMidWrap .finA-herosub b.neg{color:#ffb3b0}
+      #finMidWrap .finA-chart{flex:1.5;min-width:0}
+      #finMidWrap .finA-bars{display:flex;align-items:flex-end;gap:8px;height:118px}
+      #finMidWrap .finA-bcol{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;height:100%}
+      #finMidWrap .finA-bval{font-size:10px;color:#9a9aa1}
+      #finMidWrap .finA-bval.neg{color:#e0726f}
+      #finMidWrap .finA-bval.pos{color:#5dcaa5}
+      #finMidWrap .finA-bstack{width:66%;display:flex;flex-direction:column;justify-content:flex-end;border-radius:5px;overflow:hidden}
+      #finMidWrap .finA-bomz{background:#5dcaa5}
+      #finMidWrap .finA-bkos{background:#e0726f}
+      #finMidWrap .finA-bempty{height:3px;background:var(--line);border-radius:3px}
+      #finMidWrap .finA-blbl{font-size:10px;color:var(--mut2)}
+      #finMidWrap .finA-blocks{display:flex;gap:14px;align-items:flex-start}
+      #finMidWrap .finA-blocks>.fd-block{flex:1;min-width:0}
+      #finMidWrap .finA-brow{display:flex;align-items:center;gap:9px;padding:6px 4px;cursor:pointer;border-radius:7px}
+      #finMidWrap .finA-brow:hover{background:rgba(255,255,255,.04)}
+      #finMidWrap .finA-bdot{width:8px;height:8px;border-radius:50%;flex:0 0 auto}
+      #finMidWrap .finA-btext{flex:1;min-width:0;font-size:12.5px;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      #finMidWrap .finA-bdate{font-size:11px;color:var(--mut2);flex:0 0 auto}
+      #finMidWrap .finA-bamt{font-size:12.5px;flex:0 0 62px;text-align:right}
+      #finMidWrap .finA-bamt.neg{color:#e0726f}
+      #finMidWrap .finA-noproj{background:rgba(232,232,234,.05);border-color:rgba(232,232,234,.22)}
+      #finMidWrap .finA-nprow{display:flex;align-items:center;justify-content:space-between;gap:9px;padding:6px 0}
+      #finMidWrap .finA-nptext{flex:1;min-width:0;font-size:12.5px;color:#e8e8ea;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      #finMidWrap .finA-npamt{font-size:12.5px;color:#e8e8ea}
+      #finMidWrap .fd-empty{font-size:12px;color:var(--mut2)}
       </style>
       <div id="view-contacten" class="hidden">
         <div id="contactenWrap"></div>
@@ -2568,9 +2626,10 @@ let _pbPid=null, _pbItems=[], _pbMode='klanten', _pbTarget=null;
 // Financiën: render het inkoopbord INLINE in kolom 2 (geen overlay)
 async function selectFinProj(pid){
   if(!isDesk3()){ return openProjectBoard(pid,'financien'); }
-  const p=projById(pid); if(!p)return; _pbPid=pid; _pbMode='financien'; _pbTarget='finmid';
+  const p=projById(pid); if(!p)return; _pbPid=pid; _pbMode='financien'; _pbTarget='finright';
   try{ const r=await sb.from('project_board').select('*').eq('project_id',pid).order('kind').order('sort').order('created_at'); _pbItems=(r&&r.data)?r.data:[]; }catch(_){ _pbItems=[]; }
-  _renderProjBoard(); try{ renderFinancien(); }catch(_){}
+  try{ renderFinancien(); }catch(_){}   // kolom 2 = blokken
+  _renderProjBoard();                    // kolom 3 = inkoop
 }
 // Klanten: render het volledige projectbord INLINE over kolom 2+3 (geen overlay)
 async function selectBeheerProj(pid){
@@ -2655,7 +2714,7 @@ function _renderProjBoard(){
   const secBestel=`<div class="pb-sec"><div class="pb-h"><button class="pb-chk pb-chk-list" onclick="pbCheckAllInk()" title="Hele lijst afvinken">${_pbChk(false)}</button><span>Bestellijst</span><span class="pb-hbtns"><button class="pb-ai" onclick="pbInkPaste()" title="Plak een verlanglijst of winkelwagen — AI maakt er regels van">${_tIc(_TABCHAN.asterisk,15,1.7)}<span>lijst</span></button>${inkopen.length?`<button class="pb-listdel" onclick="pbDelBestel()" title="Hele bestellijst verwijderen"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/></svg></button>`:''}</span></div>${_masterLink}${inkopenOpen.length?inkopenOpen.map(inkRow).join(''):'<div class="pb-empty">Nog geen bestellingen.</div>'}<div class="pb-add"><input class="pb-in" data-kind="inkoop" placeholder="+ artikel toevoegen…" onkeydown="pbAddKey(event,'inkoop')"></div>${inkopenOpen.length?`<div class="pb-besteltot">Totaal <b>€${fmtEur(_openTot)}</b></div>`:''}</div>`;
   const _body=(_pbMode==='financien')?secInk:(secWait+secTaken+secBestel+secDone+secAppt+secFiles+secPrijs+secNotes);
   const _head=`<div class="pb-head"><span class="kbadge" style="background:${col}">${esc(initial)}</span><div class="pb-title"><b>${esc(p.client||'')}</b>${p.project?'<span> · '+esc(p.project)+'</span>':''}${_pbMode==='financien'?'<span style="color:'+col+'"> · inkoop</span>':''}</div></div>`;
-  if(_pbTarget==='finmid'){ const el=document.getElementById('finMidWrap'); if(el)el.innerHTML=`<div class="pb-inline" style="--scol:${col}">${_head}${_body}</div>`; return; }
+  if(_pbTarget==='finmid'||_pbTarget==='finright'){ const el=document.getElementById(_pbTarget==='finright'?'finRightWrap':'finMidWrap'); if(el)el.innerHTML=`<div class="pb-inline" style="--scol:${col}">${_head}${_body}</div>`; return; }
   if(_pbTarget==='beheer'){ const el=document.getElementById('beheerBoardWrap'); if(el)el.innerHTML=`<div class="pb-inline pb-board-inline" style="--scol:${col}">${_head}<div class="pb-grid"><div class="pb-colL">${secWait}${secTaken}${secBestel}${secDone}</div><div class="pb-colR">${secAppt}${secFiles}${secPrijs}${secNotes}</div></div></div>`; return; }
   if(!ov)return;
   ov.innerHTML=`<div class="modal pb-modal" style="--scol:${col};width:100%;max-width:none">
@@ -2715,7 +2774,8 @@ async function pbSetBudget(val){ const budget=_parseEur(val); const p=projById(_
 async function pbSetProjectprijs(val){ const v=_parseEur(val); const p=projById(_pbPid); if(p)p.projectprijs=v; try{ await sb.from('projects').update({projectprijs:v}).eq('id',_pbPid); }catch(_){} _renderProjBoard(); }
 async function pbCycleStatus(id){ const order=['te bestellen','besteld']; const x=_pbItems.find(i=>i.id===id); if(!x)return; const cur=(x.status==='binnen')?'besteld':(x.status||'te bestellen'); const ns=order[(order.indexOf(cur)+1)%order.length]; x.status=ns; try{ await sb.from('project_board').update({status:ns}).eq('id',id); }catch(_){} _finInk=null; _renderProjBoard(); }
 // ===== Financiën-railkolom: per project omzet − inkoop = marge, klik → projectbord =====
-let _finInk=null, _finUp=null;
+let _finInk=null, _finUp=null, _finRows=null;
+function _finShortDate(iso){ if(!iso)return ''; const d=new Date(iso); if(isNaN(d))return ''; return d.getDate()+' '+['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'][d.getMonth()]; }
 // Euro-icoon (Tabler currency-euro via _tIc) voor "nog geen financiën — voeg toe"
 const _euroIc=_tIc('<path d="M17.2 7a6 7 0 1 0 0 10"/><path d="M13 10h-8m0 4h8"/>',17,1.6);
 // Eerste kolom = exact de Klanten-vormgeving: deel dezelfde open/dicht-status (_kClientOpen).
@@ -2736,11 +2796,12 @@ async function renderFinancien(){
   const w=document.getElementById('financienWrap'); if(!w)return;
   if(_finInk===null){
     try{
-      const r=await sb.from('project_board').select('project_id,text,price,qty,status,done').eq('kind','inkoop');
-      _finInk={}; _finUp=[];
-      (r&&r.data||[]).forEach(x=>{ const k=String(x.project_id); const price=(x.price!=null&&x.price!=='')?Number(x.price):0; const qty=x.qty||1; _finInk[k]=(_finInk[k]||0)+price*qty;
-        if(!x.done && (x.status==null||x.status==='te bestellen') && price*qty>0) _finUp.push({project_id:k,text:x.text||'Artikel',amount:price*qty}); });
-    }catch(_){ _finInk={}; _finUp=[]; }
+      const r=await sb.from('project_board').select('project_id,text,price,qty,status,done,created_at').eq('kind','inkoop');
+      _finInk={}; _finUp=[]; _finRows=[];
+      (r&&r.data||[]).forEach(x=>{ const k=String(x.project_id); const price=(x.price!=null&&x.price!=='')?Number(x.price):0; const qty=x.qty||1; const amt=price*qty; _finInk[k]=(_finInk[k]||0)+amt;
+        _finRows.push({project_id:x.project_id,text:x.text||'Artikel',amount:amt,done:!!x.done,status:x.status,created_at:x.created_at});
+        if(!x.done && (x.status==null||x.status==='te bestellen') && amt>0) _finUp.push({project_id:k,text:x.text||'Artikel',amount:amt}); });
+    }catch(_){ _finInk={}; _finUp=[]; _finRows=[]; }
   }
   const esc=s=>String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
   const projs=(state.projects||[]).filter(p=>p.id!=='__inbox__');
@@ -2753,7 +2814,7 @@ async function renderFinancien(){
   let tOm=0,tInEx=0,nPrice=0,sumPct=0; const projStats=[];
   const groups=order.map(client=>{
     const arr=byClient[client]; const ccol=(arr[0]&&arr[0].color)||'#888';
-    const open=_kClientOpen.has(client); const cActive=(_pbTarget==='finmid'&&_pbPid&&arr.some(p=>p.id===_pbPid)); const editingC=(_kEdit==='c:'+client); let cOm=0,cInEx=0;
+    const open=_kClientOpen.has(client); const cActive=((_pbTarget==='finmid'||_pbTarget==='finright')&&_pbPid&&arr.some(p=>p.id===_pbPid)); const editingC=(_kEdit==='c:'+client); let cOm=0,cInEx=0;
     const rows=arr.map((p,idx)=>{
       const col=p.color||ccol; const btw=(p.btw!=null&&p.btw!=='')?Number(p.btw):21;
       const om=(p.projectprijs!=null&&p.projectprijs!=='')?Number(p.projectprijs):null;
@@ -2761,7 +2822,7 @@ async function renderFinancien(){
       const marge=om!=null?(om-inkEx):null; cOm+=om||0; cInEx+=inkEx; tOm+=om||0; tInEx+=inkEx;
       if(om!=null&&om>0){ nPrice++; sumPct+=((om-inkEx)/om)*100; }
       projStats.push({id:p.id,name:p.project||'—',color:col,om:om||0,inkEx,marge:(marge!=null?marge:-inkEx)});
-      const psel=(_pbPid===p.id&&_pbTarget==='finmid')?' on':''; const last=idx===arr.length-1; const editingP=(_kEdit===p.id);
+      const psel=(_pbPid===p.id&&(_pbTarget==='finmid'||_pbTarget==='finright'))?' on':''; const last=idx===arr.length-1; const editingP=(_kEdit===p.id);
       const pname=editingP
         ? `<input class="ksub kedit-input" value="${escapeHtml(p.project||'')}" onblur="kProjSave('${p.id}',this.value)" onkeydown="if(event.key==='Enter')this.blur();else if(event.key==='Escape')kEditCancel()" />`
         : `<button class="ksub-btn" onclick="event.stopPropagation();selectFinProj('${p.id}')" title="Open inkoop">${escapeHtml(p.project||'Project / event')}</button>`;
@@ -2796,30 +2857,51 @@ async function renderFinancien(){
         <button class="kicon kadd" onclick="event.stopPropagation();addProjectTo('${esc(client)}')" title="Project toevoegen"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 5v14M5 12h14"/></svg></button>
       </div>${open?rows:''}</div>`;
   }).join('');
-  const tMarge=tOm-tInEx, avgPct=nPrice?(sumPct/nPrice):null;
+  const tMarge=tOm-tInEx;
   w.innerHTML=`<div class="fin-list">${groups||'<div class="hint">Nog geen projecten.</div>'}</div>`;
-  const fmw=document.getElementById('finMidWrap');
-  if(fmw && _pbTarget!=='finmid'){ fmw.innerHTML='<div class="fin-mid-hint">Kies links een project om de inkoop te zien en te bewerken.</div>'; }
-  const fr=document.getElementById('finRightWrap'); if(!fr)return;
-  // ── Dashboard (rechts): kaarten + marge-donut + marge-per-project + aankomende inkoop ──
-  const sel=(_pbTarget==='finmid'&&_pbPid)?projById(_pbPid):null;
-  let dOm,dInEx,dLabel,dCol;
-  if(sel){ const btw=(sel.btw!=null&&sel.btw!=='')?Number(sel.btw):21; dOm=(sel.projectprijs!=null&&sel.projectprijs!=='')?Number(sel.projectprijs):0; dInEx=(_finInk[String(sel.id)]||0)/(1+btw/100); dLabel=(sel.project||sel.client||'Project'); dCol=sel.color||'#8b8b8b'; }
-  else { dOm=tOm; dInEx=tInEx; dLabel='Begeister totaal'; dCol='#8b8b8b'; }
-  const dMarge=dOm-dInEx;
-  const cards=`<div class="fd-cards">
-    <div class="fd-card"><div class="fd-clabel">Omzet</div><div class="fd-cval">€${fmtEur(tOm)}</div></div>
-    <div class="fd-card"><div class="fd-clabel">Uitgegeven</div><div class="fd-cval">€${fmtEur(tInEx)}</div></div>
-    <div class="fd-card"><div class="fd-clabel">Marge</div><div class="fd-cval ${tMarge<0?'neg':'pos'}">€${fmtEur(tMarge)}</div></div>
-    <div class="fd-card"><div class="fd-clabel">Gem. marge</div><div class="fd-cval">${avgPct!=null?Math.round(avgPct)+'%':'—'}</div></div>
-  </div>`;
-  const top=projStats.filter(p=>p.om>0||p.inkEx>0).sort((a,b)=>Math.abs(b.marge)-Math.abs(a.marge)).slice(0,6);
-  const maxAbs=Math.max(1,...top.map(p=>Math.abs(p.marge)));
-  const trend=top.map(p=>{ const wd=Math.round(Math.abs(p.marge)/maxAbs*100); const neg=p.marge<0; return `<div class="fd-trow"><span class="fd-tname" style="color:${p.color}" title="${escapeHtml(p.name)}">${escapeHtml(p.name)}</span><div class="fd-tbar"><div class="fd-tfill" style="width:${wd}%;background:${neg?'#e0726f':p.color}"></div></div><span class="fd-tval ${neg?'neg':'pos'}">€${fmtEur(p.marge)}</span></div>`; }).join('');
-  fr.innerHTML=`<div class="findash">
-    ${cards}
-    <div class="fd-block"><div class="fd-h">${escapeHtml(dLabel)}</div><div class="fd-donutrow">${_finDonut(dOm,dInEx,dCol)}<div class="fd-dstats"><div class="fd-dstat"><span>Omzet</span><b>€${fmtEur(dOm)}</b></div><div class="fd-dstat"><span>Kosten (excl.)</span><b>€${fmtEur(dInEx)}</b></div><div class="fd-dstat marge ${dMarge<0?'neg':''}"><span>Marge</span><b>€${fmtEur(dMarge)}</b></div></div></div></div>
-    <div class="fd-block"><div class="fd-h">Marge per project</div>${trend||'<div class="fd-empty">Nog geen cijfers.</div>'}</div>
+  const fmw=document.getElementById('finMidWrap'), fr=document.getElementById('finRightWrap');
+  const vfm=document.getElementById('view-finmid'), vfr=document.getElementById('view-finright');
+  const finSel=(_pbTarget==='finmid'||_pbTarget==='finright')&&_pbPid;
+
+  if(finSel){
+    // TOESTAND B — kolom 2 = blokken; kolom 3 = inkoop (door _renderProjBoard)
+    if(vfm)vfm.classList.remove('finfull'); if(vfr)vfr.classList.remove('hidden');
+    const p=projById(_pbPid); const btw=(p&&p.btw!=null&&p.btw!=='')?Number(p.btw):21;
+    const om=(p&&p.projectprijs!=null&&p.projectprijs!=='')?Number(p.projectprijs):null;
+    const ink=_finInk[String(_pbPid)]||0, inkEx=ink/(1+btw/100), marge=om!=null?om-inkEx:null, col=(p&&p.color)||'#8b8b8b';
+    if(fmw) fmw.innerHTML=`<div class="finB">
+      <div class="finB-row">
+        <div class="fd-card"><div class="fd-clabel">Projectprijs</div><div class="finB-price">€ <input class="finB-in" type="text" inputmode="decimal" value="${om!=null?String(om).replace('.',','):''}" placeholder="—" onchange="pbSetProjectprijs(this.value)"></div></div>
+        <button class="fd-card finB-uit" onclick="_renderProjBoard()"><div class="fd-clabel">Uitgaven totaal</div><div class="fd-cval">€${fmtEur(inkEx)}</div></button>
+      </div>
+      <div class="fd-block"><div class="fd-h">${escapeHtml((p&&(p.project||p.client))||'Project')} · marge</div><div class="fd-donutrow">${_finDonut(om!=null?om:0,inkEx,col)}<div class="fd-dstats"><div class="fd-dstat"><span>Omzet</span><b>${om!=null?'€'+fmtEur(om):'—'}</b></div><div class="fd-dstat"><span>Kosten (excl.)</span><b>€${fmtEur(inkEx)}</b></div><div class="fd-dstat marge ${marge!=null&&marge<0?'neg':''}"><span>Marge</span><b>${marge!=null?'€'+fmtEur(marge):'—'}</b></div></div></div></div>
+    </div>`;
+    return;
+  }
+
+  // TOESTAND A — géén project → Begeister-totaal (volle breedte kolom 2; kolom 3 verborgen)
+  if(vfm)vfm.classList.add('finfull'); if(vfr)vfr.classList.add('hidden'); if(fr)fr.innerHTML='';
+  const pjName=id=>{ const p=projById(id); return p?(p.project||p.client||'—'):null; };
+  const pjColor=id=>{ const p=projById(id); return p?(p.color||'#888'):'#6a6a6a'; };
+  const _ML=['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
+  const now=new Date(); const mKeys=[], mMap={};
+  for(let i=5;i>=0;i--){ const d=new Date(now.getFullYear(),now.getMonth()-i,1); const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); mKeys.push({k,label:_ML[d.getMonth()]}); mMap[k]={kosten:0,omzet:0}; }
+  (_finRows||[]).forEach(x=>{ if(!x.created_at)return; const k=String(x.created_at).slice(0,7); if(mMap[k])mMap[k].kosten+=x.amount; });
+  const maxM=Math.max(1,...mKeys.map(m=>mMap[m.k].kosten+mMap[m.k].omzet));
+  const bars=mKeys.map(m=>{ const dd=mMap[m.k]; const mg=dd.omzet-dd.kosten; const kH=Math.round(dd.kosten/maxM*84), oH=Math.round(dd.omzet/maxM*84); const any=dd.kosten||dd.omzet;
+    return `<div class="finA-bcol"><div class="finA-bval ${mg<0?'neg':'pos'}">${any?'€'+fmtEur(mg):''}</div><div class="finA-bstack">${oH?`<div class="finA-bomz" style="height:${oH}px"></div>`:''}${kH?`<div class="finA-bkos" style="height:${kH}px"></div>`:''}${!any?'<div class="finA-bempty"></div>':''}</div><div class="finA-blbl">${m.label}</div></div>`; }).join('');
+  const dated=(_finRows||[]).filter(x=>x.created_at).sort((a,b)=>String(b.created_at).localeCompare(String(a.created_at)));
+  const boek=dated.filter(x=>projById(x.project_id)).slice(0,7).map(x=>`<div class="finA-brow" onclick="selectFinProj('${x.project_id}')"><span class="finA-bdot" style="background:${pjColor(x.project_id)}"></span><span class="finA-btext">${escapeHtml(pjName(x.project_id)||'—')} · ${escapeHtml(_shortName(x.text))}</span><span class="finA-bdate">${_finShortDate(x.created_at)}</span><span class="finA-bamt neg">-€${fmtEur(x.amount)}</span></div>`).join('');
+  const noRows=dated.filter(x=>!projById(x.project_id)).slice(0,10).map(x=>`<div class="finA-nprow"><span class="finA-nptext">${escapeHtml(_shortName(x.text))}</span><span class="finA-npamt">€${fmtEur(x.amount)}</span></div>`).join('');
+  if(fmw) fmw.innerHTML=`<div class="finA">
+    <div class="finA-top">
+      <div class="finA-hero"><div class="finA-herolbl">Begeister · totaal</div><div class="finA-herobig">€${fmtEur(tOm)}</div><div class="finA-herosub">omzet · marge <b class="${tMarge<0?'neg':'pos'}">€${fmtEur(tMarge)}</b> · uitgegeven €${fmtEur(tInEx)}</div></div>
+      <div class="fd-block finA-chart"><div class="fd-h">Per maand · marge</div><div class="finA-bars">${bars}</div></div>
+    </div>
+    <div class="finA-blocks">
+      <div class="fd-block"><div class="fd-h">Recente boekingen</div>${boek||'<div class="fd-empty">Nog geen boekingen.</div>'}</div>
+      <div class="fd-block finA-noproj"><div class="fd-h">Zonder project · algemeen</div>${noRows||'<div class="fd-empty">Niets zonder project.</div>'}</div>
+    </div>
   </div>`;
 }
 async function pbInkLink(){ const url=((await uiPrompt('Plak een productlink (Amazon of web):'))||'').trim(); if(!/^https?:\/\//i.test(url))return; let meta={}; try{ meta=await fetch('/api/linkmeta',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url})}).then(r=>r.json()); }catch(_){} const name=(meta&&meta.title)?String(meta.title).slice(0,140):url; try{ const ins=await sb.from('project_board').insert({project_id:_pbPid,kind:'inkoop',text:name,qty:1,url,sort:_pbItems.length}).select().single(); if(ins&&ins.data)_pbItems.push(ins.data); }catch(_){} _renderProjBoard(); }
