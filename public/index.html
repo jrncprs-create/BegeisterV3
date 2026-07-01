@@ -713,9 +713,10 @@
   .pb-cluster:hover{background:color-mix(in srgb,var(--scol) 14%,transparent)}
   .pb-cluster-shop{font-size:13.5px;font-weight:600}
   .pb-cluster-sub{font-size:12px;opacity:.7;white-space:nowrap}
-  .pb-orderall{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;margin-top:13px;padding:11px 14px;border-radius:11px;border:1px solid color-mix(in srgb,var(--scol) 42%,transparent);background:color-mix(in srgb,var(--scol) 12%,transparent);color:var(--scol);font-size:13.5px;font-weight:600;font-family:inherit;cursor:pointer;transition:background .15s}
-  .pb-orderall:hover{background:color-mix(in srgb,var(--scol) 22%,transparent)}
-  .pb-orderall-n{font-size:12px;opacity:.85;background:color-mix(in srgb,var(--scol) 24%,transparent);border-radius:999px;padding:1px 8px;min-width:20px;text-align:center}
+  .pb-thumb{width:36px;height:36px;border-radius:7px;object-fit:cover;flex:0 0 auto;background:#fff;margin-right:2px}
+  .pb-ink-name{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1 1 auto}
+  .pb-ink-name .pb-tx{flex:0 1 auto}
+  .pb-ink-sub{font-size:11.5px;color:var(--mut2)}
   .pb-besteltot{margin-top:12px;font-size:13px;color:var(--scol)}
   .pb-besteltot b{font-weight:600}
   .pb-board-inline .pb-del{background:transparent;border:none;color:var(--scol);opacity:0;cursor:pointer;font-size:18px;line-height:1;padding:0 2px;flex:0 0 auto;margin-left:8px;transition:opacity .15s}
@@ -1495,7 +1496,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v103</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v104</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -2488,9 +2489,12 @@ function _renderProjBoard(){
   const _lnkIc='<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 15l6-6"/><path d="M11 6l1-1a3.5 3.5 0 015 5l-1 1"/><path d="M13 18l-1 1a3.5 3.5 0 01-5-5l1-1"/></svg>';
   const _stCol={'te bestellen':['rgba(186,117,23,.16)','#d8a64a'],'besteld':['rgba(24,95,165,.2)','#7db0e6']};
   const inkRow=(x)=>{ const pr=(x.price!=null&&x.price!=='')?Number(x.price):null; const qty=x.qty||1;
-    const inner=`${esc(x.text)}${qty>1?` <span class="pb-qty">×${qty}</span>`:''}`;
-    const nm=x.url?`<a class="pb-tx pb-itxlink" href="${esc(x.url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Open bij verkoper">${inner}</a>`:`<a class="pb-tx pb-itxlink" href="https://www.google.com/search?q=${encodeURIComponent(x.text||'')}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Zoek dit artikel op Google">${inner}</a>`;
-    return `<div class="pb-row pb-ink" data-tid="${x.id}"><button class="pb-chk" onclick="pbInkCheck('${x.id}',${x.done?'false':'true'})" title="Afvinken">${_pbChk(!!x.done)}</button>${nm}<input class="pb-price" type="text" inputmode="decimal" value="${pr!=null?String(pr).replace('.',','):''}" placeholder="€" onclick="event.stopPropagation()" onchange="pbSetPrice('${x.id}',this.value)"><button class="pb-del" onclick="event.preventDefault();pbDel('${x.id}')" title="Verwijderen">×</button></div>`; };
+    const href=x.url?esc(x.url):('https://www.google.com/search?q='+encodeURIComponent(x.text||''));
+    const ttl=x.url?'Open bij verkoper':'Zoek dit artikel op Google';
+    const sub=(qty>1)?`<span class="pb-ink-sub">${qty} × €${pr!=null?fmtEur(pr):'—'}${pr!=null?' = €'+fmtEur(pr*qty):''}</span>`:'';
+    const nameCell=`<div class="pb-ink-name"><a class="pb-tx pb-itxlink" href="${href}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="${ttl}">${esc(x.text)}${qty>1?` <span class="pb-qty">×${qty}</span>`:''}</a>${sub}</div>`;
+    const thumb=x.image?`<img class="pb-thumb" src="${esc(x.image)}" alt="" loading="lazy" onerror="this.style.display='none'">`:'';
+    return `<div class="pb-row pb-ink" data-tid="${x.id}"><button class="pb-chk" onclick="pbInkCheck('${x.id}',${x.done?'false':'true'})" title="Afvinken">${_pbChk(!!x.done)}</button>${thumb}${nameCell}<input class="pb-price" type="text" inputmode="decimal" value="${pr!=null?String(pr).replace('.',','):''}" placeholder="€" onclick="event.stopPropagation()" onchange="pbSetPrice('${x.id}',this.value)" title="Prijs per stuk"><button class="pb-del" onclick="event.preventDefault();pbDel('${x.id}')" title="Verwijderen">×</button></div>`; };
   const doneInkRow=(x)=>`<div class="pb-row pb-donerow"><button class="pb-chk" onclick="pbInkCheck('${x.id}',false)" title="Terugzetten">${_pbChk(true)}</button><span class="pb-tx done">${esc(x.text||'')}</span></div>`;
   const apptRow=(a)=>{ const d=a.date?d3date(a.date):''; return `<div class="pb-row pb-appt"><span class="pb-tx">${esc(a.t||'Afspraak')}</span><span class="pb-when">${esc(d)}${a.start?' · '+esc(String(a.start).slice(0,5)):''}</span><button class="pb-edit" onclick="openApptModal('${a.id}')" title="Bewerken">${_penIc}</button></div>`; };
   const secWait=`<div class="pb-sec"><div class="pb-h">In afwachting <button class="pb-hadd" onclick="openModal(null,'wachter','wait','${_pbPid}')" title="Toevoegen">+</button></div>${waitT.length?waitT.map(waitRow).join(''):'<div class="pb-empty">Niets in afwachting.</div>'}</div>`;
@@ -2512,9 +2516,7 @@ function _renderProjBoard(){
       _masterLink=`<a class="pb-cluster" href="${esc(_u)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Open de hele lijst bij ${esc(_shop)}"><span class="pb-cluster-shop">🛒 ${esc(_shop)}${_pj?' · '+esc(_pj):''}</span><span class="pb-cluster-sub">${_n} items ↗</span></a>`; } }
   const inkopenOpen=inkopen.filter(x=>!x.done);
   const _openTot=inkopenOpen.reduce((s,x)=>s+((x.price!=null&&x.price!=='')?Number(x.price):0)*(x.qty||1),0);
-  const _amzN=inkopenOpen.filter(x=>_amazonAsin(x.url)).length;
-  const _orderBtn=_amzN?`<button class="pb-orderall" onclick="pbOrderAll()" title="Alle Amazon-artikelen in één keer in je mandje zetten">🛒 Bestel alles bij Amazon <span class="pb-orderall-n">${_amzN}</span></button>`:'';
-  const secBestel=`<div class="pb-sec"><div class="pb-h"><button class="pb-chk pb-chk-list" onclick="pbCheckAllInk()" title="Hele lijst afvinken">${_pbChk(false)}</button><span>Bestellijst</span><span class="pb-hbtns"><button class="pb-ai" onclick="pbInkPaste()" title="Plak een verlanglijst of winkelwagen — AI maakt er regels van">${_tIc(_TABCHAN.asterisk,15,1.7)}<span>lijst</span></button>${inkopen.length?`<button class="pb-listdel" onclick="pbDelBestel()" title="Hele bestellijst verwijderen"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/></svg></button>`:''}</span></div>${_masterLink}${inkopenOpen.length?inkopenOpen.map(inkRow).join(''):'<div class="pb-empty">Nog geen bestellingen.</div>'}<div class="pb-add"><input class="pb-in" data-kind="inkoop" placeholder="+ artikel toevoegen…" onkeydown="pbAddKey(event,'inkoop')"></div>${inkopenOpen.length?`<div class="pb-besteltot">Totaal <b>€${fmtEur(_openTot)}</b></div>`:''}${_orderBtn}</div>`;
+  const secBestel=`<div class="pb-sec"><div class="pb-h"><button class="pb-chk pb-chk-list" onclick="pbCheckAllInk()" title="Hele lijst afvinken">${_pbChk(false)}</button><span>Bestellijst</span><span class="pb-hbtns"><button class="pb-ai" onclick="pbInkPaste()" title="Plak een verlanglijst of winkelwagen — AI maakt er regels van">${_tIc(_TABCHAN.asterisk,15,1.7)}<span>lijst</span></button>${inkopen.length?`<button class="pb-listdel" onclick="pbDelBestel()" title="Hele bestellijst verwijderen"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/></svg></button>`:''}</span></div>${_masterLink}${inkopenOpen.length?inkopenOpen.map(inkRow).join(''):'<div class="pb-empty">Nog geen bestellingen.</div>'}<div class="pb-add"><input class="pb-in" data-kind="inkoop" placeholder="+ artikel toevoegen…" onkeydown="pbAddKey(event,'inkoop')"></div>${inkopenOpen.length?`<div class="pb-besteltot">Totaal <b>€${fmtEur(_openTot)}</b></div>`:''}</div>`;
   const _body=(_pbMode==='financien')?secInk:(secWait+secTaken+secBestel+secDone+secAppt+secFiles+secPrijs+secNotes);
   const _head=`<div class="pb-head"><span class="kbadge" style="background:${col}">${esc(initial)}</span><div class="pb-title"><b>${esc(p.client||'')}</b>${p.project?'<span> · '+esc(p.project)+'</span>':''}${_pbMode==='financien'?'<span style="color:'+col+'"> · inkoop</span>':''}</div></div>`;
   if(_pbTarget==='finmid'){ const el=document.getElementById('finMidWrap'); if(el)el.innerHTML=`<div class="pb-inline" style="--scol:${col}">${_head}${_body}</div>`; return; }
@@ -2637,30 +2639,39 @@ function _dedupTitle(s){ s=String(s||'').replace(/\s+/g,' ').trim(); if(!s) retu
   const sig=s.slice(0,Math.min(24,s.length)); const idx=s.indexOf(sig,10); if(idx>10) return s.slice(0,idx).replace(/[…\-\s]+$/,'').trim();
   const h=Math.floor(s.length/2); if(s.length%2===0 && s.slice(0,h)===s.slice(h)) return s.slice(0,h).trim();
   return s; }
+// Lange webshop-titel inkorten tot iets leesbaars: knip bij eerste komma/streepje, anders ~52 tekens op woordgrens.
+function _shortName(s){ s=String(s||'').replace(/\s+/g,' ').trim(); if(!s) return s;
+  let c=s.split(/,| - | – | \| /)[0].trim(); if(c.length<6) c=s;
+  if(c.length>52){ c=c.slice(0,52).replace(/\s+\S*$/,'').trim(); }
+  return c||s.slice(0,52); }
 // Geplakte winkelwagen/lijst mét product-LINKS lokaal omzetten naar inkoopregels — zonder AI.
 // Werkt met markdown-links [naam](url) én kale URL's; pakt prijs (€) en aantal ("Quantity is N").
 function _parsePastedList(txt){
   const lines=String(txt||'').split(/\r?\n/);
   const isProd=(u)=>/\/(?:dp|gp\/product|gp\/aw\/d|product)\/[A-Z0-9]{10}/i.test(u);
   const priceRe=/(?:€|eur)\s?(\d{1,4}(?:[.,]\d{3})*(?:[.,]\d{2})?)/i;
+  const skipRe=/\/\s*count|per\b|subtotal|subtotaal|totaal|total|shipping|verzend|delivery|bezorg/i;
+  const toNum=(s)=>{ if(/,\d{2}$/.test(s)) s=s.replace(/\./g,'').replace(',','.'); else s=s.replace(/,(?=\d{3}\b)/g,''); const n=parseFloat(s); return isNaN(n)?null:n; };
   const items=[]; let cur=null; const flush=()=>{ if(cur){ items.push(cur); cur=null; } };
-  // Zelfde product 2× gelinkt (foto-link + titel-link) → samenvoegen op basis van de schone URL,
-  // zodat er geen lege "Artikel"-dubbelrijen ontstaan.
+  // Zelfde product 2× gelinkt (foto-link + titel-link) → samenvoegen op basis van de schone URL.
   const addLink=(name,rawUrl)=>{ const url=_cleanProductUrl(rawUrl.replace(/&amp;/g,'&')); const nm=_dedupTitle(name||'');
     if(cur && cur.url===url){ if((!cur.name||cur.name==='Artikel')&&nm) cur.name=nm; }
-    else { flush(); cur={name:nm||'Artikel',url:url,price:null,qty:1}; } };
+    else { flush(); cur={name:nm||'Artikel',url:url,price:null,qty:1,image:null}; } };
   for(let i=0;i<lines.length;i++){ const l=lines[i].trim(); if(!l) continue;
     let prod=false;
     for(const m of l.matchAll(/\[([^\]]*)\]\((https?:\/\/[^)\s]+)\)/g)){ if(isProd(m[2])){ addLink(m[1],m[2]); prod=true; } }
-    if(!prod){ const um=l.match(/https?:\/\/[^\s)]+/); if(um&&isProd(um[0])){ const nm=l.replace(/\[[^\]]*\]\([^)]*\)/g,'').replace(um[0],'').replace(/[|—–]/g,' ').replace(/\s+/g,' ').trim(); addLink(nm,um[0].replace(/[).,;]+$/,'')); prod=true; } }
+    if(!prod){ const um=l.match(/https?:\/\/[^\s)]+/); if(um&&isProd(um[0])){ const nm=l.replace(/\[[^\]]*\]\([^)]*\)/g,'').replace(/\{\{img:[^}]+\}\}/g,'').replace(um[0],'').replace(/[|—–]/g,' ').replace(/\s+/g,' ').trim(); addLink(nm,um[0].replace(/[).,;]+$/,'')); prod=true; } }
     if(cur){
-      // prijs: eerste standalone €, maar NIET van subtotaal/totaal/verzend/per-stuk
-      if(cur.price==null && priceRe.test(l) && !/\/\s*count|per\b|subtotal|subtotaal|totaal|total|shipping|verzend|delivery|bezorg/i.test(l)){ let s=l.match(priceRe)[1]; if(/,\d{2}$/.test(s)) s=s.replace(/\./g,'').replace(',','.'); else s=s.replace(/,(?=\d{3}\b)/g,''); const n=parseFloat(s); if(!isNaN(n)) cur.price=n; }
+      const imgm=l.match(/\{\{img:([^}]+)\}\}/); if(imgm && !cur.image && /^https?:/i.test(imgm[1])) cur.image=imgm[1].replace(/&amp;/gi,'&');
+      if(cur.price==null && priceRe.test(l) && !skipRe.test(l)){ const n=toNum(l.match(priceRe)[1]); if(n!=null) cur.price=n; }
       const q=l.match(/(?:quantity is|aantal(?:\s+is)?)\s+(\d{1,3})/i); if(q){ const n=parseInt(q[1],10); if(n>0) cur.qty=n; }
     }
   }
   flush();
-  return items.filter(x=>x.name&&x.name!=='Artikel').map(x=>({name:x.name.slice(0,200),qty:x.qty||1,price:x.price,url:x.url}));
+  let out=items.filter(x=>x.name&&x.name!=='Artikel');
+  // Fallback: kregen geen items een prijs, maar staan er los evenveel €-bedragen → op volgorde koppelen.
+  if(out.length && out.every(x=>x.price==null)){ const toks=[]; for(const l of lines){ const t=l.trim(); if(!t||skipRe.test(t))continue; const pm=t.match(priceRe); if(pm){ const n=toNum(pm[1]); if(n!=null) toks.push(n); } } if(toks.length===out.length) out.forEach((it,ix)=>{ it.price=toks[ix]; }); }
+  return out.map(x=>({name:_shortName(x.name).slice(0,120),qty:x.qty||1,price:x.price,url:x.url,image:x.image||null}));
 }
 // Klembord-HTML (die bij plakken de <a href>-links bevat) omzetten naar tekst-met-links,
 // zodat _parsePastedList de links kan vinden ook al toont de textarea alleen platte tekst.
@@ -2668,7 +2679,8 @@ function _htmlToLinkText(html){
   let s=String(html||'');
   s=s.replace(/<style[\s\S]*?<\/style>/gi,' ').replace(/<script[\s\S]*?<\/script>/gi,' ');
   s=s.replace(/<span[^>]*aria-hidden=["']true["'][^>]*>[\s\S]*?<\/span>/gi,' '); // dubbele visuele prijs weg, offscreen-prijs blijft
-  s=s.replace(/<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi,(m,href,inner)=>{ const tx=inner.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim(); return ' ['+tx+']('+href.replace(/&amp;/gi,'&')+') '; });
+  s=s.replace(/<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi,(m,href,inner)=>{ const im=inner.match(/<img[^>]+src=["']([^"']+)["']/i); const tx=inner.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim(); return ' ['+tx+']('+href.replace(/&amp;/gi,'&')+')'+(im?' {{img:'+im[1]+'}}':'')+' '; });
+  s=s.replace(/<img[^>]+src=["']([^"']+)["'][^>]*>/gi,' {{img:$1}} '); // losse thumbnails ook meepakken
   s=s.replace(/<\/(p|div|li|tr|h\d)>/gi,'\n').replace(/<br\s*\/?>/gi,'\n');
   s=s.replace(/<[^>]+>/g,' ');
   s=s.replace(/&nbsp;/gi,' ').replace(/&amp;/gi,'&').replace(/&euro;/gi,'€').replace(/&#8364;/gi,'€').replace(/&#39;/gi,"'").replace(/&quot;/gi,'"');
@@ -2693,7 +2705,7 @@ function pbInkPaste(){ const ov=document.createElement('div'); ov.className='ove
     if(local.length){ items=local; }
     else { try{ const r=await fetch('/api/bestellijst',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:txt})}); const d=await r.json(); items=(d&&d.items)||[]; err=d&&d.error; }catch(e){ err=String(e&&e.message||e); } }
     if(!items.length){ b.disabled=false; b.innerHTML=_orig; _note(err?('Kon de lijst niet lezen: '+err+' — tip: plak de winkelwagen mét de productlinks erbij, dan gaat het zónder AI.'):'Geen artikelen herkend. Plak het lijst-gedeelte (namen + prijzen), of een winkelwagen mét productlinks.'); return; }
-    for(const it of items){ try{ const ins=await sb.from('project_board').insert({project_id:_pbPid,kind:'inkoop',text:it.name,qty:it.qty||1,price:(it.price!=null?it.price:null),url:it.url||null,sort:_pbItems.length}).select().single(); if(ins&&ins.data)_pbItems.push(ins.data); }catch(_){} }
+    for(const it of items){ try{ const ins=await sb.from('project_board').insert({project_id:_pbPid,kind:'inkoop',text:it.name,qty:it.qty||1,price:(it.price!=null?it.price:null),url:it.url||null,image:it.image||null,sort:_pbItems.length}).select().single(); if(ins&&ins.data)_pbItems.push(ins.data); }catch(_){} }
     close(); _finInk=null; _renderProjBoard(); try{render();}catch(_){}
   };
   setTimeout(()=>{ const t=ov.querySelector('#pbpaste'); if(t)t.focus(); },60);
