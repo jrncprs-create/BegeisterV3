@@ -1496,7 +1496,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v108</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v109</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -5669,7 +5669,9 @@ async function handlePhoto(e){
 // Bij versturen → /api/transcribe (Groq Whisper) → transcript + taak-suggesties → review in 'In afwachting'.
 var _vr={stream:null,rec:null,chunks:[],ac:null,analyser:null,buf:null,raf:0,wave:[],t0:0,acc:0,paused:false,mime:'',sending:false};
 function _vrPickMime(){
-  var c=['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/aac','audio/ogg;codecs=opus'];
+  // MP4 eerst: Safari's WebM-opname is kapot (levert een lege 15-byte header). Safari pakt zo z'n
+  // betrouwbare eigen MP4/AAC; Chrome/Firefox (geen MP4-opname) vallen terug op WebM/Opus.
+  var c=['audio/mp4','audio/mp4;codecs=mp4a.40.2','audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus'];
   if(typeof MediaRecorder==='undefined'||!MediaRecorder.isTypeSupported)return '';
   for(var i=0;i<c.length;i++){ if(MediaRecorder.isTypeSupported(c[i]))return c[i]; }
   return '';
@@ -5766,7 +5768,7 @@ function vrStop(send){
     const blob=new Blob(_vr.chunks,{type:_vr.mime||'audio/webm'});
     _vrTeardown();
     _vrHideOverlay();                 // balk meteen weg — niet bevroren laten staan
-    if(!blob.size){ _vr.sending=false; return; }
+    if(blob.size<800){ _vr.sending=false; try{ await uiConfirm('Er kwam (bijna) geen geluid uit de opname — probeer het nog eens, en check of de microfoon toegang heeft.',{ok:'Oké',danger:false}); }catch(_){} return; }
     _vrBusy(true,'Spraak uitwerken…');
     try{ await _vrSend(blob); }
     catch(e){ try{ await uiConfirm('Versturen lukte niet: '+(e&&e.message||e),{ok:'Oké',danger:false}); }catch(_){}}
