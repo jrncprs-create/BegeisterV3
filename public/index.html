@@ -1487,6 +1487,7 @@
       <button data-v="files" onclick="setView('files')">Bestanden</button>
       <button data-v="contacten" onclick="setView('contacten')">Contacten</button>
       <button data-v="bronnen" onclick="setView('bronnen')">Bronnen <span class="badge" id="nb-bron"></span></button>
+      <button id="clipBtn" onclick="pasteAsSource()" title="Plak klembord als bron voor de AI (met links)"><svg viewBox="0 0 24 24" width="15" height="15" style="vertical-align:-2px" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M8 5H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/></svg> Plakken</button>
       <button id="dayBtn" onclick="openDayOverview()" title="Dagoverzicht">Dagoverzicht</button>
       <button id="inspBtn" onclick="openInspiration()" title="Inspiratie">Inspiratie</button>
       <button id="pushBtn" onclick="enablePush()" title="Meldingen aanzetten">Meldingen</button>
@@ -1494,7 +1495,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v101</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v103</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -2643,17 +2644,23 @@ function _parsePastedList(txt){
   const isProd=(u)=>/\/(?:dp|gp\/product|gp\/aw\/d|product)\/[A-Z0-9]{10}/i.test(u);
   const priceRe=/(?:€|eur)\s?(\d{1,4}(?:[.,]\d{3})*(?:[.,]\d{2})?)/i;
   const items=[]; let cur=null; const flush=()=>{ if(cur){ items.push(cur); cur=null; } };
+  // Zelfde product 2× gelinkt (foto-link + titel-link) → samenvoegen op basis van de schone URL,
+  // zodat er geen lege "Artikel"-dubbelrijen ontstaan.
+  const addLink=(name,rawUrl)=>{ const url=_cleanProductUrl(rawUrl.replace(/&amp;/g,'&')); const nm=_dedupTitle(name||'');
+    if(cur && cur.url===url){ if((!cur.name||cur.name==='Artikel')&&nm) cur.name=nm; }
+    else { flush(); cur={name:nm||'Artikel',url:url,price:null,qty:1}; } };
   for(let i=0;i<lines.length;i++){ const l=lines[i].trim(); if(!l) continue;
     let prod=false;
-    for(const m of l.matchAll(/\[([^\]]*)\]\((https?:\/\/[^)\s]+)\)/g)){ if(isProd(m[2])){ flush(); cur={name:_dedupTitle(m[1])||'Artikel',url:_cleanProductUrl(m[2].replace(/&amp;/g,'&')),price:null,qty:1}; prod=true; } }
-    if(!prod){ const um=l.match(/https?:\/\/[^\s)]+/); if(um&&isProd(um[0])){ flush(); const nm=l.replace(/\[[^\]]*\]\([^)]*\)/g,'').replace(um[0],'').replace(/[|—–]/g,' ').replace(/\s+/g,' ').trim(); cur={name:_dedupTitle(nm)||'Artikel',url:_cleanProductUrl(um[0].replace(/[).,;]+$/,'').replace(/&amp;/g,'&')),price:null,qty:1}; prod=true; } }
+    for(const m of l.matchAll(/\[([^\]]*)\]\((https?:\/\/[^)\s]+)\)/g)){ if(isProd(m[2])){ addLink(m[1],m[2]); prod=true; } }
+    if(!prod){ const um=l.match(/https?:\/\/[^\s)]+/); if(um&&isProd(um[0])){ const nm=l.replace(/\[[^\]]*\]\([^)]*\)/g,'').replace(um[0],'').replace(/[|—–]/g,' ').replace(/\s+/g,' ').trim(); addLink(nm,um[0].replace(/[).,;]+$/,'')); prod=true; } }
     if(cur){
-      if(cur.price==null && priceRe.test(l) && !/\/\s*count|per\b/i.test(l)){ let s=l.match(priceRe)[1]; if(/,\d{2}$/.test(s)) s=s.replace(/\./g,'').replace(',','.'); else s=s.replace(/,(?=\d{3}\b)/g,''); const n=parseFloat(s); if(!isNaN(n)) cur.price=n; }
+      // prijs: eerste standalone €, maar NIET van subtotaal/totaal/verzend/per-stuk
+      if(cur.price==null && priceRe.test(l) && !/\/\s*count|per\b|subtotal|subtotaal|totaal|total|shipping|verzend|delivery|bezorg/i.test(l)){ let s=l.match(priceRe)[1]; if(/,\d{2}$/.test(s)) s=s.replace(/\./g,'').replace(',','.'); else s=s.replace(/,(?=\d{3}\b)/g,''); const n=parseFloat(s); if(!isNaN(n)) cur.price=n; }
       const q=l.match(/(?:quantity is|aantal(?:\s+is)?)\s+(\d{1,3})/i); if(q){ const n=parseInt(q[1],10); if(n>0) cur.qty=n; }
     }
   }
   flush();
-  return items.map(x=>({name:x.name.slice(0,200),qty:x.qty||1,price:x.price,url:x.url}));
+  return items.filter(x=>x.name&&x.name!=='Artikel').map(x=>({name:x.name.slice(0,200),qty:x.qty||1,price:x.price,url:x.url}));
 }
 // Klembord-HTML (die bij plakken de <a href>-links bevat) omzetten naar tekst-met-links,
 // zodat _parsePastedList de links kan vinden ook al toont de textarea alleen platte tekst.
@@ -4944,6 +4951,43 @@ async function handleDroppedFiles(list){
   _dropFiles=[...list];
   try{ if(typeof dismissWelcome==='function') dismissWelcome(); }catch(_){}   // chat verdwijnt bij droppen
   _dropRunNext();
+}
+// Klembord-knop (menu): plak overal HTML-tekst (met links + thumbnails) als BRON voor de AI.
+// Probeert het klembord automatisch te lezen; lukt dat niet → handmatig plakvak.
+async function pasteAsSource(){
+  try{ if(typeof closePlus==='function') closePlus(); }catch(_){}
+  try{ const nav=document.getElementById('nav'); if(nav)nav.classList.remove('open'); }catch(_){}
+  let html='', text='';
+  try{
+    if(navigator.clipboard && navigator.clipboard.read){
+      const its=await navigator.clipboard.read();
+      for(const it of its){
+        if(it.types.includes('text/html')){ try{ html=await (await it.getType('text/html')).text(); }catch(_){} }
+        if(it.types.includes('text/plain')){ try{ text=await (await it.getType('text/plain')).text(); }catch(_){} }
+      }
+    } else if(navigator.clipboard && navigator.clipboard.readText){ text=await navigator.clipboard.readText(); }
+  }catch(_){}
+  if(!html && !text){ _pasteSourceModal(); return; }   // geen automatische toegang → handmatig plakvak
+  _ingestPasted(html,text);
+}
+function _ingestPasted(html,text){
+  const content=((html? _htmlToLinkText(html):'')||text||'').trim();
+  if(!content){ try{ uiConfirm('Je klembord is leeg of bevat geen tekst om te plakken.',{ok:'Oké',danger:false}); }catch(_){} return; }
+  const name='Geplakt — '+new Date().toLocaleString('nl-NL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+'.txt';
+  let file; try{ file=new File([content],name,{type:'text/plain'}); }catch(_){ file=new Blob([content],{type:'text/plain'}); try{file.name=name;}catch(__){} }
+  handleDroppedFiles([file]);
+}
+function _pasteSourceModal(){
+  const ov=document.createElement('div'); ov.className='overlay';
+  ov.innerHTML='<div class="modal" style="width:560px;max-width:94vw"><button class="modal-close" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button><h3>Plak als bron</h3><div style="font-size:12.5px;color:var(--mut2);margin:-6px 0 12px">Plak hier (Cmd/Ctrl+V) — mét opmaak &amp; links. De AI maakt er actiepunten van en bewaart het als bron.</div><textarea id="psrc" class="pb-notes" style="min-height:170px" placeholder="Plak hier…"></textarea><div class="foot" style="display:flex;justify-content:flex-end;gap:10px;margin-top:16px"><button class="btn ghost" id="pscancel">Annuleren</button><button class="btn" id="psok">Verwerken</button></div></div>';
+  document.body.appendChild(ov); requestAnimationFrame(()=>ov.classList.add('open'));
+  const close=()=>{ ov.classList.remove('open'); setTimeout(()=>ov.remove(),300); };
+  ov.querySelector('.modal-close').onclick=close; ov.querySelector('#pscancel').onclick=close;
+  ov.addEventListener('click',e=>{ if(e.target===ov) close(); });
+  let _html=''; const _ta=ov.querySelector('#psrc');
+  if(_ta) _ta.addEventListener('paste',e=>{ try{ const hh=e.clipboardData&&e.clipboardData.getData('text/html'); if(hh)_html=hh; }catch(_){} });
+  ov.querySelector('#psok').onclick=()=>{ const txt=(_ta&&_ta.value||'').trim(); if(!_html && !txt) return; close(); _ingestPasted(_html,txt); };
+  setTimeout(()=>{ if(_ta)_ta.focus(); },60);
 }
 function _dropRunNext(){ if(!_dropFiles.length){ _dzHide(); return; } _dropProcess(_dropFiles.shift()); }
 
