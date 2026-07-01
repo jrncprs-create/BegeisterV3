@@ -85,9 +85,15 @@ export default async function handler(req, res) {
 
     // 4) Taak-suggesties uit het transcript (zelfde extractie als mail/drop). Faalt de AI (Anthropic-storing),
     //    dan krijgen we nog steeds het volledige transcript terug — de gebruiker splitst dan zelf.
+    // De transcriptie (Groq) is het belangrijkst en is al binnen. De taak-extractie loopt via Anthropic
+    // en kan bij een storing lang hangen (retries) — daarom een strakke time-out: lukt het niet snel,
+    // dan geven we gewoon het transcript terug (de gebruiker splitst dan zelf in taken).
     let ex = { items: [], summary: "", contacts: [], client: "", project: "", type: "", from: "", category: "", subject: "", usage: null };
     try {
-      ex = await extractItems({ text: transcript, sender: who || "Spraak", subject: "spraakbericht", today, catalog, context });
+      ex = await Promise.race([
+        extractItems({ text: transcript, sender: who || "Spraak", subject: "spraakbericht", today, catalog, context }),
+        new Promise((_, rej) => setTimeout(() => rej(new Error("extract-timeout (AI traag/uit)")), 9000)),
+      ]);
     } catch (e) { console.error("transcribe-extract:", e.message); }
     if (ex.usage) { try { await logUsage(db, { source: "voice", ...ex.usage }); } catch (_) {} }
 
