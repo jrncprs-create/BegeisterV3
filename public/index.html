@@ -1503,7 +1503,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v125</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v126</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -1694,8 +1694,32 @@
       #pmvOverlay .pmv-proj{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:transparent;border:none;border-radius:9px;padding:9px 12px 9px 34px;color:var(--txt);font-size:13.5px;cursor:pointer}
       #pmvOverlay .pmv-proj:hover{background:rgba(255,255,255,.06)}
       #pmvOverlay .pmv-dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto}
-      #finMidWrap .fd-block{background:#141417;border:1px solid var(--line);border-radius:12px;padding:13px 15px}
-      #finMidWrap .fd-h{font-size:12.5px;color:var(--mut2);margin-bottom:9px}
+      /* Toestand B — vlakke board-stijl, gelijk aan Klanten-bord */
+      #finMidWrap .finB-flat .pb-head{padding-right:0}
+      #finMidWrap .finB-flat .pb-title b{color:var(--scol)}
+      #finMidWrap .finB-flat .pb-head .finB-health{margin-left:auto;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;text-transform:none;letter-spacing:.2px}
+      #finMidWrap .finB-flat .finB-health.ok{color:var(--scol);background:color-mix(in srgb,var(--scol) 15%,transparent)}
+      #finMidWrap .finB-flat .finB-health.dun{color:#d8a64a;background:rgba(216,166,74,.15)}
+      #finMidWrap .finB-flat .finB-health.neg{color:#e0726f;background:rgba(224,114,111,.15)}
+      #finMidWrap .finB-ovsec .finB-ov{display:flex;align-items:center;gap:22px}
+      #finMidWrap .finB-flat .fd-ring{flex:0 0 auto;width:128px;height:128px}
+      #finMidWrap .finB-ovstats{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+      #finMidWrap .finB-ovstats .pb-finline.marge b{font-size:16px}
+      #finMidWrap .finB-pills{display:flex;gap:7px;flex-wrap:wrap;margin:2px 0 9px}
+      #finMidWrap .finB-pill{font-size:11.5px;color:var(--mut);background:transparent;border:1px solid var(--line);border-radius:20px;padding:5px 12px;cursor:pointer;transition:all .15s}
+      #finMidWrap .finB-pill:hover{border-color:var(--scol);color:var(--txt)}
+      #finMidWrap .finB-pill.on{color:var(--scol);border-color:var(--scol);background:color-mix(in srgb,var(--scol) 13%,transparent);font-weight:600}
+      #finMidWrap .finB-flat .finB-openrow{color:var(--scol);opacity:.85}
+      #finMidWrap .finB-flat .finB-openrow.paid b{color:var(--scol)}
+      #finMidWrap .finB-flat .finB-openrow.open b{color:#e6c07a}
+      #finMidWrap .finB-flat .finB-openhint{font-size:12px;color:var(--mut2)}
+      #finMidWrap .finB-sub{color:var(--mut2);font-size:11.5px}
+      #finMidWrap .finB-sub.over{color:#e0726f}
+      #finMidWrap .finB-budrow{margin-top:10px}
+      #finMidWrap .finB-flat .finB-budbar{margin-top:11px}
+      #finMidWrap .finB-scansec{padding-top:14px}
+      #finMidWrap .fd-block{background:#141417;border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+      #finMidWrap .fd-h{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;font-weight:600;color:var(--mut);margin-bottom:11px}
       #finMidWrap .fd-donutrow{display:flex;align-items:center;gap:16px}
       #finMidWrap .fd-dstats{flex:1;display:flex;flex-direction:column;gap:8px}
       #finMidWrap .fd-dstat{display:flex;justify-content:space-between;font-size:12.5px;color:var(--mut2)}
@@ -1706,12 +1730,13 @@
       #finMidWrap .fd-ringnum{fill:#d7dadd;font-size:19px;font-weight:600}
       #finMidWrap .fd-ringnum.neg{fill:#e0726f}
       #finMidWrap .fd-ringlbl{fill:var(--mut2);font-size:11px}
-      #finMidWrap .finA{display:flex;flex-direction:column;gap:14px;padding:2px}
+      #finMidWrap .finA{display:flex;flex-direction:column;gap:14px;padding:16px 2px 2px}
+      #finMidWrap .finB-flat{padding:16px 2px 34px}
       #finMidWrap .finA-top{display:flex;gap:14px;align-items:stretch}
-      #finMidWrap .finA-hero{flex:1;min-width:0;background:linear-gradient(160deg,#26262b,#17171a);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:16px 18px;display:flex;flex-direction:column;justify-content:center}
-      #finMidWrap .finA-herolbl{font-size:12px;color:#b6b6bc}
-      #finMidWrap .finA-herobig{font-size:30px;font-weight:600;margin:8px 0 2px;color:#f2f2f4}
-      #finMidWrap .finA-herosub{font-size:12px;color:#a2a2a8}
+      #finMidWrap .finA-hero{flex:1;min-width:0;background:#141417;border:1px solid var(--line);border-radius:14px;padding:18px 20px;display:flex;flex-direction:column;justify-content:center}
+      #finMidWrap .finA-herolbl{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;font-weight:600;color:var(--mut)}
+      #finMidWrap .finA-herobig{font-size:32px;font-weight:600;margin:10px 0 3px;color:#f2f2f4;letter-spacing:-.5px}
+      #finMidWrap .finA-herosub{font-size:12px;color:var(--mut2)}
       #finMidWrap .finA-herosub b.pos{color:#e6e6e8}
       #finMidWrap .finA-herosub b.neg{color:#e0726f}
       #finMidWrap .finA-chart{flex:1.5;min-width:0}
@@ -3035,24 +3060,24 @@ async function renderFinancien(){
       else if(st==='gefactureerd'){ openLbl='Openstaand'+(_dt?' · sinds '+_dt:''); openVal=_E+fmtEur(omIncl); openCls='open'; }
       else { openLbl='Nog te factureren'; openVal=_E+fmtEur(omIncl); openCls='todo'; }
     }
-    if(fmw) fmw.innerHTML=`<div class="finB"><div class="finB-card" style="--ccol:${col}">
-      <div class="finB-head"><span class="kbadge" style="background:${col}">${ic}</span><div class="finB-htxt"><b>${escapeHtml(p.client||'')}</b>${p.project?`<span> · ${escapeHtml(p.project)}</span>`:''}</div>${healthChip}</div>
-      <div class="finB-body">${_finDonut(om!=null?om:0,inkEx,col)}<div class="finB-stats">
-        <div class="finB-stat"><span>Omzet (excl.)</span><b>${om!=null?_E+fmtEur(om):'—'}</b></div>
-        <div class="finB-stat"><span>Kosten (excl.)</span><b>${_E}${fmtEur(inkEx)}</b></div>
-        <div class="finB-stat marge ${marge!=null&&marge<0?'neg':''}"><span>Marge</span><b>${marge!=null?_E+fmtEur(marge):'—'}</b></div>
-      </div></div>
-      <div class="finB-invoice">
+    if(fmw) fmw.innerHTML=`<div class="pb-inline pb-board-inline finB-flat" style="--scol:${col};--ccol:${col}">
+      <div class="pb-head"><span class="kbadge" style="background:${col}">${ic}</span><div class="pb-title"><b>${escapeHtml(p.client||'')}</b>${p.project?`<span> · ${escapeHtml(p.project)}</span>`:''}</div>${healthChip}</div>
+      <div class="pb-sec finB-ovsec"><div class="finB-ov">${_finDonut(om!=null?om:0,inkEx,col)}<div class="finB-ovstats">
+        <div class="pb-finline"><span>Omzet (excl.)</span><b>${om!=null?'€'+fmtEur(om):'—'}</b></div>
+        <div class="pb-finline"><span>Kosten (excl.)</span><b>€${fmtEur(inkEx)}</b></div>
+        <div class="pb-finline marge ${marge!=null&&marge<0?'neg':''}"><span>Marge</span><b>${marge!=null?'€'+fmtEur(marge):'—'}</b></div>
+      </div></div></div>
+      <div class="pb-sec"><div class="pb-h">Facturatie</div>
         <div class="finB-pills">${pills}</div>
-        ${om!=null?`<div class="finB-openrow ${openCls}"><span>${openLbl}</span><b>${openVal}</b></div>`:'<div class="finB-openhint">Vul een projectprijs in om facturatie te volgen.</div>'}
+        ${om!=null?`<div class="pb-finline finB-openrow ${openCls}"><span>${openLbl}</span><b>${openVal}</b></div>`:'<div class="finB-openhint">Vul een projectprijs in om facturatie te volgen.</div>'}
       </div>
-      <div class="finB-fields">
-        <label class="finB-field"><span>Projectprijs</span><span class="finB-inwrap">${_E}<input class="finB-in" type="text" inputmode="decimal" value="${om!=null?String(om).replace('.',','):''}" placeholder="—" onchange="pbSetProjectprijs(this.value)"></span><em>excl. btw${omIncl!=null?' · incl. €'+fmtEur(omIncl):''}</em></label>
-        <label class="finB-field"><span>Klantbudget</span><span class="finB-inwrap">${_E}<input class="finB-in" type="text" inputmode="decimal" value="${budget!=null?String(budget).replace('.',','):''}" placeholder="—" onchange="pbSetBudget(this.value)"></span>${budPct!=null?`<em class="${budPct>100?'over':''}">${budPct}% benut</em>`:''}</label>
+      <div class="pb-sec"><div class="pb-h">Projectprijs</div>
+        <div class="pb-prijsrow">€ <input class="pb-bud" type="text" inputmode="decimal" value="${om!=null?String(om).replace('.',','):''}" placeholder="—" onchange="pbSetProjectprijs(this.value)"> <span class="finB-sub">excl. btw${omIncl!=null?' · incl. €'+fmtEur(omIncl):''}</span></div>
+        <div class="pb-prijsrow finB-budrow">Klantbudget € <input class="pb-bud" type="text" inputmode="decimal" value="${budget!=null?String(budget).replace('.',','):''}" placeholder="—" onchange="pbSetBudget(this.value)"> ${budPct!=null?`<span class="finB-sub ${budPct>100?'over':''}">${budPct}% benut</span>`:''}</div>
+        ${budPct!=null?`<div class="finB-budbar"><div class="finB-budfill ${budPct>100?'over':''}" style="width:${Math.min(100,budPct)}%"></div></div>`:''}
       </div>
-      ${budPct!=null?`<div class="finB-budbar"><div class="finB-budfill ${budPct>100?'over':''}" style="width:${Math.min(100,budPct)}%"></div></div>`:''}
-      <div class="finB-scan" id="finBScan"><button class="finB-scanbtn" onclick="pbScanBudget(this)">${_tIc(_TABCHAN.asterisk,15,1.7)}<span>Budget uit bronnen halen</span></button></div>
-    </div></div>`;
+      <div class="pb-sec finB-scansec"><div class="finB-scan" id="finBScan"><button class="finB-scanbtn" onclick="pbScanBudget(this)">${_tIc(_TABCHAN.asterisk,15,1.7)}<span>Budget uit bronnen halen</span></button></div></div>
+    </div>`;
     return;
   }
 
@@ -3081,7 +3106,7 @@ async function renderFinancien(){
   const cs=clientStats.slice().sort((a,b)=>b.marge-a.marge);
   const csMax=Math.max(1,...cs.map(c=>Math.abs(c.marge)));
   const csRows=cs.slice(0,8).map(c=>{ const w=Math.round(Math.abs(c.marge)/csMax*100); const neg=c.marge<0;
-    return `<div class="finA-crow" onclick="${c.pid?`selectFinProj('${c.pid}')`:''}"><span class="finA-cdot" style="background:${c.color}"></span><span class="finA-cname">${escapeHtml(c.client||'—')}</span><span class="finA-cbar"><span class="finA-cfill ${neg?'neg':''}" style="width:${w}%;background:${neg?'#e0726f':c.color}"></span></span><span class="finA-camt ${neg?'neg':''}">€${fmtEur(c.marge)}</span></div>`; }).join('');
+    return `<div class="finA-crow" onclick="${c.pid?`selectFinProj('${c.pid}')`:''}"><span class="finA-cdot" style="background:${_isBeg(c.color)?'#e8e8ea':c.color}"></span><span class="finA-cname">${escapeHtml(c.client||'—')}</span><span class="finA-cbar"><span class="finA-cfill ${neg?'neg':''}" style="width:${w}%;background:${neg?'#e0726f':'#cbced2'}"></span></span><span class="finA-camt ${neg?'neg':''}">€${fmtEur(c.marge)}</span></div>`; }).join('');
   // Nog in te kopen (open 'te bestellen' over alle projecten)
   const up=(_finUp||[]).slice().sort((a,b)=>b.amount-a.amount);
   const upTot=up.reduce((s,x)=>s+x.amount,0);
