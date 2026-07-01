@@ -1496,7 +1496,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v111</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v112</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -5890,6 +5890,15 @@ function vrAddTaskLine(text,checked){
   if(!text){ inp.focus(); }
 }
 function vrReviewClose(){ _vrHideOverlay(); }
+// Korte, nette taaktitel uit een lange tekst: eerste zin, anders op woordgrens afkappen (nooit midden in een woord).
+function _vrShortTitle(t){
+  t=(t||'').trim().replace(/\s+/g,' ');
+  const m=t.match(/^.{10,90}?[.!?](\s|$)/);
+  if(m) return m[0].trim();
+  if(t.length<=80) return t;
+  let s=t.slice(0,80); const sp=s.lastIndexOf(' '); if(sp>30) s=s.slice(0,sp);
+  return s+'…';
+}
 async function vrSaveReview(){
   const ta=document.getElementById('vrTranscript'); const transcript=ta?ta.value.trim():'';
   const clientVal=((document.getElementById('vr_client')||{}).value||'').trim();
@@ -5904,9 +5913,9 @@ async function vrSaveReview(){
   for(const x of rows){
     try{ await sb.from('items').insert({project_id:pid||null,source_id:srcId||null,title:x.t,status:'wait'}); }catch(_){}
   }
-  // geen taakregels gekozen? zet het hele transcript als één in-afwachting-punt zodat het zichtbaar blijft
+  // geen taakregels gekozen? één net kaartje in afwachting (korte titel op woordgrens); het hele gesprek blijft als bron.
   if(!rows.length && transcript){
-    try{ await sb.from('items').insert({project_id:pid||null,source_id:srcId||null,title:transcript.slice(0,140),status:'wait'}); }catch(_){}
+    try{ await sb.from('items').insert({project_id:pid||null,source_id:srcId||null,title:_vrShortTitle(transcript),status:'wait'}); }catch(_){}
   }
   try{ notifyPartner((who||'Iemand')+' sprak iets in — '+(rows.length?rows.length+' punt(en)':'transcript')+' staat in afwachting.'); }catch(_){}
   vrReviewClose();
