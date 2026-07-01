@@ -713,6 +713,9 @@
   .pb-cluster:hover{background:color-mix(in srgb,var(--scol) 14%,transparent)}
   .pb-cluster-shop{font-size:13.5px;font-weight:600}
   .pb-cluster-sub{font-size:12px;opacity:.7;white-space:nowrap}
+  .pb-orderall{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;margin-top:13px;padding:11px 14px;border-radius:11px;border:1px solid color-mix(in srgb,var(--scol) 42%,transparent);background:color-mix(in srgb,var(--scol) 12%,transparent);color:var(--scol);font-size:13.5px;font-weight:600;font-family:inherit;cursor:pointer;transition:background .15s}
+  .pb-orderall:hover{background:color-mix(in srgb,var(--scol) 22%,transparent)}
+  .pb-orderall-n{font-size:12px;opacity:.85;background:color-mix(in srgb,var(--scol) 24%,transparent);border-radius:999px;padding:1px 8px;min-width:20px;text-align:center}
   .pb-besteltot{margin-top:12px;font-size:13px;color:var(--scol)}
   .pb-besteltot b{font-weight:600}
   .pb-board-inline .pb-del{background:transparent;border:none;color:var(--scol);opacity:0;cursor:pointer;font-size:18px;line-height:1;padding:0 2px;flex:0 0 auto;margin-left:8px;transition:opacity .15s}
@@ -1491,7 +1494,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v98</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v99</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -2508,7 +2511,9 @@ function _renderProjBoard(){
       _masterLink=`<a class="pb-cluster" href="${esc(_u)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Open de hele lijst bij ${esc(_shop)}"><span class="pb-cluster-shop">🛒 ${esc(_shop)}${_pj?' · '+esc(_pj):''}</span><span class="pb-cluster-sub">${_n} items ↗</span></a>`; } }
   const inkopenOpen=inkopen.filter(x=>!x.done);
   const _openTot=inkopenOpen.reduce((s,x)=>s+((x.price!=null&&x.price!=='')?Number(x.price):0)*(x.qty||1),0);
-  const secBestel=`<div class="pb-sec"><div class="pb-h"><button class="pb-chk pb-chk-list" onclick="pbCheckAllInk()" title="Hele lijst afvinken">${_pbChk(false)}</button><span>Bestellijst</span><span class="pb-hbtns"><button class="pb-ai" onclick="pbInkPaste()" title="Plak een verlanglijst of winkelwagen — AI maakt er regels van">${_tIc(_TABCHAN.asterisk,15,1.7)}<span>lijst</span></button>${inkopen.length?`<button class="pb-listdel" onclick="pbDelBestel()" title="Hele bestellijst verwijderen"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/></svg></button>`:''}</span></div>${_masterLink}${inkopenOpen.length?inkopenOpen.map(inkRow).join(''):'<div class="pb-empty">Nog geen bestellingen.</div>'}<div class="pb-add"><input class="pb-in" data-kind="inkoop" placeholder="+ artikel toevoegen…" onkeydown="pbAddKey(event,'inkoop')"></div>${inkopenOpen.length?`<div class="pb-besteltot">Totaal <b>€${fmtEur(_openTot)}</b></div>`:''}</div>`;
+  const _amzN=inkopenOpen.filter(x=>_amazonAsin(x.url)).length;
+  const _orderBtn=_amzN?`<button class="pb-orderall" onclick="pbOrderAll()" title="Alle Amazon-artikelen in één keer in je mandje zetten">🛒 Bestel alles bij Amazon <span class="pb-orderall-n">${_amzN}</span></button>`:'';
+  const secBestel=`<div class="pb-sec"><div class="pb-h"><button class="pb-chk pb-chk-list" onclick="pbCheckAllInk()" title="Hele lijst afvinken">${_pbChk(false)}</button><span>Bestellijst</span><span class="pb-hbtns"><button class="pb-ai" onclick="pbInkPaste()" title="Plak een verlanglijst of winkelwagen — AI maakt er regels van">${_tIc(_TABCHAN.asterisk,15,1.7)}<span>lijst</span></button>${inkopen.length?`<button class="pb-listdel" onclick="pbDelBestel()" title="Hele bestellijst verwijderen"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/></svg></button>`:''}</span></div>${_masterLink}${inkopenOpen.length?inkopenOpen.map(inkRow).join(''):'<div class="pb-empty">Nog geen bestellingen.</div>'}<div class="pb-add"><input class="pb-in" data-kind="inkoop" placeholder="+ artikel toevoegen…" onkeydown="pbAddKey(event,'inkoop')"></div>${inkopenOpen.length?`<div class="pb-besteltot">Totaal <b>€${fmtEur(_openTot)}</b></div>`:''}${_orderBtn}</div>`;
   const _body=(_pbMode==='financien')?secInk:(secWait+secTaken+secBestel+secDone+secAppt+secFiles+secPrijs+secNotes);
   const _head=`<div class="pb-head"><span class="kbadge" style="background:${col}">${esc(initial)}</span><div class="pb-title"><b>${esc(p.client||'')}</b>${p.project?'<span> · '+esc(p.project)+'</span>':''}${_pbMode==='financien'?'<span style="color:'+col+'"> · inkoop</span>':''}</div></div>`;
   if(_pbTarget==='finmid'){ const el=document.getElementById('finMidWrap'); if(el)el.innerHTML=`<div class="pb-inline" style="--scol:${col}">${_head}${_body}</div>`; return; }
@@ -2609,6 +2614,21 @@ async function renderFinancien(){
   }
 }
 async function pbInkLink(){ const url=((await uiPrompt('Plak een productlink (Amazon of web):'))||'').trim(); if(!/^https?:\/\//i.test(url))return; let meta={}; try{ meta=await fetch('/api/linkmeta',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url})}).then(r=>r.json()); }catch(_){} const name=(meta&&meta.title)?String(meta.title).slice(0,140):url; try{ const ins=await sb.from('project_board').insert({project_id:_pbPid,kind:'inkoop',text:name,qty:1,url,sort:_pbItems.length}).select().single(); if(ins&&ins.data)_pbItems.push(ins.data); }catch(_){} _renderProjBoard(); }
+// ASIN uit een Amazon-productlink halen (voor de "Bestel alles"-mandje-URL).
+function _amazonAsin(u){ try{ const url=new URL(u); if(!/amazon\./i.test(url.hostname)) return null; const m=url.pathname.match(/\/(?:dp|gp\/product|gp\/aw\/d|product)\/([A-Z0-9]{10})/i); return m?m[1].toUpperCase():null; }catch(_){ return null; } }
+// Route B: alle Amazon-items met een ASIN in één keer in het Amazon-mandje zetten.
+// Bouwt een add-to-cart-URL (ASIN.1/Quantity.1…) en opent die; de gebruiker rekent zelf af.
+async function pbOrderAll(){
+  const open=_pbItems.filter(x=>x.kind==='inkoop'&&!x.done);
+  const rows=[]; let dom='www.amazon.nl';
+  for(const x of open){ const a=_amazonAsin(x.url); if(!a) continue; try{ const h=new URL(x.url).hostname.replace(/^www\./,''); if(/amazon\./i.test(h)) dom='www.'+h; }catch(_){} rows.push({asin:a,qty:Math.max(1,x.qty||1)}); }
+  if(!rows.length){ await uiConfirm('Geen Amazon-artikelen met een productlink in deze lijst. Voeg items met een Amazon-link toe (of plak een lijst mét links), dan kan ik ze samen in je mandje zetten.',{ok:'Oké',danger:false}); return; }
+  const url='https://'+dom+'/gp/aws/cart/add.html?'+rows.map((r,i)=>`ASIN.${i+1}=${encodeURIComponent(r.asin)}&Quantity.${i+1}=${r.qty}`).join('&');
+  const skipped=open.length-rows.length;
+  const msg=`${rows.length} Amazon-artikel(en) worden in je mandje gezet — daarna reken je zelf af.`+(skipped>0?` ${skipped} item(s) zonder Amazon-link sla ik over.`:'')+`\n\nLet op: Amazon's add-to-cart is soms wisselvallig; klopt het mandje niet, gebruik dan de losse links.`;
+  const ok=await uiConfirm(msg,{ok:'Naar mijn Amazon-mandje',danger:false});
+  if(ok) window.open(url,'_blank','noopener');
+}
 function pbInkPaste(){ const ov=document.createElement('div'); ov.className='overlay';
   ov.innerHTML='<div class="modal" style="width:560px;max-width:94vw"><button class="modal-close" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button><h3>Plak je winkelwagen of lijst</h3><div style="font-size:12.5px;color:var(--mut2);margin:-6px 0 12px">Open je Amazon-lijst, selecteer alles (Cmd/Ctrl+A) en plak het hier — de AI maakt er een bestellijst van.</div><textarea id="pbpaste" class="pb-notes" style="min-height:170px" placeholder="Plak hier…"></textarea><div class="foot" style="display:flex;justify-content:flex-end;gap:10px;margin-top:16px"><button class="btn ghost" id="pbpcancel">Annuleren</button><button class="btn" id="pbpok">Maak bestellijst</button></div></div>';
   document.body.appendChild(ov); requestAnimationFrame(()=>ov.classList.add('open'));
