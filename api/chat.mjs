@@ -7,6 +7,7 @@
 // Het EINDANTWOORD blijft het bestaande JSON-contract {reply, items, ...}.
 import Anthropic from "@anthropic-ai/sdk";
 import { svc, logUsage, countWebSearches } from "../lib/usage.mjs";
+import { createMessage } from "../lib/airetry.mjs";
 
 const KEY = (process.env.ANTHROPIC_API_KEY || "").trim();
 const anthropic = KEY ? new Anthropic({ apiKey: KEY }) : null;
@@ -243,7 +244,7 @@ export default async function handler(req, res) {
       const convo = messages.slice();
       const MAX_ITERS = 5;
       for (let i = 0; i < MAX_ITERS; i++) {
-        resp = await anthropic.messages.create({
+        resp = await createMessage(anthropic, {
           model: MODEL, max_tokens: 1600, system: sys, tools, messages: convo,
         });
         totalIn += resp?.usage?.input_tokens || 0;
@@ -273,7 +274,7 @@ export default async function handler(req, res) {
       // Fallback: simpele call zonder tools (oorspronkelijk gedrag).
       try { console.error("chat tool-loop fout:", toolErr.message); } catch (_) { /* ignore */ }
       try {
-        resp = await anthropic.messages.create({ model: MODEL, max_tokens: 1600, system: sys, messages });
+        resp = await createMessage(anthropic, { model: MODEL, max_tokens: 1600, system: sys, messages });
         totalIn += resp?.usage?.input_tokens || 0;
         totalOut += resp?.usage?.output_tokens || 0;
       } catch (e2) {

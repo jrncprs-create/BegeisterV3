@@ -5,6 +5,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { extractItems } from "../intake/extract.mjs";
 import { logUsage } from "../lib/usage.mjs";
+import { createMessage } from "../lib/airetry.mjs";
 
 const KEY = (process.env.ANTHROPIC_API_KEY || "").trim();
 const anthropic = KEY ? new Anthropic({ apiKey: KEY }) : null;
@@ -27,7 +28,7 @@ Antwoord ALLEEN met geldige JSON: {"reply":"korte samenvatting (1 zin)","client"
 
 async function aiFromBlocks(blocks, opts, src) {
   if (!anthropic) return { reply: "(AI staat uit) Bestand ontvangen.", items: [] };
-  const resp = await anthropic.messages.create({
+  const resp = await createMessage(anthropic, {
     model: MODEL, max_tokens: 1500, system: visionSystem(opts),
     messages: [{ role: "user", content: blocks }],
   });

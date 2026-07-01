@@ -1,5 +1,6 @@
 // Zet een geplakte winkelwagen/lijst (bv. Amazon) om in gestructureerde inkoopregels.
 import Anthropic from "@anthropic-ai/sdk";
+import { createMessage } from "../lib/airetry.mjs";
 
 const KEY = (process.env.ANTHROPIC_API_KEY || "").trim();
 const anthropic = KEY ? new Anthropic({ apiKey: KEY }) : null;
@@ -15,7 +16,7 @@ Haal per product: name (korte, duidelijke productnaam), qty (aantal, standaard 1
 Verzin NOOIT prijzen of links. Negeer verzendkosten, subtotalen, totalen, kortingen, reclame- en navigatietekst. Behandel duidelijke regels als losse producten.
 Antwoord ALLEEN met geldige JSON: {"items":[{"name":"","qty":1,"price":null,"url":null}]}`;
   try {
-    const r = await anthropic.messages.create({ model: MODEL, max_tokens: 1600, system: sys, messages: [{ role: "user", content: text }] });
+    const r = await createMessage(anthropic, { model: MODEL, max_tokens: 1600, system: sys, messages: [{ role: "user", content: text }] });
     const raw = r.content.map(b => (b.type === "text" ? b.text : "")).join("");
     const slice = raw.slice(raw.indexOf("{"), raw.lastIndexOf("}") + 1);
     let parsed; try { parsed = JSON.parse(slice); } catch (_) { parsed = { items: [] }; }
