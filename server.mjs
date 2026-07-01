@@ -40,6 +40,7 @@ app.use("/api/opdracht", express.raw({
 await mount("/api/opdracht", "./api/opdracht.mjs");
 await mount("/api/readdrop", "./api/readdrop.mjs");
 await mount("/api/transcribe", "./api/transcribe.mjs");
+await mount("/api/scanbudget", "./api/scanbudget.mjs");
 await mount("/api/wa-subscribe", "./api/wa-subscribe.mjs");
 await mount("/api/projtodos", "./api/projtodos.mjs");
 await mount("/api/linkmeta", "./api/linkmeta.mjs");
