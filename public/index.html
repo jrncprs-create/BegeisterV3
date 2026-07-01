@@ -1496,7 +1496,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v112</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v113</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -3702,6 +3702,10 @@ function renderProjecten(){
   const rows=state.projects.filter(p=>p.id!=='__inbox__');
   const byClient={}, order=[];
   rows.forEach(p=>{ const c=p.client||''; if(!byClient[c]){byClient[c]=[];order.push(c);} byClient[c].push(p); });
+  // Meest recent bewerkte klanten bovenaan: laatste activiteit = nieuwste item, project of binnengekomen bron.
+  const _srcByProj={}; (state.sources||[]).forEach(s=>{ if(s.proj){ const t=s.ts?new Date(s.ts).getTime():0; if(t>(_srcByProj[s.proj]||0))_srcByProj[s.proj]=t; } });
+  const _clientAct=c=>{ let m=0; (byClient[c]||[]).forEach(p=>{ if(p.created>m)m=p.created; (p.items||[]).forEach(it=>{ if((it.created||0)>m)m=it.created; }); if(_srcByProj[p.id]>m)m=_srcByProj[p.id]; }); return m; };
+  order.sort((a,b)=>_clientAct(b)-_clientAct(a));   // stabiel: klanten zonder activiteit behouden hun onderlinge volgorde
   const esc=s=>String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
   const _actProj=(_pbTarget==='beheer'&&_pbPid)?projById(_pbPid):null; const _actClient=_actProj?_actProj.client:null;
   const html=order.map(client=>{
@@ -4497,6 +4501,7 @@ async function sbLoad(){
   state.ctx = {}; ((cx && cx.data) ? cx.data : []).forEach(r=>{ state.ctx[r.key]=r.body||''; });
   state.appointments = (ap && ap.data ? ap.data : []).map(_mapAppt);
   const _mapProj=pr=>({id:pr.id,client:pr.client,project:pr.project,color:pr.color,icon:pr.icon,role:pr.role,
+    created: pr.created_at?new Date(pr.created_at).getTime():0,
     items: items.filter(x=>x.project_id===pr.id).map(_mapItem)});
   const activeProjects=projects.filter(pr=>!pr.archived);
   state.archived = projects.filter(pr=>pr.archived).map(_mapProj);
