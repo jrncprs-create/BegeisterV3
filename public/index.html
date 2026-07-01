@@ -1494,7 +1494,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v99</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v100</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -2629,6 +2629,32 @@ async function pbOrderAll(){
   const ok=await uiConfirm(msg,{ok:'Naar mijn Amazon-mandje',danger:false});
   if(ok) window.open(url,'_blank','noopener');
 }
+// Amazon-URL opschonen naar /dp/<ASIN>; andere shops → origin+pad zonder tracking.
+function _cleanProductUrl(u){ try{ const url=new URL(u); const m=url.pathname.match(/\/(?:dp|gp\/product|gp\/aw\/d|product)\/([A-Z0-9]{10})/i); if(m&&/amazon\./i.test(url.hostname)) return url.origin+'/dp/'+m[1].toUpperCase(); return url.origin+url.pathname; }catch(_){ return u; } }
+// Amazon dubbelt vaak de titel ("NaamNaam" of "Naam…Naam…") — dat eruit halen.
+function _dedupTitle(s){ s=String(s||'').replace(/\s+/g,' ').trim(); if(!s) return s;
+  const sig=s.slice(0,Math.min(24,s.length)); const idx=s.indexOf(sig,10); if(idx>10) return s.slice(0,idx).replace(/[…\-\s]+$/,'').trim();
+  const h=Math.floor(s.length/2); if(s.length%2===0 && s.slice(0,h)===s.slice(h)) return s.slice(0,h).trim();
+  return s; }
+// Geplakte winkelwagen/lijst mét product-LINKS lokaal omzetten naar inkoopregels — zonder AI.
+// Werkt met markdown-links [naam](url) én kale URL's; pakt prijs (€) en aantal ("Quantity is N").
+function _parsePastedList(txt){
+  const lines=String(txt||'').split(/\r?\n/);
+  const isProd=(u)=>/\/(?:dp|gp\/product|gp\/aw\/d|product)\/[A-Z0-9]{10}/i.test(u);
+  const priceRe=/(?:€|eur)\s?(\d{1,4}(?:[.,]\d{3})*(?:[.,]\d{2})?)/i;
+  const items=[]; let cur=null; const flush=()=>{ if(cur){ items.push(cur); cur=null; } };
+  for(let i=0;i<lines.length;i++){ const l=lines[i].trim(); if(!l) continue;
+    let prod=false;
+    for(const m of l.matchAll(/\[([^\]]*)\]\((https?:\/\/[^)\s]+)\)/g)){ if(isProd(m[2])){ flush(); cur={name:_dedupTitle(m[1])||'Artikel',url:_cleanProductUrl(m[2].replace(/&amp;/g,'&')),price:null,qty:1}; prod=true; } }
+    if(!prod){ const um=l.match(/https?:\/\/[^\s)]+/); if(um&&isProd(um[0])){ flush(); const nm=l.replace(/\[[^\]]*\]\([^)]*\)/g,'').replace(um[0],'').replace(/[|—–]/g,' ').replace(/\s+/g,' ').trim(); cur={name:_dedupTitle(nm)||'Artikel',url:_cleanProductUrl(um[0].replace(/[).,;]+$/,'').replace(/&amp;/g,'&')),price:null,qty:1}; prod=true; } }
+    if(cur){
+      if(cur.price==null && priceRe.test(l) && !/\/\s*count|per\b/i.test(l)){ let s=l.match(priceRe)[1]; if(/,\d{2}$/.test(s)) s=s.replace(/\./g,'').replace(',','.'); else s=s.replace(/,(?=\d{3}\b)/g,''); const n=parseFloat(s); if(!isNaN(n)) cur.price=n; }
+      const q=l.match(/(?:quantity is|aantal(?:\s+is)?)\s+(\d{1,3})/i); if(q){ const n=parseInt(q[1],10); if(n>0) cur.qty=n; }
+    }
+  }
+  flush();
+  return items.map(x=>({name:x.name.slice(0,200),qty:x.qty||1,price:x.price,url:x.url}));
+}
 function pbInkPaste(){ const ov=document.createElement('div'); ov.className='overlay';
   ov.innerHTML='<div class="modal" style="width:560px;max-width:94vw"><button class="modal-close" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button><h3>Plak je winkelwagen of lijst</h3><div style="font-size:12.5px;color:var(--mut2);margin:-6px 0 12px">Open je Amazon-lijst, selecteer alles (Cmd/Ctrl+A) en plak het hier — de AI maakt er een bestellijst van.</div><textarea id="pbpaste" class="pb-notes" style="min-height:170px" placeholder="Plak hier…"></textarea><div class="foot" style="display:flex;justify-content:flex-end;gap:10px;margin-top:16px"><button class="btn ghost" id="pbpcancel">Annuleren</button><button class="btn" id="pbpok">Maak bestellijst</button></div></div>';
   document.body.appendChild(ov); requestAnimationFrame(()=>ov.classList.add('open'));
@@ -2638,8 +2664,11 @@ function pbInkPaste(){ const ov=document.createElement('div'); ov.className='ove
   const _note=(m)=>{ let n=ov.querySelector('.pbp-note'); if(!n){ n=document.createElement('div'); n.className='pbp-note'; n.style.cssText='color:#f0a;font-size:12.5px;margin-top:12px;line-height:1.4'; const foot=ov.querySelector('.foot'); if(foot)foot.parentNode.insertBefore(n,foot); else ov.querySelector('.modal').appendChild(n); } n.textContent=m; };
   ov.querySelector('#pbpok').onclick=async()=>{ const txt=(ov.querySelector('#pbpaste').value||'').trim(); if(!txt){ _note('Plak eerst de lijst-tekst.'); return; }
     const b=ov.querySelector('#pbpok'); const _orig=b.innerHTML; b.disabled=true; b.innerHTML='<img class="kfile-aianim" src="/thinking.webp" alt="">';
-    let items=[], err=null; try{ const r=await fetch('/api/bestellijst',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:txt})}); const d=await r.json(); items=(d&&d.items)||[]; err=d&&d.error; }catch(e){ err=String(e&&e.message||e); }
-    if(!items.length){ b.disabled=false; b.innerHTML=_orig; _note(err?('Kon de lijst niet lezen: '+err):'Geen artikelen herkend. Plak alleen het lijst-gedeelte (productnamen + prijzen), zonder de menu-/navigatietekst eromheen.'); return; }
+    let items=[], err=null;
+    const local=_parsePastedList(txt); // regels mét product-links → direct koppelen, zónder AI (werkt ook bij AI-storing)
+    if(local.length){ items=local; }
+    else { try{ const r=await fetch('/api/bestellijst',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:txt})}); const d=await r.json(); items=(d&&d.items)||[]; err=d&&d.error; }catch(e){ err=String(e&&e.message||e); } }
+    if(!items.length){ b.disabled=false; b.innerHTML=_orig; _note(err?('Kon de lijst niet lezen: '+err+' — tip: plak de winkelwagen mét de productlinks erbij, dan gaat het zónder AI.'):'Geen artikelen herkend. Plak het lijst-gedeelte (namen + prijzen), of een winkelwagen mét productlinks.'); return; }
     for(const it of items){ try{ const ins=await sb.from('project_board').insert({project_id:_pbPid,kind:'inkoop',text:it.name,qty:it.qty||1,price:(it.price!=null?it.price:null),url:it.url||null,sort:_pbItems.length}).select().single(); if(ins&&ins.data)_pbItems.push(ins.data); }catch(_){} }
     close(); _finInk=null; _renderProjBoard(); try{render();}catch(_){}
   };
