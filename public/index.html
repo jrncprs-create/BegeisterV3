@@ -655,7 +655,6 @@
   .pb-itxlink{text-decoration:none}
   .pb-itxlink:hover{color:var(--scol,#fff)!important}
   /* Financiën-railkolom */
-  #financienWrap{padding:2px 20px 22px}
   #financienWrap .fin-row,#financienWrap .fin-totrow{display:flex;align-items:center;gap:12px;padding:11px 14px;border-bottom:1px solid var(--line)}
   #financienWrap .fin-row{cursor:pointer}
   #financienWrap .fin-row:hover{background:rgba(255,255,255,.03)}
@@ -1198,7 +1197,7 @@
     /* Bronnen & Klanten: één kolom breed i.p.v. volle breedte */
     #view-bronnen,#view-beheer,#view-contacten{max-width:34vw}
     /* Bronnen / Klanten / Contacten wonen in de eerste kolom (#rail) met eigen scroll */
-    .rail #view-bronnen,.rail #view-beheer,.rail #view-contacten,.rail #view-files,.rail #view-archief{display:block;max-width:none;position:relative;padding:0 16px 60px}
+    .rail #view-bronnen,.rail #view-beheer,.rail #view-contacten,.rail #view-files,.rail #view-archief,.rail #view-financien{display:block;max-width:none;position:relative;padding:0 16px 60px}
     .rail #view-bronnen.hidden,.rail #view-beheer.hidden,.rail #view-contacten.hidden{display:none!important}
     /* sluitkruis rechtsboven in een rail-kolom */
     .rail .rail-close{position:absolute;top:18px;right:12px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;background:transparent;border:none;color:rgba(255,255,255,.6);cursor:pointer;padding:0;z-index:5;transition:color .15s}
@@ -1497,7 +1496,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v115</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v116</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -4291,7 +4290,23 @@ function addProject(){
 }
 
 // ---------- kleurkiezer (8 kleuren, donker) ----------
-const PALETTE=['#a78bfa','#60a5fa','#34d399','#fbbf24','#fb923c','#f87171','#f472b6','#9ca3af'];
+const PALETTE=['#a78bfa','#60a5fa','#34d399','#fbbf24','#fb923c','#f87171','#f472b6','#22d3ee','#a3e635','#e879f9','#2dd4bf','#818cf8','#fca5a5','#4ade80','#c084fc','#38bdf8','#facc15','#fb7185','#7dd3fc','#bef264','#f0abfc','#5eead4','#94a3b8'];
+// HSL→hex, voor als het palet op is: altijd een nieuwe, ongebruikte kleur genereren.
+function _hslHex(h,s,l){ s/=100;l/=100; const k=n=>(n+h/30)%12; const a=s*Math.min(l,1-l); const f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1))); const to=x=>Math.round(255*x).toString(16).padStart(2,'0'); return '#'+to(f(0))+to(f(8))+to(f(4)); }
+function _freshColor(taken){ for(const c of PALETTE){ if(!taken.has(c.toLowerCase()))return c; } for(let i=0;i<80;i++){ const c=_hslHex((i*47+13)%360,58,64); if(!taken.has(c.toLowerCase()))return c; } return PALETTE[taken.size%PALETTE.length]; }
+// Elke klant een unieke kleur: reserveer per klant de kleur van z'n eerste project; bij botsing een nieuwe.
+let _colorDedupDone=false;
+async function _ensureUniqueClientColors(){
+  const byC={}, order=[]; (state.projects||[]).forEach(p=>{ if(p.id==='__inbox__'||!p.client)return; if(!byC[p.client]){byC[p.client]=[];order.push(p.client);} byC[p.client].push(p); });
+  const taken=new Set(); const fixes=[];
+  for(const cl of order){ const first=byC[cl][0]; let col=(first.color||'').toLowerCase();
+    if(!col || taken.has(col)){ const nc=_freshColor(taken); fixes.push({id:first.id,color:nc}); first.color=nc; col=nc.toLowerCase(); }
+    taken.add(col);
+  }
+  for(const f of fixes){ try{ await sb.from('projects').update({color:f.color}).eq('id',f.id); }catch(_){} }
+  if(fixes.length){ try{ rebuildColors(); }catch(_){} }
+  return fixes.length;
+}
 let npColor='#fbbf24',cpopTarget=null;
 function openColorPicker(e,kind,id){e.stopPropagation();cpopTarget={kind,id};
   const el=document.getElementById('cpop');
@@ -4390,7 +4405,7 @@ function uiConfirm(title,opts){
   });
 }
 // kleur per klant: nieuwe klanten krijgen automatisch een volgende paletkleur
-function _nextClientColor(){ const cs=new Set(); state.projects.forEach(p=>{ if(p.id!=='__inbox__'&&p.client) cs.add(p.client); }); return PALETTE[cs.size % PALETTE.length]; }
+function _nextClientColor(){ const taken=new Set(); (state.projects||[]).forEach(p=>{ if(p.id!=='__inbox__'&&p.color) taken.add(String(p.color).toLowerCase()); }); return _freshColor(taken); }
 function _clientColor(client){ const p=state.projects.find(x=>x.id!=='__inbox__'&&x.client===client&&x.color); return p?p.color:_nextClientColor(); }
 async function _newClientPrompt(){
   const name=((await uiPrompt('Naam nieuwe klant:'))||'').trim(); if(!name)return null;
@@ -4612,7 +4627,7 @@ async function sbLoad(){
   state.sources = sources.map(src=>_mapSource(src,atts));
   if(activeTab!=='all' && !state.projects.find(x=>x.id===activeTab)) activeTab='all';
 }
-async function refresh(){ await sbLoad(); render(); try{ if(_pbTarget&&_pbPid)_renderProjBoard(); }catch(_){} }
+async function refresh(){ await sbLoad(); if(!_colorDedupDone){ _colorDedupDone=true; try{ await _ensureUniqueClientColors(); }catch(_){} } render(); try{ if(_pbTarget&&_pbPid)_renderProjBoard(); }catch(_){} }
 // ---------- live updates (Supabase Realtime + poll-vangnet) met FLIP-animatie ----------
 // Nieuw item komt vanzelf binnen (geen verversen); bestaande items zakken soepel met
 // trage ease naar beneden (FLIP) terwijl het nieuwe van bovenaf infadet (.liveIn).
