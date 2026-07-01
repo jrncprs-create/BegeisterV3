@@ -1503,7 +1503,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v123</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v124</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -1622,6 +1622,38 @@
       #finMidWrap .finB-budbar{height:6px;background:var(--line);border-radius:4px;overflow:hidden}
       #finMidWrap .finB-budfill{height:100%;background:var(--ccol);border-radius:4px}
       #finMidWrap .finB-budfill.over{background:#e0726f}
+      #finMidWrap .finB-head .finB-health{margin-left:auto;font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:20px;white-space:nowrap}
+      #finMidWrap .finB-health.ok{color:var(--ccol);background:color-mix(in srgb,var(--ccol) 16%,transparent)}
+      #finMidWrap .finB-health.dun{color:#d8a64a;background:rgba(216,166,74,.15)}
+      #finMidWrap .finB-health.neg{color:#e0726f;background:rgba(224,114,111,.15)}
+      #finMidWrap .finB-invoice{display:flex;flex-direction:column;gap:9px;border-top:1px solid var(--line);padding-top:12px}
+      #finMidWrap .finB-pills{display:flex;gap:6px;flex-wrap:wrap}
+      #finMidWrap .finB-pill{font-size:11.5px;color:var(--mut2);background:transparent;border:1px solid var(--line);border-radius:20px;padding:4px 11px;cursor:pointer;transition:all .15s}
+      #finMidWrap .finB-pill:hover{border-color:var(--ccol);color:var(--txt)}
+      #finMidWrap .finB-pill.on{color:#111;background:var(--ccol);border-color:var(--ccol);font-weight:600}
+      #finMidWrap .finB-openrow{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;color:var(--mut2)}
+      #finMidWrap .finB-openrow b{font-weight:600;font-variant-numeric:tabular-nums}
+      #finMidWrap .finB-openrow .e{color:var(--mut2);font-weight:400;margin-right:4px;font-size:12px}
+      #finMidWrap .finB-openrow.open b{color:#e6e6e8}
+      #finMidWrap .finB-openrow.paid b{color:var(--ccol)}
+      #finMidWrap .finB-openrow.todo b{color:#c9c9cf}
+      #finMidWrap .finB-openhint{font-size:12px;color:var(--mut2)}
+      #finMidWrap .finA-cf{display:flex;gap:12px}
+      #finMidWrap .finA-cfcard{flex:1;background:#141417;border:1px solid var(--line);border-radius:12px;padding:13px 15px;border-left:3px solid var(--line)}
+      #finMidWrap .finA-cfcard.todo{border-left-color:#7d8590}
+      #finMidWrap .finA-cfcard.open{border-left-color:#d8a64a}
+      #finMidWrap .finA-cfcard.paid{border-left-color:#d7dadd}
+      #finMidWrap .finA-cflbl{font-size:11.5px;color:var(--mut2);margin-bottom:6px}
+      #finMidWrap .finA-cfval{font-size:21px;font-weight:600;color:#e8e8ea;font-variant-numeric:tabular-nums}
+      #finMidWrap .finA-crow{display:flex;align-items:center;gap:9px;padding:6px 4px;border-radius:7px;cursor:pointer}
+      #finMidWrap .finA-crow:hover{background:rgba(255,255,255,.04)}
+      #finMidWrap .finA-cdot{width:8px;height:8px;border-radius:50%;flex:0 0 auto}
+      #finMidWrap .finA-cname{flex:0 0 34%;min-width:0;font-size:12.5px;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      #finMidWrap .finA-cbar{flex:1;height:7px;background:var(--line);border-radius:4px;overflow:hidden}
+      #finMidWrap .finA-cfill{display:block;height:100%;border-radius:4px}
+      #finMidWrap .finA-camt{flex:0 0 74px;text-align:right;font-size:12.5px;color:#d7dadd;font-variant-numeric:tabular-nums}
+      #finMidWrap .finA-camt.neg{color:#e0726f}
+      #finMidWrap .finA-uptot{color:#d7dadd;font-weight:600}
       #finMidWrap .fd-block{background:#141417;border:1px solid var(--line);border-radius:12px;padding:13px 15px}
       #finMidWrap .fd-h{font-size:12.5px;color:var(--mut2);margin-bottom:9px}
       #finMidWrap .fd-donutrow{display:flex;align-items:center;gap:16px}
@@ -2794,7 +2826,15 @@ function fmtEur(n){ n=Number(n)||0; return n.toLocaleString('nl-NL',{minimumFrac
 function _parseEur(v){ v=String(v||'').replace(/[^0-9,.\-]/g,'').replace(/\.(?=\d{3}(\D|$))/g,'').replace(',', '.'); const n=parseFloat(v); return isNaN(n)?null:n; }
 async function pbSetPrice(id,val){ const price=_parseEur(val); const x=_pbItems.find(i=>i.id===id); if(x)x.price=price; try{ await sb.from('project_board').update({price}).eq('id',id); }catch(_){} _renderProjBoard(); }
 async function pbSetBudget(val){ const budget=_parseEur(val); const p=projById(_pbPid); if(p)p.budget=budget; try{ await sb.from('projects').update({budget}).eq('id',_pbPid); }catch(_){} _renderProjBoard(); }
-async function pbSetProjectprijs(val){ const v=_parseEur(val); const p=projById(_pbPid); if(p)p.projectprijs=v; try{ await sb.from('projects').update({projectprijs:v}).eq('id',_pbPid); }catch(_){} _renderProjBoard(); }
+async function pbSetProjectprijs(val){ const v=_parseEur(val); const p=projById(_pbPid); if(p)p.projectprijs=v; try{ await sb.from('projects').update({projectprijs:v}).eq('id',_pbPid); }catch(_){} _renderProjBoard(); try{ if(view==='financien')renderFinancien(); }catch(_){} }
+// Marge-gezondheid (geen groen — verlies=rood, dun=amber, gezond=klantkleur/licht)
+function _margeHealth(om,marge){ if(om==null||om<=0||marge==null)return null; const pct=Math.round(marge/om*100);
+  if(marge<0)return{label:'verlies',cls:'neg',pct}; if(pct<15)return{label:'dun',cls:'dun',pct}; if(pct<40)return{label:'oké',cls:'ok',pct}; return{label:'sterk',cls:'ok',pct}; }
+// Factuur/betaalstatus zetten; bij gefactureerd/betaald automatisch een datum vastleggen.
+async function pbSetInvoiceStatus(st){ const p=projById(_pbPid); if(!p)return; p.invoice_status=st; const patch={invoice_status:st};
+  if((st==='gefactureerd'||st==='betaald')&&!p.invoice_date){ p.invoice_date=new Date().toISOString().slice(0,10); patch.invoice_date=p.invoice_date; }
+  try{ await sb.from('projects').update(patch).eq('id',_pbPid); }catch(_){}
+  try{ renderFinancien(); }catch(_){} }
 async function pbCycleStatus(id){ const order=['te bestellen','besteld']; const x=_pbItems.find(i=>i.id===id); if(!x)return; const cur=(x.status==='binnen')?'besteld':(x.status||'te bestellen'); const ns=order[(order.indexOf(cur)+1)%order.length]; x.status=ns; try{ await sb.from('project_board').update({status:ns}).eq('id',id); }catch(_){} _finInk=null; _renderProjBoard(); }
 // ===== Financiën-railkolom: per project omzet − inkoop = marge, klik → projectbord =====
 let _finInk=null, _finUp=null, _finRows=null;
@@ -2834,7 +2874,7 @@ async function renderFinancien(){
   const _srcByProj={}; (state.sources||[]).forEach(s=>{ if(s.proj){ const t=s.ts?new Date(s.ts).getTime():0; if(t>(_srcByProj[s.proj]||0))_srcByProj[s.proj]=t; } });
   const _act=c=>{ let m=0; (byClient[c]||[]).forEach(p=>{ if((p.created||0)>m)m=p.created; (p.items||[]).forEach(it=>{ if((it.created||0)>m)m=it.created; }); if(_srcByProj[p.id]>m)m=_srcByProj[p.id]; }); return m; };
   order.sort((a,b)=>_act(b)-_act(a));
-  let tOm=0,tInEx=0,nPrice=0,sumPct=0; const projStats=[];
+  let tOm=0,tInEx=0,nPrice=0,sumPct=0,cfTeFact=0,cfOpen=0,cfOntv=0; const projStats=[]; const clientStats=[];
   const groups=order.map(client=>{
     const arr=byClient[client]; const ccol=(arr[0]&&arr[0].color)||'#888';
     const open=_kClientOpen.has(client); const cActive=((_pbTarget==='finmid'||_pbTarget==='finright')&&_pbPid&&arr.some(p=>p.id===_pbPid)); const editingC=(_kEdit==='c:'+client); let cOm=0,cInEx=0;
@@ -2845,6 +2885,8 @@ async function renderFinancien(){
       const marge=om!=null?(om-inkEx):null; cOm+=om||0; cInEx+=inkEx; tOm+=om||0; tInEx+=inkEx;
       if(om!=null&&om>0){ nPrice++; sumPct+=((om-inkEx)/om)*100; }
       projStats.push({id:p.id,name:p.project||'—',color:col,om:om||0,inkEx,marge:(marge!=null?marge:-inkEx)});
+      const omIncl=om!=null?om*(1+btw/100):0; const pst=p.invoice_status||'concept';
+      if(pst==='betaald')cfOntv+=omIncl; else if(pst==='gefactureerd')cfOpen+=omIncl; else if(om!=null&&om>0)cfTeFact+=omIncl;
       const psel=(_pbPid===p.id&&(_pbTarget==='finmid'||_pbTarget==='finright'))?' on':''; const last=idx===arr.length-1; const editingP=(_kEdit===p.id);
       const pname=editingP
         ? `<input class="ksub kedit-input" value="${escapeHtml(p.project||'')}" onblur="kProjSave('${p.id}',this.value)" onkeydown="if(event.key==='Enter')this.blur();else if(event.key==='Escape')kEditCancel()" />`
@@ -2862,7 +2904,7 @@ async function renderFinancien(){
         <button class="kicon" onclick="event.stopPropagation();deleteProject('${p.id}')" title="Verwijderen"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/></svg></button>
       </div></div>`;
     }).join('');
-    const cMarge=cOm-cInEx; const ic=escapeHtml(((client||'?').toString().trim()[0]||'?').toUpperCase());
+    const cMarge=cOm-cInEx; if(cOm>0||cInEx>0)clientStats.push({client,color:ccol,marge:cMarge,om:cOm,inEx:cInEx,pid:(arr[0]&&arr[0].id)}); const ic=escapeHtml(((client||'?').toString().trim()[0]||'?').toUpperCase());
     const cHasFin=cOm>0||cInEx>0;
     const cValCell=cHasFin
       ? `<span class="fin-marge ${cMarge<0?'neg':''}">€${fmtEur(cMarge)}</span>`
@@ -2892,19 +2934,38 @@ async function renderFinancien(){
     const p=projById(_pbPid); const btw=(p&&p.btw!=null&&p.btw!=='')?Number(p.btw):21;
     const om=(p&&p.projectprijs!=null&&p.projectprijs!=='')?Number(p.projectprijs):null;
     const ink=_finInk[String(_pbPid)]||0, inkEx=ink/(1+btw/100), marge=om!=null?om-inkEx:null, col=(p&&p.color)||'#8b8b8b';
+    const omIncl=om!=null?om*(1+btw/100):null;
     const budget=(p&&p.budget!=null&&p.budget!=='')?Number(p.budget):null;
     const budPct=(budget&&budget>0)?Math.round(inkEx/budget*100):null;
     const ic=escapeHtml((((p&&p.client)||'?').toString().trim()[0]||'?').toUpperCase());
     const _E='<span class="e">€</span>';
+    // Marge-gezondheid (geen groen): verlies=rood, dun=amber, gezond=klantkleur
+    const hp=_margeHealth(om,marge);
+    const healthChip=hp?`<span class="finB-health ${hp.cls}">${hp.pct!=null?hp.pct+'% · ':''}${hp.label}</span>`:'';
+    // Factuur/betaalstatus
+    const st=(p&&p.invoice_status)||'concept';
+    const _STG=[['concept','Concept'],['geoffreerd','Geoffreerd'],['gefactureerd','Gefactureerd'],['betaald','Betaald']];
+    const pills=_STG.map(([k,lbl])=>`<button class="finB-pill${st===k?' on':''}" onclick="pbSetInvoiceStatus('${k}')">${lbl}</button>`).join('');
+    const _dt=(p&&p.invoice_date)?_finShortDate(p.invoice_date):'';
+    let openLbl='', openVal='', openCls='';
+    if(om!=null){
+      if(st==='betaald'){ openLbl='Voldaan'; openVal='✓'; openCls='paid'; }
+      else if(st==='gefactureerd'){ openLbl='Openstaand'+(_dt?' · sinds '+_dt:''); openVal=_E+fmtEur(omIncl); openCls='open'; }
+      else { openLbl='Nog te factureren'; openVal=_E+fmtEur(omIncl); openCls='todo'; }
+    }
     if(fmw) fmw.innerHTML=`<div class="finB"><div class="finB-card" style="--ccol:${col}">
-      <div class="finB-head"><span class="kbadge" style="background:${col}">${ic}</span><div class="finB-htxt"><b>${escapeHtml(p.client||'')}</b>${p.project?`<span> · ${escapeHtml(p.project)}</span>`:''}</div></div>
+      <div class="finB-head"><span class="kbadge" style="background:${col}">${ic}</span><div class="finB-htxt"><b>${escapeHtml(p.client||'')}</b>${p.project?`<span> · ${escapeHtml(p.project)}</span>`:''}</div>${healthChip}</div>
       <div class="finB-body">${_finDonut(om!=null?om:0,inkEx,col)}<div class="finB-stats">
-        <div class="finB-stat"><span>Omzet</span><b>${om!=null?_E+fmtEur(om):'—'}</b></div>
+        <div class="finB-stat"><span>Omzet (excl.)</span><b>${om!=null?_E+fmtEur(om):'—'}</b></div>
         <div class="finB-stat"><span>Kosten (excl.)</span><b>${_E}${fmtEur(inkEx)}</b></div>
         <div class="finB-stat marge ${marge!=null&&marge<0?'neg':''}"><span>Marge</span><b>${marge!=null?_E+fmtEur(marge):'—'}</b></div>
       </div></div>
+      <div class="finB-invoice">
+        <div class="finB-pills">${pills}</div>
+        ${om!=null?`<div class="finB-openrow ${openCls}"><span>${openLbl}</span><b>${openVal}</b></div>`:'<div class="finB-openhint">Vul een projectprijs in om facturatie te volgen.</div>'}
+      </div>
       <div class="finB-fields">
-        <label class="finB-field"><span>Projectprijs</span><span class="finB-inwrap">${_E}<input class="finB-in" type="text" inputmode="decimal" value="${om!=null?String(om).replace('.',','):''}" placeholder="—" onchange="pbSetProjectprijs(this.value)"></span><em>excl. btw</em></label>
+        <label class="finB-field"><span>Projectprijs</span><span class="finB-inwrap">${_E}<input class="finB-in" type="text" inputmode="decimal" value="${om!=null?String(om).replace('.',','):''}" placeholder="—" onchange="pbSetProjectprijs(this.value)"></span><em>excl. btw${omIncl!=null?' · incl. €'+fmtEur(omIncl):''}</em></label>
         <label class="finB-field"><span>Klantbudget</span><span class="finB-inwrap">${_E}<input class="finB-in" type="text" inputmode="decimal" value="${budget!=null?String(budget).replace('.',','):''}" placeholder="—" onchange="pbSetBudget(this.value)"></span>${budPct!=null?`<em class="${budPct>100?'over':''}">${budPct}% benut</em>`:''}</label>
       </div>
       ${budPct!=null?`<div class="finB-budbar"><div class="finB-budfill ${budPct>100?'over':''}" style="width:${Math.min(100,budPct)}%"></div></div>`:''}
@@ -2926,10 +2987,30 @@ async function renderFinancien(){
   const dated=(_finRows||[]).filter(x=>x.created_at).sort((a,b)=>String(b.created_at).localeCompare(String(a.created_at)));
   const boek=dated.filter(x=>projById(x.project_id)).slice(0,7).map(x=>`<div class="finA-brow" onclick="selectFinProj('${x.project_id}')"><span class="finA-bdot" style="background:${pjColor(x.project_id)}"></span><span class="finA-btext">${escapeHtml(pjName(x.project_id)||'—')} · ${escapeHtml(_shortName(x.text))}</span><span class="finA-bdate">${_finShortDate(x.created_at)}</span><span class="finA-bamt neg">-€${fmtEur(x.amount)}</span></div>`).join('');
   const noRows=dated.filter(x=>!projById(x.project_id)).slice(0,10).map(x=>`<div class="finA-nprow"><span class="finA-nptext">${escapeHtml(_shortName(x.text))}</span><span class="finA-npamt">€${fmtEur(x.amount)}</span></div>`).join('');
+  // Cashflow-kern
+  const cfHtml=`<div class="finA-cf">
+    <div class="finA-cfcard todo"><div class="finA-cflbl">Nog te factureren</div><div class="finA-cfval">€${fmtEur(cfTeFact)}</div></div>
+    <div class="finA-cfcard open"><div class="finA-cflbl">Openstaand</div><div class="finA-cfval">€${fmtEur(cfOpen)}</div></div>
+    <div class="finA-cfcard paid"><div class="finA-cflbl">Ontvangen</div><div class="finA-cfval">€${fmtEur(cfOntv)}</div></div>
+  </div>`;
+  // Marge per klant (ranglijst, hoog → laag)
+  const cs=clientStats.slice().sort((a,b)=>b.marge-a.marge);
+  const csMax=Math.max(1,...cs.map(c=>Math.abs(c.marge)));
+  const csRows=cs.slice(0,8).map(c=>{ const w=Math.round(Math.abs(c.marge)/csMax*100); const neg=c.marge<0;
+    return `<div class="finA-crow" onclick="${c.pid?`selectFinProj('${c.pid}')`:''}"><span class="finA-cdot" style="background:${c.color}"></span><span class="finA-cname">${escapeHtml(c.client||'—')}</span><span class="finA-cbar"><span class="finA-cfill ${neg?'neg':''}" style="width:${w}%;background:${neg?'#e0726f':c.color}"></span></span><span class="finA-camt ${neg?'neg':''}">€${fmtEur(c.marge)}</span></div>`; }).join('');
+  // Nog in te kopen (open 'te bestellen' over alle projecten)
+  const up=(_finUp||[]).slice().sort((a,b)=>b.amount-a.amount);
+  const upTot=up.reduce((s,x)=>s+x.amount,0);
+  const upRows=up.slice(0,7).map(x=>`<div class="finA-brow" onclick="selectFinProj('${x.project_id}')"><span class="finA-bdot" style="background:${pjColor(x.project_id)}"></span><span class="finA-btext">${escapeHtml(pjName(x.project_id)||'—')} · ${escapeHtml(_shortName(x.text))}</span><span class="finA-bamt">€${fmtEur(x.amount)}</span></div>`).join('');
   if(fmw) fmw.innerHTML=`<div class="finA">
     <div class="finA-top">
       <div class="finA-hero"><div class="finA-herolbl">Begeister · totaal</div><div class="finA-herobig">€${fmtEur(tOm)}</div><div class="finA-herosub">omzet · marge <b class="${tMarge<0?'neg':'pos'}">€${fmtEur(tMarge)}</b> · uitgegeven €${fmtEur(tInEx)}</div></div>
       <div class="fd-block finA-chart"><div class="fd-h">Uitgaven per maand</div><div class="finA-bars">${bars}</div></div>
+    </div>
+    ${cfHtml}
+    <div class="finA-blocks">
+      <div class="fd-block"><div class="fd-h">Marge per klant</div>${csRows||'<div class="fd-empty">Nog geen omzet of kosten.</div>'}</div>
+      <div class="fd-block"><div class="fd-h">Nog in te kopen${up.length?` · <b class="finA-uptot">€${fmtEur(upTot)}</b>`:''}</div>${upRows||'<div class="fd-empty">Niets openstaand om te bestellen.</div>'}</div>
     </div>
     <div class="finA-blocks">
       <div class="fd-block"><div class="fd-h">Recente boekingen</div>${boek||'<div class="fd-empty">Nog geen boekingen.</div>'}</div>
@@ -4754,6 +4835,8 @@ async function sbLoad(){
   state.ctx = {}; ((cx && cx.data) ? cx.data : []).forEach(r=>{ state.ctx[r.key]=r.body||''; });
   state.appointments = (ap && ap.data ? ap.data : []).map(_mapAppt);
   const _mapProj=pr=>({id:pr.id,client:pr.client,project:pr.project,color:pr.color,icon:pr.icon,role:pr.role,
+    projectprijs:pr.projectprijs, btw:pr.btw, budget:pr.budget, notes:pr.notes,
+    invoice_status:pr.invoice_status, invoice_date:pr.invoice_date,
     created: pr.created_at?new Date(pr.created_at).getTime():0,
     items: items.filter(x=>x.project_id===pr.id).map(_mapItem)});
   const activeProjects=projects.filter(pr=>!pr.archived);
