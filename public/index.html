@@ -1503,7 +1503,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v126</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v127</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -1593,7 +1593,8 @@
       #finRightWrap .fd-upamt{font-size:12.5px;color:var(--txt)}
       #finRightWrap .fd-empty{font-size:12px;color:var(--mut2)}
       .main.workspace #view-finmid.finfull{grid-column:1 / -1}
-      .main.workspace #view-finmid,.main.workspace #view-finright{padding:0 22px 40px}
+      .main.workspace #view-finmid,.main.workspace #view-finright{padding:60px 22px 40px}
+      #finRightWrap .pb-inline{padding-top:0}
       #finMidWrap .finB{padding:2px}
       #finMidWrap .finB-card{--ccol:#8b8b8b;background:#141417;border:1px solid var(--line);border-radius:16px;padding:16px 18px;display:flex;flex-direction:column;gap:14px}
       #finMidWrap .finB-head{display:flex;align-items:center;gap:11px}
@@ -1730,8 +1731,8 @@
       #finMidWrap .fd-ringnum{fill:#d7dadd;font-size:19px;font-weight:600}
       #finMidWrap .fd-ringnum.neg{fill:#e0726f}
       #finMidWrap .fd-ringlbl{fill:var(--mut2);font-size:11px}
-      #finMidWrap .finA{display:flex;flex-direction:column;gap:14px;padding:16px 2px 2px}
-      #finMidWrap .finB-flat{padding:16px 2px 34px}
+      #finMidWrap .finA{display:flex;flex-direction:column;gap:14px;padding:0 2px 2px}
+      #finMidWrap .finB-flat{padding:0 2px 34px}
       #finMidWrap .finA-top{display:flex;gap:14px;align-items:stretch}
       #finMidWrap .finA-hero{flex:1;min-width:0;background:#141417;border:1px solid var(--line);border-radius:14px;padding:18px 20px;display:flex;flex-direction:column;justify-content:center}
       #finMidWrap .finA-herolbl{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;font-weight:600;color:var(--mut)}
@@ -2807,7 +2808,7 @@ function _renderProjBoard(){
     const href=x.url?esc(x.url):('https://www.google.com/search?q='+encodeURIComponent(x.text||''));
     const ttl=x.url?'Open bij verkoper':'Zoek dit artikel op Google';
     const sub=(qty>1)?`<span class="pb-ink-sub">${qty} × €${pr!=null?fmtEur(pr):'—'}${pr!=null?' = €'+fmtEur(pr*qty):''}</span>`:'';
-    const nameCell=`<div class="pb-ink-name"><a class="pb-tx pb-itxlink" href="${href}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="${ttl}">${esc(x.text)}${qty>1?` <span class="pb-qty">×${qty}</span>`:''}</a>${sub}</div>`;
+    const nameCell=`<div class="pb-ink-name"><a class="pb-tx pb-itxlink" href="${href}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="${ttl}">${esc(_cleanInkName(x.text))}${qty>1?` <span class="pb-qty">×${qty}</span>`:''}</a>${sub}</div>`;
     const thumb=x.image?`<img class="pb-thumb" src="${esc(x.image)}" alt="" loading="lazy" onerror="this.style.display='none'">`:'';
     return `<div class="pb-row pb-ink" data-tid="${x.id}"><button class="pb-chk" onclick="pbInkCheck('${x.id}',${x.done?'false':'true'})" title="Afvinken">${_pbChk(!!x.done)}</button>${thumb}${nameCell}<span class="pb-pricewrap"><span class="pb-eur">€</span><input class="pb-price" type="text" inputmode="decimal" value="${pr!=null?String(pr).replace('.',','):''}" placeholder="—" onclick="event.stopPropagation()" onchange="pbSetPrice('${x.id}',this.value)" title="Prijs per stuk"></span><button class="pb-move" onclick="event.preventDefault();event.stopPropagation();pbMoveOpen('one','${x.id}')" title="Verplaats naar ander project/klant">${_tIc('<path d="M17 3l4 4l-4 4"/><path d="M21 7h-13"/><path d="M7 21l-4 -4l4 -4"/><path d="M3 17h13"/>',15,1.4)}</button><button class="pb-del" onclick="event.preventDefault();pbDel('${x.id}')" title="Verwijderen">×</button></div>`; };
   const doneInkRow=(x)=>`<div class="pb-row pb-donerow"><button class="pb-chk" onclick="pbInkCheck('${x.id}',false)" title="Terugzetten">${_pbChk(true)}</button><span class="pb-tx done">${esc(x.text||'')}</span></div>`;
@@ -3150,9 +3151,14 @@ function _dedupTitle(s){ s=String(s||'').replace(/\s+/g,' ').trim(); if(!s) retu
   const sig=s.slice(0,Math.min(24,s.length)); const idx=s.indexOf(sig,10); if(idx>10) return s.slice(0,idx).replace(/[…\-\s]+$/,'').trim();
   const h=Math.floor(s.length/2); if(s.length%2===0 && s.slice(0,h)===s.slice(h)) return s.slice(0,h).trim();
   return s; }
-// Lange webshop-titel inkorten tot iets leesbaars: knip bij eerste komma/streepje, anders ~52 tekens op woordgrens.
-function _shortName(s){ s=String(s||'').replace(/\s+/g,' ').trim(); if(!s) return s;
-  let c=s.split(/,| - | – | \| /)[0].trim(); if(c.length<6) c=s;
+// Legacy-inkoopnaam opschonen: haal een afsluitende prijs/winkel-annotatie weg,
+// bv "(EBROM, €21,05)", "(€5,51)", "(€2,79, was €5,30)" — die prijs staat al in het prijsveld.
+function _cleanInkName(s){ s=String(s||'').replace(/\s+/g,' ').trim();
+  for(let i=0;i<3;i++){ const n=s.replace(/\s*\([^()]*€[^()]*\)\s*$/,'').trim(); if(n===s)break; s=n; }
+  return s; }
+// Lange webshop-titel inkorten tot iets leesbaars: eerst prijs-annotatie weg, dan knippen.
+function _shortName(s){ s=_cleanInkName(String(s||'').replace(/\s+/g,' ').trim()); if(!s) return s;
+  let c=s.split(/ - | – | \| /)[0].trim(); if(c.length<6) c=s;
   if(c.length>52){ c=c.slice(0,52).replace(/\s+\S*$/,'').trim(); }
   return c||s.slice(0,52); }
 // Geplakte winkelwagen/lijst mét product-LINKS lokaal omzetten naar inkoopregels — zonder AI.
