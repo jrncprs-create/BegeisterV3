@@ -1490,7 +1490,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v95</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v96</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -2614,11 +2614,13 @@ function pbInkPaste(){ const ov=document.createElement('div'); ov.className='ove
   const close=()=>{ ov.classList.remove('open'); setTimeout(()=>ov.remove(),300); };
   ov.querySelector('.modal-close').onclick=close; ov.querySelector('#pbpcancel').onclick=close;
   ov.addEventListener('click',e=>{ if(e.target===ov) close(); });
-  ov.querySelector('#pbpok').onclick=async()=>{ const txt=(ov.querySelector('#pbpaste').value||'').trim(); if(!txt){ close(); return; }
-    const b=ov.querySelector('#pbpok'); b.disabled=true; b.innerHTML='<img class="kfile-aianim" src="/thinking.webp" alt="">';
-    let items=[]; try{ const r=await fetch('/api/bestellijst',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:txt})}); const d=await r.json(); items=(d&&d.items)||[]; }catch(_){}
+  const _note=(m)=>{ let n=ov.querySelector('.pbp-note'); if(!n){ n=document.createElement('div'); n.className='pbp-note'; n.style.cssText='color:#f0a;font-size:12.5px;margin-top:12px;line-height:1.4'; const foot=ov.querySelector('.foot'); if(foot)foot.parentNode.insertBefore(n,foot); else ov.querySelector('.modal').appendChild(n); } n.textContent=m; };
+  ov.querySelector('#pbpok').onclick=async()=>{ const txt=(ov.querySelector('#pbpaste').value||'').trim(); if(!txt){ _note('Plak eerst de lijst-tekst.'); return; }
+    const b=ov.querySelector('#pbpok'); const _orig=b.innerHTML; b.disabled=true; b.innerHTML='<img class="kfile-aianim" src="/thinking.webp" alt="">';
+    let items=[], err=null; try{ const r=await fetch('/api/bestellijst',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:txt})}); const d=await r.json(); items=(d&&d.items)||[]; err=d&&d.error; }catch(e){ err=String(e&&e.message||e); }
+    if(!items.length){ b.disabled=false; b.innerHTML=_orig; _note(err?('Kon de lijst niet lezen: '+err):'Geen artikelen herkend. Plak alleen het lijst-gedeelte (productnamen + prijzen), zonder de menu-/navigatietekst eromheen.'); return; }
     for(const it of items){ try{ const ins=await sb.from('project_board').insert({project_id:_pbPid,kind:'inkoop',text:it.name,qty:it.qty||1,price:(it.price!=null?it.price:null),url:it.url||null,sort:_pbItems.length}).select().single(); if(ins&&ins.data)_pbItems.push(ins.data); }catch(_){} }
-    close(); _renderProjBoard();
+    close(); _finInk=null; _renderProjBoard(); try{render();}catch(_){}
   };
   setTimeout(()=>{ const t=ov.querySelector('#pbpaste'); if(t)t.focus(); },60);
 }
