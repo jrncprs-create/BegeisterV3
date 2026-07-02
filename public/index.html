@@ -176,6 +176,24 @@
   .task:hover{background:rgba(255,255,255,.035)}
   .task.done{opacity:.5}
   .task.done .t-title{text-decoration:line-through}
+  /* Afgevinkt-archief onder de Taken-lijst (2 weken, daarna auto-opgeruimd) */
+  .af-arch{margin-top:18px;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .af-archhead{display:flex;align-items:center;gap:9px;padding:13px 15px;cursor:pointer;color:var(--mut2);font-size:13px}
+  .af-archhead:hover{background:rgba(255,255,255,.03)}
+  .af-archchk{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:5px;background:var(--mut2);color:var(--bg);font-size:11px}
+  .af-archlbl{color:var(--txt);font-weight:500}
+  .af-archcnt{font-variant-numeric:tabular-nums;color:var(--mut2)}
+  .af-archsub{color:var(--mut2);opacity:.8}
+  .af-archchev{margin-left:auto;display:inline-flex;transition:transform .18s;transform:rotate(180deg)}
+  .af-arch.open .af-archchev{transform:rotate(0)}
+  .af-archlist{border-top:1px solid var(--line)}
+  .arch-row{display:flex;align-items:center;gap:11px;padding:11px 15px;border-top:1px solid var(--line)}
+  .arch-row:first-child{border-top:none}
+  .arch-chk{flex:0 0 auto;background:transparent;border:none;color:var(--mut2);cursor:pointer;display:flex;padding:0}
+  .arch-chk:hover{color:var(--txt)}
+  .arch-dot{width:8px;height:8px;border-radius:50%;flex:0 0 auto}
+  .arch-t{flex:1;min-width:0;font-size:13.5px;color:var(--mut);text-decoration:line-through;opacity:.75;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .arch-days{flex:0 0 auto;font-size:11.5px;color:var(--mut2);font-variant-numeric:tabular-nums}
   .t-top{display:flex;align-items:center;gap:11px}
   .picon{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#0c0d10;font-size:14px;flex:0 0 auto}
   .picon.empty{background:transparent;border:1.5px solid rgba(255,255,255,.32)}
@@ -1619,7 +1637,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v143</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v144</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -2763,17 +2781,36 @@ function renderTaken(){
   if(activeTab!=='all'){ const ap=projById(activeTab); base=ap?ap.items.map(it=>({p:ap,it})):[]; }
   else if(filterClient!=='all'){ base=state.projects.filter(p=>p.id!=='__inbox__'&&p.client===filterClient).flatMap(p=>p.items.map(it=>({p,it}))); }
   else base=allItems();
-  const rows=sortRows(base.filter(x=>x.it.status!=='wait' && x.p.id!=='__inbox__' && (whoFilter==='all'||_ownerMatch(x.it.owner,whoFilter))));
+  const _scope=base.filter(x=> x.p.id!=='__inbox__' && (whoFilter==='all'||_ownerMatch(x.it.owner,whoFilter)));
+  const rows=sortRows(_scope.filter(x=>x.it.status!=='wait' && x.it.status!=='done'));
   const _now=Date.now(), _fresh=x=>(_now-(x.it.created||0))<3600000;
   const _fr=rows.filter(_fresh), _rs=rows.filter(x=>!_fresh(x));
   let _h='', _i=0;
   if(_fr.length) _h+='<div class="afgroup">Net binnen</div>'+_fr.map(({p,it})=>taskCard(p,it,_i++,'taken',true)).join('')+(_rs.length?'<div class="fresh-sep"></div>':'');
   _h+=_rs.map(({p,it})=>taskCard(p,it,_i++,'taken')).join('');
-  document.getElementById('list').innerHTML=_h||'<div class="hint">Geen actiepunten.</div>';
+  // Afgevinkt-archief: verdwijnen uit de actieve lijst, blijven 2 weken hier, daarna auto-opgeruimd
+  const _done=_scope.filter(x=>x.it.status==='done').sort((a,b)=>(b.it.archived||0)-(a.it.archived||0));
+  let _arch='';
+  if(_done.length){ _arch=`<div class="af-arch${_archOpen?' open':''}"><div class="af-archhead" onclick="toggleArchOpen()"><span class="af-archchk">✓</span><span class="af-archlbl">Afgevinkt</span><span class="af-archcnt">${_done.length}</span><span class="af-archsub">laatste 2 weken</span><span class="af-archchev">${_chevIc}</span></div>${_archOpen?('<div class="af-archlist">'+_done.map(({p,it})=>archRow(p,it)).join('')+'</div>'):''}</div>`; }
+  document.getElementById('list').innerHTML=(_h||'<div class="hint">Geen actiepunten.</div>')+_arch;
   if(typeof wireTaskDrag==='function') wireTaskDrag();
 }
 async function setTab(t){if(t==='__new__'){const r=await _newClientPrompt();if(r&&r.id)activeTab=r.id;render();return;}if(t==='__manage__'){setView('beheer');return;}if(t==='__newproj__'){const cl=(filterClient&&filterClient!=='all')?filterClient:null;if(cl){await addProjectTo(cl);}else{setView('beheer');}return;}if(t==='__manageproj__'){setView('beheer');return;}activeTab=t;_animateNext=true;render();}
 function setWhoFilter(name){ whoFilter=(whoFilter===name)?'all':name; _animateNext=false; render(); }
+// Afgevinkt-archief onder de Taken-lijst (2 weken zichtbaar, daarna auto-verwijderd)
+let _archOpen=false;
+function toggleArchOpen(){ _archOpen=!_archOpen; renderTaken(); }
+function archRow(p,it){
+  const d=Math.max(0,14-Math.floor((Date.now()-(it.archived||Date.now()))/86400000));
+  const col=PROJCOL[p.id]||'#888';
+  return `<div class="arch-row"><button class="arch-chk" onclick="toggle('${it.id}')" title="Terugzetten in de planning"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="5.5"/><path d="M8 12.4l2.7 2.7L16.5 9"/></svg></button><span class="arch-dot" style="background:${col}"></span><span class="arch-t">${escapeHtml(it.t||'')}</span><span class="arch-days" title="Wordt daarna automatisch verwijderd">nog ${d}d</span></div>`;
+}
+// Ruimt afgevinkte taken op die ouder zijn dan 14 dagen (draait bij het laden)
+async function _archCleanup(){
+  try{ const cutoff=new Date(Date.now()-14*86400000).toISOString();
+    await sb.from('items').delete().eq('status','done').not('archived_at','is',null).lt('archived_at',cutoff);
+  }catch(e){ console.warn('archief-opschoning', e&&e.message); }
+}
 
 // ---------- agenda ----------
 let agendaCol='agenda';   // 'agenda' (kalender) of 'afspraken' (lijst) in de rechterkolom
@@ -5414,7 +5451,7 @@ const sb = supabase.createClient(SB_URL, SB_KEY);
 save = function(){};
 
 // ── data laden uit Supabase ──
-function _mapItem(i){return {id:i.id,t:i.title,owner:i.owner||'',contact:i.contact||'',due:i.due,status:i.status,src:i.source_id,created:i.created_at?new Date(i.created_at).getTime():0};}
+function _mapItem(i){return {id:i.id,t:i.title,owner:i.owner||'',contact:i.contact||'',due:i.due,status:i.status,src:i.source_id,created:i.created_at?new Date(i.created_at).getTime():0,archived:i.archived_at?new Date(i.archived_at).getTime():0};}
 function _mapAppt(a){return {id:a.id,projectId:a.project_id||null,t:a.title,owner:a.owner||'',contact:a.contact||'',kind:a.kind||'fysiek',location:a.location||'',date:a.date,start:(a.start_time||'').slice(0,5),end:(a.end_time||'').slice(0,5),note:a.note||'',created:a.created_at?new Date(a.created_at).getTime():0};}
 function _mapSource(s,atts){
   const kind = s.channel==='whatsapp'?'chat':(s.channel==='email'?'email':'paste');
@@ -5428,6 +5465,7 @@ function _mapSource(s,atts){
           images:[]};
 }
 async function sbLoad(){
+  await _archCleanup();   // afgevinkte taken ouder dan 2 weken opruimen vóór het laden
   const [p,i,s,a,ap,c,f,cx,fo] = await Promise.all([
     sb.from('projects').select('*').order('sort'),
     sb.from('items').select('*').order('created_at'),
