@@ -28,21 +28,20 @@ export default async function handler(req, res) {
     if (!link) return res.status(200).json({ error: "geen link" });
     const ext = (name.split(".").pop() || "").toLowerCase();
 
-    // bestand ophalen
-    const r = await fetch(directLink(link), { redirect: "follow" });
-    if (!r.ok) return res.status(200).json({ error: "kon bestand niet ophalen (" + r.status + ")" });
-
     const SYS = "Je bent de assistent van Begeister (licht/decor/event-productie). Vat het document kort en concreet samen in het Nederlands: 2-4 zinnen kernpunten, en als er duidelijke actiepunten/afspraken/data in staan, noem die kort als lijstje. Geen onzin verzinnen.";
+    const durl = directLink(link);
     let content;
 
     if (ext === "pdf") {
-      const buf = Buffer.from(await r.arrayBuffer());
-      if (buf.length > 16 * 1024 * 1024) return res.status(200).json({ error: "PDF te groot om te lezen" });
+      // Anthropic haalt de PDF zélf op via de URL — dan hoeft de server geplaatste megabytes niet te uploaden
+      // (dat veroorzaakte de aanhoudende 'Premature close' bij grotere PDF's).
       content = [
-        { type: "document", source: { type: "base64", media_type: "application/pdf", data: buf.toString("base64") } },
+        { type: "document", source: { type: "url", url: durl } },
         { type: "text", text: "Vat dit document (" + name + ") samen volgens de instructie." },
       ];
     } else if (TEXT_EXT.includes(ext)) {
+      const r = await fetch(durl, { redirect: "follow" });
+      if (!r.ok) return res.status(200).json({ error: "kon bestand niet ophalen (" + r.status + ")" });
       let txt = await r.text();
       if (txt.length > 120000) txt = txt.slice(0, 120000);
       content = [{ type: "text", text: "BESTAND: " + name + "\n\n\"\"\"\n" + txt + "\n\"\"\"\n\nVat dit samen volgens de instructie." }];
@@ -50,10 +49,26 @@ export default async function handler(req, res) {
       return res.status(200).json({ error: "dit bestandstype (." + ext + ") kan ik nog niet lezen — pdf en tekstbestanden wel" });
     }
 
-    const resp = await createMessageStream(anthropic, {
+    const summarize = (c) => createMessageStream(anthropic, {
       model: MODEL, max_tokens: 700, system: SYS,
-      messages: [{ role: "user", content }],
+      messages: [{ role: "user", content: c }],
     });
+
+    let resp;
+    try {
+      resp = await summarize(content);
+    } catch (e) {
+      // Vangnet: lukt het ophalen-via-URL niet, dan de PDF alsnog zelf downloaden en als base64 meesturen.
+      if (ext !== "pdf") throw e;
+      const r2 = await fetch(durl, { redirect: "follow" });
+      if (!r2.ok) throw e;
+      const buf = Buffer.from(await r2.arrayBuffer());
+      if (buf.length > 24 * 1024 * 1024) return res.status(200).json({ error: "PDF te groot om te lezen" });
+      resp = await summarize([
+        { type: "document", source: { type: "base64", media_type: "application/pdf", data: buf.toString("base64") } },
+        { type: "text", text: "Vat dit document (" + name + ") samen volgens de instructie." },
+      ]);
+    }
     const summary = resp.content.map(b => (b.type === "text" ? b.text : "")).join("").trim();
 
     try {
