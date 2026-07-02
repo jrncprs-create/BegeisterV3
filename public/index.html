@@ -1382,7 +1382,7 @@
     .agenda-add:hover,.col-add:hover{color:#fff;transform:scale(1.12)}
     /* toevoegen speelt zich af binnen de betreffende kolom */
     .overlay.incol{background:transparent;align-items:flex-start;justify-content:stretch;padding:0;overflow-y:auto;right:auto}
-    .overlay.incol .modal{width:100%;max-width:none;border-radius:0;border:none;border-left:1px solid var(--line);min-height:100%;box-shadow:none;padding:24px 24px 32px;background:var(--bg)}
+    .overlay.incol .modal{width:100%;max-width:none;border-radius:0;border:none;border-left:none;min-height:100%;box-shadow:none;padding:24px 24px 32px;background:var(--bg)}
     #apptOverlay.incol{left:66.666vw;width:33.334vw}
     #overlay.incol{left:33.333vw;width:33.333vw}
     #overlay.incol.incol-left{left:0}
@@ -1638,7 +1638,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v145</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v146</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -1839,6 +1839,7 @@
       .pb-row.pb-ink .pb-pcell{display:flex;flex-direction:column;align-items:flex-end;gap:1px;flex:0 0 auto;min-width:104px;margin-left:auto}
       .pb-row.pb-ink .pb-ptot{display:flex;align-items:baseline;justify-content:flex-end;gap:3px;font-size:14px;font-weight:600;color:var(--txt);font-variant-numeric:tabular-nums}
       .pb-row.pb-ink .pb-ptot .pb-eur{color:var(--mut2);font-weight:400;font-size:12px}
+      .pb-row.pb-ink .pb-ptot .pb-tnum{display:inline-block;width:66px;text-align:right;font-variant-numeric:tabular-nums}
       .pb-row.pb-ink .pb-punit{font-size:11px;color:var(--mut2);display:flex;align-items:baseline;gap:2px}
       .pb-row.pb-ink .pb-price{background:transparent;border:none;border-bottom:1px solid color-mix(in srgb,var(--scol) 32%,var(--line));color:var(--txt);text-align:right;font-size:14px;font-weight:600;padding:1px 0;width:66px;font-variant-numeric:tabular-nums}
       .pb-row.pb-ink .pb-price:focus{outline:none;border-bottom-color:var(--scol)}
@@ -3059,7 +3060,7 @@ function _renderProjBoard(){
     const unitVal=pr!=null?String(pr).replace('.',','):'';
     const nameCell=`<div class="pb-ink-name"><a class="pb-tx pb-itxlink" href="${href}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="${ttl}">${esc(_cleanInkName(x.text))}</a></div>`;
     const priceCell=(qty>1)
-      ? `<div class="pb-pcell"><div class="pb-ptot">€${pr!=null?fmtEur(pr*qty):'—'}</div><div class="pb-punit">${qty} × €<input class="pb-price pb-punitin" type="text" inputmode="decimal" value="${unitVal}" placeholder="—" onclick="event.stopPropagation()" onchange="pbSetPrice('${x.id}',this.value)" title="Prijs per stuk"></div></div>`
+      ? `<div class="pb-pcell"><div class="pb-ptot"><span class="pb-eur">€</span><span class="pb-tnum">${pr!=null?fmtEur(pr*qty):'—'}</span></div><div class="pb-punit">${qty} × €<input class="pb-price pb-punitin" type="text" inputmode="decimal" value="${unitVal}" placeholder="—" onclick="event.stopPropagation()" onchange="pbSetPrice('${x.id}',this.value)" title="Prijs per stuk"></div></div>`
       : `<div class="pb-pcell"><div class="pb-ptot"><span class="pb-eur">€</span><input class="pb-price" type="text" inputmode="decimal" value="${unitVal}" placeholder="—" onclick="event.stopPropagation()" onchange="pbSetPrice('${x.id}',this.value)" title="Prijs"></div></div>`;
     return `<div class="pb-row pb-ink" data-tid="${x.id}"${x.image?` data-img="${escapeHtml(x.image)}"`:''}><button class="pb-chk" onclick="pbInkOrdered('${x.id}')" title="${x.status==='besteld'?'Terugzetten naar te bestellen':'Markeer als besteld'}">${_pbChk(x.status==='besteld')}</button>${nameCell}${priceCell}<button class="pb-move" onclick="event.preventDefault();event.stopPropagation();pbMoveOpen('one','${x.id}')" title="Verplaats naar ander project/klant">${_tIc('<path d="M17 3l4 4l-4 4"/><path d="M21 7h-13"/><path d="M7 21l-4 -4l4 -4"/><path d="M3 17h13"/>',15,1.4)}</button><button class="pb-del" onclick="event.preventDefault();pbDel('${x.id}')" title="Verwijderen">×</button></div>`; };
   const doneInkRow=(x)=>`<div class="pb-row pb-donerow"><button class="pb-chk" onclick="pbInkCheck('${x.id}',false)" title="Terugzetten">${_pbChk(true)}</button><span class="pb-tx done">${esc(x.text||'')}</span></div>`;
