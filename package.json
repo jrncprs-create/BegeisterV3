@@ -10,7 +10,7 @@
     "intake:once": "node intake/poller.mjs --once"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.30.1",
+    "@anthropic-ai/sdk": "^0.110.0",
     "@supabase/supabase-js": "^2.45.0",
     "express": "^4.21.2",
     "imapflow": "^1.0.171",
