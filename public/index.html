@@ -966,6 +966,10 @@
   .modal>input,.modal>select,.modal>textarea,.modal>.datefield,.modal .twocol{margin-top:18px}
   .modal h3+input,.modal h3+select,.modal h3+textarea,.modal h3+.datefield,.modal h3+.twocol{margin-top:0}
   .modal input:focus,.modal select:focus,.modal textarea:focus{outline:none;border-color:#5a5a5a;background:rgba(255,255,255,.04)}
+  .modal .ownerpick{display:flex;align-items:center;flex-wrap:wrap;gap:8px 14px;border:1px solid var(--line);border-radius:13px;padding:9px 15px;min-height:49px;box-sizing:border-box}
+  .modal .ownerpick .ownerpick-lbl{font-size:12.5px;color:var(--mut2)}
+  .modal .ownerpick label{display:inline-flex;align-items:center;gap:6px;font-size:13.5px;color:var(--txt);cursor:pointer;white-space:nowrap}
+  .modal .ownerpick input[type=checkbox]{width:16px;height:16px;accent-color:#8a8a8a;cursor:pointer;flex:0 0 auto}
   .modal ::placeholder{color:var(--mut2);opacity:1}
   .modal textarea{min-height:80px;resize:vertical;line-height:1.45}
   .modal select{appearance:none;-webkit-appearance:none;cursor:pointer;padding-right:36px;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ececec' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 14px center}
@@ -1530,7 +1534,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v132</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v133</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -2032,7 +2036,7 @@
     <h3 id="editModalTitle">Actiepunt bewerken</h3>
     <textarea id="m_t" rows="3" placeholder="Omschrijving" autocomplete="off"></textarea>
     <div class="twocol">
-      <div><select id="m_owner"><option value="">Wie van Begeister</option><option>Jeroen</option><option>Marlon</option></select></div>
+      <div class="ownerpick" id="m_ownerpick"><span class="ownerpick-lbl">Wie van Begeister</span><label><input type="checkbox" id="own_j" onchange="_ownerCheckSync('j')"> Jeroen</label><label><input type="checkbox" id="own_m" onchange="_ownerCheckSync('m')"> Marlon</label><label><input type="checkbox" id="own_i" onchange="_ownerCheckSync('i')"> Intern overleg</label></div>
       <div><select id="m_contact"></select></div>
     </div>
     <div class="twocol">
@@ -2382,6 +2386,21 @@ function dueInfo(due){
   const rel=n<0?`${-n}d te laat`:(n===0?'vandaag':(n===1?'morgen':`over ${n}d`));
   return{txt:`${txt} · ${rel}`,cls};
 }
+const _OWNERS=['Jeroen','Marlon','Marlon & Jeroen','Intern overleg'];
+function _ownerAllowed(o){return _OWNERS.includes(o);}
+function _ownerJoint(o){return o==='Marlon & Jeroen'||o==='Intern overleg';}
+// Een gezamenlijke owner ('Marlon & Jeroen' / 'Intern overleg') matcht zowel het Jeroen- als het Marlon-filter.
+function _ownerMatch(o,f){ o=o||''; return o===f || (_ownerJoint(o)&&(f==='Jeroen'||f==='Marlon')); }
+// Owner-keuze als aanvinkbaar: Jeroen en/of Marlon, of Intern overleg (exclusief).
+function _ownerCheckSync(which){ const j=document.getElementById('own_j'),m=document.getElementById('own_m'),i=document.getElementById('own_i'); if(!j||!m||!i)return;
+  if(which==='i'){ if(i.checked){ j.checked=false; m.checked=false; } }
+  else { if(j.checked||m.checked) i.checked=false; } }
+function _ownerFromChecks(){ const j=document.getElementById('own_j'),m=document.getElementById('own_m'),i=document.getElementById('own_i');
+  if(i&&i.checked) return 'Intern overleg';
+  const J=j&&j.checked, M=m&&m.checked;
+  if(J&&M) return 'Marlon & Jeroen'; if(J) return 'Jeroen'; if(M) return 'Marlon'; return ''; }
+function _ownerToChecks(o){ const j=document.getElementById('own_j'),m=document.getElementById('own_m'),i=document.getElementById('own_i'); if(!j||!m||!i)return;
+  i.checked=(o==='Intern overleg'); j.checked=(o==='Jeroen'||o==='Marlon & Jeroen'); m.checked=(o==='Marlon'||o==='Marlon & Jeroen'); }
 function ownerText(it){return (it.owner||'—')+(it.contact?' ↳ '+it.contact:'');}
 function chipTip(x){const di=dueInfo(x.it.due);return (escapeHtml(x.it.t)+' — '+escapeHtml(ownerText(x.it))+' · '+escapeHtml(projName(x.p.id))+(x.it.due?' · '+escapeHtml(di.txt):'')).replace(/"/g,'&quot;');}
 
@@ -2633,7 +2652,7 @@ function renderTaken(){
   if(activeTab!=='all'){ const ap=projById(activeTab); base=ap?ap.items.map(it=>({p:ap,it})):[]; }
   else if(filterClient!=='all'){ base=state.projects.filter(p=>p.id!=='__inbox__'&&p.client===filterClient).flatMap(p=>p.items.map(it=>({p,it}))); }
   else base=allItems();
-  const rows=sortRows(base.filter(x=>x.it.status!=='wait' && x.p.id!=='__inbox__' && (whoFilter==='all'||(x.it.owner||'')===whoFilter)));
+  const rows=sortRows(base.filter(x=>x.it.status!=='wait' && x.p.id!=='__inbox__' && (whoFilter==='all'||_ownerMatch(x.it.owner,whoFilter))));
   const _now=Date.now(), _fresh=x=>(_now-(x.it.created||0))<3600000;
   const _fr=rows.filter(_fresh), _rs=rows.filter(x=>!_fresh(x));
   let _h='', _i=0;
@@ -5002,7 +5021,7 @@ function newTask(){ openModal(null); }
 function newWait(){ openModal(null,'wachter','wait'); }
 function openModal(id, src, defStatus, presetPid){
   const isNew=!id; const r=isNew?null:findItem(id); if(!isNew&&!r)return; editingId=isNew?null:id;
-  document.getElementById('m_owner').value=isNew?(who||'Jeroen'):(r.it.owner==='Marlon'?'Marlon':'Jeroen');
+  _ownerToChecks(isNew?(who||'Jeroen'):(r.it.owner||''));
   const cur=isNew?'':(r.it.contact||'');
   const cs=[...CONTACTS];if(cur&&!cs.includes(cur))cs.unshift(cur);
   document.getElementById('m_contact').innerHTML='<option value="">Contact</option>'+cs.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
@@ -5034,7 +5053,7 @@ function closeModal(){const ov=document.getElementById('overlay');ov.classList.r
   setTimeout(()=>{if(!ov.classList.contains('open')){editingId=null;ov.classList.remove('incol');ov.classList.remove('incol-left');ov.style.top='';}},560);}
 function saveModal(){const r=findItem(editingId);if(!r)return;const np=document.getElementById('m_project').value;
   r.it.t=document.getElementById('m_t').value.trim()||r.it.t;
-  r.it.owner=document.getElementById('m_owner').value;
+  r.it.owner=_ownerFromChecks();
   r.it.contact=document.getElementById('m_contact').value;
   r.it.due=mDue||null;r.it.status=document.getElementById('m_status').value;
   if(np&&np!==r.p.id){r.p.items=r.p.items.filter(i=>i.id!==r.it.id);projById(np).items.push(r.it);if(activeTab!=='all')activeTab=np;}
@@ -5289,7 +5308,7 @@ saveModal = async function(){
     const title=document.getElementById('m_t').value.trim();
     if(!title){alert('Vul een omschrijving in.');return;}
     const rec={project_id:document.getElementById('m_project').value||null,title,
-      owner:document.getElementById('m_owner').value||null,contact:document.getElementById('m_contact').value||null,
+      owner:_ownerFromChecks()||null,contact:document.getElementById('m_contact').value||null,
       due:mDue||null,status:document.getElementById('m_status').value||'todo',
       source_id:_dropSrc||null};
     const ins=await sb.from('items').insert(rec).select('id').single();
@@ -5303,7 +5322,7 @@ saveModal = async function(){
   }
   const r=findItem(editingId);if(!r)return;
   const patch={title:document.getElementById('m_t').value.trim()||r.it.t,
-    owner:document.getElementById('m_owner').value||null,
+    owner:_ownerFromChecks()||null,
     contact:document.getElementById('m_contact').value||null,
     due:mDue||null,status:document.getElementById('m_status').value,
     project_id:document.getElementById('m_project').value||null};
@@ -5870,7 +5889,7 @@ function _openDraftModal(draft){
   openModal(null,'wachter','wait');   // review in de In-afwachting-kolom
   pendingSourceId=_dropSrc||null;
   if(draft.title) document.getElementById('m_t').value=draft.title;
-  if(draft.owner==='Jeroen'||draft.owner==='Marlon') document.getElementById('m_owner').value=draft.owner;
+  _ownerToChecks(draft.owner||'');
   if(draft.contact){ const sel=document.getElementById('m_contact'); if(![...sel.options].some(o=>o.value===draft.contact)){ const o=document.createElement('option'); o.value=draft.contact; o.textContent=draft.contact; sel.appendChild(o);} sel.value=draft.contact; }
   const _pid=draft.project_id||_fileProjectId||null;
   if(_pid){ const p=projById(_pid); if(p){ try{ _fillClientSelect(document.getElementById('m_client'), p.client); fillProjectSelect(p.client, _pid); _enhanceSelect('m_client','client'); _enhanceSelect('m_project','project'); }catch(_){}}}
