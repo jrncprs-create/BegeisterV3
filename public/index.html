@@ -1541,13 +1541,13 @@
   ::-webkit-scrollbar-thumb:hover{ background:rgba(255,255,255,.26) }
   ::-webkit-scrollbar-track,::-webkit-scrollbar-corner{ background:transparent }
   html{ scrollbar-color:rgba(255,255,255,.16) transparent }
-  /* Mobiele kolom-pijltjes (In afwachting · Taken · Agenda) */
-  .mob-arrow{ display:none }
+  /* Mobiele kolom-indicator (In afwachting · Taken · Agenda) — swipe navigeert */
+  .mob-dots{ display:none }
   @media (max-width:1000px){
-    .mob-arrow{ display:flex; position:fixed; top:50%; transform:translateY(-50%); width:32px; height:56px; align-items:center; justify-content:center; background:rgba(20,20,20,.66); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); border:1px solid var(--line); color:#d2d2d2; z-index:52; cursor:pointer; font-size:24px; line-height:1; padding:0 }
-    .mob-arrow.left{ left:0; border-left:none; border-radius:0 13px 13px 0 }
-    .mob-arrow.right{ right:0; border-right:none; border-radius:13px 0 0 13px }
-    .mob-arrow.hidden{ display:none }
+    .mob-dots{ display:flex; position:fixed; left:50%; transform:translateX(-50%); top:calc(env(safe-area-inset-top) + 60px); gap:7px; z-index:52; padding:6px 10px; background:rgba(20,20,20,.55); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); border:1px solid var(--line); border-radius:999px }
+    .mob-dots.hidden{ display:none }
+    .mob-dots .md-dot{ width:7px; height:7px; border-radius:50%; background:rgba(210,210,210,.30); transition:background .2s,transform .2s; cursor:pointer }
+    .mob-dots .md-dot.on{ background:#e2e2e2; transform:scale(1.2) }
   }
 </style>
 </head>
@@ -1576,7 +1576,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v140</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v141</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -2526,18 +2526,33 @@ function setView(v){
   window.scrollTo({top:0,behavior:'instant'});
   if(typeof _updateMobArrows==='function') _updateMobArrows();
 }
-// ---- Mobiele kolom-navigatie: pijltjes tussen In afwachting · Taken · Agenda ----
+// ---- Mobiele kolom-navigatie: swipe tussen In afwachting · Taken · Agenda (+ stippen-indicator) ----
 const MOBCOLS=['wachter','taken','agenda'];
 function mobColShift(dir){ const i=MOBCOLS.indexOf(view); const ni=(i<0)?1:Math.min(MOBCOLS.length-1,Math.max(0,i+dir)); if(MOBCOLS[ni]!==view) setView(MOBCOLS[ni]); }
-function _initMobArrows(){ if(document.getElementById('mobPrev'))return;
-  const mk=(id,cls,ch,dir)=>{ const b=document.createElement('button'); b.id=id; b.className='mob-arrow '+cls; b.setAttribute('aria-label', dir<0?'Vorige kolom':'Volgende kolom'); b.innerHTML=ch; b.onclick=()=>mobColShift(dir); document.body.appendChild(b); };
-  mk('mobPrev','left hidden','‹',-1); mk('mobNext','right hidden','›',1);
+function _initMobArrows(){ if(document.getElementById('mobDots'))return;
+  const d=document.createElement('div'); d.id='mobDots'; d.className='mob-dots hidden';
+  MOBCOLS.forEach((c,idx)=>{ const s=document.createElement('span'); s.className='md-dot'; s.onclick=()=>{ if(MOBCOLS[idx]!==view) setView(MOBCOLS[idx]); }; d.appendChild(s); });
+  document.body.appendChild(d);
 }
-function _updateMobArrows(){ _initMobArrows(); const p=document.getElementById('mobPrev'),n=document.getElementById('mobNext'); if(!p||!n)return;
+function _updateMobArrows(){ _initMobArrows(); const d=document.getElementById('mobDots'); if(!d)return;
   const show=(typeof isMobile==='function'&&isMobile())&&MOBCOLS.includes(view); const i=MOBCOLS.indexOf(view);
-  p.classList.toggle('hidden', !show||i<=0); n.classList.toggle('hidden', !show||i>=MOBCOLS.length-1);
+  d.classList.toggle('hidden', !show);
+  [...d.children].forEach((s,idx)=>s.classList.toggle('on', idx===i));
 }
 _initMobArrows();
+// horizontale swipe → volgende/vorige kolom (alleen mobiel, alleen op de planning-kolommen)
+(function(){ let sx=0,sy=0,st=0,ok=false;
+  document.addEventListener('touchstart',e=>{
+    if(!(typeof isMobile==='function'&&isMobile())||!MOBCOLS.includes(view)||e.touches.length!==1){ok=false;return;}
+    if(e.target.closest&&e.target.closest('.welcome-overlay,#chatDock,.modal,.sheet,.fm-prev,.filepreview,input,textarea,select')){ok=false;return;}
+    const t=e.touches[0]; sx=t.clientX; sy=t.clientY; st=Date.now(); ok=true;
+  },{passive:true});
+  document.addEventListener('touchend',e=>{
+    if(!ok)return; ok=false; const t=e.changedTouches&&e.changedTouches[0]; if(!t)return;
+    const dx=t.clientX-sx, dy=t.clientY-sy;
+    if(Date.now()-st<600 && Math.abs(dx)>60 && Math.abs(dx)>Math.abs(dy)*1.7) mobColShift(dx<0?1:-1);
+  },{passive:true});
+})();
 function toggleNav(e){if(e)e.stopPropagation();const n=document.getElementById('nav');n.classList.toggle('open');if(n.classList.contains('open'))composeMode(true);}
 document.addEventListener('click',e=>{const nav=document.getElementById('nav');if(nav&&nav.classList.contains('open')&&!nav.contains(e.target)&&e.target.id!=='hbtn')nav.classList.remove('open');});
 function setWho(){who=document.getElementById('who').value;document.getElementById('userAv').textContent=who[0];}
@@ -3254,13 +3269,11 @@ async function renderFinancien(){
         ${om!=null?`<div class="pb-finline finB-openrow ${openCls}"><span>${openLbl}</span><b>${openVal}</b></div>`:'<div class="finB-openhint">Vul een projectprijs in om facturatie te volgen.</div>'}
         <div class="finB-docs">${_intakeDocsFor(_pbPid).map(_intakeDocRow).join('')}${(_filesFor('project',_pbPid)||[]).map(_fileRow).join('')}<div class="finB-doclinks"><button class="finB-doctext" onclick="dropboxPick('project','${_pbPid}')">+ offerte toevoegen</button><button class="finB-doctext" onclick="dropboxPick('project','${_pbPid}')">+ factuur toevoegen</button></div></div>
       </div>
-      <div class="pb-sec"><div class="pb-h">Prijs &amp; budget</div>
+      <div class="pb-sec"><div class="pb-h">Prijs</div>
         <div class="finB-prow"><span class="finB-plabel">Projectprijs</span><span class="finB-pval">€<input class="finB-priceinput" type="text" inputmode="decimal" value="${om!=null?String(om).replace('.',','):''}" placeholder="—" onchange="pbSetProjectprijs(this.value)"></span></div>
         ${omIncl!=null?`<div class="finB-psub">incl. €${fmtEur(omIncl)}</div>`:''}
-        <div class="finB-prow"><span class="finB-plabel">Klantbudget</span><span class="finB-pval">€<input class="finB-priceinput" type="text" inputmode="decimal" value="${budget!=null?String(budget).replace('.',','):''}" placeholder="—" onchange="pbSetBudget(this.value)"></span></div>
-        ${budPct!=null?`<div class="finB-psub ${budPct>100?'over':''}">${budPct}% van budget benut</div>${budPct>0?`<div class="finB-budbar"><div class="finB-budfill ${budPct>100?'over':''}" style="width:${Math.min(100,budPct)}%"></div></div>`:''}`:''}
       </div>
-      <div class="pb-sec finB-scansec"><div class="finB-scan" id="finBScan"><button class="finB-scanbtn" onclick="pbScanBudget(this)">${_tIc(_TABCHAN.asterisk,15,1.7)}<span>Budget uit bronnen halen</span></button></div></div>
+      <div class="pb-sec finB-scansec"><div class="finB-scan" id="finBScan"><button class="finB-scanbtn" onclick="pbScanBudget(this)">${_tIc(_TABCHAN.asterisk,15,1.7)}<span>Prijs uit bronnen halen</span></button></div></div>
     </div>`;
     return;
   }
