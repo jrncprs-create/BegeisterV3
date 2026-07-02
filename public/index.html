@@ -1503,7 +1503,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v127</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v128</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -1640,10 +1640,7 @@
       #finMidWrap .finB-openrow.todo b{color:#c9c9cf}
       #finMidWrap .finB-openhint{font-size:12px;color:var(--mut2)}
       #finMidWrap .finA-cf{display:flex;gap:12px}
-      #finMidWrap .finA-cfcard{flex:1;background:#141417;border:1px solid var(--line);border-radius:12px;padding:13px 15px;border-left:3px solid var(--line)}
-      #finMidWrap .finA-cfcard.todo{border-left-color:#7d8590}
-      #finMidWrap .finA-cfcard.open{border-left-color:#d8a64a}
-      #finMidWrap .finA-cfcard.paid{border-left-color:#d7dadd}
+      #finMidWrap .finA-cfcard{flex:1;background:#141417;border:1px solid var(--line);border-radius:14px;padding:16px 18px}
       #finMidWrap .finA-cflbl{font-size:11.5px;color:var(--mut2);margin-bottom:6px}
       #finMidWrap .finA-cfval{font-size:21px;font-weight:600;color:#e8e8ea;font-variant-numeric:tabular-nums}
       #finMidWrap .finA-crow{display:flex;align-items:center;gap:9px;padding:6px 4px;border-radius:7px;cursor:pointer}
@@ -1685,6 +1682,17 @@
       .pb-row.pb-ink .pb-move{flex:0 0 auto;background:transparent;border:none;color:var(--mut2);cursor:pointer;padding:3px;border-radius:6px;display:flex;opacity:0;transition:opacity .15s,color .15s,background .15s}
       .pb-row.pb-ink:hover .pb-move{opacity:.6}
       .pb-row.pb-ink .pb-move:hover{opacity:1;color:var(--txt);background:rgba(255,255,255,.08)}
+      /* Financiën kolom 3: vinkjes zoals het Klanten-bord (outline in klantkleur, geen witte knop) */
+      #finRightWrap .pb-chk{background:transparent;border:none;padding:0;cursor:pointer;color:var(--scol);flex:0 0 auto;margin-top:1px;display:inline-flex;line-height:0;opacity:.9}
+      #finRightWrap .pb-donerow .pb-chk{color:var(--mut2)}
+      /* Thumbnail alleen bij hover */
+      .pb-row.pb-ink .pb-thumb{display:none}
+      .pb-row.pb-ink:hover .pb-thumb{display:block}
+      /* Prijzen + euro's netjes rechts */
+      .pb-price{text-align:right}
+      .pb-pricewrap{justify-content:flex-end}
+      /* Concept/intern-status in de Financiën-lijst */
+      #financienWrap .fin-status{font-size:12px;color:var(--mut2);flex:0 0 auto;white-space:nowrap;font-style:italic;opacity:.8}
       /* Verplaats-picker */
       #pmvOverlay .pmv-modal{width:100%;max-width:420px;background:#161619;border:1px solid var(--line);border-radius:16px;padding:18px 18px 14px;position:relative;max-height:74vh;display:flex;flex-direction:column}
       #pmvOverlay .pmv-h{font-size:15px;font-weight:600;color:var(--txt);margin:0 30px 14px 2px}
@@ -2945,7 +2953,7 @@ async function pbScanBudget(btn){
 async function pbTakeSuggest(field,val){ if(field==='projectprijs'){ await pbSetProjectprijs(String(val)); } else { await pbSetBudget(String(val)); } try{ renderFinancien(); }catch(_){} }
 async function pbCycleStatus(id){ const order=['te bestellen','besteld']; const x=_pbItems.find(i=>i.id===id); if(!x)return; const cur=(x.status==='binnen')?'besteld':(x.status||'te bestellen'); const ns=order[(order.indexOf(cur)+1)%order.length]; x.status=ns; try{ await sb.from('project_board').update({status:ns}).eq('id',id); }catch(_){} _finInk=null; _renderProjBoard(); }
 // ===== Financiën-railkolom: per project omzet − inkoop = marge, klik → projectbord =====
-let _finInk=null, _finUp=null, _finRows=null;
+let _finInk=null, _finUp=null, _finRows=null, _finOpenInk={};
 function _finShortDate(iso){ if(!iso)return ''; const d=new Date(iso); if(isNaN(d))return ''; return d.getDate()+' '+['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'][d.getMonth()]; }
 // Euro-icoon (Tabler currency-euro via _tIc) voor "nog geen financiën — voeg toe"
 const _euroIc=_tIc('<path d="M17.2 7a6 7 0 1 0 0 10"/><path d="M13 10h-8m0 4h8"/>',17,1.6);
@@ -2954,13 +2962,17 @@ function toggleFinClient(c){ if(_kClientOpen.has(c))_kClientOpen.delete(c); else
 // Projectgerichte marge-donut: gevuld deel = kosten t.o.v. omzet, midden = marge. Rood bij negatieve marge.
 function _finDonut(om,inkEx,col){
   const r=52, C=2*Math.PI*r, marge=om-inkEx;
-  const frac= om>0 ? Math.min(inkEx/om,1) : (inkEx>0?1:0);
-  const dash=+(C*frac).toFixed(2), arcCol=marge<0?'#e0726f':col;
+  // Ring = behouden marge-aandeel: vol bij 0 kosten, leegt naarmate er kosten zijn. Verlies = volle rode ring.
+  let frac, neg=false;
+  if(om>0){ if(marge<0){neg=true;frac=1;} else {frac=Math.max(0,Math.min(marge/om,1));} }
+  else if(inkEx>0){ neg=true; frac=1; }
+  else { frac=0; }
+  const arcCol=neg?'#e0726f':col; const dash=+(C*frac).toFixed(2); const cap=frac>0.001?'round':'butt';
   return `<svg viewBox="0 0 140 140" width="146" height="146" class="fd-ring" aria-hidden="true">
     <circle cx="70" cy="70" r="${r}" fill="none" stroke="rgba(255,255,255,.10)" stroke-width="13"/>
-    <circle cx="70" cy="70" r="${r}" fill="none" stroke="${arcCol}" stroke-width="13" stroke-linecap="round" stroke-dasharray="${dash} ${(C-dash).toFixed(2)}" transform="rotate(-90 70 70)"/>
+    ${frac>0.001?`<circle cx="70" cy="70" r="${r}" fill="none" stroke="${arcCol}" stroke-width="13" stroke-linecap="${cap}" stroke-dasharray="${dash} ${(C-dash).toFixed(2)}" transform="rotate(-90 70 70)"/>`:''}
     <text x="70" y="66" text-anchor="middle" class="fd-ringnum ${marge<0?'neg':'pos'}">€${fmtEur(marge)}</text>
-    <text x="70" y="86" text-anchor="middle" class="fd-ringlbl">marge</text>
+    <text x="70" y="86" text-anchor="middle" class="fd-ringlbl">winst</text>
   </svg>`;
 }
 async function renderFinancien(){
@@ -2968,10 +2980,12 @@ async function renderFinancien(){
   if(_finInk===null){
     try{
       const r=await sb.from('project_board').select('id,project_id,text,price,qty,status,done,created_at').eq('kind','inkoop');
-      _finInk={}; _finUp=[]; _finRows=[];
-      (r&&r.data||[]).forEach(x=>{ const k=String(x.project_id); const price=(x.price!=null&&x.price!=='')?Number(x.price):0; const qty=x.qty||1; const amt=price*qty; _finInk[k]=(_finInk[k]||0)+amt;
-        _finRows.push({id:x.id,project_id:x.project_id,text:x.text||'Artikel',amount:amt,done:!!x.done,status:x.status,created_at:x.created_at});
-        if(!x.done && (x.status==null||x.status==='te bestellen') && amt>0) _finUp.push({id:x.id,project_id:k,text:x.text||'Artikel',amount:amt}); });
+      _finInk={}; _finUp=[]; _finRows=[]; _finOpenInk={};
+      // Kosten tellen PAS mee als een artikel betaald is (afgevinkt). Niet-afgevinkte artikelen
+      // staan als "nog in te kopen" apart en drukken nog niet op de marge.
+      (r&&r.data||[]).forEach(x=>{ const k=String(x.project_id); const price=(x.price!=null&&x.price!=='')?Number(x.price):0; const qty=x.qty||1; const amt=price*qty;
+        if(x.done){ _finInk[k]=(_finInk[k]||0)+amt; if(amt>0)_finRows.push({id:x.id,project_id:x.project_id,text:x.text||'Artikel',amount:amt,created_at:x.created_at}); }
+        else if(amt>0){ _finOpenInk[k]=(_finOpenInk[k]||0)+amt; _finUp.push({id:x.id,project_id:k,text:x.text||'Artikel',amount:amt}); } });
     }catch(_){ _finInk={}; _finUp=[]; _finRows=[]; }
   }
   const esc=s=>String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
@@ -2982,27 +2996,39 @@ async function renderFinancien(){
   const _srcByProj={}; (state.sources||[]).forEach(s=>{ if(s.proj){ const t=s.ts?new Date(s.ts).getTime():0; if(t>(_srcByProj[s.proj]||0))_srcByProj[s.proj]=t; } });
   const _act=c=>{ let m=0; (byClient[c]||[]).forEach(p=>{ if((p.created||0)>m)m=p.created; (p.items||[]).forEach(it=>{ if((it.created||0)>m)m=it.created; }); if(_srcByProj[p.id]>m)m=_srcByProj[p.id]; }); return m; };
   order.sort((a,b)=>_act(b)-_act(a));
-  let tOm=0,tInEx=0,nPrice=0,sumPct=0,cfTeFact=0,cfOpen=0,cfOntv=0; const projStats=[]; const clientStats=[];
+  let tOm=0,tInEx=0,nPrice=0,sumPct=0,cfTeFact=0,cfOpen=0,cfOntv=0,overhead=0; const projStats=[]; const clientStats=[];
   const groups=order.map(client=>{
-    const arr=byClient[client]; const ccol=(arr[0]&&arr[0].color)||'#888';
+    const arr=byClient[client]; const ccol=(arr[0]&&arr[0].color)||'#888'; const isBeg=(client==='Begeister');
     const open=_kClientOpen.has(client); const cActive=((_pbTarget==='finmid'||_pbTarget==='finright')&&_pbPid&&arr.some(p=>p.id===_pbPid)); const editingC=(_kEdit==='c:'+client); let cOm=0,cInEx=0;
     const rows=arr.map((p,idx)=>{
       const col=p.color||ccol; const btw=(p.btw!=null&&p.btw!=='')?Number(p.btw):21;
       const om=(p.projectprijs!=null&&p.projectprijs!=='')?Number(p.projectprijs):null;
-      const ink=_finInk[String(p.id)]||0; const inkEx=ink/(1+btw/100);
-      const marge=om!=null?(om-inkEx):null; cOm+=om||0; cInEx+=inkEx; tOm+=om||0; tInEx+=inkEx;
-      if(om!=null&&om>0){ nPrice++; sumPct+=((om-inkEx)/om)*100; }
-      projStats.push({id:p.id,name:p.project||'—',color:col,om:om||0,inkEx,marge:(marge!=null?marge:-inkEx)});
-      const omIncl=om!=null?om*(1+btw/100):0; const pst=p.invoice_status||'concept';
-      if(pst==='betaald')cfOntv+=omIncl; else if(pst==='gefactureerd')cfOpen+=omIncl; else if(om!=null&&om>0)cfTeFact+=omIncl;
+      const ink=_finInk[String(p.id)]||0; const inkEx=ink/(1+btw/100);            // alleen betaalde kosten
+      const openInk=_finOpenInk[String(p.id)]||0;
+      const pbudget=(p.budget!=null&&p.budget!=='')?Number(p.budget):null;
+      const pst=p.invoice_status||'concept';
+      const certain=(pst==='geoffreerd'||pst==='gefactureerd'||pst==='betaald');  // omzet pas zeker vanaf geoffreerd
+      const omC=(certain&&om!=null)?om:null;
+      const margeC=(omC!=null)?(omC-inkEx):null;
+      const omIncl=om!=null?om*(1+btw/100):0;
+      if(isBeg){ overhead+=inkEx; }                                               // Begeister = intern/overhead
+      else {
+        cInEx+=inkEx; tInEx+=inkEx;
+        if(omC!=null){ cOm+=omC; tOm+=omC; nPrice++; sumPct+=(margeC/omC)*100; }
+        if(pst==='betaald')cfOntv+=omIncl; else if(pst==='gefactureerd')cfOpen+=omIncl; else if(pst==='geoffreerd')cfTeFact+=omIncl;
+        projStats.push({id:p.id,name:p.project||'—',color:col,om:omC||0,inkEx,marge:(margeC!=null?margeC:-inkEx)});
+      }
+      const hasFin=(om!=null&&om!==0)||inkEx>0||openInk>0||pbudget!=null;
+      if(!hasFin) return '';                                                      // lege projecten niet tonen in Financiën
       const psel=(_pbPid===p.id&&(_pbTarget==='finmid'||_pbTarget==='finright'))?' on':''; const last=idx===arr.length-1; const editingP=(_kEdit===p.id);
       const pname=editingP
         ? `<input class="ksub kedit-input" value="${escapeHtml(p.project||'')}" onblur="kProjSave('${p.id}',this.value)" onkeydown="if(event.key==='Enter')this.blur();else if(event.key==='Escape')kEditCancel()" />`
         : `<button class="ksub-btn" onclick="event.stopPropagation();selectFinProj('${p.id}')" title="Open inkoop">${escapeHtml(p.project||'Project / event')}</button>`;
-      const pHasFin=(om!=null&&om!==0)||inkEx>0;
-      const pValCell=pHasFin
-        ? `<span class="fin-marge ${marge!=null&&marge<0?'neg':''}">${marge!=null?'€'+fmtEur(marge):'—'}</span>`
-        : `<button class="kicon fin-money" onclick="event.stopPropagation();selectFinProj('${p.id}')" title="Financiën toevoegen">${_euroIc}</button>`;
+      const pValCell = isBeg
+        ? `<span class="fin-status" title="Intern / overhead">${inkEx>0?'-€'+fmtEur(inkEx):'intern'}</span>`
+        : (certain
+          ? `<span class="fin-marge ${margeC!=null&&margeC<0?'neg':''}">${margeC!=null?'€'+fmtEur(margeC):'—'}</span>`
+          : `<span class="fin-status" title="Omzet telt mee zodra geoffreerd">${escapeHtml(pst)}</span>`);
       return `<div class="kprojblock${last?' last':''}"><div class="kli kproj${psel}" onclick="selectFinProj('${p.id}')">
         <button class="kdot" style="background:${col}" onclick="event.stopPropagation();openColorPicker(event,'proj','${p.id}')" title="Kleur"></button>
         ${pname}
@@ -3012,11 +3038,14 @@ async function renderFinancien(){
         <button class="kicon" onclick="event.stopPropagation();deleteProject('${p.id}')" title="Verwijderen"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/></svg></button>
       </div></div>`;
     }).join('');
-    const cMarge=cOm-cInEx; if(cOm>0||cInEx>0)clientStats.push({client,color:ccol,marge:cMarge,om:cOm,inEx:cInEx,pid:(arr[0]&&arr[0].id)}); const ic=escapeHtml(((client||'?').toString().trim()[0]||'?').toUpperCase());
+    if(!rows.trim() && !isBeg) return '';   // klant zonder financiën niet tonen
+    const cMarge=cOm-cInEx; if(!isBeg && (cOm>0||cInEx>0))clientStats.push({client,color:ccol,marge:cMarge,om:cOm,inEx:cInEx,pid:(arr[0]&&arr[0].id)}); const ic=escapeHtml(((client||'?').toString().trim()[0]||'?').toUpperCase());
     const cHasFin=cOm>0||cInEx>0;
-    const cValCell=cHasFin
-      ? `<span class="fin-marge ${cMarge<0?'neg':''}">€${fmtEur(cMarge)}</span>`
-      : `<button class="kicon fin-money" onclick="event.stopPropagation();selectFinProj('${arr[0].id}')" title="Financiën toevoegen">${_euroIc}</button>`;
+    const cValCell = isBeg
+      ? `<span class="fin-status" title="Intern / overhead">${cInEx>0?'-€'+fmtEur(cInEx):'intern'}</span>`
+      : (cHasFin
+        ? `<span class="fin-marge ${cMarge<0?'neg':''}">€${fmtEur(cMarge)}</span>`
+        : `<span class="fin-status" title="Nog geen geoffreerde omzet">concept</span>`);
     const nameEl=editingC
       ? `<input class="kname kedit-input" value="${escapeHtml(client)}" onblur="kClientSave('${esc(client)}',this.value)" onkeydown="if(event.key==='Enter')this.blur();else if(event.key==='Escape')kEditCancel()" />`
       : `<button class="kname-btn" onclick="event.stopPropagation();toggleFinClient('${esc(client)}')" title="Projecten in-/uitklappen">${escapeHtml(client||'—')}</button>`;
@@ -3064,13 +3093,14 @@ async function renderFinancien(){
     if(fmw) fmw.innerHTML=`<div class="pb-inline pb-board-inline finB-flat" style="--scol:${col};--ccol:${col}">
       <div class="pb-head"><span class="kbadge" style="background:${col}">${ic}</span><div class="pb-title"><b>${escapeHtml(p.client||'')}</b>${p.project?`<span> · ${escapeHtml(p.project)}</span>`:''}</div>${healthChip}</div>
       <div class="pb-sec finB-ovsec"><div class="finB-ov">${_finDonut(om!=null?om:0,inkEx,col)}<div class="finB-ovstats">
-        <div class="pb-finline"><span>Omzet (excl.)</span><b>${om!=null?'€'+fmtEur(om):'—'}</b></div>
+        <div class="pb-finline"><span>Inkomsten (excl.)</span><b>${om!=null?'€'+fmtEur(om):'—'}</b></div>
         <div class="pb-finline"><span>Kosten (excl.)</span><b>€${fmtEur(inkEx)}</b></div>
-        <div class="pb-finline marge ${marge!=null&&marge<0?'neg':''}"><span>Marge</span><b>${marge!=null?'€'+fmtEur(marge):'—'}</b></div>
+        <div class="pb-finline marge ${marge!=null&&marge<0?'neg':''}"><span>Winst</span><b>${marge!=null?'€'+fmtEur(marge):'—'}</b></div>
       </div></div></div>
-      <div class="pb-sec"><div class="pb-h">Facturatie</div>
+      <div class="pb-sec"><div class="pb-h">Offerte &amp; Factuur</div>
         <div class="finB-pills">${pills}</div>
         ${om!=null?`<div class="pb-finline finB-openrow ${openCls}"><span>${openLbl}</span><b>${openVal}</b></div>`:'<div class="finB-openhint">Vul een projectprijs in om facturatie te volgen.</div>'}
+        <div class="finB-docs">${(_filesFor('project',_pbPid)||[]).map(_fileRow).join('')}<button class="finB-doclink" onclick="dropboxPick('project','${_pbPid}')" title="Offerte of factuur (doc) koppelen">${_tIc('<path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/><path d="M12 11v6M9 14h6"/>',15,1.5)}<span>Offerte / factuur koppelen</span></button></div>
       </div>
       <div class="pb-sec"><div class="pb-h">Projectprijs</div>
         <div class="pb-prijsrow">€ <input class="pb-bud" type="text" inputmode="decimal" value="${om!=null?String(om).replace('.',','):''}" placeholder="—" onchange="pbSetProjectprijs(this.value)"> <span class="finB-sub">excl. btw${omIncl!=null?' · incl. €'+fmtEur(omIncl):''}</span></div>
@@ -3114,12 +3144,12 @@ async function renderFinancien(){
   const upRows=up.slice(0,7).map(x=>`<div class="finA-brow" onclick="selectFinProj('${x.project_id}')"><span class="finA-bdot" style="background:${pjColor(x.project_id)}"></span><span class="finA-btext">${escapeHtml(pjName(x.project_id)||'—')} · ${escapeHtml(_shortName(x.text))}</span><span class="finA-bamt">€${fmtEur(x.amount)}</span></div>`).join('');
   if(fmw) fmw.innerHTML=`<div class="finA">
     <div class="finA-top">
-      <div class="finA-hero"><div class="finA-herolbl">Begeister · totaal</div><div class="finA-herobig">€${fmtEur(tOm)}</div><div class="finA-herosub">omzet · marge <b class="${tMarge<0?'neg':'pos'}">€${fmtEur(tMarge)}</b> · uitgegeven €${fmtEur(tInEx)}</div></div>
+      <div class="finA-hero"><div class="finA-herolbl">Begeister · totaal</div><div class="finA-herobig">€${fmtEur(tOm)}</div><div class="finA-herosub">geoffreerde inkomsten · winst <b class="${tMarge<0?'neg':'pos'}">€${fmtEur(tMarge)}</b> · betaald €${fmtEur(tInEx)}${overhead>0?` · intern €${fmtEur(overhead)}`:''}</div></div>
       <div class="fd-block finA-chart"><div class="fd-h">Uitgaven per maand</div><div class="finA-bars">${bars}</div></div>
     </div>
     ${cfHtml}
     <div class="finA-blocks">
-      <div class="fd-block"><div class="fd-h">Marge per klant</div>${csRows||'<div class="fd-empty">Nog geen omzet of kosten.</div>'}</div>
+      <div class="fd-block"><div class="fd-h">Winst per klant</div>${csRows||'<div class="fd-empty">Nog geen inkomsten of kosten.</div>'}</div>
       <div class="fd-block"><div class="fd-h">Nog in te kopen${up.length?` · <b class="finA-uptot">€${fmtEur(upTot)}</b>`:''}</div>${upRows||'<div class="fd-empty">Niets openstaand om te bestellen.</div>'}</div>
     </div>
     <div class="finA-blocks">
