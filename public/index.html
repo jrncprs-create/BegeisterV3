@@ -947,6 +947,30 @@
   .fv-nav{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.08);border:none;color:#fff;width:44px;height:44px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2}
   .fv-nav:hover{background:rgba(255,255,255,.18)}
   .fv-prev{left:18px}.fv-next{right:18px}
+  .fv-ai{border-color:rgba(255,255,255,.42);color:#fff}
+  .fv-ai:hover{background:rgba(255,255,255,.08)}
+  .fv-main{flex:1;display:flex;min-height:0}
+  .fv-stagewrap{flex:1;min-width:0;position:relative;display:flex;align-items:center;justify-content:center}
+  .fv-results{width:0;flex:0 0 auto;overflow-y:auto;transition:width .5s cubic-bezier(.4,0,.2,1);background:#0f0f10;scrollbar-width:none}
+  .fv-results::-webkit-scrollbar{display:none}
+  .fv.fv-split .fv-results{width:min(42%,540px);padding:24px 26px;border-right:1px solid var(--line)}
+  .fvai-load{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;height:100%;min-height:220px;text-align:center;padding:20px}
+  .fvai-load .think-anim{width:42px;height:42px}
+  .fvai-status{font-size:13.5px;color:var(--mut)}
+  .fvai-h{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut2);margin:20px 0 10px;font-weight:600}
+  .fvai-h:first-child{margin-top:0}
+  .fvai-sum p{font-size:14px;line-height:1.6;color:var(--txt);margin:0 0 10px}
+  .fvai-sum a{color:#7db0e6;text-decoration:none}
+  .fvai-task{font-size:13.5px;color:var(--txt);padding:9px 0;border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:flex-start}
+  .fvai-task .fvai-tchk{flex:0 0 auto;width:18px;height:18px;border:1.5px solid var(--mut2);border-radius:6px;margin-top:1px}
+  .fvai-task .fvai-tadd{margin-left:auto;flex:0 0 auto;background:transparent;border:1px solid var(--line);color:var(--mut);border-radius:20px;font-size:11.5px;padding:3px 9px;cursor:pointer}
+  .fvai-task .fvai-tadd:hover{color:#fff;border-color:var(--mut2)}
+  .fvai-fin{margin-top:6px;background:#141417;border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .fvai-finrow{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;color:var(--mut);padding:5px 0}
+  .fvai-finrow b{color:var(--txt);font-weight:600;font-variant-numeric:tabular-nums}
+  .fvai-finrow.winst{border-top:1px solid var(--line);margin-top:5px;padding-top:9px;color:var(--txt)}
+  .fvai-err{color:var(--mut);font-size:13.5px;padding:24px;text-align:center}
+  .fvai-err .fv-btn{margin-top:12px}
 
   /* MODAL */
   .overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:20px;z-index:1000;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .35s ease,visibility 0s linear .55s}
@@ -975,8 +999,10 @@
   .modal .ownerpick .ownerpick-lbl{font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:var(--mut2)}
   .modal .ownerpick .op-opt{display:inline-flex;align-items:center;gap:10px;font-size:14px;color:var(--txt);cursor:pointer}
   .modal .ownerpick .op-opt input{position:absolute;opacity:0;pointer-events:none;width:0;height:0}
-  .modal .ownerpick .op-box{width:20px;height:20px;border-radius:6px;border:1.5px solid var(--mut2);display:inline-flex;align-items:center;justify-content:center;color:transparent;background:transparent;flex:0 0 auto;transition:border-color .12s,color .12s}
-  .modal .ownerpick .op-opt input:checked ~ .op-box{color:var(--txt);border-color:var(--txt)}
+  .modal .ownerpick .op-box{width:20px;height:20px;border-radius:6px;border:1.5px solid var(--mut2);display:inline-flex;align-items:center;justify-content:center;color:var(--txt);background:transparent;flex:0 0 auto;transition:border-color .12s}
+  .modal .ownerpick .op-box svg{opacity:0;transition:opacity .12s}
+  .modal .ownerpick .op-opt input:checked ~ .op-box{border-color:var(--txt)}
+  .modal .ownerpick .op-opt input:checked ~ .op-box svg{opacity:1}
   .modal .ownerpick .op-opt:hover .op-box{border-color:var(--txt)}
   .modal ::placeholder{color:var(--mut2);opacity:1}
   .modal textarea{min-height:80px;resize:vertical;line-height:1.45}
@@ -1179,12 +1205,17 @@
     .fv-bar{position:relative;flex-wrap:wrap;gap:8px;row-gap:8px;padding:11px 52px 11px 14px}
     .fv-name{flex:1 1 auto}
     .fv-count{flex:0 0 auto}
-    .fv-x{position:absolute;top:9px;right:10px;width:34px;height:34px;border:1px solid var(--line);border-radius:9px;align-items:center;justify-content:center;color:var(--txt);background:rgba(255,255,255,.04)}
+    .fv-x{position:absolute;top:8px;right:10px;width:40px;height:40px;border:1px solid var(--line);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;background:rgba(255,255,255,.08);z-index:5}
     .fv-actions{flex:1 1 100%;gap:8px}
     .fv-actions .fv-btn{flex:1}
-    .fv-stage{padding:14px;align-items:center}
-    .fv-stage .fv-img{max-width:100%;max-height:46vh}
-    .fv-stage .fv-frame{width:100%;height:46vh;flex:0 0 auto}
+    .fv-main{min-height:0;flex:1}
+    .fv-stagewrap{min-height:0}
+    .fv-stage{padding:12px;align-items:center;overflow:auto}
+    .fv-stage .fv-img{max-width:100%;max-height:100%;object-fit:contain}
+    .fv-stage .fv-frame{width:100%;height:100%;flex:1 1 auto}
+    /* AI-lezen op mobiel: resultaten boven, preview eronder (verticaal gestapeld) */
+    .fv.fv-split .fv-main{flex-direction:column}
+    .fv.fv-split .fv-results{width:100%!important;max-width:none!important;max-height:52%;border-right:none;border-bottom:1px solid var(--line)}
     .pvw-frame{width:92vw;height:58vh}
     .pvw-img{max-width:92vw;max-height:58vh}
     .pvw-x{width:40px;height:40px;top:calc(env(safe-area-inset-top,0px) + 10px);right:12px}
@@ -1542,7 +1573,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v137</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v138</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -2176,14 +2207,20 @@
     <span class="fv-name" id="fv_name"></span>
     <span class="fv-count" id="fv_count"></span>
     <div class="fv-actions">
+      <button class="fv-btn fv-ai" onclick="fvAiRead()" title="Laat AI dit document lezen">✦ Laat AI lezen</button>
       <button class="fv-btn" onclick="fvOpenOriginal()" title="Download in standaardprogramma">Download origineel</button>
       <button class="fv-btn" onclick="fvOpenDropbox()" title="Open in Dropbox">Open in Dropbox</button>
       <button class="fv-x" onclick="closeFileViewer()" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </div>
   </div>
-  <button class="fv-nav fv-prev" onclick="fvNav(-1)" aria-label="Vorige"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6l6 6"/></svg></button>
-  <div class="fv-stage" id="fv_stage"></div>
-  <button class="fv-nav fv-next" onclick="fvNav(1)" aria-label="Volgende"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6l-6 6"/></svg></button>
+  <div class="fv-main">
+    <div class="fv-results" id="fv_results"></div>
+    <div class="fv-stagewrap">
+      <button class="fv-nav fv-prev" onclick="fvNav(-1)" aria-label="Vorige"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6l6 6"/></svg></button>
+      <div class="fv-stage" id="fv_stage"></div>
+      <button class="fv-nav fv-next" onclick="fvNav(1)" aria-label="Volgende"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6l-6 6"/></svg></button>
+    </div>
+  </div>
 </div>
 
 <div id="duepop" class="duepop"></div>
@@ -4140,10 +4177,51 @@ function openFileViewer(fid){
   _fvIdx=Math.max(0,_fvList.findIndex(x=>x.id===fid));
   const ov=document.getElementById('fileViewer'); if(!ov)return; ov.classList.add('open'); fvRender();
 }
-function closeFileViewer(){ const ov=document.getElementById('fileViewer'); if(ov)ov.classList.remove('open'); const st=document.getElementById('fv_stage'); if(st)st.innerHTML=''; }
-function fvNav(d){ if(_fvList.length<2)return; _fvIdx=(_fvIdx+d+_fvList.length)%_fvList.length; fvRender(); }
+function closeFileViewer(){ _fvAiReset(); const ov=document.getElementById('fileViewer'); if(ov)ov.classList.remove('open'); const st=document.getElementById('fv_stage'); if(st)st.innerHTML=''; }
+function fvNav(d){ if(_fvList.length<2)return; _fvAiReset(); _fvIdx=(_fvIdx+d+_fvList.length)%_fvList.length; fvRender(); }
 function fvOpenOriginal(){ const f=_fvList[_fvIdx]; if(f)window.open(_fvDl(f.link),'_blank','noopener'); }
 function fvOpenDropbox(){ const f=_fvList[_fvIdx]; if(f)window.open(f.link,'_blank','noopener'); }
+// ✦ Laat AI lezen: analyseert het bestand, toont links de resultaten terwijl de preview soepel krimpt.
+let _fvAiTimer=null,_fvAiBullets=[];
+function _fvAiReset(){ if(_fvAiTimer){clearInterval(_fvAiTimer);_fvAiTimer=null;} const fv=document.getElementById('fileViewer'); if(fv)fv.classList.remove('fv-split'); const b=document.getElementById('fv_results'); if(b)b.innerHTML=''; }
+async function fvAiRead(){
+  const f=_fvList[_fvIdx]; if(!f)return;
+  const fv=document.getElementById('fileViewer'), box=document.getElementById('fv_results'); if(!fv||!box)return;
+  if(fv.classList.contains('fv-split')){ _fvAiReset(); return; }
+  fv.classList.add('fv-split');
+  const steps=['Bestand ophalen…','Document lezen…','Kernpunten samenvatten…','Actiepunten zoeken…','Bijna klaar…']; let si=0;
+  box.innerHTML=`<div class="fvai-load"><img class="think-anim" src="/thinking.webp" alt=""><div class="fvai-status" id="fvaiStatus">${steps[0]}</div></div>`;
+  const stx=document.getElementById('fvaiStatus');
+  _fvAiTimer=setInterval(()=>{ si=(si+1)%steps.length; if(stx)stx.textContent=steps[si]; },1600);
+  try{
+    let summary=(f.summary&&String(f.summary).trim())?f.summary:'';
+    if(!summary){
+      if(typeof _isReadableForAI==='function' && !_isReadableForAI(f.name)) throw new Error('Dit bestandstype kan ik nog niet lezen.');
+      const r=await fetch('/api/readfile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({link:f.link,name:f.name})});
+      const d=await r.json();
+      if(d&&d.summary){ summary=d.summary; f.summary=d.summary; try{ await sb.from('files').update({summary:d.summary}).eq('id',f.id); }catch(_){} }
+      else throw new Error((d&&d.error)||'Kon niet lezen');
+    }
+    if(_fvAiTimer){clearInterval(_fvAiTimer);_fvAiTimer=null;}
+    box.innerHTML=_fvAiResultHTML(f,summary);
+    if(typeof loadUsage==='function')loadUsage();
+  }catch(e){ if(_fvAiTimer){clearInterval(_fvAiTimer);_fvAiTimer=null;} box.innerHTML=`<div class="fvai-err">Lezen lukte niet.<br><span style="opacity:.7;font-size:12px">${escapeHtml(String(e&&e.message||e))}</span><br><button class="fv-btn" onclick="fvAiRead()">Opnieuw proberen</button></div>`; }
+}
+function _fvAiResultHTML(f,summary){
+  const lines=String(summary).split('\n').map(l=>l.trim()).filter(Boolean);
+  const isB=l=>/^[-•*·]\s|^\d+[.)]\s/.test(l);
+  _fvAiBullets=lines.filter(isB).map(l=>l.replace(/^[-•*·]\s*/,'').replace(/^\d+[.)]\s*/,''));
+  const paras=lines.filter(l=>!isB(l));
+  let finHTML='';
+  try{ const p=(typeof _fileProject==='function')?_fileProject(f):null;
+    if(p){ const btw=(p.btw!=null&&p.btw!=='')?Number(p.btw):21; const om=(p.projectprijs!=null&&p.projectprijs!=='')?Number(p.projectprijs):null;
+      const ink=(typeof _finInk!=='undefined'&&_finInk&&_finInk[String(p.id)])||0; const inkEx=ink/(1+btw/100); const winst=om!=null?om-inkEx:null;
+      if(om!=null||ink>0){ finHTML=`<div class="fvai-h">Financiën · ${escapeHtml(p.project||p.client||'')}</div><div class="fvai-fin"><div class="fvai-finrow"><span>Inkomsten</span><b>${om!=null?'€'+fmtEur(om):'—'}</b></div><div class="fvai-finrow"><span>Kosten</span><b>€${fmtEur(inkEx)}</b></div><div class="fvai-finrow winst"><span>Winst</span><b>${winst!=null?'€'+fmtEur(winst):'—'}</b></div></div>`; }
+    }
+  }catch(_){}
+  return `<div class="fvai"><div class="fvai-h">Samenvatting</div><div class="fvai-sum">${paras.length?paras.map(p=>`<p>${autolink(escapeHtml(p),'#7db0e6')}</p>`).join(''):'<p style="color:var(--mut2)">Geen samenvatting.</p>'}</div>${_fvAiBullets.length?`<div class="fvai-h">Actiepunten</div><div class="fvai-tasks">${_fvAiBullets.map((b,i)=>`<div class="fvai-task"><span class="fvai-tchk"></span><span>${escapeHtml(b)}</span><button class="fvai-tadd" onclick="_fvAiAddTask(${i},this)">+ taak</button></div>`).join('')}</div>`:''}${finHTML}</div>`;
+}
+async function _fvAiAddTask(i,btn){ const t=_fvAiBullets[i]; if(!t)return; const f=_fvList[_fvIdx]; const p=(typeof _fileProject==='function')?_fileProject(f):null; try{ await sb.from('items').insert({title:t,status:'todo',project_id:p?p.id:null}); }catch(_){} if(btn){btn.textContent='✓ toegevoegd';btn.disabled=true;btn.style.opacity='.6';} }
 function fvRender(){
   const f=_fvList[_fvIdx]; if(!f)return;
   document.getElementById('fv_name').textContent=f.name||'bestand';
