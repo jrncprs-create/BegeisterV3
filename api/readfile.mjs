@@ -1,7 +1,7 @@
 // Leest een gekoppeld Dropbox-bestand (via de deel-link) en laat Claude het kort samenvatten.
 import Anthropic from "@anthropic-ai/sdk";
 import { svc, logUsage } from "../lib/usage.mjs";
-import { createMessage } from "../lib/airetry.mjs";
+import { createMessageStream } from "../lib/airetry.mjs";
 
 const KEY = (process.env.ANTHROPIC_API_KEY || "").trim();
 const anthropic = KEY ? new Anthropic({ apiKey: KEY }) : null;
@@ -50,7 +50,7 @@ export default async function handler(req, res) {
       return res.status(200).json({ error: "dit bestandstype (." + ext + ") kan ik nog niet lezen — pdf en tekstbestanden wel" });
     }
 
-    const resp = await createMessage(anthropic, {
+    const resp = await createMessageStream(anthropic, {
       model: MODEL, max_tokens: 700, system: SYS,
       messages: [{ role: "user", content }],
     });
