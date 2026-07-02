@@ -792,7 +792,7 @@
   #contactenWrap .con-cmain{flex:1;min-width:0}
   #contactenWrap .con-cnm{font-size:14px}
   #contactenWrap .con-ccnt{font-size:12px;color:var(--mut2);flex:0 0 auto}
-  .con-midhdr{display:flex;align-items:center;gap:10px;padding:18px 14px 13px;border-bottom:1px solid var(--line)}
+  .con-midhdr{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line)}
   .con-midhdr input{flex:1;background:transparent;border:0;color:var(--txt);font-size:14px;outline:none}
   #conMidWrap .con-li{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line);cursor:pointer}
   #conMidWrap .con-li:hover,#conMidWrap .con-li.on{background:rgba(255,255,255,.04)}
@@ -801,7 +801,7 @@
   #conMidWrap .con-li .crole{font-size:12px;color:var(--mut2);margin-top:1px}
   #conMidWrap .con-li .cquick{display:flex;gap:10px;color:var(--mut2);flex:0 0 auto}
   #conMidWrap .con-li .cquick a{color:var(--mut2)}
-  .con-detail{padding:18px 24px 28px;display:flex;flex-direction:column;align-items:center;text-align:center}
+  .con-detail{padding:4px 24px 28px;display:flex;flex-direction:column;align-items:center;text-align:center}
   .con-av{width:84px;height:84px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;color:#000;margin-bottom:14px}
   .con-av-gen{background:transparent;overflow:hidden;padding:0}
   .con-av-gen svg{display:block;width:100%;height:100%}
@@ -839,7 +839,7 @@
   #bronMidWrap .con-li .bron-del{flex:0 0 auto;background:transparent;border:none;color:var(--mut2);cursor:pointer;padding:2px;margin-top:1px;display:inline-flex;line-height:0;opacity:0;transition:opacity .15s,color .15s}
   #bronMidWrap .con-li:hover .bron-del{opacity:.6}
   #bronMidWrap .con-li .bron-del:hover{opacity:1;color:#e0726f}
-  #bronRightWrap{padding:18px 22px 30px}
+  #bronRightWrap{padding:0 22px 30px}
   #bronRightWrap .fmp-head{padding-top:0}
   #bronRightWrap .bron-prevtext{margin-top:6px}
   #bronRightWrap .bron-chat{display:flex;flex-direction:column;gap:12px;margin-top:10px;padding-bottom:8px}
@@ -1576,7 +1576,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v139</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v140</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -1668,7 +1668,10 @@
       #finRightWrap .fd-upamt{font-size:12.5px;color:var(--txt)}
       #finRightWrap .fd-empty{font-size:12px;color:var(--mut2)}
       .main.workspace #view-finmid.finfull{grid-column:1 / -1}
-      .main.workspace #view-finmid,.main.workspace #view-finright{padding:18px 22px 40px}
+      .main.workspace #view-finmid,.main.workspace #view-finright{padding:60px 22px 40px}
+    /* Bovenkant kolom 2/3 leeg laten; content start op de lijn van het eerste kader in kolom 1 */
+    #view-conmid,#view-conright,#view-bronmid,#view-bronright{padding-top:60px}
+    #view-beheerboard{padding-top:60px}
       #finRightWrap .pb-inline{padding-top:0}
       #finMidWrap .finB{padding:2px}
       #finMidWrap .finB-card{--ccol:#8b8b8b;background:#141417;border:1px solid var(--line);border-radius:16px;padding:16px 18px;display:flex;flex-direction:column;gap:14px}
@@ -2993,7 +2996,7 @@ function _renderProjBoard(){
   const _body=(_pbMode==='financien')?secBestel:(secWait+secTaken+secBestel+secDone+secAppt+secFiles+secPrijs+secNotes);
   const _head=`<div class="pb-head"><span class="kbadge" style="background:${col}">${esc(initial)}</span><div class="pb-title"><b>${esc(p.client||'')}</b>${p.project?'<span> · '+esc(p.project)+'</span>':''}${_pbMode==='financien'?'<span style="color:'+col+'"> · inkoop</span>':''}</div></div>`;
   if(_pbTarget==='finmid'||_pbTarget==='finright'){ const el=document.getElementById(_pbTarget==='finright'?'finRightWrap':'finMidWrap'); const _cls=(_pbTarget==='finright')?'pb-inline pb-board-inline':'pb-inline'; const _h=(_pbTarget==='finright')?'':_head; if(el)el.innerHTML=`<div class="${_cls}" style="--scol:${col}">${_h}${_body}</div>`; return; }
-  if(_pbTarget==='beheer'){ const el=document.getElementById('beheerBoardWrap'); if(el)el.innerHTML=`<div class="pb-inline pb-board-inline" style="--scol:${col}">${_head}<div class="pb-grid"><div class="pb-colL">${secWait}${secTaken}${secBestel}${secDone}</div><div class="pb-colR">${secAppt}${secFiles}${secPrijs}${secNotes}</div></div></div>`; return; }
+  if(_pbTarget==='beheer'){ const el=document.getElementById('beheerBoardWrap'); if(el)el.innerHTML=`<div class="pb-inline pb-board-inline" style="--scol:${col}"><div class="pb-grid"><div class="pb-colL">${secWait}${secTaken}${secBestel}${secDone}</div><div class="pb-colR">${secAppt}${secFiles}${secPrijs}${secNotes}</div></div></div>`; return; }
   if(!ov)return;
   ov.innerHTML=`<div class="modal pb-modal" style="--scol:${col};width:100%;max-width:none">
     <button class="modal-close" onclick="closeProjectBoard()" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
@@ -3241,7 +3244,6 @@ async function renderFinancien(){
       else { openLbl='Nog te factureren'; openVal=_E+fmtEur(omIncl); openCls='todo'; }
     }
     if(fmw) fmw.innerHTML=`<div class="pb-inline pb-board-inline finB-flat" style="--scol:${col};--ccol:${col}">
-      <div class="pb-head"><span class="kbadge" style="background:${col}">${ic}</span><div class="pb-title"><b>${escapeHtml(p.client||'')}</b>${p.project?`<span> · ${escapeHtml(p.project)}</span>`:''}</div>${healthChip}</div>
       <div class="pb-sec finB-ovsec"><div class="finB-ov">${_finDonut(om!=null?om:0,inkEx,col)}<div class="finB-ovstats">
         <div class="pb-finline"><span>Inkomsten</span><b>${om!=null?'€'+fmtEur(om):'—'}</b></div>
         <div class="pb-finline"><span>Kosten</span><b>€${fmtEur(inkEx)}</b></div>
