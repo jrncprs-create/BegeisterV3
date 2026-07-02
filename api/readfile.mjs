@@ -25,8 +25,9 @@ function directLink(link) {
 function buildSys(today) {
   return "Je bent de assistent van Begeister (licht/decor/event-productie). "
     + "Antwoord UITSLUITEND met geldige JSON, zonder tekst eromheen, exact in deze vorm:\n"
-    + '{"summary":"2-4 zinnen kernpunten in het Nederlands","tasks":["korte concrete actie"],"appointments":[{"title":"waarover","date":"YYYY-MM-DD of lege string","time":"HH:MM of lege string"}]}\n'
+    + '{"summary":"2-4 zinnen kernpunten in het Nederlands","tasks":["korte concrete actie"],"appointments":[{"title":"waarover","date":"YYYY-MM-DD of lege string","time":"HH:MM of lege string"}],"money":[{"label":"waarvoor (bv. budget, projectprijs, offerte)","amount":getal-in-hele-euros-of-null,"raw":"zoals in de tekst, bv. \\"€40.000-€50.000\\""}]}\n'
     + "tasks = duidelijke to-do's uit het document. appointments = afspraken, deadlines of concrete data met (indien vermeld) datum en tijd. "
+    + "money = genoemde bedragen (budget, prijs, offerte, kosten). Bij een reeks (bv. €40.000-€50.000) zet je in amount de LAAGSTE waarde als heel getal (40000) en de volledige tekst in raw. "
     + "Verzin niets; laat een array leeg als er niets duidelijks in staat. Vandaag is " + today + ".";
 }
 
@@ -35,7 +36,7 @@ function parseResult(raw) {
   let obj = null;
   const s = txt.indexOf("{"), e = txt.lastIndexOf("}");
   if (s >= 0 && e > s) { try { obj = JSON.parse(txt.slice(s, e + 1)); } catch (_) {} }
-  if (!obj || typeof obj !== "object") return { summary: txt, tasks: [], appointments: [] };
+  if (!obj || typeof obj !== "object") return { summary: txt, tasks: [], appointments: [], money: [] };
   const arr = (v) => (Array.isArray(v) ? v : []);
   return {
     summary: String(obj.summary || "").trim(),
@@ -45,6 +46,11 @@ function parseResult(raw) {
       date: String((a && a.date) || "").trim(),
       time: String((a && a.time) || "").trim(),
     })).filter(a => a.title).slice(0, 12),
+    money: arr(obj.money).map(m => ({
+      label: String((m && m.label) || "").trim(),
+      amount: (m && m.amount != null && !isNaN(Number(m.amount))) ? Number(m.amount) : null,
+      raw: String((m && m.raw) || "").trim(),
+    })).filter(m => m.raw || m.amount != null).slice(0, 8),
   };
 }
 
@@ -63,10 +69,10 @@ export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "method not allowed" });
   if (!anthropic) return res.status(200).json({ error: "AI niet beschikbaar" });
   try {
-    const { link = "", name = "bestand", mode = "text" } = req.body || {};
-    if (!link) return res.status(200).json({ error: "geen link" });
+    const { link = "", name = "bestand", mode = "text", text: rawText = "" } = req.body || {};
+    if (!link && !String(rawText).trim()) return res.status(200).json({ error: "geen link of tekst" });
     const ext = (name.split(".").pop() || "").toLowerCase();
-    const durl = directLink(link);
+    const durl = link ? directLink(link) : "";
     const today = new Date().toISOString().slice(0, 10);
     const SYS = buildSys(today);
 
@@ -78,9 +84,13 @@ export default async function handler(req, res) {
     });
 
     let content, thin = false;
-    const canVision = ext === "pdf";
+    const canVision = !!link && ext === "pdf";
 
-    if (ext === "pdf" && mode === "vision") {
+    if (String(rawText).trim()) {
+      // Rauwe tekst (bv. een bron/mail/appje) — direct laten lezen.
+      let t = String(rawText); if (t.length > 120000) t = t.slice(0, 120000);
+      content = [{ type: "text", text: "BRON: " + name + "\n\n\"\"\"\n" + t + "\n\"\"\"\n\nGeef het resultaat volgens de instructie." }];
+    } else if (ext === "pdf" && mode === "vision") {
       // Stap 2 (op verzoek): PDF als beeld+tekst meesturen zodat tabellen/tekst-in-afbeeldingen ook meegaan.
       const r = await fetch(durl, { redirect: "follow" });
       if (!r.ok) return res.status(200).json({ error: "kon bestand niet ophalen (" + r.status + ")" });
