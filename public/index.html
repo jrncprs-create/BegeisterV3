@@ -753,8 +753,8 @@
   .pb-doneh.open .pb-donechev{transform:rotate(0)}
   .pb-board-inline .pb-donerow .pb-tx{color:var(--mut2);opacity:.7;text-decoration:line-through}
   .pb-board-inline .pb-donerow input[type=checkbox]{accent-color:var(--mut2)}
-  .pb-prijsrow{display:flex;align-items:center;gap:8px;color:var(--scol);font-size:14px}
-  .pb-prijsrow .pb-bud{width:120px}
+  .pb-prijsrow{display:flex;align-items:center;justify-content:flex-end;gap:4px;color:var(--scol);font-size:14px}
+  .pb-prijsrow .pb-bud{width:96px;text-align:right}
   .pb-inline-close{display:inline-flex;align-items:center;gap:5px;background:transparent;border:1px solid var(--line);color:var(--mut2);border-radius:8px;padding:6px 12px;font-size:12.5px;cursor:pointer;margin-bottom:14px}
   .pb-inline-close:hover{background:rgba(255,255,255,.05);color:var(--txt)}
   .kli.kproj.on .ksub-btn{color:var(--ccol)}
@@ -809,6 +809,11 @@
   .con-dline{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px;color:var(--mut)}
   .con-dline b{color:var(--s4);font-weight:500}
   .con-dline a{color:var(--primary2,#7db0e6);text-decoration:none}
+  .con-descwrap{width:100%;max-width:320px;margin:22px auto 0;text-align:left}
+  .con-descwrap h4{font-size:11.5px;letter-spacing:1px;text-transform:uppercase;color:var(--mut2);margin:0 0 8px}
+  .con-desc{width:100%;min-height:74px;background:transparent;border:1px solid var(--line);border-radius:11px;padding:10px 12px;font-size:13px;font-family:inherit;color:var(--txt);resize:vertical;line-height:1.5}
+  .con-desc:focus{outline:none;border-color:var(--mut2)}
+  .con-desc::placeholder{color:var(--mut2)}
   .con-linked{width:100%;max-width:320px;margin:18px auto 0;text-align:left}
   .con-linked h4{font-size:11.5px;letter-spacing:1px;text-transform:uppercase;color:var(--mut2);margin:0 0 8px}
   .con-linked .cl-item{font-size:13px;color:var(--mut);padding:6px 0;cursor:pointer;border-bottom:1px solid var(--line)}
@@ -827,8 +832,13 @@
   #bronMidWrap .con-li .cmain{flex:1;min-width:0}
   #bronMidWrap .con-li .cname{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   #bronMidWrap .con-li .crole{font-size:12px;color:var(--mut2);margin-top:2px}
+  #bronMidWrap .con-li .bron-del{flex:0 0 auto;background:transparent;border:none;color:var(--mut2);cursor:pointer;padding:2px;margin-top:1px;display:inline-flex;line-height:0;opacity:0;transition:opacity .15s,color .15s}
+  #bronMidWrap .con-li:hover .bron-del{opacity:.6}
+  #bronMidWrap .con-li .bron-del:hover{opacity:1;color:#e0726f}
   #bronRightWrap{padding:0 22px 30px}
   #bronRightWrap .bron-prevtext{margin-top:6px}
+  #bronRightWrap .bron-chat{display:flex;flex-direction:column;gap:12px;margin-top:10px;padding-bottom:8px}
+  #bronRightWrap .bron-chat .msg{max-width:82%}
   .pb-notes:focus{outline:none;border-color:var(--mut2)}
   .pb-empty{font-size:13px;color:var(--mut2);padding:3px 0 5px}
   .kicon.kboard:hover{color:#fff}
@@ -1520,7 +1530,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v130</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v132</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -2887,7 +2897,7 @@ function _renderProjBoard(){
   const secTaken=`<div class="pb-sec"><div class="pb-h">Taken <button class="pb-hadd" onclick="openModal(null,null,'todo','${_pbPid}')" title="Toevoegen">+</button></div>${takenT.length?takenT.map(taskRow).join(''):'<div class="pb-empty">Geen actiepunten.</div>'}</div>`;
   const doneInk=inkopen.filter(x=>x.done); const _doneN=doneT.length+doneInk.length;
   const secDone=_doneN?`<div class="pb-sec pb-donesec"><div class="pb-h pb-doneh${_pbDoneOpen?' open':''}" onclick="pbToggleDone()"><span class="pb-donelead"><span class="pb-donechk">✓</span> Afgevinkt <span class="pb-donecnt">${_doneN}</span></span><span class="pb-donechev">${_chevIc}</span></div>${_pbDoneOpen?(doneT.map(doneRow).join('')+doneInk.map(doneInkRow).join('')):''}</div>`:'';
-  const secPrijs=`<div class="pb-sec"><div class="pb-h">Projectprijs</div><div class="pb-prijsrow">€ <input class="pb-bud" type="text" inputmode="decimal" value="${omzetEx!=null?String(omzetEx).replace('.',','):''}" placeholder="—" onchange="pbSetProjectprijs(this.value)"> <span class="pb-prijssub">excl. btw</span></div><div class="pb-finline"><span>Inkoop (excl. btw)</span><b>€${fmtEur(inkExcl)}</b></div><div class="pb-finline marge ${(marge!=null&&marge<0)?'neg':''}"><span>Marge</span><b>${omzetEx!=null?'€'+fmtEur(marge):'—'}</b></div></div>`;
+  const secPrijs=`<div class="pb-sec"><div class="pb-h">Projectprijs</div><div class="pb-prijsrow">€ <input class="pb-bud" type="text" inputmode="decimal" value="${omzetEx!=null?String(omzetEx).replace('.',','):''}" placeholder="—" onchange="pbSetProjectprijs(this.value)"></div><div class="pb-finline"><span>Inkoop</span><b>€${fmtEur(inkExcl)}</b></div><div class="pb-finline marge ${(marge!=null&&marge<0)?'neg':''}"><span>Winst</span><b>${omzetEx!=null?'€'+fmtEur(marge):'—'}</b></div></div>`;
   const secCheck=`<div class="pb-sec"><div class="pb-h">Checklist <button class="pb-ai" onclick="pbAiTodos(this)" title="AI-startchecklist">${_tIc(_TABCHAN.asterisk,15,1.7)}<span>AI</span></button></div>${todos.map(cbRow).join('')}<div class="pb-add"><input class="pb-in" data-kind="todo" placeholder="+ todo toevoegen…" onkeydown="pbAddKey(event,'todo')"></div></div>`;
   const secInk=`<div class="pb-sec"><div class="pb-h"><span>Inkopen</span><span class="pb-hbtns"><button class="pb-ai" onclick="pbInkPaste()" title="Plak een winkelwagen of lijst — AI maakt er een bestellijst van">${_tIc(_TABCHAN.asterisk,15,1.7)}<span>lijst</span></button><button class="pb-ai" onclick="pbInkLink()" title="Toevoegen via productlink">+ link</button></span></div>${inkopen.map(inkRow).join('')}<div class="pb-add"><input class="pb-in" data-kind="inkoop" placeholder="+ inkoop toevoegen…" onkeydown="pbAddKey(event,'inkoop')"></div><div class="pb-ink-foot"><span class="pb-tot">Inkoop <b>€${fmtEur(inkTotal)}</b></span><span class="pb-budwrap">Projectprijs excl. €<input class="pb-bud" type="text" inputmode="decimal" value="${omzetEx!=null?String(omzetEx).replace('.',','):''}" placeholder="—" onchange="pbSetProjectprijs(this.value)"></span>${omzetEx!=null?`<span class="pb-rest">incl. €${fmtEur(omzetIn)}</span><span class="pb-rest ${marge<0?'over':''}">marge €${fmtEur(marge)}</span>`:''}<span class="pb-budwrap">Klantbudget €<input class="pb-bud" type="text" inputmode="decimal" value="${budget!=null?String(budget).replace('.',','):''}" placeholder="—" onchange="pbSetBudget(this.value)"></span></div></div>`;
   const secAppt=`<div class="pb-sec"><div class="pb-h">Afspraken <button class="pb-hadd" onclick="openApptModal(null,'${_pbPid}')" title="Afspraak toevoegen">+</button></div>${appts.length?appts.map(apptRow).join(''):'<div class="pb-empty">Nog geen afspraken.</div>'}</div>`;
@@ -3613,7 +3623,7 @@ function renderBronnen(){
     return `<div class="con-crow${on}" onclick="selectBronClient('${_qs(cl)}')"><span class="con-cdot" style="background:${col}">${ic}</span><div class="con-cmain"><div class="con-cnm" style="color:${col}">${escapeHtml(cl)}</div></div><span class="con-ccnt">${cnt[cl]}</span></div>`;
   }).join('');
   if(noneN){ const on=(_bronClient==='__none__')?' on':''; rows+=`<div class="con-crow${on}" onclick="selectBronClient('__none__')"><span class="con-cdot" style="background:#555">·</span><div class="con-cmain"><div class="con-cnm">Overig</div></div><span class="con-ccnt">${noneN}</span></div>`; }
-  wrap.innerHTML=`<div class="chdr"><span class="chdr-t">Bronnen</span></div>`+(rows||'<div class="hint">Nog geen bronnen. Ze verschijnen hier uit binnengekomen berichten of via Plakken.</div>');
+  wrap.innerHTML=(rows||'<div class="hint">Nog geen bronnen. Ze verschijnen hier uit binnengekomen berichten of via Plakken.</div>');
   renderBronMid(); renderBronRight();
 }
 function renderBronMid(){
@@ -3623,7 +3633,7 @@ function renderBronMid(){
   const q=(_bronSearch||'').toLowerCase().trim();
   if(q) list=list.filter(s=>(_srcTitle(s)+' '+(s.text||'')+' '+(s.summary||'')+' '+(s.full||'')).toLowerCase().includes(q));
   const rows=list.map(s=>{ const on=(_bronSrc===s.id)?' on':''; const dt=s.date?_finShortDate(s.date):''; const nAtt=(s.attachFull&&s.attachFull.length)?s.attachFull.length:0;
-    return `<div class="con-li${on}" data-id="${s.id}" onclick="selectBronSrc('${s.id}')"><div class="cmain"><div class="cname">${escapeHtml(_srcTitle(s))}</div><div class="crole">${escapeHtml(dt)}${nAtt?' · '+nAtt+' bijlage'+(nAtt>1?'n':''):''}</div></div></div>`;
+    return `<div class="con-li${on}" data-id="${s.id}" onclick="selectBronSrc('${s.id}')"><div class="cmain"><div class="cname">${escapeHtml(_srcTitle(s))}</div><div class="crole">${escapeHtml(dt)}${nAtt?' · '+nAtt+' bijlage'+(nAtt>1?'n':''):''}</div></div><button class="bron-del" onclick="event.stopPropagation();srcDelete('${s.id}')" title="Bron verwijderen" aria-label="Bron verwijderen">${_tIc('<path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M7 7l1 13h8l1-13"/>',16,1.6)}</button></div>`;
   }).join('');
   w.innerHTML=`<div class="con-midhdr"><input id="bron_search" placeholder="Zoek in deze klant…" autocomplete="off" value="${escapeHtml(_bronSearch||'')}" oninput="_bronFilter(this.value)"></div>`+(rows||'<div class="hint">Geen bronnen bij deze klant.</div>');
 }
@@ -3639,7 +3649,14 @@ function renderBronRight(){
     _bronLoadAttachment(atts[0]);
     return;
   }
-  const body=autolink(escapeHtml(s.full||s.text||s.summary||''),col);
+  const raw=s.full||s.text||s.summary||'';
+  const _chatRe=/^[^\n]{1,40}\([^)\n]{1,24}\):\s*/;
+  const isChat=(s.kind==='chat')||(String(raw).split('\n').filter(l=>_chatRe.test(l.trim())).length>=2);
+  if(isChat){
+    const bubbles=renderChat(raw,col);
+    if(bubbles){ w.innerHTML=head+`<div class="bron-chat">${bubbles}</div>`; return; }
+  }
+  const body=autolink(escapeHtml(raw),col);
   w.innerHTML=head+`<div class="bron-prevtext" style="white-space:pre-wrap;line-height:1.6;font-size:13.5px;color:var(--mut)">${body||'<span class="fmp-none">Geen inhoud.</span>'}</div>`;
 }
 async function _bronLoadAttachment(a){
@@ -3789,8 +3806,7 @@ function renderContacten(){
   }).join('');
   if(noneN){ const on=(_conClient==='__none__')?' on':''; rows+=`<div class="con-crow${on}" onclick="selectConClient('__none__')"><span class="con-cdot" style="background:#555">·</span><div class="con-cmain"><div class="con-cnm">Overig</div></div><span class="con-ccnt">${noneN}</span></div>`; }
   const dup=_countDupContacts();
-  wrap.innerHTML=`<div class="chdr"><span class="chdr-t">Contacten</span><button class="chdr-add" onclick="openContactModal()" title="Nieuw contact" aria-label="Nieuw contact">+</button></div>`
-    +(dup>0?`<button class="cdup" onclick="mergeDupContacts()">${dup} mogelijk dubbel — samenvoegen</button>`:'')
+  wrap.innerHTML=(dup>0?`<button class="cdup" onclick="mergeDupContacts()">${dup} mogelijk dubbel — samenvoegen</button>`:'')
     +(rows||'<div class="hint">Nog geen contacten. Ze verschijnen hier automatisch uit binnengekomen berichten, of voeg ze toe met +.</div>');
   renderConMid(); renderConRight();
 }
@@ -3833,10 +3849,12 @@ function renderConRight(){
       ${line('Telefoon',c.phone,tel?('tel:'+tel):'')}
       ${line('E-mail',c.email,c.email?('mailto:'+c.email):'')}
     </div>
+    <div class="con-descwrap"><h4>Omschrijving</h4><textarea class="con-desc" placeholder="Eigen notities over dit contact…" onblur="conSaveDesc('${c.id}',this.value)">${escapeHtml(c.description||'')}</textarea></div>
     <div class="con-linked">${_contactLinkedHTML(c)}</div>
     <button class="con-edit" onclick="openContactModal('${c.id}')">Bewerken</button>
   </div>`;
 }
+async function conSaveDesc(id,val){ const c=(state.contacts||[]).find(x=>x.id===id); if(c)c.description=val; try{ await sb.from('contacts').update({description:(val||'').trim()||null}).eq('id',id); }catch(e){ console.warn('desc',e); } }
 function conAiAvatar(id){ uiConfirm('Een AI-avatar op basis van wat we over dit contact weten zit er bijna in — dat zet ik als volgende stap aan. Voor nu zie je de gekleurde initialen.'); }
 function _filterContacts(q){ _conSearch=q; renderConMid(); }
 function _fillContactClient(sel,selected){
@@ -5381,7 +5399,7 @@ function applyLayout(){
 function _ensureRailCloses(){
   const _xIc='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
   const _plusIc='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>';
-  const spec=[['view-bronnen',''],['view-beheer','Klanten & projecten'],['view-financien','Financiën'],['view-contacten',''],['view-archief','Archief'],['view-files','Bestanden']];
+  const spec=[['view-bronnen','Bronnen'],['view-beheer','Klanten & projecten'],['view-financien','Financiën'],['view-contacten','Contacten'],['view-archief','Archief'],['view-files','Bestanden']];
   const d3=isDesk3();
   spec.forEach(([vid,label])=>{
     const v=document.getElementById(vid); if(!v)return;
