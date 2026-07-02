@@ -315,7 +315,7 @@
   .t-projsub{color:var(--mut2);font-weight:400;margin-left:7px}
   .chk{width:18px;height:18px;border:1.5px solid rgba(255,255,255,.5);border-radius:6px;cursor:pointer;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:12px;color:transparent;transition:border-color .12s,color .12s}
   .chk.sq{border-radius:6px}
-  .chk:hover{border-color:#fff;color:rgba(255,255,255,.35)}
+  .chk:hover{border-color:var(--ccol);color:var(--ccol)}
   .chk.on{background:transparent;border-color:#fff;color:#fff}
   .t-due{font-size:13px;font-variant-numeric:tabular-nums;color:var(--mut);margin-top:11px}
   .t-due.warn,.t-due.risk{color:var(--mut) !important} .t-due.late{color:var(--late);font-weight:600}
@@ -1439,7 +1439,8 @@
   .srow:hover .doc-ic,.srow.open .doc-ic{ color:var(--scol,var(--s4)) !important }
   .srow:hover .doc-ic svg,.srow.open .doc-ic svg{ stroke:var(--scol,var(--s4)) !important }
   .fm-crow:hover .fm-name,.fm-crow.open .fm-name{ color:var(--ccol,var(--s2)) !important }
-  #list .task:hover .chk,#wachterList .task:hover .chk{ border-color:var(--s2) !important }
+  #list .task:hover .chk,#wachterList .task:hover .chk{ border-color:var(--ccol) !important; background:color-mix(in srgb,var(--ccol) 9%,transparent) !important; color:transparent !important }
+  #list .task .chk:hover,#wachterList .task .chk:hover{ border-color:var(--ccol) !important; background:color-mix(in srgb,var(--ccol) 20%,transparent) !important; color:var(--ccol) !important }
 
   /* Klant-letter in het icoontje: altijd zwart + vet (kaart, dropdown, hover) */
   .picon,.cdd-badge,.kbadge,.uip-badge{ color:#000 !important; font-weight:700 !important }
@@ -1637,7 +1638,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v144</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v145</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
