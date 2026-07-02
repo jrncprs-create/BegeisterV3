@@ -5,7 +5,7 @@ import { createMessageStream } from "../lib/airetry.mjs";
 
 const KEY = (process.env.ANTHROPIC_API_KEY || "").trim();
 const anthropic = KEY ? new Anthropic({ apiKey: KEY }) : null;
-const MODEL = "claude-sonnet-4-6";
+const MODEL = "claude-haiku-4-5-20251001";
 
 const TEXT_EXT = ["txt","md","markdown","csv","tsv","json","html","htm","xml","log","rtf"];
 
