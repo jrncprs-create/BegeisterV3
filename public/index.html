@@ -801,6 +801,38 @@
   #conMidWrap .con-li .crole{font-size:12px;color:var(--mut2);margin-top:1px}
   #conMidWrap .con-li .cquick{display:flex;gap:10px;color:var(--mut2);flex:0 0 auto}
   #conMidWrap .con-li .cquick a{color:var(--mut2)}
+  /* Mobiele mappenstructuur (Bronnen + Contacten <1001px): klant → uitklappen → item → detail. JS-gated, dus geen effect op desktop. */
+  .mtree-cli{display:flex;align-items:center;gap:12px;padding:14px;border:1px solid var(--line);border-radius:13px;margin-bottom:9px;cursor:pointer}
+  .mtree-cli.open{border-bottom-left-radius:0;border-bottom-right-radius:0;margin-bottom:0;border-bottom-color:transparent}
+  .mtree-cli .con-cdot{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#000;flex:0 0 auto}
+  .mtree-cli .con-cmain{flex:1;min-width:0}
+  .mtree-cli .con-cnm{font-size:15px}
+  .mtree-cli .con-ccnt{font-size:12px;color:var(--mut2);flex:0 0 auto}
+  .mtree-chev{display:flex;color:var(--mut2);transition:transform .18s}
+  .mtree-cli.open .mtree-chev{transform:rotate(180deg)}
+  .mtree-kids{border:1px solid var(--line);border-top:none;border-bottom-left-radius:13px;border-bottom-right-radius:13px;margin-bottom:9px;overflow:hidden}
+  .mtree-item{display:flex;align-items:center;gap:10px;padding:13px 14px;border-top:1px solid var(--line);cursor:pointer}
+  .mtree-item:first-child{border-top:none}
+  .mtree-item .cmain{flex:1;min-width:0}
+  .mtree-item .cname{font-size:14px}
+  .mtree-item .crole{font-size:12px;color:var(--mut2);margin-top:1px}
+  .mtree-item .cquick{display:flex;gap:12px;color:var(--mut2);flex:0 0 auto}
+  .mtree-item .cquick a{color:var(--mut2)}
+  .mtree-item .bron-del{flex:0 0 auto;background:transparent;border:none;color:var(--mut2);cursor:pointer;padding:4px;display:flex}
+  .mtree-item.open{background:rgba(255,255,255,.03)}
+  .mtree-detail{padding:6px 15px 16px;background:rgba(255,255,255,.02);border-top:1px dashed var(--line)}
+  .mtree-detail .con-dlines{margin-top:4px}
+  .mtree-detail .con-dline{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+  .mtree-detail .con-dline:last-of-type{border-bottom:none}
+  .mtree-detail .con-dline span{color:var(--mut2)}
+  .mtree-detail .con-dline a,.mtree-detail .con-dline b{color:var(--txt);font-weight:500}
+  .mtree-desc{font-size:13px;color:var(--mut);white-space:pre-wrap;line-height:1.5;margin:10px 0 2px}
+  .mtree-detail .con-edit{margin-top:12px;width:100%;background:transparent;border:1px solid var(--line);color:var(--txt);border-radius:11px;padding:11px;font-size:13.5px;cursor:pointer}
+  .mtree-add{width:100%;background:transparent;border:none;border-top:1px solid var(--line);color:var(--mut2);padding:12px 14px;font-size:13.5px;cursor:pointer;text-align:left}
+  .mtree-stage{height:auto;min-height:200px;max-height:60vh;border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-top:8px;background:#0c0c0c;display:flex;align-items:center;justify-content:center}
+  .mtree-stage .fmp-img{max-width:100%;max-height:60vh;object-fit:contain}
+  .mtree-stage .fmp-frame{width:100%;height:60vh;border:none}
+  .mtree-detail .bron-prevtext,.mtree-detail .bron-chat{margin-top:8px}
   .con-detail{padding:4px 24px 28px;display:flex;flex-direction:column;align-items:center;text-align:center}
   .con-av{width:84px;height:84px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;color:#000;margin-bottom:14px}
   .con-av-gen{background:transparent;overflow:hidden;padding:0}
@@ -1587,7 +1619,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v142</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v143</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -3723,6 +3755,7 @@ function selectBronSrc(id){ _bronSrc=id; renderBronRight(); document.querySelect
 function _bronFilter(q){ _bronSearch=q; renderBronMid(); const si=document.getElementById('bron_search'); if(si){ si.focus(); try{si.setSelectionRange(si.value.length,si.value.length);}catch(_){} } }
 function renderBronnen(){
   const wrap=document.getElementById('bronnenWrap'); if(!wrap)return;
+  if(!isDesk3()){ return _bronTreeMobile(wrap); }
   const clean=_bronClean();
   const cnt={}; clean.forEach(s=>{ const cl=_bronClientOf(s); if(cl)cnt[cl]=(cnt[cl]||0)+1; });
   const noneN=clean.filter(s=>!_bronClientOf(s)).length;
@@ -3767,8 +3800,8 @@ function renderBronRight(){
   const body=autolink(escapeHtml(raw),col);
   w.innerHTML=head+`<div class="bron-prevtext" style="white-space:pre-wrap;line-height:1.6;font-size:13.5px;color:var(--mut)">${body||'<span class="fmp-none">Geen inhoud.</span>'}</div>`;
 }
-async function _bronLoadAttachment(a){
-  const stage=document.getElementById('bronStage'); if(!stage)return;
+async function _bronLoadAttachment(a, stageId){
+  const stage=document.getElementById(stageId||'bronStage'); if(!stage)return;
   const sp=a.storage_path||'', name=a.filename||''; let url='';
   try{
     if(sp.indexOf('dropbox:')===0){ url='/api/fileproxy?u='+encodeURIComponent(_fvRaw(sp.slice(8))); }
@@ -3777,6 +3810,45 @@ async function _bronLoadAttachment(a){
   if(!url){ stage.innerHTML='<div class="fmp-none">Kon preview niet laden.</div>'; return; }
   const isImg=/\.(png|jpe?g|gif|webp|heic|heif|bmp|tiff?|svg)$/i.test(name);
   stage.innerHTML=isImg?`<img class="fmp-img" src="${url}">`:`<iframe class="fmp-frame" src="${url}"></iframe>`;
+}
+// ---- Mobiele mappenstructuur Bronnen (klant → uitklappen → bron → preview). Alleen <1001px. ----
+let _bronTreeCli=new Set();
+function toggleBronTree(key){ if(_bronTreeCli.has(key))_bronTreeCli.delete(key); else _bronTreeCli.add(key); renderBronnen(); }
+function toggleBronItem(id){ _bronSrc=(_bronSrc===id)?null:id; renderBronnen();
+  if(_bronSrc===id){ const s=(state.sources||[]).find(x=>x.id===id); const atts=(s&&s.attachFull&&s.attachFull.length)?s.attachFull:[]; if(atts.length&&atts[0].storage_path) _bronLoadAttachment(atts[0],'btstage_'+id); }
+}
+function _bronPreviewHTML(s){
+  const col=(s.proj&&PROJCOL[s.proj])||'var(--primary2)';
+  const atts=(s.attachFull&&s.attachFull.length)?s.attachFull:[];
+  if(atts.length && atts[0].storage_path){ return `<div class="fmp-stage mtree-stage" id="btstage_${s.id}"><div class="fmp-none">Preview laden…</div></div>`; }
+  const raw=s.full||s.text||s.summary||'';
+  const _chatRe=/^[^\n]{1,40}\([^)\n]{1,24}\):\s*/;
+  const isChat=(s.kind==='chat')||(String(raw).split('\n').filter(l=>_chatRe.test(l.trim())).length>=2);
+  if(isChat){ const bubbles=renderChat(raw,col); if(bubbles) return `<div class="bron-chat">${bubbles}</div>`; }
+  const body=autolink(escapeHtml(raw),col);
+  return `<div class="bron-prevtext" style="white-space:pre-wrap;line-height:1.6;font-size:13.5px;color:var(--mut)">${body||'<span class="fmp-none">Geen inhoud.</span>'}</div>`;
+}
+function _bronTreeItem(s){
+  const open=(_bronSrc===s.id); const dt=s.date?_finShortDate(s.date):''; const nAtt=(s.attachFull&&s.attachFull.length)?s.attachFull.length:0;
+  let h=`<div class="mtree-item${open?' open':''}" onclick="toggleBronItem('${s.id}')"><div class="cmain"><div class="cname">${escapeHtml(_srcTitle(s))}</div><div class="crole">${escapeHtml(dt)}${nAtt?' · '+nAtt+' bijlage'+(nAtt>1?'n':''):''}</div></div><button class="bron-del" onclick="event.stopPropagation();srcDelete('${s.id}')" title="Bron verwijderen" aria-label="Bron verwijderen">${_tIc('<path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M7 7l1 13h8l1-13"/>',16,1.6)}</button></div>`;
+  if(open) h+=`<div class="mtree-detail">${_bronPreviewHTML(s)}</div>`;
+  return h;
+}
+function _bronTreeMobile(wrap){
+  const clean=_bronClean();
+  const cnt={}; clean.forEach(s=>{ const cl=_bronClientOf(s); if(cl)cnt[cl]=(cnt[cl]||0)+1; });
+  const noneN=clean.filter(s=>!_bronClientOf(s)).length;
+  const clients=uniqueClients().filter(Boolean).filter(cl=>cnt[cl]).sort((a,b)=>a.localeCompare(b));
+  let h='';
+  const cliRow=(cl,col,ic,n,key)=>{
+    const open=_bronTreeCli.has(key);
+    let s=`<div class="mtree-cli${open?' open':''}" onclick="toggleBronTree('${_qs(key)}')"><span class="con-cdot" style="background:${col}">${ic}</span><div class="con-cmain"><div class="con-cnm" style="color:${col}">${escapeHtml(cl)}</div></div><span class="con-ccnt">${n}</span><span class="mtree-chev">${_chevIc}</span></div>`;
+    if(open){ const list=_bronSourcesFor(key); s+='<div class="mtree-kids">'+(list.map(_bronTreeItem).join('')||'<div class="hint">Geen bronnen.</div>')+'</div>'; }
+    return s;
+  };
+  clients.forEach(cl=>{ const col=_clientColor(cl)||'#888'; const ic=escapeHtml(((String(cl).trim()[0])||'?').toUpperCase()); h+=cliRow(cl,col,ic,cnt[cl],cl); });
+  if(noneN) h+=cliRow('Overig','#555','·',noneN,'__none__');
+  wrap.innerHTML=h||'<div class="hint">Nog geen bronnen. Ze verschijnen hier uit binnengekomen berichten of via Plakken.</div>';
 }
 // Thumbnails van afbeeldings-bijlagen laden (intake-bucket of Dropbox) via signed/proxy-URL.
 async function _fillSrcThumbs(){
@@ -3916,6 +3988,7 @@ function _contactClientOf(c){ return (c&&_contactClientMap()[c.id])||''; }
 // Kolom 1: klanten met contact-aantal
 function renderContacten(){
   const wrap=document.getElementById('contactenWrap'); if(!wrap)return;
+  if(!isDesk3()){ return _conTreeMobile(wrap); }
   const contacts=(state.contacts||[]);
   const CM=_contactClientMap();
   const cnt={}; contacts.forEach(c=>{ const k=CM[c.id]; if(k)cnt[k]=(cnt[k]||0)+1; });
@@ -3972,6 +4045,40 @@ function renderConRight(){
     <div class="con-linked">${_contactLinkedHTML(c)}</div>
     <button class="con-edit" onclick="openContactModal('${c.id}')">Bewerken</button>
   </div>`;
+}
+// ---- Mobiele mappenstructuur Contacten (klant → uitklappen → contact → detail). Alleen <1001px. ----
+let _conTreeCli=new Set();
+function toggleConTree(key){ if(_conTreeCli.has(key))_conTreeCli.delete(key); else _conTreeCli.add(key); renderContacten(); }
+function toggleConItem(id){ _conContact=(_conContact===id)?null:id; renderContacten(); }
+function _conTreeItem(c){
+  const open=(_conContact===c.id);
+  const tel=(c.phone||'').replace(/[^+\d]/g,'');
+  let s=`<div class="mtree-item${open?' open':''}" onclick="toggleConItem('${c.id}')"><div class="cmain"><div class="cname">${escapeHtml(c.name||'(naamloos)')}</div>${c.role?`<div class="crole">${escapeHtml(c.role)}</div>`:''}</div><div class="cquick" onclick="event.stopPropagation()">${_conQuick(c)}</div></div>`;
+  if(open){
+    const line=(label,val,href)=> val?`<div class="con-dline"><span>${label}</span>${href?`<a href="${href}" onclick="event.stopPropagation()">${escapeHtml(val)}</a>`:`<b>${escapeHtml(val)}</b>`}</div>`:'';
+    s+=`<div class="mtree-detail"><div class="con-dlines">${line('Bedrijf',c.company)}${line('Telefoon',c.phone,tel?('tel:'+tel):'')}${line('E-mail',c.email,c.email?('mailto:'+c.email):'')}</div>${c.description?`<div class="mtree-desc">${escapeHtml(c.description)}</div>`:''}<button class="con-edit" onclick="event.stopPropagation();openContactModal('${c.id}')">Bewerken</button></div>`;
+  }
+  return s;
+}
+function _conTreeMobile(wrap){
+  const contacts=(state.contacts||[]); const CM=_contactClientMap();
+  const cnt={}; contacts.forEach(c=>{ const k=CM[c.id]; if(k)cnt[k]=(cnt[k]||0)+1; });
+  const noneN=contacts.filter(c=>!CM[c.id]).length;
+  const clients=uniqueClients().filter(Boolean).filter(cl=>cnt[cl]).sort((a,b)=>a.localeCompare(b));
+  const dup=_countDupContacts();
+  let h=(dup>0?`<button class="cdup" onclick="mergeDupContacts()">${dup} mogelijk dubbel — samenvoegen</button>`:'');
+  const cliRow=(cl,col,ic,n,key)=>{
+    const open=_conTreeCli.has(key);
+    let s=`<div class="mtree-cli${open?' open':''}" onclick="toggleConTree('${_qs(key)}')"><span class="con-cdot" style="background:${col}">${ic}</span><div class="con-cmain"><div class="con-cnm" style="color:${col}">${escapeHtml(cl)}</div></div><span class="con-ccnt">${n}</span><span class="mtree-chev">${_chevIc}</span></div>`;
+    if(open){
+      const list=contacts.filter(c=> key==='__none__' ? !CM[c.id] : CM[c.id]===cl ).sort((a,b)=>String(a.name||'').localeCompare(String(b.name||'')));
+      s+='<div class="mtree-kids">'+(list.map(_conTreeItem).join(''))+`<button class="mtree-add" onclick="event.stopPropagation();openContactModal()">+ contact</button></div>`;
+    }
+    return s;
+  };
+  clients.forEach(cl=>{ const col=_clientColor(cl)||'#888'; const ic=escapeHtml(((String(cl).trim()[0])||'?').toUpperCase()); h+=cliRow(cl,col,ic,cnt[cl],cl); });
+  if(noneN) h+=cliRow('Overig','#555','·',noneN,'__none__');
+  wrap.innerHTML=h||'<div class="hint">Nog geen contacten. Ze verschijnen hier automatisch uit binnengekomen berichten, of voeg ze toe met +.</div>';
 }
 async function conSaveDesc(id,val){ const c=(state.contacts||[]).find(x=>x.id===id); if(c)c.description=val; try{ await sb.from('contacts').update({description:(val||'').trim()||null}).eq('id',id); }catch(e){ console.warn('desc',e); } }
 async function conAiAvatar(id){ const c=(state.contacts||[]).find(x=>x.id===id); if(!c)return; const seed=Math.floor(Math.random()*1000000); c.avatar_seed=seed; renderConRight(); try{ await sb.from('contacts').update({avatar_seed:seed}).eq('id',id); }catch(e){ console.warn('avatar',e); } }
