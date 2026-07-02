@@ -295,11 +295,10 @@
   .srow.tinted .srow-title,.srow.tinted .srow-sub,.srow.tinted .srow-date,.srow.tinted .doc-ic,.srow.tinted .srow-text,.srow.tinted .srow-derived,.srow.tinted .srow-att .fname,.srow.tinted .srow-att .file-ic{color:var(--scol)!important}
   .t-proj{flex:1;min-width:0;font-size:13.5px;font-weight:600;color:var(--ccol,var(--mut));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .t-projsub{color:var(--mut2);font-weight:400;margin-left:7px}
-  .chk{width:18px;height:18px;border:1.5px solid rgba(255,255,255,.5);border-radius:50%;cursor:pointer;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:11px;color:transparent;transition:background .12s,border-color .12s,color .12s}
+  .chk{width:18px;height:18px;border:1.5px solid rgba(255,255,255,.5);border-radius:6px;cursor:pointer;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:12px;color:transparent;transition:border-color .12s,color .12s}
   .chk.sq{border-radius:6px}
-  .chk:hover{background:#34d399;border-color:#34d399;color:#0c0c0c}
-  .chk:hover{border-color:#fff}
-  .chk.on{background:#34d399;border-color:#34d399;color:#0c0c0c}
+  .chk:hover{border-color:#fff;color:rgba(255,255,255,.35)}
+  .chk.on{background:transparent;border-color:#fff;color:#fff}
   .t-due{font-size:13px;font-variant-numeric:tabular-nums;color:var(--mut);margin-top:11px}
   .t-due.warn,.t-due.risk{color:var(--mut) !important} .t-due.late{color:var(--late);font-weight:600}
   .t-title{font-size:14px;line-height:1.4;margin-top:8px;cursor:pointer;color:var(--txt)}
@@ -917,7 +916,7 @@
   .org-target{font-size:12px;color:var(--primary2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .org-target.none{color:var(--mut2);opacity:.7}
   /* file-viewer */
-  .fv{position:fixed;inset:0;z-index:200;background:rgba(8,8,8,.97);display:none;flex-direction:column}
+  .fv{position:fixed;inset:0;z-index:1300;background:rgba(8,8,8,.97);display:none;flex-direction:column}
   .fv.open{display:flex}
   .fv-bar{display:flex;align-items:center;gap:12px;padding:13px 18px;border-bottom:1px solid var(--line)}
   .fv-ic{flex:0 0 auto;width:22px;height:22px;display:flex;align-items:center;color:var(--mut)}
@@ -976,8 +975,8 @@
   .modal .ownerpick .ownerpick-lbl{font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:var(--mut2)}
   .modal .ownerpick .op-opt{display:inline-flex;align-items:center;gap:10px;font-size:14px;color:var(--txt);cursor:pointer}
   .modal .ownerpick .op-opt input{position:absolute;opacity:0;pointer-events:none;width:0;height:0}
-  .modal .ownerpick .op-box{width:20px;height:20px;border-radius:6px;border:1.5px solid var(--mut2);display:inline-flex;align-items:center;justify-content:center;color:transparent;flex:0 0 auto;transition:background .12s,border-color .12s,color .12s}
-  .modal .ownerpick .op-opt input:checked ~ .op-box{background:#fff;border-color:#fff;color:#111}
+  .modal .ownerpick .op-box{width:20px;height:20px;border-radius:6px;border:1.5px solid var(--mut2);display:inline-flex;align-items:center;justify-content:center;color:transparent;background:transparent;flex:0 0 auto;transition:border-color .12s,color .12s}
+  .modal .ownerpick .op-opt input:checked ~ .op-box{color:var(--txt);border-color:var(--txt)}
   .modal .ownerpick .op-opt:hover .op-box{border-color:var(--txt)}
   .modal ::placeholder{color:var(--mut2);opacity:1}
   .modal textarea{min-height:80px;resize:vertical;line-height:1.45}
@@ -1543,7 +1542,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v136</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v137</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -1752,6 +1751,10 @@
       .pb-besteltot .pb-btval{display:flex;flex-direction:column;align-items:flex-end}
       .pb-besteltot .pb-btval b{font-size:15px;font-weight:600}
       .pb-btsub{font-size:11px;color:var(--mut2);font-weight:400}
+      .pb-besteld-sec{margin-top:16px;padding-top:12px;border-top:1px solid color-mix(in srgb,var(--scol) 24%,transparent)}
+      .pb-besteld-sec .pb-h{color:var(--scol);opacity:.8;margin-bottom:6px}
+      .pb-besteld-sec .pb-ink{opacity:.7}
+      .pb-besteld-sec .pb-donecnt{color:var(--mut2);font-variant-numeric:tabular-nums}
       /* Zwevende productafbeelding aan de muis */
       #pbThumbFloat{position:fixed;left:0;top:0;width:140px;height:140px;object-fit:cover;border-radius:12px;border:1px solid rgba(255,255,255,.16);box-shadow:0 10px 30px rgba(0,0,0,.55);background:#fff;pointer-events:none;z-index:9999;opacity:0;transform:scale(.92);transition:opacity .12s ease,transform .12s ease}
       #pbThumbFloat.on{opacity:1;transform:scale(1)}
@@ -2920,7 +2923,7 @@ function _renderProjBoard(){
     const priceCell=(qty>1)
       ? `<div class="pb-pcell"><div class="pb-ptot">€${pr!=null?fmtEur(pr*qty):'—'}</div><div class="pb-punit">${qty} × €<input class="pb-price pb-punitin" type="text" inputmode="decimal" value="${unitVal}" placeholder="—" onclick="event.stopPropagation()" onchange="pbSetPrice('${x.id}',this.value)" title="Prijs per stuk"></div></div>`
       : `<div class="pb-pcell"><div class="pb-ptot"><span class="pb-eur">€</span><input class="pb-price" type="text" inputmode="decimal" value="${unitVal}" placeholder="—" onclick="event.stopPropagation()" onchange="pbSetPrice('${x.id}',this.value)" title="Prijs"></div></div>`;
-    return `<div class="pb-row pb-ink" data-tid="${x.id}"${x.image?` data-img="${escapeHtml(x.image)}"`:''}><button class="pb-chk" onclick="pbInkCheck('${x.id}',${x.done?'false':'true'})" title="Afvinken">${_pbChk(!!x.done)}</button>${nameCell}${priceCell}<button class="pb-move" onclick="event.preventDefault();event.stopPropagation();pbMoveOpen('one','${x.id}')" title="Verplaats naar ander project/klant">${_tIc('<path d="M17 3l4 4l-4 4"/><path d="M21 7h-13"/><path d="M7 21l-4 -4l4 -4"/><path d="M3 17h13"/>',15,1.4)}</button><button class="pb-del" onclick="event.preventDefault();pbDel('${x.id}')" title="Verwijderen">×</button></div>`; };
+    return `<div class="pb-row pb-ink" data-tid="${x.id}"${x.image?` data-img="${escapeHtml(x.image)}"`:''}><button class="pb-chk" onclick="pbInkOrdered('${x.id}')" title="${x.status==='besteld'?'Terugzetten naar te bestellen':'Markeer als besteld'}">${_pbChk(x.status==='besteld')}</button>${nameCell}${priceCell}<button class="pb-move" onclick="event.preventDefault();event.stopPropagation();pbMoveOpen('one','${x.id}')" title="Verplaats naar ander project/klant">${_tIc('<path d="M17 3l4 4l-4 4"/><path d="M21 7h-13"/><path d="M7 21l-4 -4l4 -4"/><path d="M3 17h13"/>',15,1.4)}</button><button class="pb-del" onclick="event.preventDefault();pbDel('${x.id}')" title="Verwijderen">×</button></div>`; };
   const doneInkRow=(x)=>`<div class="pb-row pb-donerow"><button class="pb-chk" onclick="pbInkCheck('${x.id}',false)" title="Terugzetten">${_pbChk(true)}</button><span class="pb-tx done">${esc(x.text||'')}</span></div>`;
   const apptRow=(a)=>{ const d=a.date?d3date(a.date):''; return `<div class="pb-row pb-appt"><span class="pb-tx">${esc(a.t||'Afspraak')}</span><span class="pb-when">${esc(d)}${a.start?' · '+esc(String(a.start).slice(0,5)):''}</span><button class="pb-edit" onclick="openApptModal('${a.id}')" title="Bewerken">${_penIc}</button></div>`; };
   const secWait=`<div class="pb-sec"><div class="pb-h">In afwachting <button class="pb-hadd" onclick="openModal(null,'wachter','wait','${_pbPid}')" title="Toevoegen">+</button></div>${waitT.length?waitT.map(waitRow).join(''):'<div class="pb-empty">Niets in afwachting.</div>'}</div>`;
@@ -2945,11 +2948,13 @@ function _renderProjBoard(){
     if(_u){ const _shop=_webshopName(_u); const _pj=(projById(_pbPid)||{}).project||''; const _n=inkopen.filter(x=>String(x.source_id)===String(_listSid)).length;
       _masterLink=`<a class="pb-cluster" href="${esc(_u)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Open de hele lijst bij ${esc(_shop)}"><span class="pb-cluster-shop">🛒 ${esc(_shop)}${_pj?' · '+esc(_pj):''}</span><span class="pb-cluster-sub">${_n} items ↗</span></a>`; } }
   const inkopenOpen=inkopen.filter(x=>!x.done);
+  const _bestNietBesteld=inkopenOpen.filter(x=>x.status!=='besteld');
+  const _bestBesteld=inkopenOpen.filter(x=>x.status==='besteld');
   const _openTot=inkopenOpen.reduce((s,x)=>s+((x.price!=null&&x.price!=='')?Number(x.price):0)*(x.qty||1),0);
-  const secBestel=`<div class="pb-sec"><div class="pb-h"><span>Bestellijst</span><span class="pb-hbtns">${inkopen.length?`<button class="pb-ai" onclick="pbOrderAll()" title="Zet de hele lijst in één keer in je Amazon-mandje">${_tIc('<path d="M6 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M17 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M17 17h-11v-14h-2"/><path d="M6 5l14 1l-1 7h-13"/>',16,1.7)}</button>`:''}<button class="pb-ai" onclick="pbInkPaste()" title="Plak een verlanglijst of winkelwagen — AI maakt er regels van">${_tIc(_TABCHAN.asterisk,15,1.7)}<span>lijst</span></button>${inkopen.length?`<button class="pb-ai" onclick="pbMoveOpen('all')" title="Hele bestellijst naar een ander project/klant verplaatsen">${_tIc('<path d="M17 3l4 4l-4 4"/><path d="M21 7h-13"/><path d="M7 21l-4 -4l4 -4"/><path d="M3 17h13"/>',15,1.5)}</button><button class="pb-listdel" onclick="pbDelBestel()" title="Hele bestellijst verwijderen"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/></svg></button>`:''}</span></div>${_masterLink}${inkopenOpen.length?inkopenOpen.map(inkRow).join(''):'<div class="pb-empty">Nog geen bestellingen.</div>'}<div class="pb-add"><input class="pb-in" data-kind="inkoop" placeholder="+ artikel toevoegen…" onkeydown="pbAddKey(event,'inkoop')"></div>${inkopenOpen.length?`<div class="pb-besteltot"><span class="pb-btlbl">Totaal</span><span class="pb-btval"><b>€${fmtEur(_openTot)}</b><span class="pb-btsub">excl. €${fmtEur(_openTot/(1+btwPct/100))}</span></span></div>`:''}</div>`;
+  const secBestel=`<div class="pb-sec"><div class="pb-h"><span>Bestellijst</span><span class="pb-hbtns">${inkopen.length?`<button class="pb-ai" onclick="pbOrderAll()" title="Zet de hele lijst in één keer in je Amazon-mandje">${_tIc('<path d="M6 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M17 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M17 17h-11v-14h-2"/><path d="M6 5l14 1l-1 7h-13"/>',16,1.7)}</button>`:''}<button class="pb-ai" onclick="pbInkPaste()" title="Plak een verlanglijst of winkelwagen — AI maakt er regels van">${_tIc(_TABCHAN.asterisk,15,1.7)}<span>lijst</span></button>${inkopen.length?`<button class="pb-ai" onclick="pbMoveOpen('all')" title="Hele bestellijst naar een ander project/klant verplaatsen">${_tIc('<path d="M17 3l4 4l-4 4"/><path d="M21 7h-13"/><path d="M7 21l-4 -4l4 -4"/><path d="M3 17h13"/>',15,1.5)}</button><button class="pb-listdel" onclick="pbDelBestel()" title="Hele bestellijst verwijderen"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/></svg></button>`:''}</span></div>${_masterLink}${_bestNietBesteld.length?_bestNietBesteld.map(inkRow).join(''):(_bestBesteld.length?'':'<div class="pb-empty">Nog geen bestellingen.</div>')}<div class="pb-add"><input class="pb-in" data-kind="inkoop" placeholder="+ artikel toevoegen…" onkeydown="pbAddKey(event,'inkoop')"></div>${inkopenOpen.length?`<div class="pb-besteltot"><span class="pb-btlbl">Totaal</span><span class="pb-btval"><b>€${fmtEur(_openTot)}</b><span class="pb-btsub">excl. €${fmtEur(_openTot/(1+btwPct/100))}</span></span></div>`:''}${_bestBesteld.length?`<div class="pb-besteld-sec"><div class="pb-h">Besteld <span class="pb-donecnt">${_bestBesteld.length}</span></div>${_bestBesteld.map(inkRow).join('')}</div>`:''}</div>`;
   const _body=(_pbMode==='financien')?secBestel:(secWait+secTaken+secBestel+secDone+secAppt+secFiles+secPrijs+secNotes);
   const _head=`<div class="pb-head"><span class="kbadge" style="background:${col}">${esc(initial)}</span><div class="pb-title"><b>${esc(p.client||'')}</b>${p.project?'<span> · '+esc(p.project)+'</span>':''}${_pbMode==='financien'?'<span style="color:'+col+'"> · inkoop</span>':''}</div></div>`;
-  if(_pbTarget==='finmid'||_pbTarget==='finright'){ const el=document.getElementById(_pbTarget==='finright'?'finRightWrap':'finMidWrap'); if(el)el.innerHTML=`<div class="pb-inline" style="--scol:${col}">${_head}${_body}</div>`; return; }
+  if(_pbTarget==='finmid'||_pbTarget==='finright'){ const el=document.getElementById(_pbTarget==='finright'?'finRightWrap':'finMidWrap'); const _cls=(_pbTarget==='finright')?'pb-inline pb-board-inline':'pb-inline'; const _h=(_pbTarget==='finright')?'':_head; if(el)el.innerHTML=`<div class="${_cls}" style="--scol:${col}">${_h}${_body}</div>`; return; }
   if(_pbTarget==='beheer'){ const el=document.getElementById('beheerBoardWrap'); if(el)el.innerHTML=`<div class="pb-inline pb-board-inline" style="--scol:${col}">${_head}<div class="pb-grid"><div class="pb-colL">${secWait}${secTaken}${secBestel}${secDone}</div><div class="pb-colR">${secAppt}${secFiles}${secPrijs}${secNotes}</div></div></div>`; return; }
   if(!ov)return;
   ov.innerHTML=`<div class="modal pb-modal" style="--scol:${col};width:100%;max-width:none">
@@ -2992,6 +2997,8 @@ async function pbAddKey(e,kind){ if(e.key!=='Enter')return; e.preventDefault(); 
 async function pbToggle(id,done){ const x=_pbItems.find(i=>i.id===id); if(x)x.done=done; try{ await sb.from('project_board').update({done}).eq('id',id); }catch(_){} _renderProjBoard(); }
 async function pbDel(id){ _pbItems=_pbItems.filter(i=>i.id!==id); try{ await sb.from('project_board').delete().eq('id',id); }catch(_){} _finInk=null; _renderProjBoard(); }
 // Bestelregel afvinken → naar Afgevinkt (met fade); uitvinken → terug
+// Bestellijst-vinkje: markeer als "besteld" (item blijft staan, schuift naar de BESTELD-sectie) i.p.v. verwijderen.
+async function pbInkOrdered(id){ const x=_pbItems.find(i=>i.id===id); if(!x)return; const ns=(x.status==='besteld')?'te bestellen':'besteld'; x.status=ns; try{ await sb.from('project_board').update({status:ns}).eq('id',id); }catch(e){ console.warn('besteld',e); } _renderProjBoard(); }
 async function pbInkCheck(id,done){ const x=_pbItems.find(i=>i.id===id); if(x)x.done=done; try{ sb.from('project_board').update({done}).eq('id',id); }catch(_){} _finInk=null;
   if(done){ const sel='[data-tid="'+id+'"]'; const row=(document.querySelector('#beheerBoardWrap '+sel)||document.querySelector('#projOverlay '+sel)||document.querySelector('#finMidWrap '+sel));
     if(row){ const tag=document.createElement('span'); tag.className='pb-archtag'; tag.textContent='Afgevinkt'; row.appendChild(tag); const h=row.offsetHeight; row.style.height=h+'px'; row.classList.add('archiving'); void row.getBoundingClientRect();
@@ -3099,7 +3106,8 @@ async function renderFinancien(){
   // meest recent bewerkte klanten bovenaan (zelfde idee als Klanten-pagina)
   const _srcByProj={}; (state.sources||[]).forEach(s=>{ if(s.proj){ const t=s.ts?new Date(s.ts).getTime():0; if(t>(_srcByProj[s.proj]||0))_srcByProj[s.proj]=t; } });
   const _act=c=>{ let m=0; (byClient[c]||[]).forEach(p=>{ if((p.created||0)>m)m=p.created; (p.items||[]).forEach(it=>{ if((it.created||0)>m)m=it.created; }); if(_srcByProj[p.id]>m)m=_srcByProj[p.id]; }); return m; };
-  order.sort((a,b)=>_act(b)-_act(a));
+  // Begeister (intern) altijd bovenaan; daaronder op laatst bewerkt.
+  order.sort((a,b)=>{ if(a==='Begeister')return -1; if(b==='Begeister')return 1; return _act(b)-_act(a); });
   let tOm=0,tInEx=0,nPrice=0,sumPct=0,cfTeFact=0,cfOpen=0,cfOntv=0,overhead=0; const projStats=[]; const clientStats=[];
   const groups=order.map(client=>{
     const arr=byClient[client]; const ccol=(arr[0]&&arr[0].color)||'#888'; const isBeg=(client==='Begeister');
@@ -3309,7 +3317,7 @@ function _pbThumbInit(){
   _pbThumbEl=document.createElement('img'); _pbThumbEl.id='pbThumbFloat'; _pbThumbEl.alt=''; document.body.appendChild(_pbThumbEl);
   document.addEventListener('mouseover',e=>{ const row=e.target.closest&&e.target.closest('.pb-ink[data-img]'); if(row){ const u=row.getAttribute('data-img'); if(u){ _pbThumbEl.src=u; _pbThumbEl.classList.add('on'); } } });
   document.addEventListener('mouseout',e=>{ const row=e.target.closest&&e.target.closest('.pb-ink[data-img]'); if(row){ const to=e.relatedTarget; if(!(to&&to.closest&&to.closest('.pb-ink[data-img]')===row)) _pbThumbEl.classList.remove('on'); } });
-  document.addEventListener('mousemove',e=>{ if(_pbThumbEl.classList.contains('on')){ let x=e.clientX+18, y=e.clientY+18; const w=140; if(x+w>window.innerWidth)x=e.clientX-w-18; if(y+w>window.innerHeight)y=e.clientY-w-18; _pbThumbEl.style.left=x+'px'; _pbThumbEl.style.top=y+'px'; } });
+  document.addEventListener('mousemove',e=>{ if(_pbThumbEl.classList.contains('on')){ const over=e.target.closest&&e.target.closest('.pb-ink[data-img]'); if(!over){ _pbThumbEl.classList.remove('on'); return; } let x=e.clientX+18, y=e.clientY+18; const w=140; if(x+w>window.innerWidth)x=e.clientX-w-18; if(y+w>window.innerHeight)y=e.clientY-w-18; _pbThumbEl.style.left=x+'px'; _pbThumbEl.style.top=y+'px'; } });
 }
 try{ _pbThumbInit(); }catch(_){}
 document.addEventListener('DOMContentLoaded',()=>{ try{ _pbThumbInit(); }catch(_){} });
@@ -5441,6 +5449,16 @@ function applyLayout(){
   _lastMob=mob;
 }
 // sluitkruis + kop in elke rail-view (Bronnen/Klanten/Contacten) op desktop; weg op mobiel
+// Kruisje bij de paginakop = terug naar de beginstaat van díe pagina (niet naar Taken).
+function _railCloseReset(){
+  try{
+    if(view==='financien'){ _pbPid=null; _pbTarget=null; _finInk=null; try{closeProjectBoard();}catch(_){} renderFinancien(); }
+    else if(view==='beheer'){ _pbPid=null; _pbTarget=null; try{closeProjectBoard();}catch(_){} renderProjecten(); }
+    else if(view==='contacten'){ _conClient=null; _conContact=null; renderContacten(); }
+    else if(view==='bronnen'){ _bronClient=null; _bronSrc=null; renderBronnen(); }
+    else setView('taken');
+  }catch(_){ try{setView('taken');}catch(__){} }
+}
 function _ensureRailCloses(){
   const _xIc='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
   const _plusIc='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>';
@@ -5453,7 +5471,7 @@ function _ensureRailCloses(){
     if(d3){
       if(!cl){ cl=document.createElement('button'); cl.className='rail-close'; v.insertBefore(cl,v.firstChild); }
       if(isBeheer){ cl.title='Nieuwe klant'; cl.setAttribute('aria-label','Nieuwe klant'); cl.innerHTML=_plusIc; cl.onclick=()=>newClientFromHeader(); }
-      else { cl.title='Sluiten'; cl.setAttribute('aria-label','Sluiten'); cl.innerHTML=_xIc; cl.onclick=()=>setView('taken'); }
+      else { cl.title='Sluiten'; cl.setAttribute('aria-label','Sluiten'); cl.innerHTML=_xIc; cl.onclick=()=>_railCloseReset(); }
       if(label && !tt){ tt=document.createElement('div'); tt.className='rail-coltitle'; tt.textContent=label; v.insertBefore(tt, cl.nextSibling); }
       else if(!label && tt){ tt.remove(); }
     }else{
