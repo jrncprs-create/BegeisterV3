@@ -49,6 +49,8 @@
   .topnav button{border:none;background:transparent;color:var(--mut);padding:7px 10px;cursor:pointer;font-size:14px;display:flex;align-items:center;gap:8px;border-bottom:2px solid transparent}
   .topnav button:hover{color:var(--txt)}
   .topnav button.active{color:var(--txt);border-bottom-color:var(--txt)}
+  .topnav .nav-picto{padding:7px 9px}
+  .topnav .nav-picto .nav-picto-lbl{display:none}
   .topnav .badge{background:#000;color:var(--mut);border-radius:999px;font-size:11px;padding:1px 7px}
   .topnav button.active .badge{color:var(--txt)}
   .userbox{display:flex;align-items:center;gap:9px}
@@ -87,6 +89,8 @@
     .topnav{position:absolute;top:100%;left:0;right:0;flex-direction:column;gap:2px;background:var(--side);border-bottom:1px solid var(--line);padding:7px;display:none;z-index:75;box-shadow:0 12px 26px rgba(0,0,0,.4)}
     .topnav.open{display:flex}
     .topnav button{width:100%;justify-content:flex-start;border-bottom:none!important;border-radius:9px;padding:12px 13px;font-size:15px}
+    .topnav .nav-picto{padding:12px 13px;gap:10px}
+    .topnav .nav-picto .nav-picto-lbl{display:inline}
     .topnav button.active{background:#2a2a2a}
     .userbox select{font-size:13px}
     .main{padding:14px 13px 44px}
@@ -262,7 +266,7 @@
   #dropZone .dz-facts .f b{color:#fff;font-weight:600}
   #dropZone .dz-title{color:#fff;font-size:18px;font-weight:600;letter-spacing:.2px}
   #dropZone .dz-sub{color:var(--mut);font-size:13.5px;max-width:330px;text-align:center;line-height:1.5}
-  .main.workspace #view-filespreview{padding:0 24px 40px 24px;height:100%;overflow-y:auto;scrollbar-width:none}
+  .main.workspace #view-filespreview{grid-column:1/-1;padding:0 24px 40px 24px;height:100%;overflow-y:auto;scrollbar-width:none}
   .main.workspace #view-filespreview::-webkit-scrollbar{display:none}
   .fmp-head{display:flex;align-items:center;gap:8px;height:26px;padding-top:18px;margin:0 0 16px;font-size:13px;color:var(--txt)}
   .fmp-head .fmp-ic{display:flex;align-items:center;color:var(--mut)}
@@ -758,8 +762,8 @@
   .kgroup.kactive .kname-btn,.kgroup.kactive .ksub-btn,.kgroup.kactive .kcnt,.kgroup.kactive .kli .kcnt,.kgroup.kactive .kicon{color:var(--ccol)}
   .kgroup.kactive .kclient{border-bottom-color:color-mix(in srgb,var(--ccol) 32%,transparent)}
   @media(min-width:1001px){
-    #view-finmid,#view-finright,#view-conmid,#view-conright{height:calc(100dvh - var(--tbh,52px));overflow-y:auto;scrollbar-width:none}
-    #view-finmid::-webkit-scrollbar,#view-finright::-webkit-scrollbar,#view-conmid::-webkit-scrollbar,#view-conright::-webkit-scrollbar{display:none}
+    #view-finmid,#view-finright,#view-conmid,#view-conright,#view-bronmid,#view-bronright{height:calc(100dvh - var(--tbh,52px));overflow-y:auto;scrollbar-width:none}
+    #view-finmid::-webkit-scrollbar,#view-finright::-webkit-scrollbar,#view-conmid::-webkit-scrollbar,#view-conright::-webkit-scrollbar,#view-bronmid::-webkit-scrollbar,#view-bronright::-webkit-scrollbar{display:none}
     #view-beheerboard{grid-column:1 / -1;height:calc(100dvh - var(--tbh,52px));overflow-y:auto;scrollbar-width:none}
     #view-beheerboard::-webkit-scrollbar{display:none}
     .pb-board-inline .pb-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 36px;align-items:start}
@@ -811,6 +815,20 @@
   .con-linked .cl-empty{font-size:12.5px;color:var(--mut2)}
   .con-edit{margin-top:22px;background:transparent;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:9px 18px;font-size:13px;cursor:pointer}
   .con-edit:hover{background:rgba(255,255,255,.05)}
+  /* Bronnen 3-koloms — hergebruikt de Contacten-stijl */
+  #bronnenWrap .con-crow{display:flex;align-items:center;gap:12px;padding:11px 14px;border-bottom:1px solid var(--line);cursor:pointer}
+  #bronnenWrap .con-crow:hover,#bronnenWrap .con-crow.on{background:rgba(255,255,255,.04)}
+  #bronnenWrap .con-cdot{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#000;flex:0 0 auto}
+  #bronnenWrap .con-cmain{flex:1;min-width:0}
+  #bronnenWrap .con-cnm{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #bronnenWrap .con-ccnt{font-size:12px;color:var(--mut2);flex:0 0 auto}
+  #bronMidWrap .con-li{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line);cursor:pointer}
+  #bronMidWrap .con-li:hover,#bronMidWrap .con-li.on{background:rgba(255,255,255,.04)}
+  #bronMidWrap .con-li .cmain{flex:1;min-width:0}
+  #bronMidWrap .con-li .cname{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #bronMidWrap .con-li .crole{font-size:12px;color:var(--mut2);margin-top:2px}
+  #bronRightWrap{padding:0 22px 30px}
+  #bronRightWrap .bron-prevtext{margin-top:6px}
   .pb-notes:focus{outline:none;border-color:var(--mut2)}
   .pb-empty{font-size:13px;color:var(--mut2);padding:3px 0 5px}
   .kicon.kboard:hover{color:#fff}
@@ -1495,15 +1513,14 @@
       <button data-v="files" onclick="setView('files')">Bestanden</button>
       <button data-v="contacten" onclick="setView('contacten')">Contacten</button>
       <button data-v="bronnen" onclick="setView('bronnen')">Bronnen <span class="badge" id="nb-bron"></span></button>
-      <button id="clipBtn" onclick="pasteAsSource()" title="Plak klembord als bron voor de AI (met links)"><svg viewBox="0 0 24 24" width="15" height="15" style="vertical-align:-2px" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M8 5H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/></svg> Plakken</button>
       <button id="dayBtn" onclick="openDayOverview()" title="Dagoverzicht">Dagoverzicht</button>
       <button id="inspBtn" onclick="openInspiration()" title="Inspiratie">Inspiratie</button>
       <button id="pushBtn" onclick="enablePush()" title="Meldingen aanzetten">Meldingen</button>
-      <button data-v="archief" onclick="setView('archief')">Archief</button>
+      <button id="clipBtn" class="nav-picto" onclick="pasteAsSource()" aria-label="Plakken — plak het klembord op het dashboard" title="Plakken — plak het klembord op het dashboard"><svg viewBox="0 0 24 24" width="16" height="16" style="vertical-align:-3px" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M8 5H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/></svg><span class="nav-picto-lbl">Plakken</span></button>
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v129</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v130</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -1544,6 +1561,8 @@
       <div id="view-railhint" class="hidden"><div class="fin-mid-hint" id="railHintTxt">Kies links een item om de details te zien.</div></div>
       <div id="view-conmid" class="hidden"><div id="conMidWrap"></div></div>
       <div id="view-conright" class="hidden"><div id="conRightWrap"></div></div>
+      <div id="view-bronmid" class="hidden"><div id="bronMidWrap"></div></div>
+      <div id="view-bronright" class="hidden"><div id="bronRightWrap"></div></div>
       <div id="view-beheerboard" class="hidden"><div id="beheerBoardWrap"></div></div>
 
       <div id="view-afspraken" class="hidden"></div>
@@ -1620,7 +1639,7 @@
       #finMidWrap .finB-in:focus{outline:none}
       #finMidWrap .finB-field em{font-style:normal;font-size:11.5px;color:var(--mut2);margin-left:auto}
       #finMidWrap .finB-field em.over{color:#e0726f}
-      #finMidWrap .finB-budbar{height:6px;background:var(--line);border-radius:4px;overflow:hidden}
+      #finMidWrap .finB-budbar{height:5px;background:color-mix(in srgb,var(--scol) 14%,transparent);border-radius:4px;overflow:hidden}
       #finMidWrap .finB-budfill{height:100%;background:var(--ccol);border-radius:4px}
       #finMidWrap .finB-budfill.over{background:#e0726f}
       #finMidWrap .finB-head .finB-health{margin-left:auto;font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:20px;white-space:nowrap}
@@ -1659,7 +1678,7 @@
       #finMidWrap .finA-npall:hover{color:#e8e8ea;border-color:rgba(232,232,234,.4)}
       #finMidWrap .finA-noproj .fd-h{display:flex;align-items:center;gap:8px}
       /* Budget-uit-bronnen scan */
-      #finMidWrap .finB-scan{border-top:1px solid var(--line);padding-top:12px}
+      #finMidWrap .finB-scan{padding-top:2px}
       #finMidWrap .finB-scanbtn,#finMidWrap .finB-scanretry{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:var(--ccol);background:transparent;border:1px solid color-mix(in srgb,var(--ccol) 40%,var(--line));border-radius:20px;padding:6px 13px;cursor:pointer;transition:background .15s}
       #finMidWrap .finB-scanbtn:hover{background:color-mix(in srgb,var(--ccol) 12%,transparent)}
       #finMidWrap .finB-scanbusy{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--mut2)}
@@ -1703,7 +1722,10 @@
       .pb-row.pb-ink .pb-price{background:transparent;border:none;border-bottom:1px solid color-mix(in srgb,var(--scol) 32%,var(--line));color:var(--txt);text-align:right;font-size:14px;font-weight:600;padding:1px 0;width:66px;font-variant-numeric:tabular-nums}
       .pb-row.pb-ink .pb-price:focus{outline:none;border-bottom-color:var(--scol)}
       .pb-row.pb-ink .pb-punitin{width:46px;font-size:11px;font-weight:400;color:var(--mut2);border-bottom:none}
-      .pb-besteltot{display:flex;justify-content:space-between;align-items:baseline;margin-top:10px;padding-top:10px;border-top:1px solid color-mix(in srgb,var(--scol) 24%,var(--line));font-size:13px;color:var(--scol)}
+      .pb-besteltot{display:flex;justify-content:space-between;align-items:baseline;margin-top:10px;padding-top:10px;border-top:1px solid color-mix(in srgb,var(--scol) 28%,transparent);font-size:13px;color:var(--scol)}
+      #finRightWrap .pb-in{border-bottom-color:color-mix(in srgb,var(--scol) 26%,transparent)}
+      #finRightWrap .pb-sec{border-top:1px solid color-mix(in srgb,var(--scol) 28%,transparent)}
+      #finRightWrap .pb-sec:first-of-type{border-top:none}
       .pb-besteltot .pb-btval{display:flex;flex-direction:column;align-items:flex-end}
       .pb-besteltot .pb-btval b{font-size:15px;font-weight:600}
       .pb-btsub{font-size:11px;color:var(--mut2);font-weight:400}
@@ -1714,6 +1736,9 @@
       #finMidWrap .finB-doclinks{display:flex;gap:18px;margin-top:9px}
       #finMidWrap .finB-doctext{background:transparent;border:none;padding:0;color:var(--scol);font-size:12.5px;cursor:pointer;opacity:.85}
       #finMidWrap .finB-doctext:hover{opacity:1;text-decoration:underline}
+      #finMidWrap .finB-intakedoc{cursor:pointer}
+      #finMidWrap .finB-docs .kfile{border-top-color:color-mix(in srgb,var(--scol) 20%,transparent)}
+      #finMidWrap .finB-doctag{margin-left:auto;flex:0 0 auto;font-size:10.5px;font-weight:600;letter-spacing:.3px;padding:2px 9px;border-radius:20px;color:var(--scol);border:1px solid color-mix(in srgb,var(--scol) 40%,transparent);background:color-mix(in srgb,var(--scol) 12%,transparent)}
       /* Prijs & budget — label links, bedrag rechts, btw klein eronder */
       #finMidWrap .finB-prow{display:flex;justify-content:space-between;align-items:baseline;margin-top:10px}
       #finMidWrap .finB-plabel{font-size:13.5px;color:var(--scol);opacity:.9}
@@ -1755,6 +1780,9 @@
       #finMidWrap .finB-sub.over{color:#e0726f}
       #finMidWrap .finB-budrow{margin-top:10px}
       #finMidWrap .finB-flat .finB-budbar{margin-top:11px}
+      /* Eén dunne klantkleur-lijn per sectie: geen dubbele lijn onder de header, geen grijze lijnen */
+      #finMidWrap .finB-flat .pb-sec:first-of-type{border-top:none}
+      #finMidWrap .finB-flat .pb-sec{border-top:1px solid color-mix(in srgb,var(--scol) 30%,transparent);margin-bottom:0}
       #finMidWrap .finB-scansec{padding-top:14px}
       #finMidWrap .fd-block{background:#141417;border:1px solid var(--line);border-radius:14px;padding:16px 18px}
       #finMidWrap .fd-h{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;font-weight:600;color:var(--mut);margin-bottom:11px}
@@ -2396,13 +2424,16 @@ function setView(v){
     const cm=document.getElementById('view-conmid'),crt=document.getElementById('view-conright');
     if(cm)cm.classList.toggle('hidden',v!=='contacten');
     if(crt)crt.classList.toggle('hidden',v!=='contacten');
-    const _railHintViews=['beheer','bronnen','archief'];
+    const bm=document.getElementById('view-bronmid'),brt=document.getElementById('view-bronright');
+    if(bm)bm.classList.toggle('hidden',v!=='bronnen');
+    if(brt)brt.classList.toggle('hidden',v!=='bronnen');
+    const _railHintViews=['beheer','archief'];
     const beheerBoardOn=(v==='beheer' && _pbTarget==='beheer' && !!_pbPid);
     const bb=document.getElementById('view-beheerboard'); if(bb)bb.classList.toggle('hidden',!beheerBoardOn);
     const rh=document.getElementById('view-railhint'); if(rh)rh.classList.toggle('hidden', !(_railHintViews.includes(v) && !beheerBoardOn));
     const rht=document.getElementById('railHintTxt'); if(rht)rht.textContent=(v==='beheer')?'Kies links een project om het werkblad te openen.':(v==='bronnen')?'Kies links een bron om de preview te zien.':'Kies links een item om de details te zien.';
   } else {
-    ['view-finmid','view-finright','view-railhint','view-conmid','view-conright','view-beheerboard'].forEach(id=>{const e=document.getElementById(id);if(e)e.classList.add('hidden');});
+    ['view-finmid','view-finright','view-railhint','view-conmid','view-conright','view-bronmid','view-bronright','view-beheerboard'].forEach(id=>{const e=document.getElementById(id);if(e)e.classList.add('hidden');});
   }
   const mh=document.querySelector('.main-head'); if(mh) mh.style.display = (v==='home'||ws) ? 'none' : 'flex';
   if(typeof closePlus==='function') closePlus();
@@ -2871,7 +2902,7 @@ function _renderProjBoard(){
       _masterLink=`<a class="pb-cluster" href="${esc(_u)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Open de hele lijst bij ${esc(_shop)}"><span class="pb-cluster-shop">🛒 ${esc(_shop)}${_pj?' · '+esc(_pj):''}</span><span class="pb-cluster-sub">${_n} items ↗</span></a>`; } }
   const inkopenOpen=inkopen.filter(x=>!x.done);
   const _openTot=inkopenOpen.reduce((s,x)=>s+((x.price!=null&&x.price!=='')?Number(x.price):0)*(x.qty||1),0);
-  const secBestel=`<div class="pb-sec"><div class="pb-h"><span>Bestellijst</span><span class="pb-hbtns">${inkopen.length?`<button class="pb-ai" onclick="pbOrderAll()" title="Zet de hele lijst in één keer in je Amazon-mandje">${_tIc('<path d="M6 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M17 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M17 17h-11v-14h-2"/><path d="M6 5l14 1l-1 7h-13"/>',16,1.7)}</button>`:''}<button class="pb-ai" onclick="pbInkPaste()" title="Plak een verlanglijst of winkelwagen — AI maakt er regels van">${_tIc(_TABCHAN.asterisk,15,1.7)}<span>lijst</span></button>${inkopen.length?`<button class="pb-ai" onclick="pbMoveOpen('all')" title="Hele bestellijst naar een ander project/klant verplaatsen">${_tIc('<path d="M17 3l4 4l-4 4"/><path d="M21 7h-13"/><path d="M7 21l-4 -4l4 -4"/><path d="M3 17h13"/>',15,1.5)}</button><button class="pb-listdel" onclick="pbDelBestel()" title="Hele bestellijst verwijderen"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/></svg></button>`:''}</span></div>${_masterLink}${inkopenOpen.length?inkopenOpen.map(inkRow).join(''):'<div class="pb-empty">Nog geen bestellingen.</div>'}<div class="pb-add"><input class="pb-in" data-kind="inkoop" placeholder="+ artikel toevoegen…" onkeydown="pbAddKey(event,'inkoop')"></div>${inkopenOpen.length?`<div class="pb-besteltot"><span class="pb-btlbl">Totaal</span><span class="pb-btval"><b>€${fmtEur(_openTot)}</b><span class="pb-btsub">incl. btw · excl. €${fmtEur(_openTot/(1+btwPct/100))}</span></span></div>`:''}</div>`;
+  const secBestel=`<div class="pb-sec"><div class="pb-h"><span>Bestellijst</span><span class="pb-hbtns">${inkopen.length?`<button class="pb-ai" onclick="pbOrderAll()" title="Zet de hele lijst in één keer in je Amazon-mandje">${_tIc('<path d="M6 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M17 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M17 17h-11v-14h-2"/><path d="M6 5l14 1l-1 7h-13"/>',16,1.7)}</button>`:''}<button class="pb-ai" onclick="pbInkPaste()" title="Plak een verlanglijst of winkelwagen — AI maakt er regels van">${_tIc(_TABCHAN.asterisk,15,1.7)}<span>lijst</span></button>${inkopen.length?`<button class="pb-ai" onclick="pbMoveOpen('all')" title="Hele bestellijst naar een ander project/klant verplaatsen">${_tIc('<path d="M17 3l4 4l-4 4"/><path d="M21 7h-13"/><path d="M7 21l-4 -4l4 -4"/><path d="M3 17h13"/>',15,1.5)}</button><button class="pb-listdel" onclick="pbDelBestel()" title="Hele bestellijst verwijderen"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/></svg></button>`:''}</span></div>${_masterLink}${inkopenOpen.length?inkopenOpen.map(inkRow).join(''):'<div class="pb-empty">Nog geen bestellingen.</div>'}<div class="pb-add"><input class="pb-in" data-kind="inkoop" placeholder="+ artikel toevoegen…" onkeydown="pbAddKey(event,'inkoop')"></div>${inkopenOpen.length?`<div class="pb-besteltot"><span class="pb-btlbl">Totaal</span><span class="pb-btval"><b>€${fmtEur(_openTot)}</b><span class="pb-btsub">excl. €${fmtEur(_openTot/(1+btwPct/100))}</span></span></div>`:''}</div>`;
   const _body=(_pbMode==='financien')?secBestel:(secWait+secTaken+secBestel+secDone+secAppt+secFiles+secPrijs+secNotes);
   const _head=`<div class="pb-head"><span class="kbadge" style="background:${col}">${esc(initial)}</span><div class="pb-title"><b>${esc(p.client||'')}</b>${p.project?'<span> · '+esc(p.project)+'</span>':''}${_pbMode==='financien'?'<span style="color:'+col+'"> · inkoop</span>':''}</div></div>`;
   if(_pbTarget==='finmid'||_pbTarget==='finright'){ const el=document.getElementById(_pbTarget==='finright'?'finRightWrap':'finMidWrap'); if(el)el.innerHTML=`<div class="pb-inline" style="--scol:${col}">${_head}${_body}</div>`; return; }
@@ -3122,20 +3153,20 @@ async function renderFinancien(){
     if(fmw) fmw.innerHTML=`<div class="pb-inline pb-board-inline finB-flat" style="--scol:${col};--ccol:${col}">
       <div class="pb-head"><span class="kbadge" style="background:${col}">${ic}</span><div class="pb-title"><b>${escapeHtml(p.client||'')}</b>${p.project?`<span> · ${escapeHtml(p.project)}</span>`:''}</div>${healthChip}</div>
       <div class="pb-sec finB-ovsec"><div class="finB-ov">${_finDonut(om!=null?om:0,inkEx,col)}<div class="finB-ovstats">
-        <div class="pb-finline"><span>Inkomsten (excl.)</span><b>${om!=null?'€'+fmtEur(om):'—'}</b></div>
-        <div class="pb-finline"><span>Kosten (excl.)</span><b>€${fmtEur(inkEx)}</b></div>
+        <div class="pb-finline"><span>Inkomsten</span><b>${om!=null?'€'+fmtEur(om):'—'}</b></div>
+        <div class="pb-finline"><span>Kosten</span><b>€${fmtEur(inkEx)}</b></div>
         <div class="pb-finline marge ${marge!=null&&marge<0?'neg':''}"><span>Winst</span><b>${marge!=null?'€'+fmtEur(marge):'—'}</b></div>
       </div></div></div>
       <div class="pb-sec"><div class="pb-h">Offerte &amp; Factuur</div>
         <div class="finB-pills">${pills}</div>
         ${om!=null?`<div class="pb-finline finB-openrow ${openCls}"><span>${openLbl}</span><b>${openVal}</b></div>`:'<div class="finB-openhint">Vul een projectprijs in om facturatie te volgen.</div>'}
-        <div class="finB-docs">${(_filesFor('project',_pbPid)||[]).map(_fileRow).join('')}<div class="finB-doclinks"><button class="finB-doctext" onclick="dropboxPick('project','${_pbPid}')">+ offerte toevoegen</button><button class="finB-doctext" onclick="dropboxPick('project','${_pbPid}')">+ factuur toevoegen</button></div></div>
+        <div class="finB-docs">${_intakeDocsFor(_pbPid).map(_intakeDocRow).join('')}${(_filesFor('project',_pbPid)||[]).map(_fileRow).join('')}<div class="finB-doclinks"><button class="finB-doctext" onclick="dropboxPick('project','${_pbPid}')">+ offerte toevoegen</button><button class="finB-doctext" onclick="dropboxPick('project','${_pbPid}')">+ factuur toevoegen</button></div></div>
       </div>
       <div class="pb-sec"><div class="pb-h">Prijs &amp; budget</div>
         <div class="finB-prow"><span class="finB-plabel">Projectprijs</span><span class="finB-pval">€<input class="finB-priceinput" type="text" inputmode="decimal" value="${om!=null?String(om).replace('.',','):''}" placeholder="—" onchange="pbSetProjectprijs(this.value)"></span></div>
-        <div class="finB-psub">excl. btw${omIncl!=null?' · incl. €'+fmtEur(omIncl):''}</div>
+        ${omIncl!=null?`<div class="finB-psub">incl. €${fmtEur(omIncl)}</div>`:''}
         <div class="finB-prow"><span class="finB-plabel">Klantbudget</span><span class="finB-pval">€<input class="finB-priceinput" type="text" inputmode="decimal" value="${budget!=null?String(budget).replace('.',','):''}" placeholder="—" onchange="pbSetBudget(this.value)"></span></div>
-        ${budPct!=null?`<div class="finB-psub ${budPct>100?'over':''}">${budPct}% van budget benut</div><div class="finB-budbar"><div class="finB-budfill ${budPct>100?'over':''}" style="width:${Math.min(100,budPct)}%"></div></div>`:''}
+        ${budPct!=null?`<div class="finB-psub ${budPct>100?'over':''}">${budPct}% van budget benut</div>${budPct>0?`<div class="finB-budbar"><div class="finB-budfill ${budPct>100?'over':''}" style="width:${Math.min(100,budPct)}%"></div></div>`:''}`:''}
       </div>
       <div class="pb-sec finB-scansec"><div class="finB-scan" id="finBScan"><button class="finB-scanbtn" onclick="pbScanBudget(this)">${_tIc(_TABCHAN.asterisk,15,1.7)}<span>Budget uit bronnen halen</span></button></div></div>
     </div>`;
@@ -3564,31 +3595,63 @@ function _srcRowHTML(s){
     </div>
   </div>`;
 }
+// ---- Bronnen: Klanten-indeling (kolom 1 klanten · kolom 2 bronnen · kolom 3 preview) ----
+let _bronClient=null,_bronSrc=null,_bronSearch='';
+function _bronClientOf(s){ const p=s&&s.proj?projById(s.proj):null; return (p&&(p.client||'').trim())||''; }
+function _bronClean(){ const seen=new Set(); return (state.sources||[]).filter(s=>{ if(_isImageSource(s))return false; const k=_srcDedupeKey(s); if(seen.has(k))return false; seen.add(k); return true; }); }
+function _bronSourcesFor(cl){ return _bronClean().filter(s=>{ const sc=_bronClientOf(s); return cl==='__none__'?!sc:sc===cl; }).sort((a,b)=>d(b.date)-d(a.date)); }
+function selectBronClient(cl){ _bronClient=cl; _bronSrc=null; _bronSearch=''; renderBronnen(); }
+function selectBronSrc(id){ _bronSrc=id; renderBronRight(); document.querySelectorAll('#bronMidWrap .con-li').forEach(el=>el.classList.toggle('on',el.dataset.id===id)); }
+function _bronFilter(q){ _bronSearch=q; renderBronMid(); const si=document.getElementById('bron_search'); if(si){ si.focus(); try{si.setSelectionRange(si.value.length,si.value.length);}catch(_){} } }
 function renderBronnen(){
   const wrap=document.getElementById('bronnenWrap'); if(!wrap)return;
-  // beeldbronnen weglaten + ontdubbelen op inhouds-sleutel
-  const seen=new Set();
-  const clean=state.sources.filter(s=>{
-    if(_isImageSource(s)) return false;
-    const k=_srcDedupeKey(s);
-    if(seen.has(k)) return false;
-    seen.add(k); return true;
-  });
-  const sorted=[...clean].sort((a,b)=>d(b.date)-d(a.date));
-  let html='';
-  // Recent: de nieuwste ~6
-  const recent=sorted.slice(0,6);
-  if(recent.length){
-    html+='<div class="src-group"><div class="src-group-h">Recent</div>'+_renderSrcList(recent)+'</div>';
+  const clean=_bronClean();
+  const cnt={}; clean.forEach(s=>{ const cl=_bronClientOf(s); if(cl)cnt[cl]=(cnt[cl]||0)+1; });
+  const noneN=clean.filter(s=>!_bronClientOf(s)).length;
+  const clients=uniqueClients().filter(Boolean).filter(cl=>cnt[cl]).sort((a,b)=>a.localeCompare(b));
+  let rows=clients.map(cl=>{ const col=_clientColor(cl)||'#888'; const ic=escapeHtml(((String(cl).trim()[0])||'?').toUpperCase()); const on=(_bronClient===cl)?' on':'';
+    return `<div class="con-crow${on}" onclick="selectBronClient('${_qs(cl)}')"><span class="con-cdot" style="background:${col}">${ic}</span><div class="con-cmain"><div class="con-cnm" style="color:${col}">${escapeHtml(cl)}</div></div><span class="con-ccnt">${cnt[cl]}</span></div>`;
+  }).join('');
+  if(noneN){ const on=(_bronClient==='__none__')?' on':''; rows+=`<div class="con-crow${on}" onclick="selectBronClient('__none__')"><span class="con-cdot" style="background:#555">·</span><div class="con-cmain"><div class="con-cnm">Overig</div></div><span class="con-ccnt">${noneN}</span></div>`; }
+  wrap.innerHTML=`<div class="chdr"><span class="chdr-t">Bronnen</span></div>`+(rows||'<div class="hint">Nog geen bronnen. Ze verschijnen hier uit binnengekomen berichten of via Plakken.</div>');
+  renderBronMid(); renderBronRight();
+}
+function renderBronMid(){
+  const w=document.getElementById('bronMidWrap'); if(!w)return;
+  if(!_bronClient){ w.innerHTML='<div class="fin-mid-hint">Kies links een klant om de bronnen te zien.</div>'; return; }
+  let list=_bronSourcesFor(_bronClient);
+  const q=(_bronSearch||'').toLowerCase().trim();
+  if(q) list=list.filter(s=>(_srcTitle(s)+' '+(s.text||'')+' '+(s.summary||'')+' '+(s.full||'')).toLowerCase().includes(q));
+  const rows=list.map(s=>{ const on=(_bronSrc===s.id)?' on':''; const dt=s.date?_finShortDate(s.date):''; const nAtt=(s.attachFull&&s.attachFull.length)?s.attachFull.length:0;
+    return `<div class="con-li${on}" data-id="${s.id}" onclick="selectBronSrc('${s.id}')"><div class="cmain"><div class="cname">${escapeHtml(_srcTitle(s))}</div><div class="crole">${escapeHtml(dt)}${nAtt?' · '+nAtt+' bijlage'+(nAtt>1?'n':''):''}</div></div></div>`;
+  }).join('');
+  w.innerHTML=`<div class="con-midhdr"><input id="bron_search" placeholder="Zoek in deze klant…" autocomplete="off" value="${escapeHtml(_bronSearch||'')}" oninput="_bronFilter(this.value)"></div>`+(rows||'<div class="hint">Geen bronnen bij deze klant.</div>');
+}
+function renderBronRight(){
+  const w=document.getElementById('bronRightWrap'); if(!w)return;
+  const s=_bronSrc?(state.sources||[]).find(x=>x.id===_bronSrc):null;
+  if(!s){ w.innerHTML='<div class="fin-mid-hint">Kies een bron voor de preview.</div>'; return; }
+  const col=(s.proj&&PROJCOL[s.proj])||'var(--primary2)';
+  const atts=(s.attachFull&&s.attachFull.length)?s.attachFull:[];
+  const head=`<div class="fmp-head"><div class="fmp-name">${escapeHtml(_srcTitle(s))}</div></div>`;
+  if(atts.length && atts[0].storage_path){
+    w.innerHTML=head+'<div class="fmp-stage" id="bronStage"><div class="fmp-none">Preview laden…</div></div>';
+    _bronLoadAttachment(atts[0]);
+    return;
   }
-  // Daaronder: gegroepeerd per klant/opdracht (kop in klantkleur)
-  const groups={}, order={}, list=[];
-  sorted.forEach(s=>{ const name=s.proj?(projName(s.proj)||'Geen klant'):'Geen klant'; if(!groups[name]){groups[name]=[];order[name]=s.proj||null;list.push(name);} groups[name].push(s); });
-  list.sort((a,b)=> a==='Geen klant'?1:(b==='Geen klant'?-1:a.localeCompare(b)));
-  html+=list.map(name=>{const col=(order[name]&&PROJCOL[order[name]])||'var(--mut2)';
-    return `<div class="src-group"><div class="src-group-h" style="color:${col}">${escapeHtml(name)}</div>${_renderSrcList(groups[name])}</div>`;}).join('');
-  wrap.innerHTML=html||'<div class="hint">Nog geen bronnen.</div>';
-  _fillSrcThumbs();
+  const body=autolink(escapeHtml(s.full||s.text||s.summary||''),col);
+  w.innerHTML=head+`<div class="bron-prevtext" style="white-space:pre-wrap;line-height:1.6;font-size:13.5px;color:var(--mut)">${body||'<span class="fmp-none">Geen inhoud.</span>'}</div>`;
+}
+async function _bronLoadAttachment(a){
+  const stage=document.getElementById('bronStage'); if(!stage)return;
+  const sp=a.storage_path||'', name=a.filename||''; let url='';
+  try{
+    if(sp.indexOf('dropbox:')===0){ url='/api/fileproxy?u='+encodeURIComponent(_fvRaw(sp.slice(8))); }
+    else { const sg=await sb.storage.from('intake').createSignedUrl(sp,3600); url=sg&&sg.data?sg.data.signedUrl:''; if(!url){ const pub=sb.storage.from('intake').getPublicUrl(sp); url=pub&&pub.data?pub.data.publicUrl:''; } }
+  }catch(_){}
+  if(!url){ stage.innerHTML='<div class="fmp-none">Kon preview niet laden.</div>'; return; }
+  const isImg=/\.(png|jpe?g|gif|webp|heic|heif|bmp|tiff?|svg)$/i.test(name);
+  stage.innerHTML=isImg?`<img class="fmp-img" src="${url}">`:`<iframe class="fmp-frame" src="${url}"></iframe>`;
 }
 // Thumbnails van afbeeldings-bijlagen laden (intake-bucket of Dropbox) via signed/proxy-URL.
 async function _fillSrcThumbs(){
@@ -3678,7 +3741,7 @@ function toggleSrc(id){
   if(willOpen && card) setTimeout(()=>{ try{card.scrollIntoView({behavior:'smooth',block:'start'});}catch(_){card.scrollIntoView();} },70);
 }
 function toggleFull(id){const f=document.getElementById('full_'+id);const b=document.getElementById('fbtn_'+id);f.classList.toggle('open');b.textContent=f.classList.contains('open')?'Verberg origineel ▴':'Toon volledig origineel ▾';}
-function gotoSource(sid){setView('bronnen');setTimeout(()=>{document.querySelectorAll('.srow.tinted').forEach(x=>x.classList.remove('tinted'));const b=document.getElementById('body_'+sid);const card=document.getElementById('card_'+sid);if(b)b.classList.add('open');if(card){card.classList.add('tinted');card.scrollIntoView({behavior:'smooth',block:'center'});}},60);}
+function gotoSource(sid){ const s=(state.sources||[]).find(x=>x.id===sid); const cl=s?(_bronClientOf(s)||'__none__'):null; _bronClient=cl; _bronSrc=sid; setView('bronnen'); setTimeout(()=>{ try{ renderBronnen(); const el=document.querySelector('#bronMidWrap .con-li[data-id="'+sid+'"]'); if(el)el.scrollIntoView({behavior:'smooth',block:'center'}); }catch(_){} },60); }
 if(!window._srcTintInit){window._srcTintInit=true;document.addEventListener('click',e=>{const t=document.querySelector('.srow.tinted');if(t&&!t.contains(e.target))t.classList.remove('tinted');});}
 
 // ---------- contacten ----------
@@ -3689,12 +3752,37 @@ let _conClient=null,_conContact=null,_conSearch='';
 function selectConClient(cl){ _conClient=cl; _conContact=null; _conSearch=''; renderContacten(); }
 function selectConContact(id){ _conContact=id; renderConRight(); document.querySelectorAll('#conMidWrap .con-li').forEach(el=>el.classList.toggle('on',el.dataset.id===id)); }
 function _conFilter(q){ _conSearch=q; renderConMid(); const si=document.getElementById('con_search'); if(si){ si.focus(); try{si.setSelectionRange(si.value.length,si.value.length);}catch(_){} } }
+// Slim per klant groeperen: koppelt elk contact aan een bekende klant via bedrijfsnaam,
+// naam-match of e-maildomein (met domein-overerving), zonder de DB te wijzigen.
+const _CON_FREEMAIL=new Set(['gmail.com','googlemail.com','hotmail.com','hotmail.nl','outlook.com','outlook.nl','live.nl','live.com','icloud.com','me.com','yahoo.com','yahoo.nl','ziggo.nl','kpnmail.nl','planet.nl','home.nl','xs4all.nl','telfort.nl','gmx.net','gmx.com','proton.me','protonmail.com','casema.nl','hetnet.nl','chello.nl','online.nl']);
+function _conNorm(s){ return String(s||'').toLowerCase().replace(/\b(b\.?v\.?|n\.?v\.?|v\.?o\.?f\.?|ltd|inc|gmbh|holding|group|the)\b/g,'').replace(/[^a-z0-9]/g,''); }
+function _conDomain(e){ const m=String(e||'').toLowerCase().match(/@([a-z0-9.-]+)/); return m?m[1].replace(/^www\./,''):''; }
+let _conMapCache=null,_conMapKey='';
+function _contactClientMap(){
+  const contacts=(state.contacts||[]);
+  const clients=uniqueClients().filter(Boolean);
+  const key=contacts.map(c=>c.id+'~'+(c.client||'')+'~'+(c.company||'')+'~'+(c.email||'')).join('|')+'##'+clients.join(',');
+  if(_conMapCache && _conMapKey===key) return _conMapCache;
+  const cn={}; clients.forEach(cl=>{ const n=_conNorm(cl); if(n)cn[n]=cl; });
+  const matchName=v=>{ const n=_conNorm(v); if(!n)return ''; if(cn[n])return cn[n];
+    const hit=clients.find(x=>{ const xn=_conNorm(x); return xn && xn.length>=4 && (n===xn||n.includes(xn)||xn.includes(n)); }); return hit||''; };
+  const map={},domainClient={};
+  contacts.forEach(c=>{
+    let cl=matchName(c.client||c.company||'');
+    if(!cl){ const dom=_conDomain(c.email); if(dom && !_CON_FREEMAIL.has(dom)) cl=matchName(dom.split('.')[0]); }
+    if(cl){ map[c.id]=cl; const dom=_conDomain(c.email); if(dom && !_CON_FREEMAIL.has(dom)) domainClient[dom]=cl; }
+  });
+  contacts.forEach(c=>{ if(map[c.id])return; const dom=_conDomain(c.email); if(dom && !_CON_FREEMAIL.has(dom) && domainClient[dom]) map[c.id]=domainClient[dom]; });
+  _conMapCache=map; _conMapKey=key; return map;
+}
+function _contactClientOf(c){ return (c&&_contactClientMap()[c.id])||''; }
 // Kolom 1: klanten met contact-aantal
 function renderContacten(){
   const wrap=document.getElementById('contactenWrap'); if(!wrap)return;
   const contacts=(state.contacts||[]);
-  const cnt={}; contacts.forEach(c=>{ const k=(c.client||'').trim(); if(k)cnt[k]=(cnt[k]||0)+1; });
-  const noneN=contacts.filter(c=>!((c.client||'').trim())).length;
+  const CM=_contactClientMap();
+  const cnt={}; contacts.forEach(c=>{ const k=CM[c.id]; if(k)cnt[k]=(cnt[k]||0)+1; });
+  const noneN=contacts.filter(c=>!CM[c.id]).length;
   const clients=uniqueClients().filter(Boolean);
   let rows=clients.map(cl=>{ const col=_clientColor(cl)||'#888'; const ic=escapeHtml(((String(cl).trim()[0])||'?').toUpperCase()); const n=cnt[cl]||0; const on=(_conClient===cl)?' on':'';
     return `<div class="con-crow${on}" onclick="selectConClient('${_qs(cl)}')"><span class="con-cdot" style="background:${col}">${ic}</span><div class="con-cmain"><div class="con-cnm" style="color:${col}">${escapeHtml(cl)}</div></div><span class="con-ccnt">${n}</span></div>`;
@@ -3715,7 +3803,7 @@ function _conQuick(c){
 function renderConMid(){
   const w=document.getElementById('conMidWrap'); if(!w)return;
   if(!_conClient){ w.innerHTML='<div class="fin-mid-hint">Kies links een klant om de contacten te zien.</div>'; return; }
-  let list=(state.contacts||[]).filter(c=> _conClient==='__none__' ? !((c.client||'').trim()) : (c.client||'').trim()===_conClient );
+  let list=(state.contacts||[]).filter(c=> _conClient==='__none__' ? !_contactClientOf(c) : _contactClientOf(c)===_conClient );
   const q=(_conSearch||'').toLowerCase().trim();
   if(q) list=list.filter(c=> ((c.name||'')+' '+(c.email||'')+' '+(c.phone||'')+' '+(c.role||'')).toLowerCase().includes(q));
   list.sort((a,b)=>String(a.name||'').localeCompare(String(b.name||'')));
@@ -3729,7 +3817,7 @@ function renderConRight(){
   const w=document.getElementById('conRightWrap'); if(!w)return;
   const c=_conContact?(state.contacts||[]).find(x=>x.id===_conContact):null;
   if(!c){ w.innerHTML='<div class="fin-mid-hint">Kies een contact voor de details.</div>'; return; }
-  const col=(c.client&&c.client.trim())?(_clientColor(c.client)||'#888'):'#777';
+  const _rc=_contactClientOf(c); const col=_rc?(_clientColor(_rc)||'#888'):'#777';
   const enough=!!(String(c.name||'').trim() && (c.role||c.company) && (c.email||c.phone));
   const avBtn=enough?`<button class="con-aiav" onclick="conAiAvatar('${c.id}')">✦ AI-avatar maken</button>`:'';
   const line=(label,val,href)=> val?`<div class="con-dline"><span>${label}</span>${href?`<a href="${href}" onclick="event.stopPropagation()">${escapeHtml(val)}</a>`:`<b>${escapeHtml(val)}</b>`}</div>`:'';
@@ -3826,6 +3914,24 @@ async function mergeDupContacts(){
 
 // ---------- Dropbox-bestanden (per project / taak) ----------
 function _filesFor(type,id){return (state.files||[]).filter(f=>f.owner_type===type && String(f.owner_id)===String(id));}
+// Intake-documenten die als offerte/factuur binnenkwamen en al aan een project gekoppeld zijn
+// (poller zet source.project_id) → automatisch tonen in de "Offerte & Factuur"-sectie.
+function _docKind(s){
+  const hay=((s&&s.subject||'')+' '+(s&&s.summary||'')+' '+((s&&s.attachFull||[]).map(a=>a.filename||'').join(' '))+' '+(s&&s.text||'')).toLowerCase();
+  if(/\bfactuur|facturen|invoice|nota\b/.test(hay)) return 'factuur';
+  if(/\bofferte|offertes|prijsopgave|quotation|quote\b/.test(hay)) return 'offerte';
+  return '';
+}
+function _intakeDocsFor(pid){
+  const out=[];
+  (state.sources||[]).forEach(s=>{ if(String(s.proj)!==String(pid))return; const k=_docKind(s); if(!k)return;
+    (s.attachFull||[]).forEach((a,i)=>{ if(!a.storage_path)return; out.push({sid:s.id,idx:i,name:a.filename||'bijlage',kind:k}); }); });
+  return out;
+}
+function _intakeDocRow(d){
+  const lbl=d.kind==='factuur'?'Factuur':'Offerte';
+  return `<div class="kfile finB-intakedoc" onclick="event.stopPropagation();openAttachment('${d.sid}',${d.idx})" title="Voorvertonen"><span class="kfile-ic">${_fileGlyph(d.name||'')}</span><span class="kfile-name">${escapeHtml(d.name||'bestand')}</span><span class="finB-doctag ${d.kind}">${lbl}</span></div>`;
+}
 function _folderGlyph(){return _tIc('<path d="M5 4h4l3 3h7a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-11a2 2 0 0 1 2 -2"/>',18,1.25);}
 function _fileRow(f){
   const ic=_fileGlyph(f.name||'');
@@ -5275,7 +5381,7 @@ function applyLayout(){
 function _ensureRailCloses(){
   const _xIc='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
   const _plusIc='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>';
-  const spec=[['view-bronnen','Bronnen'],['view-beheer','Klanten & projecten'],['view-financien','Financiën'],['view-contacten',''],['view-archief','Archief'],['view-files','Bestanden']];
+  const spec=[['view-bronnen',''],['view-beheer','Klanten & projecten'],['view-financien','Financiën'],['view-contacten',''],['view-archief','Archief'],['view-files','Bestanden']];
   const d3=isDesk3();
   spec.forEach(([vid,label])=>{
     const v=document.getElementById(vid); if(!v)return;
