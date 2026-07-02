@@ -968,10 +968,13 @@
   .modal>input,.modal>select,.modal>textarea,.modal>.datefield,.modal .twocol{margin-top:18px}
   .modal h3+input,.modal h3+select,.modal h3+textarea,.modal h3+.datefield,.modal h3+.twocol{margin-top:0}
   .modal input:focus,.modal select:focus,.modal textarea:focus{outline:none;border-color:#5a5a5a;background:rgba(255,255,255,.04)}
-  .modal .ownerpick{display:flex;align-items:center;flex-wrap:wrap;gap:8px 14px;border:1px solid var(--line);border-radius:13px;padding:9px 15px;min-height:49px;box-sizing:border-box}
-  .modal .ownerpick .ownerpick-lbl{font-size:12.5px;color:var(--mut2)}
-  .modal .ownerpick label{display:inline-flex;align-items:center;gap:6px;font-size:13.5px;color:var(--txt);cursor:pointer;white-space:nowrap}
-  .modal .ownerpick input[type=checkbox]{width:16px;height:16px;accent-color:#8a8a8a;cursor:pointer;flex:0 0 auto}
+  .modal .ownerpick{display:flex;flex-direction:column;align-items:flex-start;gap:11px;border:1px solid var(--line);border-radius:13px;padding:14px 15px;box-sizing:border-box}
+  .modal .ownerpick .ownerpick-lbl{font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:var(--mut2)}
+  .modal .ownerpick .op-opt{display:inline-flex;align-items:center;gap:10px;font-size:14px;color:var(--txt);cursor:pointer}
+  .modal .ownerpick .op-opt input{position:absolute;opacity:0;pointer-events:none;width:0;height:0}
+  .modal .ownerpick .op-box{width:20px;height:20px;border-radius:6px;border:1.5px solid var(--mut2);display:inline-flex;align-items:center;justify-content:center;color:transparent;flex:0 0 auto;transition:background .12s,border-color .12s,color .12s}
+  .modal .ownerpick .op-opt input:checked ~ .op-box{background:#fff;border-color:#fff;color:#111}
+  .modal .ownerpick .op-opt:hover .op-box{border-color:var(--txt)}
   .modal ::placeholder{color:var(--mut2);opacity:1}
   .modal textarea{min-height:80px;resize:vertical;line-height:1.45}
   .modal select{appearance:none;-webkit-appearance:none;cursor:pointer;padding-right:36px;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ececec' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 14px center}
@@ -988,7 +991,7 @@
   .datefield .cal-ic{color:var(--mut);display:flex;align-items:center}
   .datefield .ph{color:var(--mut2)}
   .modal input[type=date]::-webkit-calendar-picker-indicator{filter:invert(1);opacity:.92;cursor:pointer}
-  .duepop{position:fixed;display:none;z-index:140;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;box-shadow:0 14px 34px rgba(0,0,0,.6);width:300px}
+  .duepop{position:fixed;display:none;z-index:1200;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;box-shadow:0 14px 34px rgba(0,0,0,.6);width:300px}
   .duepop.open{display:block}
   .duepop .dphd{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
   .duepop .dphd .lbl{font-weight:650;font-size:14px;text-transform:capitalize}
@@ -1006,7 +1009,7 @@
   .duepop .dpfoot{display:flex;justify-content:space-between;margin-top:10px}
   .duepop .dpfoot button{background:transparent;border:none;color:var(--primary2);cursor:pointer;font-size:12.5px}
   /* tijdkiezer */
-  .time-overlay{position:fixed;inset:0;z-index:150;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:20px}
+  .time-overlay{position:fixed;inset:0;z-index:1200;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:20px}
   .time-overlay.open{display:flex}
   @media(min-width:1001px){ .time-overlay{justify-content:flex-end;padding-right:calc(16.65vw - 140px)} }
   .timepop{background:var(--panel);border:1px solid var(--line);border-radius:16px;width:280px;max-width:100%;padding:16px;box-shadow:0 24px 60px rgba(0,0,0,.55)}
@@ -1536,7 +1539,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v134</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v135</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -2038,7 +2041,7 @@
     <h3 id="editModalTitle">Actiepunt bewerken</h3>
     <textarea id="m_t" rows="3" placeholder="Omschrijving" autocomplete="off"></textarea>
     <div class="twocol">
-      <div class="ownerpick" id="m_ownerpick"><span class="ownerpick-lbl">Wie van Begeister</span><label><input type="checkbox" id="own_j" onchange="_ownerCheckSync('j')"> Jeroen</label><label><input type="checkbox" id="own_m" onchange="_ownerCheckSync('m')"> Marlon</label><label><input type="checkbox" id="own_i" onchange="_ownerCheckSync('i')"> Intern overleg</label></div>
+      <div class="ownerpick" id="m_ownerpick"><span class="ownerpick-lbl">Wie van Begeister</span><label class="op-opt"><input type="checkbox" id="own_j" onchange="_ownerCheckSync('j')"><span class="op-box"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5l10 -10"/></svg></span><span>Jeroen</span></label><label class="op-opt"><input type="checkbox" id="own_m" onchange="_ownerCheckSync('m')"><span class="op-box"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5l10 -10"/></svg></span><span>Marlon</span></label><label class="op-opt"><input type="checkbox" id="own_i" onchange="_ownerCheckSync('i')"><span class="op-box"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5l10 -10"/></svg></span><span>Intern overleg</span></label></div>
       <div><select id="m_contact"></select></div>
     </div>
     <div class="twocol">
