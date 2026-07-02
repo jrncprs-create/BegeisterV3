@@ -48,6 +48,17 @@ function parseResult(raw) {
   };
 }
 
+// Zet technische fouten om in een begrijpelijke melding voor de gebruiker.
+function friendlyErr(e) {
+  const m = String((e && e.message) || e || "").toLowerCase();
+  const status = e && (e.status || e.statusCode);
+  if (status === 401 || /authentication|invalid x-api-key|\bapi key\b/.test(m)) return "AI-sleutel lijkt ongeldig — controleer de ANTHROPIC_API_KEY.";
+  if (status === 402 || status === 403 || /credit balance is too low|insufficient|quota|billing|payment required/.test(m)) return "AI-tegoed is op — vul het aan in de Anthropic Console (Billing).";
+  if (status === 429 || /rate limit|overloaded/.test(m)) return "AI is even te druk — probeer het zo opnieuw.";
+  if (/premature close|fetch failed|econnreset|terminated|socket hang up|network|und_err|timeout/.test(m)) return "De verbinding met de AI viel weg (mogelijk is het tegoed op of een tijdelijke storing). Probeer het opnieuw.";
+  return String((e && e.message) || e || "onbekende fout");
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "method not allowed" });
   if (!anthropic) return res.status(200).json({ error: "AI niet beschikbaar" });
@@ -114,6 +125,6 @@ export default async function handler(req, res) {
 
     return res.status(200).json({ ...out, thin, canVision, mode });
   } catch (e) {
-    return res.status(200).json({ error: String(e.message || e) });
+    return res.status(200).json({ error: friendlyErr(e) });
   }
 }
