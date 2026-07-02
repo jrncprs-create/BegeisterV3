@@ -1004,6 +1004,9 @@
   .modal .ownerpick .op-opt input:checked ~ .op-box{border-color:var(--txt)}
   .modal .ownerpick .op-opt input:checked ~ .op-box svg{opacity:1}
   .modal .ownerpick .op-opt:hover .op-box{border-color:var(--txt)}
+  .modal .m-rightcol{display:flex;flex-direction:column;gap:10px}
+  .modal .m-rightcol .datefield,.modal .m-rightcol select{margin:0}
+  .modal input[list]{width:100%}
   .modal ::placeholder{color:var(--mut2);opacity:1}
   .modal textarea{min-height:80px;resize:vertical;line-height:1.45}
   .modal select{appearance:none;-webkit-appearance:none;cursor:pointer;padding-right:36px;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ececec' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 14px center}
@@ -1573,7 +1576,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v138</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v139</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -2080,16 +2083,14 @@
     <textarea id="m_t" rows="3" placeholder="Omschrijving" autocomplete="off"></textarea>
     <div class="twocol">
       <div class="ownerpick" id="m_ownerpick"><span class="ownerpick-lbl">Wie van Begeister</span><label class="op-opt"><input type="checkbox" id="own_j" onchange="_ownerCheckSync('j')"><span class="op-box"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5l10 -10"/></svg></span><span>Jeroen</span></label><label class="op-opt"><input type="checkbox" id="own_m" onchange="_ownerCheckSync('m')"><span class="op-box"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5l10 -10"/></svg></span><span>Marlon</span></label><label class="op-opt"><input type="checkbox" id="own_i" onchange="_ownerCheckSync('i')"><span class="op-box"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5l10 -10"/></svg></span><span>Intern overleg</span></label></div>
-      <div><select id="m_contact"></select></div>
+      <div class="m-rightcol">
+        <div class="datefield" id="m_due_field" onclick="openDuePicker(event)"><span id="m_due_label" class="ph">Deadline</span><span class="cal-ic"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z"/><path d="M16 3v4"/><path d="M8 3v4"/><path d="M4 11h16"/></svg></span></div>
+        <select id="m_status"><option value="todo">te doen</option><option value="doing">bezig</option><option value="wait">wacht op</option><option value="done">klaar</option></select>
+      </div>
     </div>
-    <div class="twocol">
-      <div><select id="m_client" onchange="onClientChange()"></select></div>
-      <div><select id="m_project" onchange="onProjectChange()"></select></div>
-    </div>
-    <div class="twocol">
-      <div><div class="datefield" id="m_due_field" onclick="openDuePicker(event)"><span id="m_due_label" class="ph">Deadline</span><span class="cal-ic"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z"/><path d="M16 3v4"/><path d="M8 3v4"/><path d="M4 11h16"/></svg></span></div></div>
-      <div><select id="m_status"><option value="todo">te doen</option><option value="doing">bezig</option><option value="wait">wacht op</option><option value="done">klaar</option></select></div>
-    </div>
+    <div><input id="m_contact" list="m_contactlist" placeholder="Contact zoeken of toevoegen…" autocomplete="off"><datalist id="m_contactlist"></datalist></div>
+    <div><select id="m_client" onchange="onClientChange()"></select></div>
+    <div><select id="m_project" onchange="onProjectChange()"></select></div>
     <div id="m_files"></div>
     <div class="foot">
       <button class="iconbtn del" onclick="deleteItem()" aria-label="Verwijderen"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10.4"/><path d="M9 9l6 6M15 9l-6 6"/></svg></button>
@@ -2207,7 +2208,7 @@
     <span class="fv-name" id="fv_name"></span>
     <span class="fv-count" id="fv_count"></span>
     <div class="fv-actions">
-      <button class="fv-btn fv-ai" onclick="fvAiRead()" title="Laat AI dit document lezen">✦ Laat AI lezen</button>
+      <button class="fv-btn fv-ai" onclick="fvAiRead()" title="Laat AI dit document lezen"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" style="vertical-align:-2px;margin-right:6px"><path d="M12 5v14"/><path d="M6 8l12 8"/><path d="M18 8l-12 8"/></svg>Laat AI lezen</button>
       <button class="fv-btn" onclick="fvOpenOriginal()" title="Download in standaardprogramma">Download origineel</button>
       <button class="fv-btn" onclick="fvOpenDropbox()" title="Open in Dropbox">Open in Dropbox</button>
       <button class="fv-x" onclick="closeFileViewer()" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
@@ -3032,7 +3033,7 @@ async function pbAddAppt(e){ if(e.key!=='Enter')return; e.preventDefault(); cons
 }
 async function pbAddKey(e,kind){ if(e.key!=='Enter')return; e.preventDefault(); const v=(e.target.value||'').trim(); if(!v)return; e.target.value=''; try{ const r=await sb.from('project_board').insert({project_id:_pbPid,kind,text:v,sort:_pbItems.length}).select().single(); if(r&&r.data)_pbItems.push(r.data); }catch(_){} _renderProjBoard(); _pbFocus(kind); }
 async function pbToggle(id,done){ const x=_pbItems.find(i=>i.id===id); if(x)x.done=done; try{ await sb.from('project_board').update({done}).eq('id',id); }catch(_){} _renderProjBoard(); }
-async function pbDel(id){ _pbItems=_pbItems.filter(i=>i.id!==id); try{ await sb.from('project_board').delete().eq('id',id); }catch(_){} _finInk=null; _renderProjBoard(); }
+async function pbDel(id){ if(!(await uiConfirm('Dit artikel verwijderen?')))return; _pbItems=_pbItems.filter(i=>i.id!==id); try{ await sb.from('project_board').delete().eq('id',id); }catch(_){} _finInk=null; _renderProjBoard(); }
 // Bestelregel afvinken → naar Afgevinkt (met fade); uitvinken → terug
 // Bestellijst-vinkje: markeer als "besteld" (item blijft staan, schuift naar de BESTELD-sectie) i.p.v. verwijderen.
 async function pbInkOrdered(id){ const x=_pbItems.find(i=>i.id===id); if(!x)return; const ns=(x.status==='besteld')?'te bestellen':'besteld'; x.status=ns; try{ await sb.from('project_board').update({status:ns}).eq('id',id); }catch(e){ console.warn('besteld',e); } _renderProjBoard(); }
@@ -3473,6 +3474,7 @@ async function saveAppt(){
 }
 async function deleteAppt(){
   if(!apptEditId)return;
+  if(!(await uiConfirm('Deze afspraak verwijderen?')))return;
   const a=(state.appointments||[]).find(x=>x.id===apptEditId);
   await sb.from('appointments').delete().eq('id',apptEditId);
   notifyPartner((who||'Iemand')+' verwijderde afspraak: '+(a?a.t:''));
@@ -3925,7 +3927,7 @@ function renderConRight(){
   const c=_conContact?(state.contacts||[]).find(x=>x.id===_conContact):null;
   if(!c){ w.innerHTML='<div class="fin-mid-hint">Kies een contact voor de details.</div>'; return; }
   const _rc=_contactClientOf(c); const col=_rc?(_clientColor(_rc)||'#888'):'#777';
-  const avBtn=`<button class="con-aiav" onclick="conAiAvatar('${c.id}')">✦ ${c.avatar_seed!=null?'Nieuwe variant':'Avatar maken'}</button>`;
+  const avBtn=`<button class="con-aiav" onclick="conAiAvatar('${c.id}')">${_tIc(_TABCHAN.asterisk,14,1.7)} ${c.avatar_seed!=null?'Nieuwe variant':'Avatar maken'}</button>`;
   const line=(label,val,href)=> val?`<div class="con-dline"><span>${label}</span>${href?`<a href="${href}" onclick="event.stopPropagation()">${escapeHtml(val)}</a>`:`<b>${escapeHtml(val)}</b>`}</div>`:'';
   const tel=(c.phone||'').replace(/[^+\d]/g,'');
   w.innerHTML=`<div class="con-detail">
@@ -4330,7 +4332,7 @@ function renderRail(){
   let _h='', _i=0;
   if(_fr.length) _h+='<div class="afgroup">Net binnen</div>'+_fr.map(f=>taskCard(f.p,f.it,_i++,'wachter',true)).join('')+(_rs.length?'<div class="fresh-sep"></div>':'');
   _h+=_rs.map(f=>taskCard(f.p,f.it,_i++,'wachter')).join('');
-  if(list) list.innerHTML = _h || '<div class="hint">Niets dat nu aandacht vraagt ✦</div>';
+  if(list) list.innerHTML = _h || '<div class="hint">Niets dat nu aandacht vraagt <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="vertical-align:-1px"><path d="M12 5v14"/><path d="M6 8l12 8"/><path d="M18 8l-12 8"/></svg></div>';
   const undated=allItems().filter(x=>x.it.status!=='done'&&!x.it.due&&x.it.status!=='wait').length;
   const foot=document.getElementById('wachterFoot');
   if(foot) foot.textContent = undated ? `${undated} actiepunt(en) staan nog zonder datum` : '';
@@ -5136,7 +5138,7 @@ function openModal(id, src, defStatus, presetPid){
   _ownerToChecks(isNew?(who||'Jeroen'):(r.it.owner||''));
   const cur=isNew?'':(r.it.contact||'');
   const cs=[...CONTACTS];if(cur&&!cs.includes(cur))cs.unshift(cur);
-  document.getElementById('m_contact').innerHTML='<option value="">Contact</option>'+cs.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+  document.getElementById('m_contactlist').innerHTML=cs.map(c=>`<option value="${escapeHtml(c)}"></option>`).join('');
   document.getElementById('m_contact').value=cur;
   const inInbox = !isNew && r.p.id==='__inbox__';
   const _pp=(isNew&&presetPid)?projById(presetPid):null;
@@ -5170,7 +5172,7 @@ function saveModal(){const r=findItem(editingId);if(!r)return;const np=document.
   r.it.due=mDue||null;r.it.status=document.getElementById('m_status').value;
   if(np&&np!==r.p.id){r.p.items=r.p.items.filter(i=>i.id!==r.it.id);projById(np).items.push(r.it);if(activeTab!=='all')activeTab=np;}
   closeModal();render();}
-function deleteItem(){const r=findItem(editingId);if(!r)return;r.p.items=r.p.items.filter(i=>i.id!==r.it.id);closeModal();render();}
+async function deleteItem(){const r=findItem(editingId);if(!r)return;if(!(await uiConfirm('Dit actiepunt verwijderen?')))return;r.p.items=r.p.items.filter(i=>i.id!==r.it.id);try{await sb.from('items').delete().eq('id',r.it.id);}catch(_){}closeModal();render();}
 document.getElementById('overlay').addEventListener('click',e=>{if(e.target.id==='overlay')closeModal();});
 
 // eigen datumkiezer
@@ -6012,7 +6014,7 @@ function _openDraftModal(draft){
   pendingSourceId=_dropSrc||null;
   if(draft.title) document.getElementById('m_t').value=draft.title;
   _ownerToChecks(draft.owner||'');
-  if(draft.contact){ const sel=document.getElementById('m_contact'); if(![...sel.options].some(o=>o.value===draft.contact)){ const o=document.createElement('option'); o.value=draft.contact; o.textContent=draft.contact; sel.appendChild(o);} sel.value=draft.contact; }
+  if(draft.contact){ const el=document.getElementById('m_contact'); if(el)el.value=draft.contact; }
   const _pid=draft.project_id||_fileProjectId||null;
   if(_pid){ const p=projById(_pid); if(p){ try{ _fillClientSelect(document.getElementById('m_client'), p.client); fillProjectSelect(p.client, _pid); _enhanceSelect('m_client','client'); _enhanceSelect('m_project','project'); }catch(_){}}}
   if(draft.due){ mDue=draft.due; duePickerRef=mDue; updateDueLabel(); }
