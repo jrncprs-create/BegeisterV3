@@ -639,7 +639,7 @@
   .pb-add{padding:3px 0 2px}
   .pb-in{width:100%;background:transparent;border:none;border-bottom:1px solid var(--line);padding:7px 2px;font-size:14px;font-family:inherit}
   .pb-in:focus{outline:none;border-bottom-color:var(--mut2)}
-  .pb-notes{width:100%;min-height:88px;background:transparent;border:1px solid var(--line);border-radius:11px;padding:11px 12px;font-size:14px;font-family:inherit;resize:vertical;margin-top:2px}
+  .pb-notes{width:100%;min-height:150px;background:transparent;border:1px solid var(--line);border-radius:11px;padding:11px 12px;font-size:14px;font-family:inherit;resize:vertical;margin-top:2px}
   /* Inkopen: regels met prijs/link + totaal/budget */
   .pb-hbtns{display:flex;gap:6px}
   .pb-ink .pb-qty{font-size:12px;color:var(--mut2)}
@@ -1006,6 +1006,17 @@
   .modal .ownerpick .op-opt:hover .op-box{border-color:var(--txt)}
   .modal .m-rightcol{display:flex;flex-direction:column;gap:10px}
   .modal .m-rightcol .datefield,.modal .m-rightcol select{margin:0}
+  /* onderste velden (contact/klant/project) zitten in een <div> en misten daardoor de 18px tussenruimte */
+  .modal>.m-fld{margin-top:18px}
+  .modal>#m_files:not(:empty){margin-top:18px}
+  /* custom contact-autocomplete — vervangt de niet-styleerbare native datalist */
+  .acwrap{position:relative}
+  .acmenu{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:40;background:#1b1b1d;border:1px solid var(--line);border-radius:12px;max-height:224px;overflow-y:auto;box-shadow:0 18px 40px rgba(0,0,0,.5);display:none;padding:5px}
+  .acmenu.on{display:block}
+  .acitem{padding:10px 12px;border-radius:8px;font-size:14px;color:var(--txt);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .acitem.new{color:var(--mut2)}
+  .acitem.new b{color:var(--txt);font-weight:600}
+  .acitem:hover,.acitem.sel{background:rgba(255,255,255,.07)}
   .modal input[list]{width:100%}
   .modal ::placeholder{color:var(--mut2);opacity:1}
   .modal textarea{min-height:80px;resize:vertical;line-height:1.45}
@@ -1576,7 +1587,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v141</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v142</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -2091,9 +2102,9 @@
         <select id="m_status"><option value="todo">te doen</option><option value="doing">bezig</option><option value="wait">wacht op</option><option value="done">klaar</option></select>
       </div>
     </div>
-    <div><input id="m_contact" list="m_contactlist" placeholder="Contact zoeken of toevoegen…" autocomplete="off"><datalist id="m_contactlist"></datalist></div>
-    <div><select id="m_client" onchange="onClientChange()"></select></div>
-    <div><select id="m_project" onchange="onProjectChange()"></select></div>
+    <div class="m-fld acwrap"><input id="m_contact" placeholder="Contact zoeken of toevoegen…" autocomplete="off"><div class="acmenu" id="m_contactmenu"></div></div>
+    <div class="m-fld"><select id="m_client" onchange="onClientChange()"></select></div>
+    <div class="m-fld"><select id="m_project" onchange="onProjectChange()"></select></div>
     <div id="m_files"></div>
     <div class="foot">
       <button class="iconbtn del" onclick="deleteItem()" aria-label="Verwijderen"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10.4"/><path d="M9 9l6 6M15 9l-6 6"/></svg></button>
@@ -2122,7 +2133,7 @@
       </div>
     </div>
     <div class="twocol">
-      <div><input id="a_contact" placeholder="Met wie" autocomplete="off" /></div>
+      <div class="acwrap"><input id="a_contact" placeholder="Met wie" autocomplete="off" /><div class="acmenu" id="a_contactmenu"></div></div>
       <div><input id="a_location" placeholder="Locatie" autocomplete="off" /></div>
     </div>
     <div class="twocol">
@@ -2885,6 +2896,7 @@ function openApptModal(id, presetPid){
   setTimeField('a_start',a?a.start:'');
   setTimeField('a_end',a?a.end:'');
   document.getElementById('a_kind').value=a?a.kind:'';
+  _acInit();
   document.getElementById('a_contact').value=a?a.contact:'';
   document.getElementById('a_location').value=a?a.location:'';
   document.getElementById('a_note').value=a?a.note:'';
@@ -5144,16 +5156,39 @@ function _fillProjectOpts(sel,client,selId){
   if(sel._cddWrap)_enhanceSelect(sel,'project');
 }
 let _apptOwner='';
-function setApptOwner(n){ _apptOwner=(_apptOwner===n)?'':n; _renderApptWho(); }
-function _renderApptWho(){ const el=document.getElementById('a_whoToggle'); if(!el)return; el.innerHTML=`<span class="tw-opt${_apptOwner==='Jeroen'?' on':''}" onclick="setApptOwner('Jeroen')">Jeroen</span><span class="tw-opt${_apptOwner==='Marlon'?' on':''}" onclick="setApptOwner('Marlon')">Marlon</span>`; }
+// Afspraak-eigenaar: Jeroen / Marlon / samen (combineerbaar, net als bij Taken)
+function setApptOwner(n){
+  let j=/jeroen/i.test(_apptOwner), m=/marlon/i.test(_apptOwner);
+  if(n==='Jeroen')j=!j; else if(n==='Marlon')m=!m;
+  _apptOwner=(j&&m)?'Marlon & Jeroen':(j?'Jeroen':(m?'Marlon':''));
+  _renderApptWho();
+}
+function _renderApptWho(){ const el=document.getElementById('a_whoToggle'); if(!el)return;
+  const j=/jeroen/i.test(_apptOwner), m=/marlon/i.test(_apptOwner);
+  el.innerHTML=`<span class="tw-opt${j?' on':''}" onclick="setApptOwner('Jeroen')">Jeroen</span><span class="tw-opt${m?' on':''}" onclick="setApptOwner('Marlon')">Marlon</span>`;
+}
+// ---- Custom contact-autocomplete (nette dropdown i.p.v. native datalist) ----
+function _acFilter(q){ const base=(typeof CONTACTS!=='undefined'&&CONTACTS)?CONTACTS:[]; const s=(q||'').trim().toLowerCase();
+  return (s?base.filter(c=>String(c).toLowerCase().includes(s)):base.slice()).slice(0,60); }
+function _acAttach(inputId,menuId){ const inp=document.getElementById(inputId),menu=document.getElementById(menuId); if(!inp||!menu||inp._acOn)return; inp._acOn=true;
+  const render=()=>{ const q=inp.value; const list=_acFilter(q);
+    let h=list.map(c=>`<div class="acitem" data-v="${escapeHtml(c)}">${escapeHtml(c)}</div>`).join('');
+    const exact=list.some(c=>String(c).toLowerCase()===(q||'').trim().toLowerCase());
+    if((q||'').trim()&&!exact) h=`<div class="acitem new" data-v="${escapeHtml(q.trim())}">+ nieuw: <b>${escapeHtml(q.trim())}</b></div>`+h;
+    menu.innerHTML=h||'<div class="acitem new" style="cursor:default">Nog geen contacten</div>'; };
+  inp.addEventListener('focus',()=>{ render(); menu.classList.add('on'); });
+  inp.addEventListener('input',()=>{ render(); menu.classList.add('on'); });
+  inp.addEventListener('blur',()=>setTimeout(()=>menu.classList.remove('on'),160));
+  menu.addEventListener('mousedown',e=>{ const it=e.target.closest('.acitem[data-v]'); if(!it)return; e.preventDefault(); inp.value=it.getAttribute('data-v'); menu.classList.remove('on'); try{inp.dispatchEvent(new Event('change'));}catch(_){} });
+}
+function _acInit(){ _acAttach('m_contact','m_contactmenu'); _acAttach('a_contact','a_contactmenu'); }
 function newTask(){ openModal(null); }
 function newWait(){ openModal(null,'wachter','wait'); }
 function openModal(id, src, defStatus, presetPid){
   const isNew=!id; const r=isNew?null:findItem(id); if(!isNew&&!r)return; editingId=isNew?null:id;
   _ownerToChecks(isNew?(who||'Jeroen'):(r.it.owner||''));
   const cur=isNew?'':(r.it.contact||'');
-  const cs=[...CONTACTS];if(cur&&!cs.includes(cur))cs.unshift(cur);
-  document.getElementById('m_contactlist').innerHTML=cs.map(c=>`<option value="${escapeHtml(c)}"></option>`).join('');
+  _acInit();
   document.getElementById('m_contact').value=cur;
   const inInbox = !isNew && r.p.id==='__inbox__';
   const _pp=(isNew&&presetPid)?projById(presetPid):null;
