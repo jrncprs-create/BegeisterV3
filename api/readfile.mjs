@@ -3,7 +3,7 @@
 // die bij het als-beeld-versturen optrad. Beeld/opmaak (bv. tabellen) alleen op verzoek via mode:"vision".
 import Anthropic from "@anthropic-ai/sdk";
 import { svc, logUsage } from "../lib/usage.mjs";
-import { createMessageStream } from "../lib/airetry.mjs";
+import { createMessage } from "../lib/airetry.mjs";
 import { getDocumentProxy, extractText } from "unpdf";
 
 const KEY = (process.env.ANTHROPIC_API_KEY || "").trim();
@@ -59,7 +59,9 @@ export default async function handler(req, res) {
     const today = new Date().toISOString().slice(0, 10);
     const SYS = buildSys(today);
 
-    const run = (content) => createMessageStream(anthropic, {
+    // Niet-streamend: streaming (SSE) bleek op deze host na ~1,5s af te breken ('Premature close').
+    // Omdat we nu alleen TEKST sturen is de call snel genoeg voor een gewone create.
+    const run = (content) => createMessage(anthropic, {
       model: MODEL, max_tokens: 900, system: SYS,
       messages: [{ role: "user", content }],
     });
