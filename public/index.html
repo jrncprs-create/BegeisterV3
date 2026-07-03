@@ -1076,6 +1076,30 @@
   .ai-modaltitle{margin:0 34px 14px 0;font-size:16px;font-weight:650;letter-spacing:.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .ai-modalbody{overflow-y:auto;min-height:60px}
   .ai-modalbody .fvai-h:first-child{margin-top:0}
+  /* ---- Opmerkingen + @mention popup ---- */
+  .cmt-modal{width:560px;max-width:94vw;max-height:86vh;display:flex;flex-direction:column;padding:24px 22px 16px}
+  .cmt-thread{flex:1 1 auto;overflow-y:auto;display:flex;flex-direction:column;gap:14px;min-height:90px;padding:8px 2px 14px}
+  .cmt-empty{color:var(--mut2);font-size:13.5px;padding:16px 2px;line-height:1.5}
+  .cmt-item{display:flex;flex-direction:column;gap:4px}
+  .cmt-head{display:flex;align-items:center;gap:8px}
+  .cmt-av{width:22px;height:22px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#111;flex:0 0 auto}
+  .cmt-auth{color:var(--txt);font-weight:600;font-size:12.5px}
+  .cmt-time{margin-left:auto;font-size:11px;color:var(--mut2)}
+  .cmt-body{font-size:14px;line-height:1.45;color:var(--txt);white-space:pre-wrap;word-break:break-word;padding-left:30px}
+  .cmt-body .men{color:var(--primary2);font-weight:600}
+  .cmt-inputwrap{position:relative;display:flex;align-items:flex-end;gap:8px;border-top:1px solid var(--line);padding-top:12px}
+  .cmt-input{flex:1;min-width:0;background:var(--panel2);border:1px solid var(--line);border-radius:12px;color:var(--txt);font:inherit;font-size:14px;line-height:1.4;padding:10px 12px;resize:none;max-height:120px;min-height:40px;outline:none}
+  .cmt-input:focus{border-color:var(--mut2)}
+  .cmt-send{flex:0 0 auto;width:38px;height:38px;border-radius:50%;border:none;background:#fff;color:#111;display:flex;align-items:center;justify-content:center;cursor:pointer}
+  .cmt-send:hover{background:#e6e6e6}
+  .cmt-menu{position:absolute;left:0;bottom:56px;background:#1b1b1b;border:1px solid var(--line);border-radius:10px;padding:5px;display:none;flex-direction:column;gap:2px;z-index:5;min-width:160px;box-shadow:0 12px 30px rgba(0,0,0,.5)}
+  .cmt-menu.open{display:flex}
+  .cmt-menu button{background:transparent;border:none;color:var(--txt);text-align:left;padding:9px 11px;border-radius:7px;font-size:14px;cursor:pointer;display:flex;align-items:center;gap:9px}
+  .cmt-menu button:hover{background:var(--panel2)}
+  .pb-cmt-open{display:inline-flex;align-items:center;gap:7px;background:transparent;border:1px solid var(--line);color:var(--mut);border-radius:9px;padding:8px 13px;font-size:13px;cursor:pointer;transition:color .15s,border-color .15s}
+  .pb-cmt-open:hover{color:var(--txt);border-color:var(--mut2)}
+  .pb-board-inline .pb-cmt-open{color:var(--scol);border-color:color-mix(in srgb,var(--scol) 34%,transparent)}
+  #m_comments{margin-top:14px}
   .iconbtn{background:transparent;border:none;cursor:pointer;padding:6px;display:flex;align-items:center;justify-content:center;border-radius:11px;color:rgba(255,255,255,.6);transition:color .15s,transform .12s}
   .iconbtn.save{margin-left:auto}
   .iconbtn:hover{color:#fff;transform:scale(1.06)}
@@ -1709,7 +1733,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v161</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v162</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -2231,6 +2255,7 @@
     <div class="m-fld"><select id="m_client" onchange="onClientChange()"></select></div>
     <div class="m-fld"><select id="m_project" onchange="onProjectChange()"></select></div>
     <div id="m_files"></div>
+    <div id="m_comments"></div>
     <div class="foot">
       <button class="iconbtn del" onclick="deleteItem()" aria-label="Verwijderen"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10.4"/><path d="M9 9l6 6M15 9l-6 6"/></svg></button>
       <button class="iconbtn save" onclick="saveModal()" aria-label="Opslaan"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10.4"/><path d="M8 12.4l2.6 2.6L16 9.2"/></svg></button>
@@ -2244,6 +2269,18 @@
     <button class="modal-close" onclick="closeAiInsight()" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     <h3 id="aiModalTitle" class="ai-modaltitle">AI-inzicht</h3>
     <div class="ai-modalbody" id="aiInsightBody"></div>
+  </div>
+</div>
+<div class="overlay" id="cmtOverlay" onclick="if(event.target===this)closeComments()">
+  <div class="modal cmt-modal">
+    <button class="modal-close" onclick="closeComments()" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <h3 id="cmtTitle" class="ai-modaltitle">Opmerkingen</h3>
+    <div class="cmt-thread" id="cmtThread"></div>
+    <div class="cmt-inputwrap">
+      <div class="cmt-menu" id="cmtMenu"></div>
+      <textarea id="cmtInput" class="cmt-input" rows="1" placeholder="Opmerking… (@ om te taggen)" oninput="_cmtOnInput(event)" onkeydown="_cmtInputKey(event)" autocomplete="off"></textarea>
+      <button class="cmt-send" onclick="_cmtSend()" aria-label="Versturen"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 11l5-5 5 5M12 6v12"/></svg></button>
+    </div>
   </div>
 </div>
 <div class="overlay" id="apptOverlay">
@@ -3204,6 +3241,7 @@ function _renderProjBoard(){
   const secInk=`<div class="pb-sec"><div class="pb-h"><span>Inkopen</span><span class="pb-hbtns"><button class="pb-ai" onclick="pbInkPaste()" title="Plak een winkelwagen of lijst — AI maakt er een bestellijst van">${_tIc(_TABCHAN.asterisk,15,1.7)}<span>lijst</span></button><button class="pb-ai" onclick="pbInkLink()" title="Toevoegen via productlink">+ link</button></span></div>${inkopen.map(inkRow).join('')}<div class="pb-add"><input class="pb-in" data-kind="inkoop" placeholder="+ inkoop toevoegen…" onkeydown="pbAddKey(event,'inkoop')"></div><div class="pb-ink-foot"><span class="pb-tot">Inkoop <b>€${fmtEur(inkTotal)}</b></span><span class="pb-budwrap">Projectprijs excl. €<input class="pb-bud" type="text" inputmode="decimal" value="${omzetEx!=null?String(omzetEx).replace('.',','):''}" placeholder="—" onchange="pbSetProjectprijs(this.value)"></span>${omzetEx!=null?`<span class="pb-rest">incl. €${fmtEur(omzetIn)}</span><span class="pb-rest ${marge<0?'over':''}">marge €${fmtEur(marge)}</span>`:''}<span class="pb-budwrap">Klantbudget €<input class="pb-bud" type="text" inputmode="decimal" value="${budget!=null?String(budget).replace('.',','):''}" placeholder="—" onchange="pbSetBudget(this.value)"></span></div></div>`;
   const secAppt=`<div class="pb-sec"><div class="pb-h">Afspraken <button class="pb-hadd" onclick="openApptModal(null,'${_pbPid}')" title="Afspraak toevoegen">+</button></div>${appts.length?appts.map(apptRow).join(''):'<div class="pb-empty">Nog geen afspraken.</div>'}</div>`;
   const secNotes=`<div class="pb-sec"><div class="pb-h">Notities</div><textarea class="pb-notes" placeholder="Vrije notities voor dit project…" onblur="pbSaveNotes(this.value)">${esc(p.notes||'')}</textarea></div>`;
+  const secCmt=`<div class="pb-sec"><div class="pb-h">Opmerkingen</div>${typeof _cmtBtnHTML==='function'?_cmtBtnHTML('project',_pbPid):''}</div>`;
   const secFiles=`<div class="pb-sec"><div class="pb-h">Bestanden <button class="pb-hadd" onclick="dropboxPick('project','${_pbPid}')" title="Bestand koppelen">+</button></div>${_filesFor('project',_pbPid).map(_fileRow).join('')||'<div class="pb-empty">Nog geen bestanden.</div>'}</div>`;
   // Bestellijst — dezelfde inkoop-items als 'Inkopen' in Financiën, met masterlink naar de hele verlanglijst
   const _inkSrcCnt={}; inkopen.forEach(x=>{ if(x.source_id)_inkSrcCnt[x.source_id]=(_inkSrcCnt[x.source_id]||0)+1; });
@@ -3217,10 +3255,10 @@ function _renderProjBoard(){
   const _bestBesteld=inkopenOpen.filter(x=>x.status==='besteld');
   const _openTot=inkopenOpen.reduce((s,x)=>s+((x.price!=null&&x.price!=='')?Number(x.price):0)*(x.qty||1),0);
   const secBestel=`<div class="pb-sec"><div class="pb-h"><span>Bestellijst</span><span class="pb-hbtns">${inkopen.length?`<button class="pb-ai" onclick="pbOrderAll()" title="Zet de hele lijst in één keer in je Amazon-mandje">${_tIc('<path d="M6 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M17 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M17 17h-11v-14h-2"/><path d="M6 5l14 1l-1 7h-13"/>',16,1.7)}</button>`:''}<button class="pb-ai" onclick="pbInkPaste()" title="Plak een verlanglijst of winkelwagen — AI maakt er regels van">${_tIc(_TABCHAN.asterisk,15,1.7)}<span>lijst</span></button>${inkopen.length?`<button class="pb-ai" onclick="pbMoveOpen('all')" title="Hele bestellijst naar een ander project/klant verplaatsen">${_tIc('<path d="M17 3l4 4l-4 4"/><path d="M21 7h-13"/><path d="M7 21l-4 -4l4 -4"/><path d="M3 17h13"/>',15,1.5)}</button><button class="pb-listdel" onclick="pbDelBestel()" title="Hele bestellijst verwijderen"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/></svg></button>`:''}</span></div>${_masterLink}${_bestNietBesteld.length?_bestNietBesteld.map(inkRow).join(''):(_bestBesteld.length?'':'<div class="pb-empty">Nog geen bestellingen.</div>')}<div class="pb-add"><input class="pb-in" data-kind="inkoop" placeholder="+ artikel toevoegen…" onkeydown="pbAddKey(event,'inkoop')"></div>${inkopenOpen.length?`<div class="pb-besteltot"><span class="pb-btlbl">Totaal</span><span class="pb-btval"><b>€${fmtEur(_openTot)}</b><span class="pb-btsub">excl. €${fmtEur(_openTot/(1+btwPct/100))}</span></span></div>`:''}${_bestBesteld.length?`<div class="pb-besteld-sec"><div class="pb-h">Besteld <span class="pb-donecnt">${_bestBesteld.length}</span></div>${_bestBesteld.map(inkRow).join('')}</div>`:''}</div>`;
-  const _body=(_pbMode==='financien')?secBestel:(secWait+secTaken+secBestel+secDone+secAppt+secFiles+secPrijs+secNotes);
+  const _body=(_pbMode==='financien')?secBestel:(secWait+secTaken+secBestel+secDone+secAppt+secFiles+secPrijs+secNotes+secCmt);
   const _head=`<div class="pb-head"><span class="kbadge" style="background:${col}">${esc(initial)}</span><div class="pb-title"><b>${esc(p.client||'')}</b>${p.project?'<span> · '+esc(p.project)+'</span>':''}${_pbMode==='financien'?'<span style="color:'+col+'"> · inkoop</span>':''}</div></div>`;
   if(_pbTarget==='finmid'||_pbTarget==='finright'){ const el=document.getElementById(_pbTarget==='finright'?'finRightWrap':'finMidWrap'); const _cls=(_pbTarget==='finright')?'pb-inline pb-board-inline':'pb-inline'; const _h=(_pbTarget==='finright')?'':_head; if(el)el.innerHTML=`<div class="${_cls}" style="--scol:${col}">${_h}${_body}</div>`; return; }
-  if(_pbTarget==='beheer'){ const el=document.getElementById('beheerBoardWrap'); if(el)el.innerHTML=`<div class="pb-inline pb-board-inline" style="--scol:${col}"><div class="pb-grid"><div class="pb-colL">${secWait}${secTaken}${secBestel}${secDone}</div><div class="pb-colR">${secAppt}${secFiles}${secPrijs}${secNotes}</div></div></div>`; return; }
+  if(_pbTarget==='beheer'){ const el=document.getElementById('beheerBoardWrap'); if(el)el.innerHTML=`<div class="pb-inline pb-board-inline" style="--scol:${col}"><div class="pb-grid"><div class="pb-colL">${secWait}${secTaken}${secBestel}${secDone}</div><div class="pb-colR">${secAppt}${secFiles}${secPrijs}${secNotes}${secCmt}</div></div></div>`; return; }
   if(!ov)return;
   ov.innerHTML=`<div class="modal pb-modal" style="--scol:${col};width:100%;max-width:none">
     <button class="modal-close" onclick="closeProjectBoard()" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
@@ -5624,6 +5662,7 @@ function openModal(id, src, defStatus, presetPid){
   ov.classList.toggle('incol-left', incol && src==='wachter');   // In-afwachting-item: bewerk in de linkerkolom
   if(incol){const tb=document.querySelector('.topbar');ov.style.top=(tb?Math.round(tb.getBoundingClientRect().height):0)+'px';} else ov.style.top='';
   const mf=document.getElementById('m_files');if(mf)mf.innerHTML=_filesHTML('task', editingId);
+  const mc=document.getElementById('m_comments');if(mc)mc.innerHTML=isNew?'':(typeof _cmtBtnHTML==='function'?_cmtBtnHTML('task',editingId):'');
   ov.classList.add('open');}
 function updateDueLabel(){const el=document.getElementById('m_due_label');if(!el)return;
   el.textContent=mDue?d(mDue).toLocaleDateString('nl-NL',{weekday:'short',day:'numeric',month:'long',year:'numeric'}):'Deadline';
@@ -5640,6 +5679,46 @@ function saveModal(){const r=findItem(editingId);if(!r)return;const np=document.
   closeModal();render();}
 async function deleteItem(){const r=findItem(editingId);if(!r)return;if(!(await uiConfirm('Dit actiepunt verwijderen?')))return;r.p.items=r.p.items.filter(i=>i.id!==r.it.id);try{await sb.from('items').delete().eq('id',r.it.id);}catch(_){}closeModal();render();}
 document.getElementById('overlay').addEventListener('click',e=>{if(e.target.id==='overlay')closeModal();});
+
+// ===== Opmerkingen + @mention (per taak & per project) =====
+const CMT_PEOPLE=['Jeroen','Marlon'];
+const _whoCol={Jeroen:'#6ea8fe',Marlon:'#f0a35e'};
+let _cmtCtx={scope:'task',id:null};
+function _cmtList(scope,id){ return (state.comments||[]).filter(c=>c.scope===scope&&String(c.ref_id)===String(id)).sort((a,b)=>new Date(a.created_at)-new Date(b.created_at)); }
+function _cmtCount(scope,id){ return _cmtList(scope,id).length; }
+function _cmtLabel(scope,id){ if(scope==='project'){ const p=projById(id); return p?((p.client||'')+(p.project?' · '+p.project:'')):'Project'; } const r=findItem(id); return r?(r.it.t||'Taak'):'Taak'; }
+function _cmtMentionsHTML(text){ let h=escapeHtml(text); CMT_PEOPLE.forEach(n=>{ h=h.replace(new RegExp('@'+n,'gi'),'<span class="men">@'+n+'</span>'); }); return h; }
+function _cmtBtnHTML(scope,id){ const n=_cmtCount(scope,id); return `<button type="button" class="pb-cmt-open" onclick="openComments('${scope}','${id}')"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H8l-4 4z"/></svg><span>Opmerkingen${n?` · ${n}`:''}</span></button>`; }
+function _cmtTime(ts){ try{ const dt=new Date(ts); const now=new Date(); const sameDay=dt.toDateString()===now.toDateString(); return sameDay?dt.toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'}):dt.toLocaleDateString('nl-NL',{day:'numeric',month:'short'})+' '+dt.toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'}); }catch(_){ return ''; } }
+function openComments(scope,id){ _cmtCtx={scope,id}; const t=document.getElementById('cmtTitle'); if(t)t.textContent='Opmerkingen — '+_cmtLabel(scope,id); _cmtRender(); const ov=document.getElementById('cmtOverlay'); if(ov)ov.classList.add('open'); const inp=document.getElementById('cmtInput'); if(inp){ inp.value=''; setTimeout(()=>{try{inp.focus();}catch(_){}},60); } _cmtMenuHide(); }
+function closeComments(){ const ov=document.getElementById('cmtOverlay'); if(ov)ov.classList.remove('open'); _cmtMenuHide(); }
+function _cmtRender(){ const box=document.getElementById('cmtThread'); if(!box)return; const list=_cmtList(_cmtCtx.scope,_cmtCtx.id);
+  if(!list.length){ box.innerHTML='<div class="cmt-empty">Nog geen opmerkingen. Schrijf de eerste — tag met @Jeroen of @Marlon om een melding te sturen.</div>'; return; }
+  box.innerHTML=list.map(c=>{ const au=c.author||'?'; const col=_whoCol[au]||'#888';
+    return `<div class="cmt-item"><div class="cmt-head"><span class="cmt-av" style="background:${col}">${escapeHtml((au[0]||'?'))}</span><span class="cmt-auth">${escapeHtml(au)}</span><span class="cmt-time">${_cmtTime(c.created_at)}</span></div><div class="cmt-body">${_cmtMentionsHTML(c.body||'')}</div></div>`;
+  }).join('');
+  box.scrollTop=box.scrollHeight;
+}
+async function _cmtSend(){ const inp=document.getElementById('cmtInput'); if(!inp)return; const text=(inp.value||'').trim(); if(!text)return;
+  const author=(typeof who!=='undefined'&&who)?who:'Jeroen';
+  const mentions=CMT_PEOPLE.filter(n=>new RegExp('@'+n,'i').test(text));
+  const row={scope:_cmtCtx.scope,ref_id:_cmtCtx.id,author,body:text,mentions};
+  inp.value=''; _cmtMenuHide();
+  let saved=null;
+  try{ const r=await sb.from('comments').insert(row).select().single(); if(r&&r.data)saved=r.data; }catch(_){}
+  if(!saved) saved={...row,id:'tmp-'+Date.now(),created_at:new Date().toISOString()};
+  state.comments=state.comments||[]; state.comments.push(saved);
+  _cmtRender();
+  try{ if(_pbTarget&&_pbPid) _renderProjBoard(); }catch(_){}
+  const targets=mentions.filter(n=>n.toLowerCase()!==author.toLowerCase());
+  if(targets.length){ try{ await fetch('/api/notify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:targets,title:'Nieuwe opmerking',body:author+' · '+_cmtLabel(_cmtCtx.scope,_cmtCtx.id)+': '+text.slice(0,120),url:'/'})}); }catch(_){} }
+}
+function _cmtInputKey(e){ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); _cmtSend(); } }
+function _cmtOnInput(e){ const inp=e.target; const v=inp.value; const caret=inp.selectionStart||v.length; const before=v.slice(0,caret); const m=before.match(/@(\w*)$/);
+  if(!m){ _cmtMenuHide(); return; } const q=m[1].toLowerCase(); const opts=CMT_PEOPLE.filter(n=>n.toLowerCase().startsWith(q)); if(!opts.length){ _cmtMenuHide(); return; }
+  const menu=document.getElementById('cmtMenu'); if(!menu)return; menu.innerHTML=opts.map(n=>`<button type="button" onmousedown="event.preventDefault();_cmtPick('${n}')"><span class="cmt-av" style="background:${_whoCol[n]}">${n[0]}</span>${n}</button>`).join(''); menu.classList.add('open'); }
+function _cmtPick(name){ const inp=document.getElementById('cmtInput'); if(!inp)return; const v=inp.value; const caret=inp.selectionStart||v.length; const before=v.slice(0,caret).replace(/@(\w*)$/,'@'+name+' '); inp.value=before+v.slice(caret); _cmtMenuHide(); try{inp.focus(); inp.setSelectionRange(before.length,before.length);}catch(_){} }
+function _cmtMenuHide(){ const menu=document.getElementById('cmtMenu'); if(menu){ menu.classList.remove('open'); menu.innerHTML=''; } }
 
 // eigen datumkiezer
 function _dueCur(){return _dueTarget==='appt'?(document.getElementById('a_date').value||null):mDue;}
@@ -5738,7 +5817,7 @@ function _mapSource(s,atts){
 }
 async function sbLoad(){
   await _archCleanup();   // afgevinkte taken ouder dan 2 weken opruimen vóór het laden
-  const [p,i,s,a,ap,c,f,cx,fo] = await Promise.all([
+  const [p,i,s,a,ap,c,f,cx,fo,cm] = await Promise.all([
     sb.from('projects').select('*').order('sort'),
     sb.from('items').select('*').order('created_at'),
     sb.from('sources').select('*').order('received_at',{ascending:false}),
@@ -5748,7 +5827,9 @@ async function sbLoad(){
     sb.from('files').select('*').order('created_at',{ascending:false}),
     sb.from('app_context').select('*'),
     sb.from('folders').select('*').order('sort'),
+    sb.from('comments').select('*').order('created_at'),
   ]);
+  state.comments = (cm && cm.data) ? cm.data : [];
   state.folders = (fo && fo.data) ? fo.data : [];
   const projects=p.data||[], items=i.data||[], sources=s.data||[], atts=a.data||[];
   state.contacts = (c && c.data) ? c.data : [];
