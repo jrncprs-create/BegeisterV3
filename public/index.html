@@ -1528,9 +1528,8 @@
   /* Mobiel: board-header stapelen — knoprij boven, themanaam eronder op volle breedte (geen mid-woord afbreken) */
   @media(max-width:1000px){
     .insp-head--board{flex-wrap:wrap;gap:10px;margin-bottom:18px}
-    .insp-head--board .insp-back{order:1}
+    .insp-head--board .insp-back{order:1;margin-right:auto}
     .insp-head--board .insp-btn,.insp-head--board .dov-close{order:2}
-    .insp-head--board .insp-btn:first-of-type{margin-left:auto}
     .insp-head--board .insp-title{order:3;flex:1 1 100%;width:100%;margin-left:0!important;overflow-wrap:normal;word-break:normal}
   }
   .insp-boards{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:30px 26px}
@@ -1672,7 +1671,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v155</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v156</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
