@@ -1643,6 +1643,15 @@
     .mob-dots.hidden{ display:none }
     .mob-dots .md-dot{ width:7px; height:7px; border-radius:50%; background:rgba(210,210,210,.30); transition:background .2s,transform .2s; cursor:pointer }
     .mob-dots .md-dot.on{ background:#e2e2e2; transform:scale(1.2) }
+    /* Meebewegende slide tussen planning-kolommen: nieuwe kolom schuift van de juiste kant in */
+    @keyframes mobSlideR{from{transform:translateX(100%)}to{transform:translateX(0)}}
+    @keyframes mobSlideL{from{transform:translateX(-100%)}to{transform:translateX(0)}}
+    .mob-slide-r{animation:mobSlideR .34s cubic-bezier(.22,1,.36,1)}
+    .mob-slide-l{animation:mobSlideL .34s cubic-bezier(.22,1,.36,1)}
+    /* tijdens sleep volgt de kolom de vinger (geen transitie), daarna soepel terug/vooruit */
+    #view-wachter,#view-taken,#view-agenda{will-change:transform}
+    .mob-dragging{transition:none!important}
+    .mob-snap{transition:transform .28s cubic-bezier(.22,1,.36,1)}
   }
 </style>
 </head>
@@ -1671,7 +1680,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v156</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v157</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -2572,6 +2581,7 @@ function setView(v){
   // Financiën-inkoopselectie geldt alleen binnen Financiën
   if(v!=='financien' && _pbTarget==='finmid'){ _pbTarget=null; _pbPid=null; }
   if(v!=='beheer' && _pbTarget==='beheer'){ _pbTarget=null; _pbPid=null; }
+  const _prevView=view;
   view=v;
   document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('active',b.dataset.v===v));
   // Planning is de paraplu over In afwachting · Taken · Agenda · Afspraken
@@ -2627,6 +2637,7 @@ function setView(v){
   _animateNext=true;
   render();
   window.scrollTo({top:0,behavior:'instant'});
+  if(typeof _mobSlideIn==='function') _mobSlideIn(_prevView,v);
   if(typeof _updateMobArrows==='function') _updateMobArrows();
 }
 // ---- Mobiele kolom-navigatie: swipe tussen In afwachting · Taken · Agenda (+ stippen-indicator) ----
@@ -2643,17 +2654,43 @@ function _updateMobArrows(){ _initMobArrows(); const d=document.getElementById('
   [...d.children].forEach((s,idx)=>s.classList.toggle('on', idx===i));
 }
 _initMobArrows();
-// horizontale swipe → volgende/vorige kolom (alleen mobiel, alleen op de planning-kolommen)
-(function(){ let sx=0,sy=0,st=0,ok=false;
+// Nieuwe kolom schuift van de juiste kant in beeld bij een kolomwissel (swipe of stip).
+function _mobSlideIn(prev,next){ try{
+  if(!(typeof isMobile==='function'&&isMobile()))return;
+  if(!MOBCOLS.includes(prev)||!MOBCOLS.includes(next)||prev===next)return;
+  const el=document.getElementById('view-'+next); if(!el)return;
+  const toRight = MOBCOLS.indexOf(next)>MOBCOLS.indexOf(prev);
+  el.classList.remove('mob-slide-r','mob-slide-l','mob-snap','mob-dragging'); el.style.transform='';
+  void el.offsetWidth; // reflow → herstart animatie
+  el.classList.add(toRight?'mob-slide-r':'mob-slide-l');
+  el.addEventListener('animationend',function h(){ el.classList.remove('mob-slide-r','mob-slide-l'); el.removeEventListener('animationend',h); });
+}catch(_){}}
+// horizontale swipe → vorige/volgende kolom, met meebewegende slide (alleen mobiel, planning-kolommen)
+(function(){ let sx=0,sy=0,st=0,ok=false,decided=false,horiz=false,cur=null,W=0;
+  const curEl=()=>document.getElementById('view-'+view);
+  function reset(el){ if(!el)return; el.classList.remove('mob-dragging','mob-snap'); el.style.transform=''; }
   document.addEventListener('touchstart',e=>{
     if(!(typeof isMobile==='function'&&isMobile())||!MOBCOLS.includes(view)||e.touches.length!==1){ok=false;return;}
-    if(e.target.closest&&e.target.closest('.welcome-overlay,#chatDock,.modal,.sheet,.fm-prev,.filepreview,input,textarea,select')){ok=false;return;}
-    const t=e.touches[0]; sx=t.clientX; sy=t.clientY; st=Date.now(); ok=true;
+    if(e.target.closest&&e.target.closest('.welcome-overlay,#chatDock,.modal,.sheet,.fm-prev,.filepreview,input,textarea,select,.insp-ov,.insp-pvw,.overlay')){ok=false;return;}
+    const t=e.touches[0]; sx=t.clientX; sy=t.clientY; st=Date.now(); ok=true; decided=false; horiz=false; W=window.innerWidth||360; cur=curEl();
   },{passive:true});
+  document.addEventListener('touchmove',e=>{
+    if(!ok||!cur)return; const t=e.touches[0]; const dx=t.clientX-sx, dy=t.clientY-sy;
+    if(!decided){ if(Math.abs(dx)<8&&Math.abs(dy)<8)return; horiz=Math.abs(dx)>Math.abs(dy)*1.2; decided=true; if(horiz){ cur.classList.add('mob-dragging'); } else { ok=false; return; } }
+    if(!horiz)return;
+    const i=MOBCOLS.indexOf(view); const atEnd=(dx<0&&i>=MOBCOLS.length-1)||(dx>0&&i<=0);
+    const d = atEnd ? dx*0.28 : dx*0.62;   // aan de randen stugger (rubber-band)
+    cur.style.transform='translateX('+d+'px)';
+    if(e.cancelable)e.preventDefault();     // horizontaal vegen → verticaal scrollen blokkeren
+  },{passive:false});
   document.addEventListener('touchend',e=>{
-    if(!ok)return; ok=false; const t=e.changedTouches&&e.changedTouches[0]; if(!t)return;
-    const dx=t.clientX-sx, dy=t.clientY-sy;
-    if(Date.now()-st<600 && Math.abs(dx)>60 && Math.abs(dx)>Math.abs(dy)*1.7) mobColShift(dx<0?1:-1);
+    if(!ok){return;} ok=false; const el=cur; cur=null; if(!el){return;}
+    const t=e.changedTouches&&e.changedTouches[0]; const dx=t?t.clientX-sx:0, dy=t?t.clientY-sy:0;
+    if(!horiz){ reset(el); return; }
+    const i=MOBCOLS.indexOf(view); const canGo=(dx<0&&i<MOBCOLS.length-1)||(dx>0&&i>0);
+    const pass = canGo && ((Math.abs(dx)>W*0.30) || (Date.now()-st<320 && Math.abs(dx)>50 && Math.abs(dx)>Math.abs(dy)*1.4));
+    if(pass){ reset(el); mobColShift(dx<0?1:-1); }   // setView triggert de inschuif-animatie
+    else { el.classList.remove('mob-dragging'); el.classList.add('mob-snap'); el.style.transform='translateX(0)'; setTimeout(()=>reset(el),300); }
   },{passive:true});
 })();
 function toggleNav(e){if(e)e.stopPropagation();const n=document.getElementById('nav');n.classList.toggle('open');if(n.classList.contains('open'))composeMode(true);}

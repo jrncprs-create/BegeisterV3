@@ -1,6 +1,10 @@
-// Begeister service worker — push-notificaties + altijd verse app (v4).
+// Begeister service worker — push-notificaties + altijd verse app (v5).
 self.addEventListener('install', (e) => self.skipWaiting());
-self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()));
+self.addEventListener('activate', (e) => e.waitUntil((async () => {
+  // Ruim oude caches op zodat een verouderde index.html op iOS niet blijft hangen.
+  try { const keys = await caches.keys(); await Promise.all(keys.map((k) => caches.delete(k))); } catch (_) {}
+  await self.clients.claim();
+})()));
 
 // Network-first voor navigaties: haal de nieuwste index.html op zodat updates
 // meteen verschijnen (iOS PWA houdt anders de oude versie vast).
