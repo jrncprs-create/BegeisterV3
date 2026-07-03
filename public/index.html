@@ -1733,7 +1733,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v162</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v163</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -5670,12 +5670,21 @@ function updateDueLabel(){const el=document.getElementById('m_due_label');if(!el
 function closeModal(){const ov=document.getElementById('overlay');ov.classList.remove('open');document.getElementById('duepop').classList.remove('open');
   if(!_dropAdvancing){ _dropFiles=[]; _dropQueue=[]; _dropSrc=null; _dropFileObj=null; _dropFileDone=false; if(typeof _dzHide==='function')_dzHide(); }   // handmatig sluiten = drop-review afbreken
   setTimeout(()=>{if(!ov.classList.contains('open')){editingId=null;ov.classList.remove('incol');ov.classList.remove('incol-left');ov.style.top='';}},560);}
-function saveModal(){const r=findItem(editingId);if(!r)return;const np=document.getElementById('m_project').value;
+async function saveModal(){const r=findItem(editingId);if(!r)return;
+  const _oldOwner=r.it.owner||'';
+  const np=document.getElementById('m_project').value;
   r.it.t=document.getElementById('m_t').value.trim()||r.it.t;
   r.it.owner=_ownerFromChecks();
   r.it.contact=document.getElementById('m_contact').value;
   r.it.due=mDue||null;r.it.status=document.getElementById('m_status').value;
-  if(np&&np!==r.p.id){r.p.items=r.p.items.filter(i=>i.id!==r.it.id);projById(np).items.push(r.it);if(activeTab!=='all')activeTab=np;}
+  if(np&&np!==r.p.id){ const _tp=projById(np); if(_tp){ r.p.items=r.p.items.filter(i=>i.id!==r.it.id); _tp.items.push(r.it); if(activeTab!=='all')activeTab=np; } }
+  const _id=r.it.id, _newOwner=r.it.owner||'', _title=r.it.t;
+  // Persisteer de wijziging écht naar Supabase (deed saveModal voorheen niet — bleef lokaal).
+  const _patch={ title:_title, owner:_newOwner||null, contact:r.it.contact||null, due:r.it.due||null, status:r.it.status };
+  if(np){ if(/^[0-9a-f-]{36}$/i.test(np)) _patch.project_id=np; else if(np==='__none__'||np==='__inbox__') _patch.project_id=null; }
+  try{ await sb.from('items').update(_patch).eq('id',_id); }catch(_){}
+  // Gerichte melding bij (nieuwe) toewijzing aan een collega.
+  try{ _notifyAssign(_oldOwner,_newOwner,_title); }catch(_){}
   closeModal();render();}
 async function deleteItem(){const r=findItem(editingId);if(!r)return;if(!(await uiConfirm('Dit actiepunt verwijderen?')))return;r.p.items=r.p.items.filter(i=>i.id!==r.it.id);try{await sb.from('items').delete().eq('id',r.it.id);}catch(_){}closeModal();render();}
 document.getElementById('overlay').addEventListener('click',e=>{if(e.target.id==='overlay')closeModal();});
@@ -6823,6 +6832,19 @@ function addTyping(opts){const t=document.getElementById('chatThread');if(!t)ret
 function knownIds(){return new Set(state.projects.filter(p=>p.id!=='__inbox__').map(p=>p.id));}
 // melding naar de partner (niet naar jezelf) — zo houden Marlon en Jeroen elkaar op de hoogte
 function notifyPartner(body){ if(!body)return; try{ fetch('/api/notify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({actor:who||'',body})}); }catch(_){ } }
+// Gerichte push wanneer een taak aan een collega wordt toegewezen (eigenaar gewijzigd).
+// Stuurt alleen naar wie NIEUW is toegevoegd én niet de actor zelf is.
+function _notifyAssign(oldOwner,newOwner,title){
+  try{
+    const PEOPLE=['Jeroen','Marlon'];
+    const has=(s,n)=> new RegExp('(^|[^A-Za-z])'+n+'([^A-Za-z]|$)','i').test(String(s||''));
+    const actor=String((typeof who!=='undefined'&&who)||'').trim();
+    const targets=PEOPLE.filter(n=> has(newOwner,n) && !has(oldOwner,n) && n.toLowerCase()!==actor.toLowerCase());
+    if(!targets.length)return;
+    fetch('/api/notify',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({to:targets,title:'Nieuw voor jou',body:(actor||'Iemand')+' wees je toe: '+(title||'een taak'),url:'/'})}).catch(()=>{});
+  }catch(_){}
+}
 // AI-first: voorstel tonen (samenvatting + af-vinkbare, bewerkbare lijst) en
 // pas op "Opslaan" wegzetten. pendingSourceId = bron van een foto/bijlage.
 let proposal={items:[],updates:[],removes:[],appointments:[]}, proposalCard=null, pendingSourceId=null;
