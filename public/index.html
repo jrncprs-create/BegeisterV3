@@ -1733,7 +1733,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v163</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v164</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -5986,12 +5986,14 @@ saveModal = async function(){
     if(ins&&ins.data) lastAddedIds=[ins.data.id];
     if(rec.project_id && activeTab!=='all') activeTab=rec.project_id;
     notifyPartner((who||'Iemand')+' voegde een taak toe: '+title);
+    try{ _notifyAssign('', rec.owner||'', title); }catch(_){}
     _animateNext=true;
     if(_dropQueue.length){ const nx=_dropQueue.shift(); await refreshTaken(); _openDraftModal(nx); return; }   // volgend gevonden punt
     if(_dropFiles.length){ _dropSrc=null; _dropAdvancing=true; closeModal(); _dropAdvancing=false; await refreshTaken(); _dropRunNext(); return; }   // volgend bestand
     _dropSrc=null; closeModal(); await refreshTaken(); return;
   }
   const r=findItem(editingId);if(!r)return;
+  const _oldOwner=r.it.owner||'';
   const patch={title:document.getElementById('m_t').value.trim()||r.it.t,
     owner:_ownerFromChecks()||null,
     contact:document.getElementById('m_contact').value||null,
@@ -6000,6 +6002,7 @@ saveModal = async function(){
   await sb.from('items').update(patch).eq('id',editingId);
   if(patch.project_id && patch.project_id!==r.p.id && activeTab!=='all') activeTab=patch.project_id;
   notifyPartner((who||'Iemand')+' paste een taak aan: '+(patch.title||r.it.t));
+  try{ _notifyAssign(_oldOwner, patch.owner||'', patch.title||r.it.t); }catch(_){}
   closeModal(); await refreshTaken();};
 
 deleteItem = async function(){const r=findItem(editingId);if(!r)return;
