@@ -648,6 +648,34 @@
   .pb-ai:hover{color:#fff;border-color:var(--mut2)}
   .pb-row{display:flex;align-items:center;gap:11px;padding:6px 0;cursor:pointer}
   .pb-row input[type=checkbox]{width:17px;height:17px;flex:0 0 auto;accent-color:var(--scol,#888);cursor:pointer}
+  /* Uniforme, strakke vinkjes overal (desktop == mobiel). Native checkboxes zonder appearance-reset
+     werden op iOS opgeblazen tot brede witte pillen; hieronder forceren we een net vierkant vakje. */
+  .pb-row input[type=checkbox],
+  .pb-board-inline .pb-row input[type=checkbox],
+  .pb-board-inline .pb-donerow input[type=checkbox],
+  .org-row input[type=checkbox],
+  .prop-row input[type=checkbox],
+  .vr-tasks .vr-tk input[type=checkbox]{
+    -webkit-appearance:none;appearance:none;box-sizing:border-box;
+    width:18px;height:18px;flex:0 0 auto;margin:0;padding:0;cursor:pointer;position:relative;
+    border:1.5px solid rgba(255,255,255,.5);border-radius:5px;background:transparent;
+    transition:background .12s,border-color .12s;
+  }
+  .pb-row input[type=checkbox]:checked,
+  .pb-board-inline .pb-row input[type=checkbox]:checked{ background:var(--scol,#888);border-color:var(--scol,#888) }
+  .pb-board-inline .pb-donerow input[type=checkbox]:checked{ background:var(--mut2);border-color:var(--mut2) }
+  .org-row input[type=checkbox]:checked{ background:#34d399;border-color:#34d399 }
+  .prop-row input[type=checkbox]:checked{ background:#fff;border-color:#fff }
+  .vr-tasks .vr-tk input[type=checkbox]:checked{ background:#c8a24a;border-color:#c8a24a }
+  .pb-row input[type=checkbox]:checked::after,
+  .pb-board-inline .pb-row input[type=checkbox]:checked::after,
+  .pb-board-inline .pb-donerow input[type=checkbox]:checked::after,
+  .org-row input[type=checkbox]:checked::after,
+  .prop-row input[type=checkbox]:checked::after,
+  .vr-tasks .vr-tk input[type=checkbox]:checked::after{
+    content:"";position:absolute;left:5.5px;top:2px;width:4px;height:8.5px;
+    border:solid #0c0c0c;border-width:0 2px 2px 0;transform:rotate(45deg);
+  }
   .pb-tx{flex:1;font-size:14px}
   .pb-tx.done{text-decoration:line-through;opacity:.55}
   .pb-del{background:transparent;border:none;cursor:pointer;font-size:17px;line-height:1;padding:0 3px;opacity:.6}
@@ -1681,7 +1709,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v159</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v160</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
