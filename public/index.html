@@ -1044,6 +1044,10 @@
   .uip-badge{flex:0 0 auto;width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px}
   .modal-close{position:absolute;top:20px;right:22px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;background:transparent;border:none;color:rgba(255,255,255,.6);cursor:pointer;padding:0;transition:color .15s}
   .modal-close:hover{color:#fff}
+  .ai-modal{width:600px;max-width:94vw;max-height:88vh;display:flex;flex-direction:column;padding:26px 26px 20px}
+  .ai-modaltitle{margin:0 34px 14px 0;font-size:16px;font-weight:650;letter-spacing:.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ai-modalbody{overflow-y:auto;min-height:60px}
+  .ai-modalbody .fvai-h:first-child{margin-top:0}
   .iconbtn{background:transparent;border:none;cursor:pointer;padding:6px;display:flex;align-items:center;justify-content:center;border-radius:11px;color:rgba(255,255,255,.6);transition:color .15s,transform .12s}
   .iconbtn.save{margin-left:auto}
   .iconbtn:hover{color:#fff;transform:scale(1.06)}
@@ -1648,7 +1652,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v150</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v151</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -2176,6 +2180,13 @@
 </div>
 
 <!-- AFSPRAAK MODAL -->
+<div class="overlay" id="aiInsightOverlay" onclick="if(event.target===this)closeAiInsight()">
+  <div class="modal ai-modal">
+    <button class="modal-close" onclick="closeAiInsight()" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <h3 id="aiModalTitle" class="ai-modaltitle">AI-inzicht</h3>
+    <div class="ai-modalbody" id="aiInsightBody"></div>
+  </div>
+</div>
 <div class="overlay" id="apptOverlay">
   <div class="modal">
     <div class="appt-head"><h3 id="apptModalTitle">Nieuwe afspraak</h3><div class="appt-who" id="a_whoToggle"></div><button class="modal-close" onclick="closeApptModal()" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
@@ -2284,7 +2295,7 @@
     <span class="fv-name" id="fv_name"></span>
     <span class="fv-count" id="fv_count"></span>
     <div class="fv-actions">
-      <button class="fv-btn fv-ai" onclick="fvAiRead()" title="Laat AI dit document lezen"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" style="vertical-align:-2px;margin-right:6px"><path d="M12 5v14"/><path d="M6 8l12 8"/><path d="M18 8l-12 8"/></svg>Laat AI lezen</button>
+      <button class="fv-btn fv-ai" onclick="var _f=_fvList[_fvIdx];if(_f)openAiInsight('file',_f.id)" title="Laat AI dit document lezen"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" style="vertical-align:-2px;margin-right:6px"><path d="M12 5v14"/><path d="M6 8l12 8"/><path d="M18 8l-12 8"/></svg>Laat AI lezen</button>
       <button class="fv-btn" onclick="fvOpenOriginal()" title="Download in standaardprogramma">Download origineel</button>
       <button class="fv-btn" onclick="fvOpenDropbox()" title="Open in Dropbox">Open in Dropbox</button>
       <button class="fv-x" onclick="closeFileViewer()" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
@@ -3834,8 +3845,8 @@ function renderBronRight(){
   const col=(s.proj&&PROJCOL[s.proj])||'var(--primary2)';
   const atts=(s.attachFull&&s.attachFull.length)?s.attachFull:[];
   const raw=s.full||s.text||s.summary||'';
-  const aiBtn=String(raw).trim()?`<button class="fv-btn bron-aibtn" onclick="bronAiRead('${s.id}')">✦ Laat AI lezen</button>`:'';
-  const head=`<div class="fmp-head"><div class="fmp-name">${escapeHtml(_srcTitle(s))}</div>${aiBtn}</div><div id="bronAiResults" class="bron-airesults"></div>`;
+  const aiBtn=String(raw).trim()?`<button class="fv-btn bron-aibtn" onclick="openAiInsight('bron','${s.id}')">✦ Laat AI lezen</button>`:'';
+  const head=`<div class="fmp-head"><div class="fmp-name">${escapeHtml(_srcTitle(s))}</div>${aiBtn}</div>`;
   if(atts.length && atts[0].storage_path){
     w.innerHTML=head+'<div class="fmp-stage" id="bronStage"><div class="fmp-none">Preview laden…</div></div>';
     _bronLoadAttachment(atts[0]);
@@ -3931,6 +3942,32 @@ async function kfileAiRead(id){
     box.innerHTML=_fvAiResultHTML(null,data);
     if(typeof loadUsage==='function')loadUsage();
   }catch(e){ box.innerHTML=`<div class="fvai-err">Lezen lukte niet.<br><span style="opacity:.7;font-size:12px">${escapeHtml(String(e&&e.message||e))}</span><br><button class="fv-btn" onclick="kfileAiRead('${id}')">Opnieuw</button></div>`; }
+}
+// ✦ AI-inzicht als POPUP — één paneel, overal hetzelfde (bestand, bron, klant-bord, viewer).
+function closeAiInsight(){ const ov=document.getElementById('aiInsightOverlay'); if(ov)ov.classList.remove('open'); if(_fvAiTimer){clearInterval(_fvAiTimer);_fvAiTimer=null;} }
+async function openAiInsight(kind, ref){
+  const ov=document.getElementById('aiInsightOverlay'), body=document.getElementById('aiInsightBody'), title=document.getElementById('aiModalTitle'); if(!ov||!body)return;
+  let name='', key='', payload=null, projectId=null, reRead=null, readable=true;
+  if(kind==='file'){ const f=(state.files||[]).find(x=>x.id===ref); if(!f)return; name=f.name||'bestand'; key='file:'+f.id; payload={link:f.link,name:f.name}; reRead={link:f.link,name:f.name}; projectId=(typeof _fileProject==='function'&&_fileProject(f))?_fileProject(f).id:null; readable=(typeof _isReadableForAI!=='function')||_isReadableForAI(f.name); }
+  else if(kind==='bron'){ const s=(state.sources||[]).find(x=>x.id===ref); if(!s)return; name=(typeof _srcTitle==='function')?_srcTitle(s):'bron'; key='bron:'+s.id; const raw=s.full||s.text||s.summary||''; payload={text:raw,name}; projectId=s.proj||null; }
+  else return;
+  if(title)title.textContent=name;
+  ov.classList.add('open');
+  if(_fvAiData[key]){ body.innerHTML=_fvAiResultHTML(null,_fvAiData[key]); return; }
+  if(!readable){ body.innerHTML='<div class="fvai-err">Dit bestandstype kan ik nog niet lezen (pdf en tekst wel).</div>'; return; }
+  const steps=['Lezen…','Kernpunten samenvatten…','Taken, afspraken & bedragen zoeken…','Bijna klaar…']; let si=0;
+  body.innerHTML=`<div class="fvai-load"><img class="think-anim" src="/thinking.webp" alt=""><div class="fvai-status" id="fvaiStatus">${steps[0]}</div></div>`;
+  const stx=document.getElementById('fvaiStatus'); if(_fvAiTimer)clearInterval(_fvAiTimer); _fvAiTimer=setInterval(()=>{ si=(si+1)%steps.length; if(stx)stx.textContent=steps[si]; },1500);
+  try{
+    const r=await fetch('/api/readfile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({mode:'text'},payload))});
+    const d=await r.json(); if(d&&d.error) throw new Error(d.error);
+    const data={ summary:(d&&d.summary)||'', tasks:(d&&d.tasks)||[], appointments:(d&&d.appointments)||[], money:(d&&d.money)||[], thin:!!(d&&d.thin), canVision:!!(d&&d.canVision), visionDone:false, projectId, reRead, boxId:'aiInsightBody', key };
+    _fvAiData[key]=data;
+    if(kind==='file' && data.summary){ const f=(state.files||[]).find(x=>x.id===ref); if(f){ f.summary=data.summary; try{ await sb.from('files').update({summary:data.summary}).eq('id',ref); }catch(_){} } }
+    if(_fvAiTimer){clearInterval(_fvAiTimer);_fvAiTimer=null;}
+    body.innerHTML=_fvAiResultHTML(null,data);
+    if(typeof loadUsage==='function')loadUsage();
+  }catch(e){ if(_fvAiTimer){clearInterval(_fvAiTimer);_fvAiTimer=null;} body.innerHTML=`<div class="fvai-err">Lezen lukte niet.<br><span style="opacity:.7;font-size:12px">${escapeHtml(String(e&&e.message||e))}</span><br><button class="fv-btn" onclick="openAiInsight('${kind}','${ref}')">Opnieuw proberen</button></div>`; }
 }
 async function _bronLoadAttachment(a, stageId){
   const stage=document.getElementById(stageId||'bronStage'); if(!stage)return;
@@ -4312,7 +4349,7 @@ function _folderGlyph(){return _tIc('<path d="M5 4h4l3 3h7a2 2 0 0 1 2 2v8a2 2 0
 function _fileRow(f){
   const ic=_fileGlyph(f.name||'');
   return `<div class="kfile"><div class="kfile-main" onclick="event.stopPropagation();openFileViewer('${f.id}')" title="Voorvertonen"><span class="kfile-ic">${ic}</span><span class="kfile-name">${escapeHtml(f.name||'bestand')}</span></div>`
-    +`<button class="kfile-ai" title="AI leest dit bestand — samenvatting, taken, afspraken & bedrag" onclick="event.stopPropagation();kfileAiRead('${f.id}')">${_tIc(_TABCHAN.asterisk,16,1.7)}</button>`
+    +`<button class="kfile-ai" title="AI leest dit bestand — samenvatting, taken, afspraken & bedrag" onclick="event.stopPropagation();openAiInsight('file','${f.id}')">${_tIc(_TABCHAN.asterisk,16,1.7)}</button>`
     +`<button class="kfile-ai kfile-collapse" title="Samenvatting inklappen" onclick="event.stopPropagation();var s=document.getElementById('fsum_${f.id}');if(s)s.classList.remove('on')">${_tIc('<path d="M6 9l6 6l6 -6"/>',16,1.7)}</button>`
     +`<button class="kfile-del" title="Bestand verwijderen" onclick="event.stopPropagation();deleteFile('${f.id}')">${_tIc('<path d="M18 6l-12 12"/><path d="M6 6l12 12"/>',16,1.7)}</button>`
     +`<div class="kfile-sum" id="fsum_${f.id}">${escapeHtml(f.summary||'')}</div></div>`;
@@ -5218,7 +5255,7 @@ function fmPreview(id){
   if(['png','jpg','jpeg','gif','webp','bmp','svg','heic','heif'].includes(ext)) body='<img class="fmp-img" src="'+escapeHtml(url)+'" alt="">';
   else if(ext==='pdf') body='<iframe class="fmp-frame" src="'+escapeHtml(url)+'#toolbar=0&navpanes=0&view=FitH" title="PDF"></iframe>';
   else body='<div class="fmp-none">'+_fileGlyph(f.name)+'<p>Geen voorvertoning</p></div>';
-  pane.innerHTML='<div class="fmp-head"><span class="fmp-ic">'+_fileGlyph(f.name)+'</span><span class="fmp-name">'+escapeHtml(f.name||'bestand')+'</span><button class="fmp-x" onclick="fmClosePreview()" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><div class="fmp-stage">'+body+'</div><div class="fmp-foot"><button class="fv-btn fmp-aibtn" onclick="fmAiRead(\''+id+'\')">✦ Laat AI lezen</button><button class="fv-btn" onclick="window.open(\''+_fvDl(f.link)+'\',\'_blank\',\'noopener\')">Download origineel</button><button class="fv-btn" onclick="window.open(\''+(f.link||'')+'\',\'_blank\',\'noopener\')">Open in Dropbox</button></div><div id="fmAiResults" class="bron-airesults"></div>';
+  pane.innerHTML='<div class="fmp-head"><span class="fmp-ic">'+_fileGlyph(f.name)+'</span><span class="fmp-name">'+escapeHtml(f.name||'bestand')+'</span><button class="fmp-x" onclick="fmClosePreview()" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><div class="fmp-stage">'+body+'</div><div class="fmp-foot"><button class="fv-btn fmp-aibtn" onclick="openAiInsight(\'file\',\''+id+'\')">✦ Laat AI lezen</button><button class="fv-btn" onclick="window.open(\''+_fvDl(f.link)+'\',\'_blank\',\'noopener\')">Download origineel</button><button class="fv-btn" onclick="window.open(\''+(f.link||'')+'\',\'_blank\',\'noopener\')">Open in Dropbox</button></div><div id="fmAiResults" class="bron-airesults"></div>';
 }
 function renderArchief(){
   const wrap=document.getElementById('archiefWrap'); if(!wrap)return;
