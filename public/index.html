@@ -1566,6 +1566,7 @@
   .insp-pvw-link:hover{color:#fff}
   .insp-pvw-assign{border-top:1px solid var(--line);padding-top:14px}
   .insp-pvw-lbl{font-size:12px;color:var(--mut2);margin-bottom:8px}
+  .insp-pvw-move{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;align-items:start}
   @media(max-width:1000px){
     .insp-pvw{padding:0;align-items:stretch;justify-content:stretch}
     .insp-pvw-inner{flex-direction:column;max-width:100vw;max-height:none;height:100dvh;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:calc(var(--tbh,52px) + 18px) 16px 40px;gap:16px}
@@ -1574,6 +1575,9 @@
     .insp-pvw-img img{max-width:100%;max-height:48vh;margin:0 auto}
     .insp-pvw-embed{width:100%;max-width:100%;height:min(68vh,620px)}
     .insp-pvw-side{min-width:0;width:100%}
+    /* Koppelen & verplaatsen: dropdowns onder elkaar i.p.v. naast elkaar */
+    .insp-pvw-move{grid-template-columns:1fr}
+    .insp-pvw-move > *{width:100%;min-width:0;max-width:100%;box-sizing:border-box}
     .insp-pvw-x{top:calc(var(--tbh,52px) + 10px);right:14px;z-index:122}
   }
   @media(max-width:1000px){ .insp-grid{column-count:2} .insp-boards{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:24px 18px} .insp-inner{padding:calc(var(--tbh,52px) + 16px) 16px 80px} }
@@ -1660,7 +1664,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v153</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v154</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -6096,7 +6100,7 @@ function _inspPreview(it){
         ${linkHtml}
         <div class="insp-pvw-assign">
           <div class="insp-pvw-lbl">Koppelen &amp; verplaatsen</div>
-          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;align-items:start">
+          <div class="insp-pvw-move">
             <select id="insp_client" onchange="inspOnClientChange()"></select>
             <select id="insp_project" onchange="inspOnProjectChange('${it.id}')"></select>
             <select id="insp_board" onchange="inspOnBoardChange('${it.id}')"></select>
