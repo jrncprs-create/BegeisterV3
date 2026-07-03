@@ -932,6 +932,8 @@
   .kfile-aianim{width:18px;height:18px;display:block;object-fit:contain}
   .kfile-sum{flex:1 1 100%;font-size:12.5px;color:var(--mut);line-height:1.5;margin:2px 0 2px 25px;white-space:pre-wrap;display:none}
   .kfile-sum.on{display:block}
+  .kfile-sum .fvai{white-space:normal}
+  .kfile-sum .fvai-h:first-child{margin-top:2px}
   .ctx-intro{font-size:12.5px;color:var(--mut2);margin:0 0 6px;line-height:1.5}
   .ctx-label{font-size:11.5px;letter-spacing:.6px;text-transform:uppercase;color:var(--mut2);margin:16px 0 7px;font-weight:600}
   #ctxOverlay .modal textarea{min-height:96px;line-height:1.5}
@@ -1646,7 +1648,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v149</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v150</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -3911,6 +3913,25 @@ async function fmAiRead(id){
     if(typeof loadUsage==='function')loadUsage();
   }catch(e){ if(_fvAiTimer){clearInterval(_fvAiTimer);_fvAiTimer=null;} box.innerHTML=`<div class="fvai-err">Lezen lukte niet.<br><span style="opacity:.7;font-size:12px">${escapeHtml(String(e&&e.message||e))}</span><br><button class="fv-btn" onclick="fmAiRead('${id}')">Opnieuw</button></div>`; }
 }
+// ✦ AI-inzicht vanuit de bestanden-rij in het project/klant-bord — zelfde paneel, inline onder het bestand.
+async function kfileAiRead(id){
+  const f=(state.files||[]).find(x=>x.id===id); if(!f)return;
+  const box=document.getElementById('fsum_'+id); if(!box)return;
+  box.classList.add('on');
+  const key='kf:'+f.id;
+  if(_fvAiData[key]){ box.innerHTML=_fvAiResultHTML(null,_fvAiData[key]); return; }
+  if(typeof _isReadableForAI==='function' && !_isReadableForAI(f.name)){ box.innerHTML='<span class="fvai-status">Dit bestandstype kan ik nog niet lezen (pdf en tekst wel).</span>'; return; }
+  box.innerHTML='<div class="fvai-load"><img class="think-anim" src="/thinking.webp" alt=""><div class="fvai-status">Lezen…</div></div>';
+  try{
+    const r=await fetch('/api/readfile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({link:f.link,name:f.name,mode:'text'})});
+    const d=await r.json(); if(d&&d.error) throw new Error(d.error);
+    const data={ summary:(d&&d.summary)||'', tasks:(d&&d.tasks)||[], appointments:(d&&d.appointments)||[], money:(d&&d.money)||[], thin:!!(d&&d.thin), canVision:!!(d&&d.canVision), visionDone:false, projectId:(typeof _fileProject==='function'&&_fileProject(f))?_fileProject(f).id:null, reRead:{link:f.link,name:f.name}, boxId:'fsum_'+id, key };
+    _fvAiData[key]=data;
+    if(data.summary){ f.summary=data.summary; try{ await sb.from('files').update({summary:data.summary}).eq('id',f.id); }catch(_){} }
+    box.innerHTML=_fvAiResultHTML(null,data);
+    if(typeof loadUsage==='function')loadUsage();
+  }catch(e){ box.innerHTML=`<div class="fvai-err">Lezen lukte niet.<br><span style="opacity:.7;font-size:12px">${escapeHtml(String(e&&e.message||e))}</span><br><button class="fv-btn" onclick="kfileAiRead('${id}')">Opnieuw</button></div>`; }
+}
 async function _bronLoadAttachment(a, stageId){
   const stage=document.getElementById(stageId||'bronStage'); if(!stage)return;
   const sp=a.storage_path||'', name=a.filename||''; let url='';
@@ -4291,7 +4312,7 @@ function _folderGlyph(){return _tIc('<path d="M5 4h4l3 3h7a2 2 0 0 1 2 2v8a2 2 0
 function _fileRow(f){
   const ic=_fileGlyph(f.name||'');
   return `<div class="kfile"><div class="kfile-main" onclick="event.stopPropagation();openFileViewer('${f.id}')" title="Voorvertonen"><span class="kfile-ic">${ic}</span><span class="kfile-name">${escapeHtml(f.name||'bestand')}</span></div>`
-    +`<button class="kfile-ai" title="AI leest dit bestand" onclick="event.stopPropagation();summarizeFile('${f.id}')">${_tIc(_TABCHAN.asterisk,16,1.7)}</button>`
+    +`<button class="kfile-ai" title="AI leest dit bestand — samenvatting, taken, afspraken & bedrag" onclick="event.stopPropagation();kfileAiRead('${f.id}')">${_tIc(_TABCHAN.asterisk,16,1.7)}</button>`
     +`<button class="kfile-ai kfile-collapse" title="Samenvatting inklappen" onclick="event.stopPropagation();var s=document.getElementById('fsum_${f.id}');if(s)s.classList.remove('on')">${_tIc('<path d="M6 9l6 6l6 -6"/>',16,1.7)}</button>`
     +`<button class="kfile-del" title="Bestand verwijderen" onclick="event.stopPropagation();deleteFile('${f.id}')">${_tIc('<path d="M18 6l-12 12"/><path d="M6 6l12 12"/>',16,1.7)}</button>`
     +`<div class="kfile-sum" id="fsum_${f.id}">${escapeHtml(f.summary||'')}</div></div>`;
