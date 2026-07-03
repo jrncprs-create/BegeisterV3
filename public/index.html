@@ -1648,10 +1648,11 @@
      je met de vinger versleept (twee kolommen tegelijk zichtbaar tijdens het vegen). */
   @media(max-width:600px){
     .main{overflow-x:clip}
-    #mobTrack{display:flex;align-items:flex-start;width:100%;transition:transform .34s cubic-bezier(.22,1,.36,1);will-change:transform}
+    /* spoor breekt uit de .main-padding naar volle schermbreedte (100vw), zodat de buurkolom
+       niet in de rechterrand lekt; hoogte wordt in JS gezet zodat elke kolom apart scrollt */
+    #mobTrack{display:flex;align-items:stretch;width:100vw;margin-left:-13px;transition:transform .34s cubic-bezier(.22,1,.36,1);will-change:transform;overflow:visible}
     #mobTrack.dragging{transition:none}
-    #mobTrack > *{flex:0 0 100%;width:100%;min-width:100%;max-width:100%;display:block!important}
-    #mobTrack > *{max-width:100%}
+    #mobTrack > *{flex:0 0 100vw;width:100vw;min-width:100vw;max-width:100vw;display:block!important;box-sizing:border-box;padding:0 13px 184px;height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
   }
 </style>
 </head>
@@ -1680,7 +1681,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v158</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v159</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -2668,9 +2669,13 @@ function _syncMobTrack(){ try{
     els.forEach(e=>track.appendChild(e));   // (her)plaats in MOBCOLS-volgorde
     const idx=Math.max(0,MOBCOLS.indexOf(view));
     if(!track.classList.contains('dragging')) track.style.transform='translateX('+(-idx*100)+'%)';
+    // vaste hoogte → elke kolom scrollt apart (niet meer alle 3 tegelijk met de pagina)
+    const top=track.getBoundingClientRect().top;
+    track.style.height=Math.max(220,(window.innerHeight-top))+'px';
+    main.style.paddingBottom='0';
   } else if(track){
     _mobAnchors.forEach(a=>{ if(a.next&&a.next.parentNode===a.parent)a.parent.insertBefore(a.el,a.next); else a.parent.appendChild(a.el); });
-    track.remove();
+    track.remove(); main.style.paddingBottom='';
   }
 }catch(_){}}
 window.addEventListener('resize',()=>{ try{ _syncMobTrack(); }catch(_){} });
