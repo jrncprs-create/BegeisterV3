@@ -1646,7 +1646,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v148</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v149</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -3871,6 +3871,46 @@ async function bronAiRead(sid){
     if(typeof loadUsage==='function')loadUsage();
   }catch(e){ if(_fvAiTimer){clearInterval(_fvAiTimer);_fvAiTimer=null;} box.innerHTML=`<div class="fvai-err">Lezen lukte niet.<br><span style="opacity:.7;font-size:12px">${escapeHtml(String(e&&e.message||e))}</span><br><button class="fv-btn" onclick="bronAiRead('${sid}')">Opnieuw</button></div>`; }
 }
+// Generieke 'beeld meelezen'-stap — werkt vanuit elk paneel via _aiCtx (reRead/boxId/key).
+async function _aiVision(btn){
+  const c=_aiCtx; if(!c||!c.reRead||!c.key)return;
+  if(btn){ btn.disabled=true; btn.textContent='Beeld lezen…'; }
+  const msg=document.getElementById('fvaiVisMsg'); if(msg)msg.textContent='';
+  try{
+    const r=await fetch('/api/readfile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({mode:'vision'},c.reRead))});
+    const d=await r.json(); if(d&&d.error) throw new Error(d.error);
+    const cur=_fvAiData[c.key]||{summary:'',tasks:[],appointments:[],money:[]};
+    const sT=new Set((cur.tasks||[]).map(t=>String(t).toLowerCase())); (d.tasks||[]).forEach(t=>{const k=String(t).toLowerCase(); if(t&&!sT.has(k)){cur.tasks.push(t);sT.add(k);}});
+    const sA=new Set((cur.appointments||[]).map(a=>String(a.title).toLowerCase())); (d.appointments||[]).forEach(a=>{const k=String(a.title).toLowerCase(); if(a.title&&!sA.has(k)){cur.appointments.push(a);sA.add(k);}});
+    cur.money=cur.money||[]; const sM=new Set(cur.money.map(m=>String(m.raw||m.amount).toLowerCase())); (d.money||[]).forEach(m=>{const k=String(m.raw||m.amount).toLowerCase(); if((m.raw||m.amount!=null)&&!sM.has(k)){cur.money.push(m);sM.add(k);}});
+    if(d.summary && d.summary.length>(cur.summary||'').length) cur.summary=d.summary;
+    cur.visionDone=true; _fvAiData[c.key]=cur;
+    const box=document.getElementById(c.boxId); if(box) box.innerHTML=_fvAiResultHTML(null,cur);
+  }catch(e){ if(btn){btn.disabled=false;btn.textContent='Beeld meelezen';} const m=document.getElementById('fvaiVisMsg'); if(m) m.textContent='Beeld-analyse lukte niet ('+String(e&&e.message||e)+'). De tekst-samenvatting hierboven klopt wel.'; }
+}
+// ✦ Laat AI lezen vanuit de desktop-bestandspreview (fmPreview) — zelfde paneel.
+async function fmAiRead(id){
+  const f=(state.files||[]).find(x=>x.id===id); if(!f)return;
+  const box=document.getElementById('fmAiResults'); if(!box)return;
+  if(box.getAttribute('data-open')==='1'){ box.innerHTML=''; box.removeAttribute('data-open'); return; }
+  box.setAttribute('data-open','1');
+  const key='fm:'+f.id;
+  if(_fvAiData[key]){ box.innerHTML=_fvAiResultHTML(null,_fvAiData[key]); return; }
+  if(typeof _isReadableForAI==='function' && !_isReadableForAI(f.name)){ box.innerHTML='<div class="fvai-err">Dit bestandstype kan ik nog niet lezen (pdf en tekst wel).</div>'; return; }
+  const steps=['Bestand ophalen…','Tekst lezen…','Kernpunten samenvatten…','Taken, afspraken & bedragen zoeken…','Bijna klaar…']; let si=0;
+  box.innerHTML=`<div class="fvai-load"><img class="think-anim" src="/thinking.webp" alt=""><div class="fvai-status" id="fvaiStatus">${steps[0]}</div></div>`;
+  const stx=document.getElementById('fvaiStatus'); if(_fvAiTimer)clearInterval(_fvAiTimer); _fvAiTimer=setInterval(()=>{ si=(si+1)%steps.length; if(stx)stx.textContent=steps[si]; },1500);
+  try{
+    const r=await fetch('/api/readfile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({link:f.link,name:f.name,mode:'text'})});
+    const d=await r.json(); if(d&&d.error) throw new Error(d.error);
+    const data={ summary:(d&&d.summary)||'', tasks:(d&&d.tasks)||[], appointments:(d&&d.appointments)||[], money:(d&&d.money)||[], thin:!!(d&&d.thin), canVision:!!(d&&d.canVision), visionDone:false, projectId:(typeof _fileProject==='function'&&_fileProject(f))?_fileProject(f).id:null, reRead:{link:f.link,name:f.name}, boxId:'fmAiResults', key };
+    _fvAiData[key]=data;
+    if(data.summary){ f.summary=data.summary; try{ await sb.from('files').update({summary:data.summary}).eq('id',f.id); }catch(_){} }
+    if(_fvAiTimer){clearInterval(_fvAiTimer);_fvAiTimer=null;}
+    box.innerHTML=_fvAiResultHTML(null,data);
+    if(typeof loadUsage==='function')loadUsage();
+  }catch(e){ if(_fvAiTimer){clearInterval(_fvAiTimer);_fvAiTimer=null;} box.innerHTML=`<div class="fvai-err">Lezen lukte niet.<br><span style="opacity:.7;font-size:12px">${escapeHtml(String(e&&e.message||e))}</span><br><button class="fv-btn" onclick="fmAiRead('${id}')">Opnieuw</button></div>`; }
+}
 async function _bronLoadAttachment(a, stageId){
   const stage=document.getElementById(stageId||'bronStage'); if(!stage)return;
   const sp=a.storage_path||'', name=a.filename||''; let url='';
@@ -4409,7 +4449,7 @@ async function fvAiRead(){
     if(typeof _isReadableForAI==='function' && !_isReadableForAI(f.name)) throw new Error('Dit bestandstype kan ik nog niet lezen.');
     const d=await _fvAiFetch(f,'text');
     if(d&&d.error) throw new Error(d.error);
-    const data={ summary:(d&&d.summary)||'', tasks:(d&&d.tasks)||[], appointments:(d&&d.appointments)||[], money:(d&&d.money)||[], thin:!!(d&&d.thin), canVision:!!(d&&d.canVision), visionDone:false, projectId:(typeof _fileProject==='function'&&_fileProject(f))?_fileProject(f).id:null };
+    const data={ summary:(d&&d.summary)||'', tasks:(d&&d.tasks)||[], appointments:(d&&d.appointments)||[], money:(d&&d.money)||[], thin:!!(d&&d.thin), canVision:!!(d&&d.canVision), visionDone:false, projectId:(typeof _fileProject==='function'&&_fileProject(f))?_fileProject(f).id:null, reRead:{link:f.link,name:f.name}, boxId:'fv_results', key:f.id };
     _fvAiData[f.id]=data;
     if(data.summary){ f.summary=data.summary; try{ await sb.from('files').update({summary:data.summary}).eq('id',f.id); }catch(_){} }
     if(_fvAiTimer){clearInterval(_fvAiTimer);_fvAiTimer=null;}
@@ -4442,7 +4482,7 @@ function _fvAiResultHTML(f,data){
   const paras=summary.split('\n').map(l=>l.trim()).filter(Boolean);
   const tasks=data.tasks||[], appts=data.appointments||[], money=data.money||[];
   const projectId = data.projectId || ((typeof _fileProject==='function' && f && _fileProject(f))?_fileProject(f).id:null);
-  _aiCtx={ tasks, appointments:appts, money, projectId };
+  _aiCtx={ tasks, appointments:appts, money, projectId, reRead:data.reRead||null, boxId:data.boxId||null, key:data.key||null };
   let finHTML='';
   try{ const p=projectId?((typeof projById==='function')?projById(projectId):null):((typeof _fileProject==='function')?_fileProject(f):null);
     if(p){ const btw=(p.btw!=null&&p.btw!=='')?Number(p.btw):21; const om=(p.projectprijs!=null&&p.projectprijs!=='')?Number(p.projectprijs):null;
@@ -4457,7 +4497,7 @@ function _fvAiResultHTML(f,data){
   let visionHTML='';
   if(data&&data.canVision&&!data.visionDone){
     const lbl=data.thin?'Weinig tekst gevonden — waarschijnlijk gescand of veel beeld. Ook als beeld laten meelezen?':'Zitten er tabellen of tekst in afbeeldingen? Die kan ik ook meelezen.';
-    visionHTML=`<div class="fvai-vision"><span class="fvai-vislbl">${lbl}</span><button class="fv-btn fvai-visbtn" onclick="fvAiVision(this)">Beeld meelezen</button><div class="fvai-vismsg" id="fvaiVisMsg"></div></div>`;
+    visionHTML=`<div class="fvai-vision"><span class="fvai-vislbl">${lbl}</span><button class="fv-btn fvai-visbtn" onclick="_aiVision(this)">Beeld meelezen</button><div class="fvai-vismsg" id="fvaiVisMsg"></div></div>`;
   }
   return `<div class="fvai"><div class="fvai-h">Samenvatting</div><div class="fvai-sum">${paras.length?paras.map(p=>`<p>${autolink(escapeHtml(p),'#7db0e6')}</p>`).join(''):'<p style="color:var(--mut2)">Geen samenvatting.</p>'}</div>${tasksHTML}${apptsHTML}${moneyHTML}${finHTML}${visionHTML}</div>`;
 }
@@ -5157,7 +5197,7 @@ function fmPreview(id){
   if(['png','jpg','jpeg','gif','webp','bmp','svg','heic','heif'].includes(ext)) body='<img class="fmp-img" src="'+escapeHtml(url)+'" alt="">';
   else if(ext==='pdf') body='<iframe class="fmp-frame" src="'+escapeHtml(url)+'#toolbar=0&navpanes=0&view=FitH" title="PDF"></iframe>';
   else body='<div class="fmp-none">'+_fileGlyph(f.name)+'<p>Geen voorvertoning</p></div>';
-  pane.innerHTML='<div class="fmp-head"><span class="fmp-ic">'+_fileGlyph(f.name)+'</span><span class="fmp-name">'+escapeHtml(f.name||'bestand')+'</span><button class="fmp-x" onclick="fmClosePreview()" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><div class="fmp-stage">'+body+'</div><div class="fmp-foot"><button class="fv-btn" onclick="window.open(\''+_fvDl(f.link)+'\',\'_blank\',\'noopener\')">Download origineel</button><button class="fv-btn" onclick="window.open(\''+(f.link||'')+'\',\'_blank\',\'noopener\')">Open in Dropbox</button></div>';
+  pane.innerHTML='<div class="fmp-head"><span class="fmp-ic">'+_fileGlyph(f.name)+'</span><span class="fmp-name">'+escapeHtml(f.name||'bestand')+'</span><button class="fmp-x" onclick="fmClosePreview()" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><div class="fmp-stage">'+body+'</div><div class="fmp-foot"><button class="fv-btn fmp-aibtn" onclick="fmAiRead(\''+id+'\')">✦ Laat AI lezen</button><button class="fv-btn" onclick="window.open(\''+_fvDl(f.link)+'\',\'_blank\',\'noopener\')">Download origineel</button><button class="fv-btn" onclick="window.open(\''+(f.link||'')+'\',\'_blank\',\'noopener\')">Open in Dropbox</button></div><div id="fmAiResults" class="bron-airesults"></div>';
 }
 function renderArchief(){
   const wrap=document.getElementById('archiefWrap'); if(!wrap)return;
