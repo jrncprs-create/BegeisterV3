@@ -1513,8 +1513,8 @@
   .dov-inner{max-width:680px;margin:0 auto;padding:max(48px,calc(env(safe-area-inset-top) + 40px)) 26px 80px;position:relative}
   .dov-close{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:transparent;color:#9b9b9b;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto;transition:color .15s,border-color .15s}
   .dov-close:hover{color:#fff;border-color:#fff}
-  /* iPhone: geen rondje om het sluitknopje bij Dagoverzicht/Inspiratie — alleen het icoon rechtsboven */
-  @media(max-width:600px){ .dov-close{border:none;border-radius:0;background:transparent} }
+  /* Mobiel (o.a. iPhone): geen rondje om het sluitknopje bij Dagoverzicht/Inspiratie — alleen het icoon rechtsboven */
+  @media(max-width:1000px){ .dov-close{border:none;border-radius:0;background:transparent} }
   /* ===== Inspiratie-overlay (themastapels → raster), schuift van boven in ===== */
   .insp-ov{position:fixed;inset:0;z-index:96;background:var(--bg);overflow-y:auto;transform:translateY(-100%);transition:transform .6s cubic-bezier(.22,1.12,.36,1);will-change:transform;-webkit-overflow-scrolling:touch}
   .insp-ov.open{transform:translateY(0)}
