@@ -1699,7 +1699,9 @@
   /* Mobiele planning-carousel: In afwachting · Taken · Agenda naast elkaar in één spoor dat
      je met de vinger versleept (twee kolommen tegelijk zichtbaar tijdens het vegen). */
   @media(max-width:600px){
-    .main{overflow-x:clip}
+    /* Pagina strak in het scherm: geen horizontaal slepen / iOS-rubberbanding zijwaarts */
+    html,body{overflow-x:hidden;max-width:100vw;overscroll-behavior-x:none}
+    .main{overflow-x:clip;max-width:100vw}
     /* spoor breekt uit de .main-padding naar volle schermbreedte (100vw), zodat de buurkolom
        niet in de rechterrand lekt; hoogte wordt in JS gezet zodat elke kolom apart scrollt */
     #mobTrack{display:flex;align-items:stretch;width:100vw;margin-left:-13px;transition:transform .34s cubic-bezier(.22,1,.36,1);will-change:transform;overflow:visible}
@@ -1733,7 +1735,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v165</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v166</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -4001,19 +4003,16 @@ function renderBronRight(){
   const raw=s.full||s.text||s.summary||'';
   const aiBtn=String(raw).trim()?`<button class="fv-btn bron-aibtn" onclick="openAiInsight('bron','${s.id}')">✦ Laat AI lezen</button>`:'';
   const head=`<div class="fmp-head"><div class="fmp-name">${escapeHtml(_srcTitle(s))}</div>${aiBtn}</div>`;
-  if(atts.length && atts[0].storage_path){
-    w.innerHTML=head+'<div class="fmp-stage" id="bronStage"><div class="fmp-none">Preview laden…</div></div>';
-    _bronLoadAttachment(atts[0]);
-    return;
-  }
+  // Mailtekst (of chat) ALTIJD tonen; bijlage(n) eronder — niet meer óf tekst óf beeld.
   const _chatRe=/^[^\n]{1,40}\([^)\n]{1,24}\):\s*/;
   const isChat=(s.kind==='chat')||(String(raw).split('\n').filter(l=>_chatRe.test(l.trim())).length>=2);
-  if(isChat){
-    const bubbles=renderChat(raw,col);
-    if(bubbles){ w.innerHTML=head+`<div class="bron-chat">${bubbles}</div>`; return; }
-  }
-  const body=autolink(escapeHtml(raw),col);
-  w.innerHTML=head+`<div class="bron-prevtext" style="white-space:pre-wrap;line-height:1.6;font-size:13.5px;color:var(--mut)">${body||'<span class="fmp-none">Geen inhoud.</span>'}</div>`;
+  let bodyHtml='';
+  if(isChat){ const bubbles=renderChat(raw,col); if(bubbles) bodyHtml=`<div class="bron-chat">${bubbles}</div>`; }
+  if(!bodyHtml){ const body=autolink(escapeHtml(raw),col); bodyHtml=`<div class="bron-prevtext" style="white-space:pre-wrap;line-height:1.6;font-size:13.5px;color:var(--mut)">${body||'<span class="fmp-none">Geen inhoud.</span>'}</div>`; }
+  const hasAtt=atts.length && atts[0].storage_path;
+  const attHtml=hasAtt?'<div class="fmp-stage" id="bronStage" style="margin-top:16px"><div class="fmp-none">Bijlage laden…</div></div>':'';
+  w.innerHTML=head+bodyHtml+attHtml;
+  if(hasAtt){ _bronLoadAttachment(atts[0]); }
 }
 // ✦ Laat AI een bron lezen — hergebruikt hetzelfde inzicht-paneel als Bestanden.
 async function bronAiRead(sid){
