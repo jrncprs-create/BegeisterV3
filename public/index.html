@@ -166,6 +166,8 @@
   .cdd-menu{position:absolute;top:calc(100% + 6px);left:0;right:0;background:#2a2a2a;border:1px solid #3a3a3a;border-radius:12px;padding:6px;z-index:60;box-shadow:0 14px 38px rgba(0,0,0,.6);display:none;max-height:62vh;overflow:auto;scrollbar-width:none}
   .cdd-menu::-webkit-scrollbar{display:none}
   .cdd.open .cdd-menu{display:block}
+  /* Open menu wordt naar <body> verplaatst en op het scherm vastgezet (past altijd, klapt slim om) */
+  .cdd-menu.cdd-menu-fixed{position:fixed;display:block;z-index:2000;left:0;top:0;margin:0}
   .cdd-opt{display:flex;align-items:center;gap:8px;padding:9px 9px;border-radius:8px;font-size:14px;font-weight:400;color:var(--txt);cursor:pointer}
   .cdd-opt:hover{background:rgba(255,255,255,.06)}
   .cdd-opt.sel{background:rgba(255,255,255,.10)}
@@ -1735,7 +1737,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v166</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v167</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -2912,9 +2914,52 @@ function _cddHTML(opts,active,handler){
   const items=opts.map(o=>{const lead=o.badge?`<span class="cdd-badge" style="background:${o.badge.col}">${escapeHtml(o.badge.ch||'')}</span>`:`<span class="cdd-ck">${o.v===active?'✓':''}</span>`;return `<div class="cdd-opt${o.v===active?' sel':''} ${o.cls||''}" onclick="_cddPick('${handler}','${o.v}')">${lead}<span class="cdd-lbl"${o.badge?` style="color:${o.badge.col}"`:''}>${escapeHtml(o.l)}</span></div>`;}).join('');
   return `<div class="cdd"><button class="cdd-btn" onclick="_cddToggle(event)"><span class="cdd-cur">${escapeHtml(cur.l)}</span><svg class="cdd-chev" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6l6 -6"/></svg></button><div class="cdd-menu">${items}</div></div>`;
 }
-function _cddToggle(e){ e.stopPropagation(); const dd=e.currentTarget.closest('.cdd'); const open=dd.classList.contains('open'); document.querySelectorAll('.cdd.open').forEach(x=>x.classList.remove('open')); if(!open)dd.classList.add('open'); }
-function _cddPick(handler,v){ document.querySelectorAll('.cdd.open').forEach(x=>x.classList.remove('open')); if(typeof window[handler]==='function') window[handler](v); }
-if(!window._cddInit){window._cddInit=true; document.addEventListener('click',()=>{document.querySelectorAll('.cdd.open').forEach(x=>x.classList.remove('open'));});}
+// ---- Dropdown-positionering: menu naar <body> tillen zodat het nooit door een
+//      scrollende/transformende ouder (bv. #mobTrack) wordt afgeknipt; slim omhoog/
+//      omlaag klappen en de hoogte klemmen zodat het altijd op het scherm past. ----
+let _cddCur=null;
+function _cddReflow(){
+  if(!_cddCur) return; const dd=_cddCur.dd, menu=_cddCur.menu;
+  const btn=dd.querySelector('.cdd-btn'); if(!btn){ return; }
+  const r=btn.getBoundingClientRect();
+  const vw=window.innerWidth, vh=window.innerHeight, M=8;
+  let width=Math.min(Math.max(r.width, Math.min(240, vw-2*M)), vw-2*M);
+  menu.style.width=width+'px';
+  let left=Math.min(Math.max(M, r.left), vw-M-width);
+  menu.style.left=left+'px';
+  menu.style.maxHeight='none';
+  const needed=menu.offsetHeight;
+  const below=vh-r.bottom-M, above=r.top-M;
+  if(below>=Math.min(needed,200) || below>=above){
+    menu.style.top=(r.bottom+6)+'px'; menu.style.bottom='auto';
+    menu.style.maxHeight=Math.max(120, below-6)+'px';
+  } else {
+    menu.style.top='auto'; menu.style.bottom=(vh-r.top+6)+'px';
+    menu.style.maxHeight=Math.max(120, above-6)+'px';
+  }
+}
+function _cddPlace(dd){
+  const menu=dd.querySelector('.cdd-menu'); if(!menu) return;
+  const home=menu.parentNode;
+  document.body.appendChild(menu);
+  menu.classList.add('cdd-menu-fixed');
+  _cddCur={dd, menu, home};
+  _cddReflow();
+}
+function _cddCloseAll(){
+  document.querySelectorAll('.cdd.open').forEach(x=>x.classList.remove('open'));
+  if(_cddCur){ const {menu,home}=_cddCur; menu.classList.remove('cdd-menu-fixed');
+    menu.style.width=menu.style.left=menu.style.top=menu.style.bottom=menu.style.maxHeight='';
+    if(home && menu.parentNode!==home) home.appendChild(menu); _cddCur=null; }
+}
+function _cddOpen(dd){ _cddCloseAll(); dd.classList.add('open'); _cddPlace(dd); }
+function _cddToggle(e){ e.stopPropagation(); const dd=e.currentTarget.closest('.cdd'); const open=dd.classList.contains('open'); _cddCloseAll(); if(!open) _cddOpen(dd); }
+function _cddPick(handler,v){ _cddCloseAll(); if(typeof window[handler]==='function') window[handler](v); }
+if(!window._cddInit){window._cddInit=true;
+  document.addEventListener('click',()=>{ _cddCloseAll(); });
+  window.addEventListener('resize',()=>{ _cddCloseAll(); });
+  window.addEventListener('scroll',(e)=>{ if(!_cddCur) return; if(_cddCur.menu.contains(e.target)) return; _cddReflow(); }, true);
+}
 // Gestileerde keuzelijst (badge + klantkleur) die een verborgen native <select> aanstuurt.
 function _formBadge(kind,v){
   if(!v||v==='__new__'||v==='__manage__'||v==='__none__') return null;
@@ -2935,8 +2980,8 @@ function _enhanceSelect(sel,kind){
   const cb=_formBadge(kind,cur.v);
   const items=opts.map(o=>{ const b=_formBadge(kind,o.v); const lead=b?`<span class="cdd-badge" style="background:${b.col}">${escapeHtml(b.ch||'')}</span>`:`<span class="cdd-ck">${o.v===sel.value?'✓':''}</span>`; return `<div class="cdd-opt${o.v===sel.value?' sel':''} ${o.cls}" data-v="${escapeHtml(o.v)}">${lead}<span class="cdd-lbl"${b?` style="color:${b.col}"`:''}>${escapeHtml(o.l)}</span></div>`; }).join('');
   wrap.innerHTML=`<button type="button" class="cdd-btn">${cb?`<span class="cdd-badge" style="background:${cb.col}">${escapeHtml(cb.ch||'')}</span>`:''}<span class="cdd-cur"${cb?` style="--cdc:${cb.col}"`:''}>${escapeHtml(cur.l)}</span><svg class="cdd-chev" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6l6 -6"/></svg></button><div class="cdd-menu">${items}</div>`;
-  wrap.querySelector('.cdd-btn').onclick=e=>{ e.stopPropagation(); const open=wrap.classList.contains('open'); document.querySelectorAll('.cdd.open').forEach(x=>x.classList.remove('open')); if(!open)wrap.classList.add('open'); };
-  wrap.querySelectorAll('.cdd-opt').forEach(el=>{ el.onclick=e=>{ e.stopPropagation(); wrap.classList.remove('open'); sel.value=el.getAttribute('data-v'); sel.dispatchEvent(new Event('change')); _enhanceSelect(sel,kind); }; });
+  wrap.querySelector('.cdd-btn').onclick=e=>{ e.stopPropagation(); const open=wrap.classList.contains('open'); _cddCloseAll(); if(!open) _cddOpen(wrap); };
+  wrap.querySelectorAll('.cdd-opt').forEach(el=>{ el.onclick=e=>{ e.stopPropagation(); _cddCloseAll(); sel.value=el.getAttribute('data-v'); sel.dispatchEvent(new Event('change')); _enhanceSelect(sel,kind); }; });
 }
 function renderTaken(){
   const va=document.getElementById('view-taken');
