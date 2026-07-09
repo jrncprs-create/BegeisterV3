@@ -1340,6 +1340,10 @@
     background:transparent;color:var(--mut2);cursor:pointer;display:flex;align-items:center;justify-content:center;
     transition:color .15s,border-color .15s}
   .vraag-wolk .vw-trash:hover{color:#f87171;border-color:rgba(248,113,113,.4)}
+  .vraag-wolk .vw-zeker{margin-left:auto;flex:none;background:transparent;border:1px solid rgba(248,113,113,.5);
+    color:#f87171;border-radius:8px;padding:5px 12px;font:inherit;font-size:12px;cursor:pointer}
+  .vraag-wolk .vw-zeker:hover{background:rgba(248,113,113,.12)}
+  .vraag-wolk .vw-rest + .vw-zeker{margin-left:10px}
   .vraag-wolk .vw-rest + .vw-trash{margin-left:10px}
   .welcome-overlay #chatThread{flex:1 1 auto;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:10px;width:100%;padding:2px;margin:0}
   .welcome-overlay #chatThread:empty{display:none}
@@ -1817,7 +1821,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v179</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v180</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -6776,7 +6780,7 @@ function dismissWelcome(){ hideWelcome(); _animateNext=true; render(); try{ setT
    de app opent: het welkomstscherm komt naar voren. Geen bubbel die je kunt missen.
    Er wordt nooit iets aangemaakt zonder dat je op Aanmaken drukt.
    ============================================================================ */
-var _vraagIdx=0;
+var _vraagIdx=0, _vraagBevestig=null, _vraagBevestigTimer=null;
 
 // LET OP: _clientColor bestaat twee keer in dit bestand; de tweede definitie wint en
 // geeft '#888' voor een onbekende klant. Daarom hier een eigen, expliciete opzoeker.
@@ -6819,9 +6823,11 @@ function renderWelcomeVraag(){
    +   '<button class="btn ghost" onclick="vraagAfwijzen(\''+s.id+'\')">Nee, geen nieuw project</button>'
    +   '<button class="btn ghost" onclick="vraagLater()">Later</button>'
    +   (rest>0?'<span class="vw-rest">nog '+rest+' vraag'+(rest===1?'':'en')+'</span>':'')
-   +   '<button class="vw-trash" onclick="vraagVerwijderBron(\''+s.id+'\')" title="Deze bron verwijderen" aria-label="Verwijderen">'
-   +     '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/></svg>'
-   +   '</button>'
+   +   (String(_vraagBevestig)===String(s.id)
+        ? '<button class="vw-zeker" onclick="vraagVerwijderBron(\''+s.id+'\')" title="Klik nogmaals om te verwijderen">Zeker?</button>'
+        : '<button class="vw-trash" onclick="vraagVerwijderBron(\''+s.id+'\')" title="Deze bron verwijderen" aria-label="Verwijderen">'
+          + '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/></svg>'
+          + '</button>')
    + '</div></div>';
 }
 async function _vraagAf(sid, status){
@@ -6857,11 +6863,18 @@ async function vraagAanmaken(sid){
 }
 async function vraagAfwijzen(sid){ await _vraagAf(sid,'afgewezen'); await refresh(); }
 // De prullenbak gooit de bron echt weg. Bijlagen en documenten gaan mee (cascade in de database).
+// Eerste klik op de prullenbak vraagt "Zeker?" in het wolkje zelf; de tweede verwijdert.
+// Geen modale dialoog voor zo'n klein gebaar. Na 4 seconden vervalt de vraag vanzelf.
+function _vraagBevestigReset(){ if(_vraagBevestigTimer) clearTimeout(_vraagBevestigTimer); _vraagBevestigTimer=null; _vraagBevestig=null; }
 async function vraagVerwijderBron(sid){
-  const s=(state.vragen||[]).find(x=>String(x.id)===String(sid));
-  const nDoc=(state.documents||[]).filter(d=>String(d.source_id)===String(sid)).length;
-  const extra=nDoc?'\n\nDe '+nDoc+' bijlage'+(nDoc===1?'':'n')+' verdwijnt ook.':'';
-  if(!(await uiConfirm('Deze bron definitief verwijderen?'+extra,{ok:'Verwijderen',danger:true})))return;
+  if(String(_vraagBevestig)!==String(sid)){
+    _vraagBevestig=sid;
+    if(_vraagBevestigTimer) clearTimeout(_vraagBevestigTimer);
+    _vraagBevestigTimer=setTimeout(()=>{ _vraagBevestigReset(); renderWelcomeVraag(); }, 4000);
+    renderWelcomeVraag();
+    return;
+  }
+  _vraagBevestigReset();
   try{ await sb.from('sources').delete().eq('id',sid); }catch(_){}
   state.vragen=(state.vragen||[]).filter(x=>String(x.id)!==String(sid));
   _vraagIdx=0;
@@ -6870,7 +6883,7 @@ async function vraagVerwijderBron(sid){
   if(_open && !_vraagOpen().length) dismissWelcome();
   await refresh();
 }
-function vraagLater(){ const v=_vraagOpen(); _vraagIdx=(_vraagIdx+1)%Math.max(v.length,1); if(v.length<=1){ if(_welkomStaatOpen()) dismissWelcome(); } else renderWelcomeVraag(); }
+function vraagLater(){ _vraagBevestigReset(); const v=_vraagOpen(); _vraagIdx=(_vraagIdx+1)%Math.max(v.length,1); if(v.length<=1){ if(_welkomStaatOpen()) dismissWelcome(); } else renderWelcomeVraag(); }
 // ===== Dagoverzicht-overlay =====
 function _projColor(p){ try{ return (PROJCOL&&PROJCOL[p.id])||'#888'; }catch(_){ return '#888'; } }
 function _dayData(){
