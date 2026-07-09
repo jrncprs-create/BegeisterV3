@@ -1738,7 +1738,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v171</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v172</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -2933,7 +2933,9 @@ async function pvSuggestAll(){
   try{
     const catalog=(state.projects||[]).filter(p=>p.id!=='__inbox__')
       .map(p=>({project_id:p.id,client:p.client||'',project:p.project||''}));
-    const sources=(state.inbox||[]).slice(0,90).map(s=>({id:s.id,channel:s.channel,sender:s.sender,subject:s.subject,body:(s.summary||s.body||'').slice(0,300)}));
+    const metDoc=new Set((state.documents||[]).map(d=>String(d.source_id)));
+    const sources=(state.inbox||[]).slice(0,90).map(s=>({id:s.id,channel:s.channel,sender:s.sender,subject:s.subject,
+      body:(s.summary||s.body||'').slice(0,300), bijlage:metDoc.has(String(s.id))}));
     const r=await fetch('/api/triage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sources,catalog})});
     const d=await r.json();
     _pvSug=(d&&d.suggestions)||{};
@@ -3001,8 +3003,9 @@ async function pvBulk(kind){
   if(!ids.length)return;
   const lbl={werk:'naar hun voorgestelde project',inspiratie:'naar het inspiratiebord',
              prive:'als privé wegzetten',ruis:'als ruis wegzetten'}[kind];
-  const extra=(kind==='inspiratie')?'\n\nDeze leveren geen taken op.':'';
-  if(!(await uiConfirm(ids.length+' item'+(ids.length===1?'':'s')+' '+lbl+'?'+extra,{ok:'Doen',danger:false})))return;
+  const extra=(kind==='inspiratie')?'\n\nDeze leveren geen taken op.'
+            :(kind==='ruis')?'\n\nRuis verdwijnt uit het Postvak In. De bronnen blijven bij Bronnen staan, maar je ziet ze hier niet meer. Loop ze liever eerst even na.':'';
+  if(!(await uiConfirm(ids.length+' item'+(ids.length===1?'':'s')+' '+lbl+'?'+extra,{ok:'Doen',danger:(kind==='ruis')})))return;
 
   if(kind==='werk'){
     const perProject={};
