@@ -919,6 +919,25 @@
   #bronMidWrap .con-li .bron-del{flex:0 0 auto;background:transparent;border:none;color:var(--mut2);cursor:pointer;padding:2px;margin-top:1px;display:inline-flex;line-height:0;opacity:0;transition:opacity .15s,color .15s}
   #bronMidWrap .con-li:hover .bron-del{opacity:.6}
   #bronMidWrap .con-li .bron-del:hover{opacity:1;color:#e0726f}
+  /* Bijlagen bij een bron: één grote stage + een strip eronder als er meer zijn.
+     De generieke .fmp-stage rekent met calc(100% - 130px); in deze kolom is er geen
+     vaste hoogte om vanaf te rekenen, vandaar een eigen maat. */
+  .bron-atts{margin-top:16px}
+  .bron-stage{height:auto;min-height:0;aspect-ratio:4/3;max-height:62vh;position:relative}
+  .bron-stage .fmp-frame{width:100%;height:100%}
+  .bs-bar{display:flex;align-items:center;gap:8px;margin-top:10px}
+  .bs-nav{flex:none;width:28px;height:28px;border-radius:50%;border:1px solid var(--line);background:transparent;
+    color:var(--mut);font-size:16px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .bs-nav:hover{color:var(--txt);border-color:var(--mut2)}
+  .bs-thumbs{flex:1;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px 0}
+  .bs-thumbs::-webkit-scrollbar{display:none}
+  .bs-thumb{flex:none;width:52px;height:40px;border-radius:6px;overflow:hidden;padding:0;cursor:pointer;
+    border:1px solid var(--line);background:#0c0c0c;opacity:.55;transition:opacity .15s,border-color .15s}
+  .bs-thumb:hover{opacity:.85}
+  .bs-thumb.on{opacity:1;border-color:var(--mut)}
+  .bs-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+  .bs-ext{font-size:10px;color:var(--mut2);letter-spacing:.04em}
+  .bs-tel{flex:none;font-size:11.5px;color:var(--mut2);min-width:44px;text-align:right}
   #bronRightWrap{padding:0 22px 30px}
   #bronRightWrap .fmp-head{padding-top:0}
   #bronRightWrap .bron-prevtext{margin-top:6px}
@@ -1752,7 +1771,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v173</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v174</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -4439,10 +4458,14 @@ function renderBronRight(){
   let bodyHtml='';
   if(isChat){ const bubbles=renderChat(raw,col); if(bubbles) bodyHtml=`<div class="bron-chat">${bubbles}</div>`; }
   if(!bodyHtml){ const body=autolink(escapeHtml(raw),col); bodyHtml=`<div class="bron-prevtext" style="white-space:pre-wrap;line-height:1.6;font-size:13.5px;color:var(--mut)">${body||'<span class="fmp-none">Geen inhoud.</span>'}</div>`; }
-  const hasAtt=atts.length && atts[0].storage_path;
-  const attHtml=hasAtt?'<div class="fmp-stage" id="bronStage" style="margin-top:16px"><div class="fmp-none">Bijlage laden…</div></div>':'';
+  const bruikbaar=atts.filter(a=>a.storage_path);
+  const attHtml=bruikbaar.length
+    ? '<div class="bron-atts">'
+      + '<div class="fmp-stage bron-stage" id="bronStage"><div class="fmp-none">Bijlage laden…</div></div>'
+      + '<div id="bronStrip"></div></div>'
+    : '';
   w.innerHTML=head+bodyHtml+attHtml;
-  if(hasAtt){ _bronLoadAttachment(atts[0]); }
+  if(bruikbaar.length) _bronLoadAlleBijlagen(bruikbaar);
 }
 // ✦ Laat AI een bron lezen — hergebruikt hetzelfde inzicht-paneel als Bestanden.
 async function bronAiRead(sid){
@@ -4552,17 +4575,65 @@ async function openAiInsight(kind, ref){
     if(typeof loadUsage==='function')loadUsage();
   }catch(e){ if(_fvAiTimer){clearInterval(_fvAiTimer);_fvAiTimer=null;} body.innerHTML=`<div class="fvai-err">Lezen lukte niet.<br><span style="opacity:.7;font-size:12px">${escapeHtml(String(e&&e.message||e))}</span><br><button class="fv-btn" onclick="openAiInsight('${kind}','${ref}')">Opnieuw proberen</button></div>`; }
 }
+function _isAttImg(name){ return /\.(png|jpe?g|gif|webp|heic|heif|bmp|tiff?|svg)$/i.test(name||''); }
+function _isAttPdf(name){ return /\.pdf$/i.test(name||''); }
+// PDF's zonder de zwevende zoombalk van de browser en passend op de breedte.
+// De bestandsviewer deed dit al; de bronpreview vergat het.
+function _attSrc(url,name){ return _isAttPdf(name) ? (url+'#toolbar=0&navpanes=0&view=FitH') : url; }
+
+async function _attUrl(a){
+  const sp=(a&&a.storage_path)||''; if(!sp) return '';
+  try{
+    if(sp.indexOf('dropbox:')===0) return '/api/fileproxy?u='+encodeURIComponent(_fvRaw(sp.slice(8)));
+    const sg=await sb.storage.from('intake').createSignedUrl(sp,3600);
+    if(sg&&sg.data&&sg.data.signedUrl) return sg.data.signedUrl;
+    const pub=sb.storage.from('intake').getPublicUrl(sp);
+    return (pub&&pub.data)?pub.data.publicUrl:'';
+  }catch(_){ return ''; }
+}
 async function _bronLoadAttachment(a, stageId){
   const stage=document.getElementById(stageId||'bronStage'); if(!stage)return;
-  const sp=a.storage_path||'', name=a.filename||''; let url='';
-  try{
-    if(sp.indexOf('dropbox:')===0){ url='/api/fileproxy?u='+encodeURIComponent(_fvRaw(sp.slice(8))); }
-    else { const sg=await sb.storage.from('intake').createSignedUrl(sp,3600); url=sg&&sg.data?sg.data.signedUrl:''; if(!url){ const pub=sb.storage.from('intake').getPublicUrl(sp); url=pub&&pub.data?pub.data.publicUrl:''; } }
-  }catch(_){}
+  const url=await _attUrl(a), name=a.filename||'';
   if(!url){ stage.innerHTML='<div class="fmp-none">Kon preview niet laden.</div>'; return; }
-  const isImg=/\.(png|jpe?g|gif|webp|heic|heif|bmp|tiff?|svg)$/i.test(name);
-  stage.innerHTML=isImg?`<img class="fmp-img" src="${url}">`:`<iframe class="fmp-frame" src="${url}"></iframe>`;
+  stage.innerHTML=_isAttImg(name)
+    ? `<img class="fmp-img" src="${url}">`
+    : `<iframe class="fmp-frame" src="${_attSrc(url,name)}"></iframe>`;
 }
+
+/* ---- Meerdere bijlagen in één bron: stapel met een strip eronder ---- */
+var _bronAtts=[], _bronAttUrls=[], _bronAttIdx=0;
+async function _bronLoadAlleBijlagen(atts){
+  _bronAtts=atts||[]; _bronAttIdx=0;
+  _bronAttUrls=await Promise.all(_bronAtts.map(a=>_attUrl(a)));
+  _bronPaintAtt();
+}
+function _bronPaintAtt(){
+  const stage=document.getElementById('bronStage'); if(!stage)return;
+  const a=_bronAtts[_bronAttIdx]||{}, url=_bronAttUrls[_bronAttIdx]||'';
+  const naam=a.filename||'bijlage';
+  stage.innerHTML = !url ? '<div class="fmp-none">Kon deze bijlage niet laden.</div>'
+    : (_isAttImg(naam) ? `<img class="fmp-img" src="${url}" alt="${escapeHtml(naam)}">`
+                       : `<iframe class="fmp-frame" src="${_attSrc(url,naam)}" title="${escapeHtml(naam)}"></iframe>`);
+  const strip=document.getElementById('bronStrip'); if(!strip)return;
+  if(_bronAtts.length<2){ strip.innerHTML=''; return; }
+  strip.innerHTML='<div class="bs-bar">'
+    + '<button class="bs-nav" onclick="bronAttStap(-1)" aria-label="Vorige">‹</button>'
+    + '<div class="bs-thumbs">'
+    + _bronAtts.map((x,i)=>{
+        const u=_bronAttUrls[i]||''; const n=x.filename||'';
+        const on=(i===_bronAttIdx)?' on':'';
+        return '<button class="bs-thumb'+on+'" onclick="bronAttGa('+i+')" title="'+escapeHtml(n)+'">'
+          + (_isAttImg(n)&&u ? '<img src="'+u+'" alt="">' : '<span class="bs-ext">'+escapeHtml((n.split('.').pop()||'?').toUpperCase())+'</span>')
+          + '</button>';
+      }).join('')
+    + '</div>'
+    + '<button class="bs-nav" onclick="bronAttStap(1)" aria-label="Volgende">›</button>'
+    + '<span class="bs-tel">'+(_bronAttIdx+1)+' / '+_bronAtts.length+'</span>'
+    + '</div>';
+  try{ const act=strip.querySelector('.bs-thumb.on'); if(act&&act.scrollIntoView) act.scrollIntoView({block:'nearest',inline:'nearest'}); }catch(_){}
+}
+function bronAttGa(i){ if(i<0||i>=_bronAtts.length)return; _bronAttIdx=i; _bronPaintAtt(); }
+function bronAttStap(d){ if(!_bronAtts.length)return; _bronAttIdx=(_bronAttIdx+d+_bronAtts.length)%_bronAtts.length; _bronPaintAtt(); }
 // ---- Mobiele mappenstructuur Bronnen (klant → uitklappen → bron → preview). Alleen <1001px. ----
 let _bronTreeCli=new Set();
 function toggleBronTree(key){ if(_bronTreeCli.has(key))_bronTreeCli.delete(key); else _bronTreeCli.add(key); renderBronnen(); }
