@@ -23,7 +23,8 @@ Bepaal ook of het bestand over een specifieke KLANT/opdrachtgever gaat. Geef "cl
 Geef "type" = kort documenttype in 1-2 woorden (bv. "pitchdeck", "offerte", "factuur", "mail", "screenshot", "tekening", "draaiboek"), anders "". Geef "from" = afzender/auteur als die herkenbaar is, anders "".
 Geef "category" = kies de best passende map uit deze VASTE lijst: Concept, Lichtontwerp, Decor, Tekeningen, Plattegronden, Draaiboek, Planning, Leveranciers, Techniek, Offertes, Media. Bij twijfel: "Concept".
 Geef "subject" = kort, concreet onderwerp van het document in 2-3 woorden (zo bondig mogelijk), ZONDER klantnaam en ZONDER datum, MÉT het documenttype erin verwerkt als dat logisch is (bv. "licht offerte", "concept", "draaiboek opbouw", "factuur huur"). Geen interne codenamen of projectcodes. Kleine letters, gewone spaties, geen leestekens.
-Antwoord ALLEEN met geldige JSON: {"reply":"korte samenvatting (1 zin)","client":"","project":"","type":"","from":"","category":"","subject":"","items":[{"title":"","owner":"","contact":"","due":null,"status":"todo","project_id":null}]}`;
+Geef "kind" = "werk", "inspiratie" of "prive". "inspiratie" = beeld, sfeer, referentie of een mooie foto zónder concrete actie. "prive" = persoonlijk, niets met werk te maken. Bij "inspiratie" laat je "items" ALTIJD leeg — een referentiebeeld levert geen actiepunten op. Bij twijfel: "werk".
+Antwoord ALLEEN met geldige JSON: {"reply":"korte samenvatting (1 zin)","client":"","project":"","type":"","from":"","category":"","subject":"","kind":"werk","items":[{"title":"","owner":"","contact":"","due":null,"status":"todo","project_id":null}]}`;
 }
 
 async function aiFromBlocks(blocks, opts, src) {
@@ -45,7 +46,10 @@ async function aiFromBlocks(blocks, opts, src) {
   let parsed;
   try { parsed = JSON.parse(slice); }
   catch (_) { parsed = { reply: raw.trim() || "Ik heb het bestand bekeken.", items: [] }; }
-  return { reply: parsed.reply || "", items: Array.isArray(parsed.items) ? parsed.items : [], client: (parsed.client || "").toString().trim(), project: (parsed.project || "").toString().trim(), type: (parsed.type || "").toString().trim(), from: (parsed.from || "").toString().trim(), category: (parsed.category || "").toString().trim(), subject: (parsed.subject || "").toString().trim() };
+  const kind = ["werk", "inspiratie", "prive"].includes(parsed.kind) ? parsed.kind : "werk";
+  // Inspiratie levert nooit actiepunten op — hard afdwingen, niet alleen vragen.
+  const items = (kind === "inspiratie") ? [] : (Array.isArray(parsed.items) ? parsed.items : []);
+  return { reply: parsed.reply || "", items, kind, client: (parsed.client || "").toString().trim(), project: (parsed.project || "").toString().trim(), type: (parsed.type || "").toString().trim(), from: (parsed.from || "").toString().trim(), category: (parsed.category || "").toString().trim(), subject: (parsed.subject || "").toString().trim() };
 }
 
 export default async function handler(req, res) {
