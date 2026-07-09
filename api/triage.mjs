@@ -20,14 +20,25 @@ export function chunk(arr, n) {
 }
 
 export function sanitize(raw, sources, cats) {
-  const idSet = new Set((sources || []).map(s => String(s.id)));
+  const byId = new Map((sources || []).map(s => [String(s.id), s]));
   const projSet = new Set((cats || []).map(c => String(c.id ?? c.project_id ?? "")));
   const out = {};
   for (const [sid, val] of Object.entries(raw || {})) {
-    if (!idSet.has(String(sid)) || !val || typeof val !== "object") continue;
-    const kind = KINDS.includes(val.kind) ? val.kind : "werk";
+    const bron = byId.get(String(sid));
+    if (!bron || !val || typeof val !== "object") continue;
+
+    let kind = KINDS.includes(val.kind) ? val.kind : "werk";
+    const reden = String(val.reden || "");
+
+    // Vangnet 1: een bron met een bijlage is nooit ruis. Daar hangt een bestand aan.
+    if (kind === "ruis" && bron.bijlage) kind = "werk";
+
+    // Vangnet 2: het model ziet maar één blok en kan dus niet weten of iets dubbel is.
+    // Beroept het zich tóch op dubbel-zijn, dan is dat een gok — niet wegzetten.
+    if (kind === "ruis" && /\bdubbel|duplicaat|identiek\b/i.test(reden)) kind = "werk";
+
     const pid = projSet.has(String(val.project_id || "")) ? String(val.project_id) : "";
-    out[sid] = { kind, project_id: pid, reden: String(val.reden || "").slice(0, 60) };
+    out[sid] = { kind, project_id: pid, reden: reden.slice(0, 60) };
   }
   return out;
 }
@@ -54,7 +65,16 @@ Geef per bron:
    - "werk"       = hoort bij een klantopdracht of bij Begeister zelf (offerte, factuur, draaiboek, afspraak, vraag van een klant, techniek).
    - "inspiratie" = beeld, referentie, sfeer, een mooie foto of link zonder concrete actie. GEEN taak, GEEN deadline.
    - "prive"      = persoonlijk, niets met werk te maken (school van de kinderen, huurcontract, verjaardag, boodschappen, tickets, Marktplaats).
-   - "ruis"       = leeg, mislukt, dubbel, nieuwsbrief, of zonder enige betekenis.
+   - "ruis"       = UITSLUITEND: leeg, een mislukte transcriptie, of tekst zonder enige betekenis.
+
+   Over "ruis" — lees dit twee keer:
+   • Je ziet maar een DEEL van de bronnen. Je kunt dus NIET weten of iets dubbel is.
+     Noem nooit iets "ruis" omdat het dubbel lijkt. Ontdubbelen is niet jouw taak.
+   • Staat er geen passende klant in de catalogus? Dan is het nog steeds "werk" —
+     met een leeg project_id. "Geen match" is geen ruis.
+   • Een bestand of bijlage is nooit ruis, ook niet als de naam nietszeggend is.
+   • Twijfel je tussen werk en ruis? Kies "werk". Iets ten onrechte laten staan kost
+     een seconde; iets ten onrechte wegzetten kost een document.
 
 2. "project_id" — ALLEEN een id uit de catalogus hieronder, en alleen als het onmiskenbaar klopt.
    Twijfel je? Laat leeg (""). Een verkeerde koppeling is erger dan geen koppeling.
