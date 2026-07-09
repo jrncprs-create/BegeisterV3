@@ -4,13 +4,11 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { svc, logUsage } from "../lib/usage.mjs";
 import { createMessage } from "../lib/airetry.mjs";
-import { getDocumentProxy, extractText } from "unpdf";
+import { extractTekst } from "../lib/extractdoc.mjs";
 
 const KEY = (process.env.ANTHROPIC_API_KEY || "").trim();
 const anthropic = KEY ? new Anthropic({ apiKey: KEY }) : null;
 const MODEL = "claude-haiku-4-5-20251001";
-
-const TEXT_EXT = ["txt","md","markdown","csv","tsv","json","html","htm","xml","log","rtf"];
 
 function directLink(link) {
   try {
@@ -100,28 +98,21 @@ export default async function handler(req, res) {
         { type: "document", source: { type: "base64", media_type: "application/pdf", data: buf.toString("base64") } },
         { type: "text", text: "Lees nu OOK de afbeeldingen en opmaak (bv. tabellen) van dit document (" + name + ") en geef het resultaat volgens de instructie." },
       ];
-    } else if (ext === "pdf") {
-      // Stap 1: alleen de PDF-tekst (snel).
-      const r = await fetch(durl, { redirect: "follow" });
-      if (!r.ok) return res.status(200).json({ error: "kon bestand niet ophalen (" + r.status + ")" });
-      const u8 = new Uint8Array(await r.arrayBuffer());
-      let text = "";
-      try {
-        const pdf = await getDocumentProxy(u8);
-        const ex = await extractText(pdf, { mergePages: true });
-        text = (ex && ex.text ? ex.text : "").replace(/[ \t]+\n/g, "\n").trim();
-      } catch (_) {}
-      thin = text.replace(/\s/g, "").length < 120;
-      if (text.length > 120000) text = text.slice(0, 120000);
-      content = [{ type: "text", text: "BESTAND (PDF-tekst): " + name + "\n\n\"\"\"\n" + (text || "(geen leesbare tekst gevonden)") + "\n\"\"\"\n\nGeef het resultaat volgens de instructie." }];
-    } else if (TEXT_EXT.includes(ext)) {
-      const r = await fetch(durl, { redirect: "follow" });
-      if (!r.ok) return res.status(200).json({ error: "kon bestand niet ophalen (" + r.status + ")" });
-      let txt = await r.text();
-      if (txt.length > 120000) txt = txt.slice(0, 120000);
-      content = [{ type: "text", text: "BESTAND: " + name + "\n\n\"\"\"\n" + txt + "\n\"\"\"\n\nGeef het resultaat volgens de instructie." }];
     } else {
-      return res.status(200).json({ error: "dit bestandstype (." + ext + ") kan ik nog niet lezen — pdf en tekstbestanden wel" });
+      // Alle overige formaten via één gedeelde extractor: pdf, docx, xlsx, pptx, csv, tekst.
+      // Google-snelkoppelingen en .webloc geven daar een eigen, uitlegbare fout.
+      const r = await fetch(durl, { redirect: "follow" });
+      if (!r.ok) return res.status(200).json({ error: "kon bestand niet ophalen (" + r.status + ")" });
+      const buf = Buffer.from(await r.arrayBuffer());
+      let uit;
+      try {
+        uit = await extractTekst(buf, name);
+      } catch (e) {
+        return res.status(200).json({ error: (e && e.message) || "kan dit bestand niet lezen", code: (e && e.code) || "", url: (e && e.url) || "" });
+      }
+      const text = uit.tekst || "";
+      thin = text.replace(/\s/g, "").length < 120;
+      content = [{ type: "text", text: "BESTAND (" + uit.label + "): " + name + "\n\n\"\"\"\n" + (text || "(geen leesbare tekst gevonden)") + "\n\"\"\"\n\nGeef het resultaat volgens de instructie." }];
     }
 
     const resp = await run(content);
