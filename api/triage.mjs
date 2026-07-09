@@ -19,9 +19,18 @@ export function chunk(arr, n) {
   return out;
 }
 
+// Ruimt een voorgestelde klant-/projectnaam op. Geeft "" terug als er niets bruikbaars is.
+function schoon(naam) {
+  return String(naam || "").replace(/\s+/g, " ").replace(/["`]/g, "").trim().slice(0, 60);
+}
+
 export function sanitize(raw, sources, cats) {
   const byId = new Map((sources || []).map(s => [String(s.id), s]));
   const projSet = new Set((cats || []).map(c => String(c.id ?? c.project_id ?? "")));
+  // Klantnamen exact zoals ze in de catalogus staan, opzoekbaar op kleine letters.
+  const klantOp = new Map();
+  (cats || []).forEach(c => { if (c.client) klantOp.set(c.client.toLowerCase(), c.client); });
+
   const out = {};
   for (const [sid, val] of Object.entries(raw || {})) {
     const bron = byId.get(String(sid));
@@ -41,7 +50,25 @@ export function sanitize(raw, sources, cats) {
     if (kind === "ruis" && /(dubbel|duplicaat|duplicate|identiek|identical)/i.test(reden)) kind = "werk";
 
     const pid = projSet.has(String(val.project_id || "")) ? String(val.project_id) : "";
-    out[sid] = { kind, project_id: pid, reden: reden.slice(0, 60) };
+
+    // Voorstel voor iets nieuws. Streng: alleen bij werk zonder bestaand project, en
+    // alleen als er ook echt een naam ligt. Bestaat de klant al, dan gebruiken we de
+    // schrijfwijze uit de catalogus — anders krijg je "bonbon vivant" naast "BonBon Vivant".
+    let nieuwKlant = "", nieuwProject = "";
+    if (kind === "werk" && !pid) {
+      nieuwKlant = schoon(val.nieuw_klant);
+      nieuwProject = schoon(val.nieuw_project);
+      const bestaand = klantOp.get(nieuwKlant.toLowerCase());
+      if (bestaand) nieuwKlant = bestaand;
+      // Een voorstel zonder projectnaam én zonder klantnaam is geen voorstel.
+      if (!nieuwKlant && !nieuwProject) { nieuwKlant = ""; nieuwProject = ""; }
+      // Alleen een projectnaam, zonder klant, kunnen we nergens hangen.
+      if (!nieuwKlant) nieuwProject = "";
+    }
+
+    out[sid] = { kind, project_id: pid, reden: reden.slice(0, 60),
+                 nieuw_klant: nieuwKlant, nieuw_project: nieuwProject,
+                 klant_bestaat: !!(nieuwKlant && klantOp.has(nieuwKlant.toLowerCase())) };
   }
   return out;
 }
@@ -86,11 +113,22 @@ Geef per bron:
 
 3. "reden" — maximaal 6 woorden, waarom je dit denkt. In het Nederlands.
 
+4. "nieuw_klant" en "nieuw_project" — ALLEEN invullen bij kind "werk" én een leeg project_id,
+   en alleen als je met redelijke zekerheid ziet om welke opdrachtgever of welk project het gaat.
+   Je maakt niets aan; je doet een voorstel dat de gebruiker bevestigt of weggooit.
+   • Bestaat de klant al in de catalogus? Neem de naam dan LETTERLIJK over uit de catalogus
+     en vul alleen "nieuw_project" met een korte projectnaam (2-4 woorden).
+   • Gaat het over Begeister zelf (eigen pitch, eigen website, eigen huisvesting, eigen
+     inkoop)? Dan is "nieuw_klant" = "Begeister" en "nieuw_project" een korte naam.
+   • Nieuwe opdrachtgever? Vul beide. Gebruik de naam zoals die in de tekst staat.
+   • Weet je het niet? Laat beide leeg (""). Liever leeg dan geraden.
+   Projectnamen zijn kort, zonder klantnaam en zonder jaartal.
+
 CATALOGUS (project_id → klant · project):
 ${catTxt}
 
 Antwoord ALLEEN met geldige JSON, zonder tekst eromheen:
-{"<bron-id>":{"kind":"werk","project_id":"","reden":""}}`;
+{"<bron-id>":{"kind":"werk","project_id":"","reden":"","nieuw_klant":"","nieuw_project":""}}`;
 
     // In blokken. Eén call over 60 bronnen liep tegen max_tokens aan: de JSON werd
     // afgekapt, JSON.parse faalde, en er kwam stilletjes niets terug. Kleine blokken
