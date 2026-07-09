@@ -1771,7 +1771,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v174</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v175</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -4524,7 +4524,7 @@ async function fmAiRead(id){
     const d=await r.json(); if(d&&d.error) throw new Error(d.error);
     const data={ summary:(d&&d.summary)||'', tasks:(d&&d.tasks)||[], appointments:(d&&d.appointments)||[], money:(d&&d.money)||[], thin:!!(d&&d.thin), canVision:!!(d&&d.canVision), visionDone:false, projectId:(typeof _fileProject==='function'&&_fileProject(f))?_fileProject(f).id:null, reRead:{link:f.link,name:f.name}, boxId:'fmAiResults', key };
     _fvAiData[key]=data;
-    if(data.summary){ f.summary=data.summary; try{ await sb.from('files').update({summary:data.summary}).eq('id',f.id); }catch(_){} }
+    if(data.summary){ f.summary=data.summary; await _fileUpdate(f,{summary:data.summary}); }
     if(_fvAiTimer){clearInterval(_fvAiTimer);_fvAiTimer=null;}
     box.innerHTML=_fvAiResultHTML(null,data);
     if(typeof loadUsage==='function')loadUsage();
@@ -4544,7 +4544,7 @@ async function kfileAiRead(id){
     const d=await r.json(); if(d&&d.error) throw new Error(d.error);
     const data={ summary:(d&&d.summary)||'', tasks:(d&&d.tasks)||[], appointments:(d&&d.appointments)||[], money:(d&&d.money)||[], thin:!!(d&&d.thin), canVision:!!(d&&d.canVision), visionDone:false, projectId:(typeof _fileProject==='function'&&_fileProject(f))?_fileProject(f).id:null, reRead:{link:f.link,name:f.name}, boxId:'fsum_'+id, key };
     _fvAiData[key]=data;
-    if(data.summary){ f.summary=data.summary; try{ await sb.from('files').update({summary:data.summary}).eq('id',f.id); }catch(_){} }
+    if(data.summary){ f.summary=data.summary; await _fileUpdate(f,{summary:data.summary}); }
     box.innerHTML=_fvAiResultHTML(null,data);
     if(typeof loadUsage==='function')loadUsage();
   }catch(e){ box.innerHTML=`<div class="fvai-err">Lezen lukte niet.<br><span style="opacity:.7;font-size:12px">${escapeHtml(String(e&&e.message||e))}</span><br><button class="fv-btn" onclick="kfileAiRead('${id}')">Opnieuw</button></div>`; }
@@ -4569,7 +4569,7 @@ async function openAiInsight(kind, ref){
     const d=await r.json(); if(d&&d.error) throw new Error(d.error);
     const data={ summary:(d&&d.summary)||'', tasks:(d&&d.tasks)||[], appointments:(d&&d.appointments)||[], money:(d&&d.money)||[], thin:!!(d&&d.thin), canVision:!!(d&&d.canVision), visionDone:false, projectId, reRead, boxId:'aiInsightBody', key };
     _fvAiData[key]=data;
-    if(kind==='file' && data.summary){ const f=(state.files||[]).find(x=>x.id===ref); if(f){ f.summary=data.summary; try{ await sb.from('files').update({summary:data.summary}).eq('id',ref); }catch(_){} } }
+    if(kind==='file' && data.summary){ const f=(state.files||[]).find(x=>x.id===ref); if(f){ f.summary=data.summary; await _fileUpdate(ref,{summary:data.summary}); } }
     if(_fvAiTimer){clearInterval(_fvAiTimer);_fvAiTimer=null;}
     body.innerHTML=_fvAiResultHTML(null,data);
     if(typeof loadUsage==='function')loadUsage();
@@ -5124,7 +5124,7 @@ async function applyOrganize(){
   closeOrganize();
   await uiConfirm(ok+' van '+moves.length+' bestand(en) verplaatst.');
 }
-async function deleteFile(fid){ if(!(await uiConfirm('Bestand ontkoppelen?')))return; await sb.from('files').delete().eq('id',fid); await refresh(); }
+async function deleteFile(fid){ if(!(await uiConfirm('Bestand ontkoppelen?')))return; await _fileDelete(fid); await refresh(); }
 // ---------- file-viewer (paginavullend) ----------
 let _fvList=[],_fvIdx=0;
 function _fvRaw(link){ let u=String(link||'').replace('://www.dropbox.com/','://dl.dropboxusercontent.com/').replace('://dropbox.com/','://dl.dropboxusercontent.com/'); u=u.replace(/([?&])dl=\d&?/,'$1').replace(/[?&]$/,''); return u; }
@@ -5138,7 +5138,9 @@ function openFileViewer(fid){
 }
 function closeFileViewer(){ _fvAiReset(); const ov=document.getElementById('fileViewer'); if(ov)ov.classList.remove('open'); const st=document.getElementById('fv_stage'); if(st)st.innerHTML=''; }
 function fvNav(d){ if(_fvList.length<2)return; _fvAiReset(); _fvIdx=(_fvIdx+d+_fvList.length)%_fvList.length; fvRender(); }
-function fvOpenOriginal(){ const f=_fvList[_fvIdx]; if(f)window.open(_fvDl(f.link),'_blank','noopener'); }
+async function fvOpenOriginal(){ const f=_fvList[_fvIdx]; if(!f)return;
+  if(f.link){ window.open(_fvDl(f.link),'_blank','noopener'); return; }
+  const u=await _attUrl(f); if(u) window.open(u,'_blank','noopener'); }
 function fvOpenDropbox(){ const f=_fvList[_fvIdx]; if(f)window.open(f.link,'_blank','noopener'); }
 // ✦ Laat AI lezen: analyseert het bestand, toont links de resultaten terwijl de preview soepel krimpt.
 let _fvAiTimer=null,_fvAiBullets=[],_fvAiData={},_aiCtx=null;
@@ -5163,7 +5165,7 @@ async function fvAiRead(){
     if(d&&d.error) throw new Error(d.error);
     const data={ summary:(d&&d.summary)||'', tasks:(d&&d.tasks)||[], appointments:(d&&d.appointments)||[], money:(d&&d.money)||[], thin:!!(d&&d.thin), canVision:!!(d&&d.canVision), visionDone:false, projectId:(typeof _fileProject==='function'&&_fileProject(f))?_fileProject(f).id:null, reRead:{link:f.link,name:f.name}, boxId:'fv_results', key:f.id };
     _fvAiData[f.id]=data;
-    if(data.summary){ f.summary=data.summary; try{ await sb.from('files').update({summary:data.summary}).eq('id',f.id); }catch(_){} }
+    if(data.summary){ f.summary=data.summary; await _fileUpdate(f,{summary:data.summary}); }
     if(_fvAiTimer){clearInterval(_fvAiTimer);_fvAiTimer=null;}
     box.innerHTML=_fvAiResultHTML(f,data);
     if(typeof loadUsage==='function')loadUsage();
@@ -5216,16 +5218,21 @@ function _fvAiResultHTML(f,data){
 async function _fvAiAddTask(i,btn){ const c=_aiCtx; const t=c&&c.tasks&&c.tasks[i]; if(!t)return; try{ await sb.from('items').insert({title:t,status:'todo',project_id:(c&&c.projectId)||null}); }catch(_){} if(btn){btn.textContent='✓ toegevoegd';btn.disabled=true;btn.style.opacity='.6';} try{ if(typeof refreshRail==='function')refreshRail(); else if(typeof render==='function')render(); }catch(_){} }
 async function _fvAiAddAppt(i,btn){ const c=_aiCtx; const a=c&&c.appointments&&c.appointments[i]; if(!a)return; try{ const ins=await sb.from('appointments').insert({title:a.title,date:a.date||null,start_time:a.time||null,kind:'fysiek',project_id:(c&&c.projectId)||null}).select('*').single(); if(ins&&ins.data){ state.appointments=state.appointments||[]; state.appointments.push(_mapAppt(ins.data)); } }catch(e){ console.warn('appt',e); } if(btn){btn.textContent='✓ ingepland';btn.disabled=true;btn.style.opacity='.6';} try{ if(typeof render==='function')render(); }catch(_){} }
 async function _fvAiAddPrice(i,btn){ const c=_aiCtx; const m=c&&c.money&&c.money[i]; if(!m||m.amount==null||!(c&&c.projectId))return; const p=(typeof projById==='function')?projById(c.projectId):null; if(p)p.projectprijs=m.amount; try{ await sb.from('projects').update({projectprijs:m.amount}).eq('id',c.projectId); }catch(_){} if(btn){btn.textContent='✓ als projectprijs';btn.disabled=true;btn.style.opacity='.6';} try{ if(typeof render==='function')render(); if(typeof renderFinancien==='function'&&view==='financien')renderFinancien(); }catch(_){} }
-function fvRender(){
+async function fvRender(){
   const f=_fvList[_fvIdx]; if(!f)return;
   document.getElementById('fv_name').textContent=f.name||'bestand';
   document.getElementById('fv_ic').innerHTML=_fileGlyph(f.name||'');
   document.getElementById('fv_count').textContent=_fvList.length>1?`${_fvIdx+1} / ${_fvList.length}`:'';
   const ext=((f.name||'').split('.').pop()||'').toLowerCase();
-  const url='/api/fileproxy?u='+encodeURIComponent(_fvRaw(f.link)); const st=document.getElementById('fv_stage');
+  const st=document.getElementById('fv_stage');
+  // Dropbox-bestanden gaan via de proxy; mailbijlagen liggen in Supabase Storage.
+  let url='';
+  if(f.link) url='/api/fileproxy?u='+encodeURIComponent(_fvRaw(f.link));
+  else if(f.storage_path){ st.innerHTML='<div class="fv-none">Laden…</div>'; url=await _attUrl(f); }
+  if(!url){ st.innerHTML=`<div class="fv-none">${_fileGlyph(f.name)}<p>Kon dit bestand niet laden.</p></div>`; return; }
   if(['png','jpg','jpeg','gif','webp','bmp','svg','heic','heif'].includes(ext)) st.innerHTML=`<img class="fv-img" src="${escapeHtml(url)}" alt="">`;
   else if(ext==='pdf') st.innerHTML=`<iframe class="fv-frame" src="${escapeHtml(url)}#toolbar=0&navpanes=0&view=FitH" title="PDF"></iframe>`;
-  else st.innerHTML=`<div class="fv-none">${_fileGlyph(f.name)}<p>Geen voorvertoning voor dit bestandstype.</p><p>Gebruik “Download origineel” of “Open in Dropbox”.</p></div>`;
+  else st.innerHTML=`<div class="fv-none">${_fileGlyph(f.name)}<p>Geen voorvertoning voor dit bestandstype.</p><p>Gebruik “Download origineel”${f.link?' of “Open in Dropbox”':''}.</p></div>`;
   const multi=_fvList.length>1; const pv=document.querySelector('.fv-prev'),nx=document.querySelector('.fv-next'); if(pv)pv.style.display=multi?'':'none'; if(nx)nx.style.display=multi?'':'none';
 }
 if(!window._fvKeyInit){window._fvKeyInit=true; document.addEventListener('keydown',e=>{ const v=document.getElementById('fileViewer'); if(!v||!v.classList.contains('open'))return; if(e.key==='Escape')closeFileViewer(); else if(e.key==='ArrowLeft')fvNav(-1); else if(e.key==='ArrowRight')fvNav(1); });}
@@ -5245,7 +5252,7 @@ async function summarizeFile(fid){
     const d=await r.json();
     const sum = d&&d.summary ? d.summary : (d&&d.error ? ('Lukt niet: '+d.error) : 'Kon het bestand niet lezen.');
     el.textContent=sum;
-    if(d&&d.summary){ f.summary=d.summary; try{ await sb.from('files').update({summary:d.summary}).eq('id',fid); }catch(_){} }   // bewaren → niet opnieuw laten lezen
+    if(d&&d.summary){ f.summary=d.summary; await _fileUpdate(fid,{summary:d.summary}); }   // bewaren → niet opnieuw laten lezen
     if(typeof loadUsage==='function') loadUsage();
   }catch(e){ el.textContent='Kon het bestand niet lezen.'; }
   if(btn){ btn.innerHTML=_orig; btn.disabled=false; }
@@ -5342,7 +5349,7 @@ async function _moveApprovedFiles(r){
       const target=p.client+'/'+(p.project||p.client)+'/'+cat;
       try{
         await fetch('/api/dropbox/list',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'sync',items:[{link:f.link,name:f.name,target}]})});
-        await sb.from('files').update({owner_type:'project',owner_id:String(pid)}).eq('id',f.id);
+        await _fileUpdate(f,{owner_type:'project',owner_id:String(pid)});
       }catch(_){}
     }
   }catch(_){}
@@ -5511,6 +5518,37 @@ async function newClientFromHeader(){
 // ---------- File manager (tree) ----------
 let _fmOpen=new Set(), _fmQuery='';
 function _searchGlyph(){return '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="7"/><path d="M21 21l-6 -6"/></svg>';}
+/* Een rij in de Bestanden-lijst komt uit één van twee tabellen:
+   - files      (Dropbox-koppelingen, id = uuid)
+   - documents  (mailbijlagen e.d., id = "doc:<uuid>", _fromDoc = true)
+   Deze twee helpers vertalen een wijziging naar de juiste tabel en kolomnamen,
+   zodat de rest van de pagina zich er niets van hoeft aan te trekken. */
+function _fileById(fid){ return (state.files||[]).find(x=>String(x.id)===String(fid))||null; }
+const _DOC_KOLOM={ name:'filename', icon:'category', owner_id:'project_id', summary:'summary' };
+async function _fileUpdate(fOrId, patch){
+  const f=(typeof fOrId==='string')?_fileById(fOrId):fOrId;
+  if(!f) return false;
+  if(!f._fromDoc){ try{ await sb.from('files').update(patch).eq('id',f.id); return true; }catch(_){ return false; } }
+  const p={};
+  for(const [k,v] of Object.entries(patch)){
+    if(k==='owner_type') continue;                 // documents kent geen owner_type
+    if(k==='folder_id')  continue;                 // en geen mappen
+    const kol=_DOC_KOLOM[k]; if(kol) p[kol]=v;
+  }
+  if(!Object.keys(p).length) return false;
+  try{ await sb.from('documents').update(p).eq('id',f.docId); return true; }catch(_){ return false; }
+}
+async function _fileDelete(fOrId){
+  const f=(typeof fOrId==='string')?_fileById(fOrId):fOrId;
+  if(!f) return false;
+  if(!f._fromDoc){ try{ await sb.from('files').delete().eq('id',f.id); return true; }catch(_){ return false; } }
+  // Een bijlage weghalen doen we bij de bron: de trigger ruimt het document dan mee op.
+  try{
+    if(f.storage_path){ await sb.from('attachments').delete().eq('storage_path',f.storage_path); }
+    await sb.from('documents').delete().eq('id',f.docId);
+    return true;
+  }catch(_){ return false; }
+}
 function _fileProject(f){
   if(f.owner_type==='project') return projById(f.owner_id)||null;
   if(f.owner_type==='task'){ const r=findItem(f.owner_id); return r?r.p:null; }
@@ -5541,12 +5579,12 @@ async function fmDelete(btn){
   if(k==='cat'){ const client=btn.dataset.client,pid=btn.dataset.pid,cat=btn.dataset.cat;
     const files=(state.files||[]).filter(f=>{ if((f.icon||'')!==cat)return false; if(f.owner_type==='client')return pid==='__alg__'&&String(f.owner_id)===String(client); const p=_fileProject(f); return !!p&&pid!=='__alg__'&&String(p.id)===String(pid); });
     if(!(await uiConfirm("Map '"+cat+"' opheffen?"+(files.length?" De "+files.length+" bestand(en) gaan naar 'Niet gesorteerd'.":""))))return;
-    for(const f of files){ try{ await sb.from('files').update({icon:''}).eq('id',f.id); }catch(_){} }
+    for(const f of files){ await _fileUpdate(f,{icon:''}); }
     await refresh(); return; }
   if(k==='project'){ const pid=btn.dataset.pid; const p=projById(pid); if(!p)return;
     const files=(state.files||[]).filter(f=>{ const fp=_fileProject(f); return !!fp&&String(fp.id)===String(pid); });
     if(!(await uiConfirm("Project-map '"+(p.project||'')+"' verwijderen?"+(files.length?" De "+files.length+" bestand(en) gaan naar de klant.":""))))return;
-    for(const f of files){ try{ await sb.from('files').update({owner_type:'client',owner_id:p.client}).eq('id',f.id); }catch(_){} }
+    for(const f of files){ await _fileUpdate(f,{owner_type:'client',owner_id:p.client}); }
     try{ await sb.from('projects').delete().eq('id',pid); }catch(_){}
     await refresh(); return; }
   if(k==='client'){ const client=btn.dataset.client;
@@ -5562,7 +5600,7 @@ async function fmRename(btn){
   if(k==='file'){ const id=btn.dataset.fid; const f=(state.files||[]).find(x=>String(x.id)===String(id)); if(!f)return;
     const fc=(function(){const p=_fileProject(f);if(p&&p.color)return p.color;return f.owner_type==='client'?_clientColor(f.owner_id):'';})();
     const nv=((await uiPrompt('Nieuwe bestandsnaam:', f.name||'', fc?{accent:fc}:{}))||'').trim(); if(!nv||nv===f.name)return;
-    try{ await sb.from('files').update({name:nv}).eq('id',id); f.name=nv; }catch(_){} _renderFmTree(); return; }
+    await _fileUpdate(id,{name:nv}); f.name=nv; _renderFmTree(); return; }
   if(k==='project'){ const pid=btn.dataset.pid; const p=projById(pid); if(!p)return;
     const nv=((await uiPrompt('Nieuwe projectnaam:', p.project||'', p.color?{accent:p.color}:{}))||'').trim(); if(!nv||nv===p.project)return;
     try{ await sb.from('projects').update({project:nv}).eq('id',pid); }catch(_){} await refresh(); return; }
@@ -5572,7 +5610,10 @@ async function fmRename(btn){
   if(k==='cat'){ const client=btn.dataset.client, pid=btn.dataset.pid, cat=btn.dataset.cat;
     const cc=(pid==='__alg__')?_clientColor(client):((projById(pid)||{}).color||'');
     const nv=((await uiPrompt('Nieuwe mapnaam:', cat||'', cc?{accent:cc}:{}))||'').trim(); if(!nv||nv===cat)return;
-    try{ let q=sb.from('files').update({icon:nv}).eq('icon',cat||''); if(pid==='__alg__'){ q=q.eq('owner_type','client').eq('owner_id',client); } else { q=q.eq('owner_type','project').eq('owner_id',pid); } await q; }catch(_){} await refresh(); return; }
+    try{ let q=sb.from('files').update({icon:nv}).eq('icon',cat||''); if(pid==='__alg__'){ q=q.eq('owner_type','client').eq('owner_id',client); } else { q=q.eq('owner_type','project').eq('owner_id',pid); } await q; }catch(_){}
+    // Dezelfde mapnaam ook bij de documenten (mailbijlagen); die kennen alleen projecten.
+    if(pid!=='__alg__'){ try{ await sb.from('documents').update({category:nv}).eq('category',cat||'').eq('project_id',pid); }catch(_){} }
+    await refresh(); return; }
 }
 function _cat(f){ return (f && f.icon || '').trim(); }
 // ===== Losse mappen (folders-tabel) — wit, eigen mapicoon, vrij te verplaatsen =====
@@ -5592,6 +5633,9 @@ async function fmFolderDrop(e,targetFolderId){
   e.preventDefault(); e.stopPropagation(); const row=e.currentTarget; if(row&&row.classList)row.classList.remove('fm-dragover');
   if(_fmDragLoose){ const fid=_fmDragLoose; _fmDragLoose=null; if(String(fid)===String(targetFolderId)||_isFolderDescendant(targetFolderId,fid))return; try{ await sb.from('folders').update({parent_kind:'folder',parent_id:String(targetFolderId)}).eq('id',fid); }catch(_){} await refresh(); return; }
   const id=_fmDragId; _fmDragId=null; if(!id)return;
+  // Mailbijlagen (documents) kennen geen losse mappen — die blijven bij hun categorie.
+  const _f=_fileById(id);
+  if(_f&&_f._fromDoc){ try{ await uiConfirm('Deze bijlage hoort bij een bron en kan niet in een losse map. Verander desnoods de categorie.',{ok:'Oké',danger:false}); }catch(_){} return; }
   try{ await sb.from('files').update({folder_id:targetFolderId}).eq('id',id); }catch(_){} await refresh();
 }
 async function fmRenameFolder(btn){ const fid=btn.dataset.fold; const fo=(state.folders||[]).find(x=>String(x.id)===String(fid)); if(!fo)return; const nv=((await uiPrompt('Nieuwe mapnaam:', fo.name||''))||'').trim(); if(!nv||nv===fo.name)return; try{ await sb.from('folders').update({name:nv}).eq('id',fid); }catch(_){} await refresh(); }
@@ -5666,7 +5710,7 @@ async function _fmMoveFolder(src,tgt){
   const patch={ icon: tgt.cat ? tgt.cat : src.cat };
   if(tgt.pid==='__alg__'){ patch.owner_type='client'; patch.owner_id=tgt.client; }
   else { patch.owner_type='project'; patch.owner_id=tgt.pid; }
-  for(const f of files){ try{ await sb.from('files').update(patch).eq('id',f.id); }catch(_){} }
+  for(const f of files){ await _fileUpdate(f,patch); }
   await refresh();   // herladen uit DB i.p.v. lokaal muteren -> geen halve/dubbele staat
 }
 function _hasFiles(e){ try{ return [...(e.dataTransfer.types||[])].includes('Files'); }catch(_){ return false; } }
@@ -5685,7 +5729,7 @@ async function fmDrop(e){
   else if(pid==='__none__'){ /* losse bestanden: laat owner staan */ }
   else { patch.owner_type='project'; patch.owner_id=pid; }
   Object.assign(f,patch);
-  try{ await sb.from('files').update(patch).eq('id',id); }catch(_){}
+  await _fileUpdate(id,patch);
   _renderFmTree();
 }
 function _fileToB64(file){ return new Promise((res,rej)=>{ const fr=new FileReader(); fr.onload=()=>{ const s=String(fr.result||''); const i=s.indexOf(','); res(i>=0?s.slice(i+1):s); }; fr.onerror=rej; fr.readAsDataURL(file); }); }
@@ -5730,7 +5774,7 @@ async function fmSortAI(){
     const d=await r.json(); const map=(d&&d.map)||{}; const moves=(d&&d.moves)||{};
     // 1) Categorie alleen zetten voor nog niet-gesorteerde bestanden.
     const todoIds=new Set(todo.map(f=>f.id));
-    for(const id of Object.keys(map)){ if(!todoIds.has(id))continue; try{ await sb.from('files').update({icon:map[id]}).eq('id',id); }catch(_){ } const f=all.find(x=>x.id===id); if(f)f.icon=map[id]; }
+    for(const id of Object.keys(map)){ if(!todoIds.has(id))continue; await _fileUpdate(id,{icon:map[id]}); const f=all.find(x=>x.id===id); if(f)f.icon=map[id]; }
     _renderFmTree();
     // 2) Verplaats-voorstellen tonen ter bevestiging (nooit stil verschuiven).
     const proposals=Object.keys(moves).map(id=>({f:all.find(x=>x.id===id),mv:moves[id]})).filter(x=>x.f);
@@ -5771,7 +5815,7 @@ function _fmCloseMoveOv(){ const ov=document.getElementById('fmMoveOv'); if(!ov)
 function _fmMvCheck(){ const l=document.getElementById('fmMvList'); if(l&&!l.querySelector('.fmmv-row')) _fmCloseMoveOv(); }
 async function _applyOneMove(p){
   const upd=p.mv.project_id?{owner_type:'project',owner_id:String(p.mv.project_id),folder_id:null}:{owner_type:'client',owner_id:String(p.mv.client),folder_id:null};
-  try{ await sb.from('files').update(upd).eq('id',p.f.id); }catch(_){ return false; }
+  if(!(await _fileUpdate(p.f,upd))) return false;
   Object.assign(p.f,upd); return true;
 }
 async function _fmApplyMove(i){
@@ -5864,7 +5908,7 @@ function _fmShowRenameConfirm(changes){
 }
 function _fmCloseRnOv(){ const ov=document.getElementById('fmRnOv'); if(!ov)return; ov.classList.remove('open'); setTimeout(()=>ov.remove(),250); }
 function _fmRnCheck(){ const l=document.getElementById('fmRnList'); if(l&&!l.querySelector('.fmmv-row')) _fmCloseRnOv(); }
-async function _applyRename(p){ try{ await sb.from('files').update({name:p.newName}).eq('id',p.f.id); }catch(_){ return false; } p.f.name=p.newName; return true; }
+async function _applyRename(p){ if(!(await _fileUpdate(p.f,{name:p.newName}))) return false; p.f.name=p.newName; return true; }
 async function _fmApplyRename(i){
   const ov=document.getElementById('fmRnOv'); if(!ov)return; const p=ov._changes[i]; if(!p)return;
   const row=ov.querySelector(`.fmmv-row[data-i="${i}"]`); if(row)row.style.opacity='.4';
@@ -5897,7 +5941,7 @@ async function fmSyncDropbox(){
 let _fmPrevId=null;
 function fmFileClick(id){ if(isDesk3()) fmPreview(id); else openFileViewer(id); }
 function fmClosePreview(){ _fmPrevId=null; const pane=document.getElementById('view-filespreview'); if(pane)pane.innerHTML='<div class="fmp-empty">Kies een bestand</div>'; document.querySelectorAll('#fmTree .fm-file.sel').forEach(e=>e.classList.remove('sel')); }
-function fmPreview(id){
+async function fmPreview(id){
   _fmPrevId=id;
   const pane=document.getElementById('view-filespreview'); if(!pane) return;
   document.querySelectorAll('#fmTree .fm-file.sel').forEach(e=>e.classList.remove('sel'));
@@ -5905,12 +5949,16 @@ function fmPreview(id){
   const f=(state.files||[]).find(x=>x.id===id);
   if(!f){ pane.innerHTML='<div class="fmp-empty">Kies een bestand</div>'; return; }
   const ext=((f.name||'').split('.').pop()||'').toLowerCase();
-  const url='/api/fileproxy?u='+encodeURIComponent(_fvRaw(f.link));
+  // Dropbox-bestand → proxy-link; mailbijlage → signed URL uit Supabase Storage.
+  const url = f.link ? ('/api/fileproxy?u='+encodeURIComponent(_fvRaw(f.link))) : await _attUrl(f);
   let body;
-  if(['png','jpg','jpeg','gif','webp','bmp','svg','heic','heif'].includes(ext)) body='<img class="fmp-img" src="'+escapeHtml(url)+'" alt="">';
+  if(!url) body='<div class="fmp-none">'+_fileGlyph(f.name)+'<p>Kon dit bestand niet laden</p></div>';
+  else if(['png','jpg','jpeg','gif','webp','bmp','svg','heic','heif'].includes(ext)) body='<img class="fmp-img" src="'+escapeHtml(url)+'" alt="">';
   else if(ext==='pdf') body='<iframe class="fmp-frame" src="'+escapeHtml(url)+'#toolbar=0&navpanes=0&view=FitH" title="PDF"></iframe>';
   else body='<div class="fmp-none">'+_fileGlyph(f.name)+'<p>Geen voorvertoning</p></div>';
-  pane.innerHTML='<div class="fmp-head"><span class="fmp-ic">'+_fileGlyph(f.name)+'</span><span class="fmp-name">'+escapeHtml(f.name||'bestand')+'</span><button class="fmp-x" onclick="fmClosePreview()" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><div class="fmp-stage">'+body+'</div><div class="fmp-foot"><button class="fv-btn fmp-aibtn" onclick="openAiInsight(\'file\',\''+id+'\')">✦ Laat AI lezen</button><button class="fv-btn" onclick="window.open(\''+_fvDl(f.link)+'\',\'_blank\',\'noopener\')">Download origineel</button><button class="fv-btn" onclick="window.open(\''+(f.link||'')+'\',\'_blank\',\'noopener\')">Open in Dropbox</button></div><div id="fmAiResults" class="bron-airesults"></div>';
+  const dlKnop = url?'<button class="fv-btn" onclick="window.open(\''+escapeHtml(f.link?_fvDl(f.link):url)+'\',\'_blank\',\'noopener\')">Download origineel</button>':'';
+  const dbKnop = f.link?'<button class="fv-btn" onclick="window.open(\''+escapeHtml(f.link)+'\',\'_blank\',\'noopener\')">Open in Dropbox</button>':'';
+  pane.innerHTML='<div class="fmp-head"><span class="fmp-ic">'+_fileGlyph(f.name)+'</span><span class="fmp-name">'+escapeHtml(f.name||'bestand')+'</span><button class="fmp-x" onclick="fmClosePreview()" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><div class="fmp-stage">'+body+'</div><div class="fmp-foot"><button class="fv-btn fmp-aibtn" onclick="openAiInsight(\'file\',\''+id+'\')">✦ Laat AI lezen</button>'+dlKnop+dbKnop+'</div><div id="fmAiResults" class="bron-airesults"></div>';
 }
 function renderArchief(){
   const wrap=document.getElementById('archiefWrap'); if(!wrap)return;
@@ -6354,9 +6402,21 @@ async function sbLoad(){
   state.comments = (cm && cm.data) ? cm.data : [];
   state.documents = (dc && dc.data) ? dc.data : [];
   state.folders = (fo && fo.data) ? fo.data : [];
+  // De Bestanden-pagina leest van oudsher alleen de files-tabel (Dropbox). Mailbijlagen
+  // staan in Supabase Storage en bleven daardoor onzichtbaar. We schuiven ze hier als
+  // volwaardige rijen in dezelfde lijst; _fileUpdate/_fileDelete sturen wijzigingen
+  // vervolgens naar de juiste tabel. origin='file' slaan we over: dat zijn dezelfde
+  // rijen als in files, die zouden dan dubbel staan.
+  state.docFiles = (state.documents||[])
+    .filter(d=>d.origin!=='file' && d.project_id)
+    .map(d=>({ id:'doc:'+d.id, docId:d.id, _fromDoc:true,
+      owner_type:'project', owner_id:String(d.project_id),
+      name:d.filename||'bijlage', link:d.link||'', icon:d.category||'',
+      bytes:d.size||null, summary:d.summary||null,
+      storage_path:d.storage_path||'', created_at:d.created_at }));
   const projects=p.data||[], items=i.data||[], sources=s.data||[], atts=a.data||[];
   state.contacts = (c && c.data) ? c.data : [];
-  state.files = (f && f.data) ? f.data : [];
+  state.files = ((f && f.data) ? f.data : []).concat(state.docFiles||[]);
   state.ctx = {}; ((cx && cx.data) ? cx.data : []).forEach(r=>{ state.ctx[r.key]=r.body||''; });
   state.appointments = (ap && ap.data ? ap.data : []).map(_mapAppt);
   const _mapProj=pr=>({id:pr.id,client:pr.client,project:pr.project,color:pr.color,icon:pr.icon,role:pr.role,
