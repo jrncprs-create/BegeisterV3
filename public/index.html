@@ -944,6 +944,16 @@
   .pv-acties{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
   .pv-acties select{max-width:280px}
   .pv-leeg{padding:48px 0;text-align:center;color:var(--mut2);font-size:13.5px}
+  /* Bestanden op het bord: mapjes per soort, kop in de klantkleur. */
+  .pb-map{margin:0 0 6px}
+  .pb-maph{display:flex;align-items:center;gap:7px;width:100%;background:none;border:0;padding:6px 0;cursor:pointer;
+    color:var(--mcol);font:inherit;font-size:12px;letter-spacing:.02em;text-align:left}
+  .pb-mapchev{transform:rotate(90deg);transition:transform .15s;opacity:.8}
+  .pb-maph.dicht .pb-mapchev{transform:rotate(0deg)}
+  .pb-mapic{opacity:.9;flex:none}
+  .pb-mapnm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pb-mapcnt{color:var(--mut2);font-size:11px}
+  .pb-mapkids{padding-left:6px}
   /* Voortgang op het projectbord: zes stappen, gevuld tot en met de huidige. */
   .pb-fase{display:flex;gap:0;align-items:flex-start;padding:2px 0 4px}
   .pb-fasestap{flex:1;min-width:0;background:none;border:none;padding:0;cursor:pointer;
@@ -1084,8 +1094,10 @@
   .fv-img{max-width:100%;max-height:100%;object-fit:contain;border-radius:6px}
   /* align-items:center gaf de iframe geen hoogte om 100% van te nemen — hij kroop samen tot
      een strook. align-self:stretch + flex:1 laat 'm het hele venster vullen. */
-  .fv-frame{width:100%;height:auto;align-self:stretch;flex:1 1 auto;border:none;background:#fff;border-radius:6px}
+  .fv-frame{width:100%;height:100%;align-self:stretch;flex:1 1 auto;border:none;background:#fff;border-radius:6px}
   .fv-none{text-align:center;color:var(--mut2);display:flex;flex-direction:column;align-items:center;gap:4px}
+  /* Een geplakte URL zonder spaties duwde de kolom uit elkaar. */
+  .pb-tx{overflow-wrap:anywhere;word-break:break-word;min-width:0}
   .fv-none svg{width:52px;height:52px;opacity:.5;margin-bottom:8px}
   .fv-nav{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.08);border:none;color:#fff;width:44px;height:44px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2}
   .fv-nav:hover{background:rgba(255,255,255,.18)}
@@ -1093,7 +1105,10 @@
   .fv-ai{border-color:rgba(255,255,255,.42);color:#fff}
   .fv-ai:hover{background:rgba(255,255,255,.08)}
   .fv-main{flex:1;display:flex;min-height:0}
-  .fv-stagewrap{flex:1;min-width:0;position:relative;display:flex;align-items:center;justify-content:center}
+  /* align-items:center gaf .fv-stage alleen de hoogte van zijn inhoud (186px in een venster
+     van 686px). Daardoor was een PDF een strookje en viel een staande foto boven en onder weg,
+     want max-height:100% van niets is niets. De navigatieknoppen staan absoluut, die merken niets. */
+  .fv-stagewrap{flex:1;min-width:0;min-height:0;position:relative;display:flex;align-items:stretch;justify-content:center}
   .fv-results{width:0;flex:0 0 auto;overflow-y:auto;transition:width .5s cubic-bezier(.4,0,.2,1);background:#0f0f10;scrollbar-width:none}
   .fv-results::-webkit-scrollbar{display:none}
   .fv.fv-split .fv-results{width:min(42%,540px);padding:24px 26px;border-right:1px solid var(--line)}
@@ -1821,7 +1836,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v180</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v181</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -3647,12 +3662,13 @@ function _renderProjBoard(){
     return `<div class="pb-row pb-ink" data-tid="${x.id}"${x.image?` data-img="${escapeHtml(x.image)}"`:''}><button class="pb-chk" onclick="pbInkOrdered('${x.id}')" title="${x.status==='besteld'?'Terugzetten naar te bestellen':'Markeer als besteld'}">${_pbChk(x.status==='besteld')}</button>${nameCell}${priceCell}<button class="pb-move" onclick="event.preventDefault();event.stopPropagation();pbMoveOpen('one','${x.id}')" title="Verplaats naar ander project/klant">${_tIc('<path d="M17 3l4 4l-4 4"/><path d="M21 7h-13"/><path d="M7 21l-4 -4l4 -4"/><path d="M3 17h13"/>',15,1.4)}</button><button class="pb-del" onclick="event.preventDefault();pbDel('${x.id}')" title="Verwijderen">×</button></div>`; };
   const doneInkRow=(x)=>`<div class="pb-row pb-donerow"><button class="pb-chk" onclick="pbInkCheck('${x.id}',false)" title="Terugzetten">${_pbChk(true)}</button><span class="pb-tx done">${esc(x.text||'')}</span></div>`;
   const apptRow=(a)=>{ const d=a.date?d3date(a.date):''; return `<div class="pb-row pb-appt"><span class="pb-tx">${esc(a.t||'Afspraak')}</span><span class="pb-when">${esc(d)}${a.start?' · '+esc(String(a.start).slice(0,5)):''}</span><button class="pb-edit" onclick="openApptModal('${a.id}')" title="Bewerken">${_penIc}</button></div>`; };
-  // Voortgang: waar staan we in het traject. Klik een fase om 'm te zetten.
+  // Voortgang: waar staan we in het klanttraject. Interne projecten (Begeister) en privé
+  // hebben geen briefing, akkoord of factuur — daar is een fasebalk zinloos.
   const _fase=p.phase||'briefing';
   const _fIdx=_DOS_PHASES.findIndex(x=>x.k===_fase);
-  const secFase=`<div class="pb-sec"><div class="pb-h">Voortgang</div><div class="pb-fase">`
+  const secFase=_geenTraject(p.client) ? '' : (`<div class="pb-sec"><div class="pb-h">Voortgang</div><div class="pb-fase">`
     + _DOS_PHASES.map((f,i)=>`<button class="pb-fasestap${i<=_fIdx?' done':''}${i===_fIdx?' nu':''}" style="--fcol:${col}" onclick="pbSetPhase('${f.k}')" title="${f.l}"><span class="pb-fasedot"></span><span class="pb-faselbl">${f.l}</span></button>`).join('')
-    + `</div></div>`;
+    + `</div></div>`);
   const secWait=`<div class="pb-sec"><div class="pb-h">In afwachting <button class="pb-hadd" onclick="openModal(null,'wachter','wait','${_pbPid}')" title="Toevoegen">+</button></div>${waitT.length?waitT.map(waitRow).join(''):'<div class="pb-empty">Niets in afwachting.</div>'}</div>`;
   const secTaken=`<div class="pb-sec"><div class="pb-h">Taken <button class="pb-hadd" onclick="openModal(null,null,'todo','${_pbPid}')" title="Toevoegen">+</button></div>${takenT.length?takenT.map(taskRow).join(''):'<div class="pb-empty">Geen actiepunten.</div>'}</div>`;
   const doneInk=inkopen.filter(x=>x.done); const _doneN=doneT.length+doneInk.length;
@@ -3667,7 +3683,7 @@ function _renderProjBoard(){
   const secAppt=`<div class="pb-sec"><div class="pb-h">Afspraken <button class="pb-hadd" onclick="openApptModal(null,'${_pbPid}')" title="Afspraak toevoegen">+</button></div>${appts.length?appts.map(apptRow).join(''):'<div class="pb-empty">Nog geen afspraken.</div>'}</div>`;
   const secNotes=`<div class="pb-sec"><div class="pb-h">Notities</div><textarea class="pb-notes" placeholder="Vrije notities voor dit project…" onblur="pbSaveNotes(this.value)">${esc(p.notes||'')}</textarea></div>`;
   const secCmt=`<div class="pb-sec"><div class="pb-h">Opmerkingen</div>${typeof _cmtBtnHTML==='function'?_cmtBtnHTML('project',_pbPid):''}</div>`;
-  const secFiles=`<div class="pb-sec"><div class="pb-h">Bestanden <button class="pb-hadd" onclick="dropboxPick('project','${_pbPid}')" title="Bestand koppelen">+</button></div>${_filesFor('project',_pbPid).map(_fileRow).join('')||'<div class="pb-empty">Nog geen bestanden.</div>'}</div>`;
+  const secFiles=`<div class="pb-sec"><div class="pb-h">Bestanden <button class="pb-hadd" onclick="dropboxPick('project','${_pbPid}')" title="Bestand koppelen">+</button></div>${_bestandenPerSoort(_filesFor('project',_pbPid), col)}</div>`;
   // Bestellijst — dezelfde inkoop-items als 'Inkopen' in Financiën, met masterlink naar de hele verlanglijst
   const _inkSrcCnt={}; inkopen.forEach(x=>{ if(x.source_id)_inkSrcCnt[x.source_id]=(_inkSrcCnt[x.source_id]||0)+1; });
   const _listSid=Object.keys(_inkSrcCnt).find(sid=>_inkSrcCnt[sid]>=2);
@@ -5014,6 +5030,36 @@ function _fileRow(f){
     +`<button class="kfile-del" title="Bestand verwijderen" onclick="event.stopPropagation();deleteFile('${f.id}')">${_tIc('<path d="M18 6l-12 12"/><path d="M6 6l12 12"/>',16,1.7)}</button>`
     +`<div class="kfile-sum" id="fsum_${f.id}">${escapeHtml(f.summary||'')}</div></div>`;
 }
+// Bestanden op het projectbord gegroepeerd per soort: Afbeeldingen, PDF's, Documenten,
+// Audio & video, Overig. De mapkoppen krijgen de kleur van de klant.
+const _SOORT_VOLGORDE=['Afbeeldingen',"PDF's",'Documenten','Audio & video','Overig'];
+function _bestandSoortMap(naam){
+  const n=String(naam||'').toLowerCase();
+  if(_isAttImg(n)) return 'Afbeeldingen';
+  if(/\.pdf$/.test(n)) return "PDF's";
+  if(/\.(docx?|xlsx?|xlsm|pptx?|csv|tsv|txt|md|rtf|pages|numbers|key|gdoc|gsheet)$/.test(n)) return 'Documenten';
+  if(/\.(m4a|mp3|wav|aac|mp4|mov|avi|mkv|webm)$/.test(n)) return 'Audio & video';
+  return 'Overig';
+}
+var _pbMapDicht=new Set();
+function pbToggleMap(soort){ if(_pbMapDicht.has(soort))_pbMapDicht.delete(soort); else _pbMapDicht.add(soort); _renderProjBoard(); }
+function _bestandenPerSoort(lijst, kleur){
+  if(!lijst || !lijst.length) return '<div class="pb-empty">Nog geen bestanden.</div>';
+  const per={};
+  lijst.forEach(f=>{ const s=_bestandSoortMap(f.name); (per[s]=per[s]||[]).push(f); });
+  return _SOORT_VOLGORDE.filter(s=>per[s]).map(soort=>{
+    const dicht=_pbMapDicht.has(soort);
+    const kids=dicht?'':per[soort].map(_fileRow).join('');
+    return '<div class="pb-map" style="--mcol:'+kleur+'">'
+      + '<button class="pb-maph'+(dicht?' dicht':'')+'" onclick="pbToggleMap(\''+soort.replace(/'/g,"\\'")+'\')">'
+      +   '<svg class="pb-mapchev" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6l-6 6"/></svg>'
+      +   '<svg class="pb-mapic" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>'
+      +   '<span class="pb-mapnm">'+escapeHtml(soort)+'</span>'
+      +   '<span class="pb-mapcnt">'+per[soort].length+'</span>'
+      + '</button>'
+      + '<div class="pb-mapkids">'+kids+'</div></div>';
+  }).join('');
+}
 function _filesHTML(type,id){
   if(!id) return '<div class="kfiles-hint">Sla eerst op om bestanden te koppelen.</div>';
   const list=_filesFor(type,id).map(_fileRow).join('');
@@ -6006,6 +6052,8 @@ function _freshColor(taken){ for(const c of PALETTE){ if(!taken.has(c.toLowerCas
 // Elke klant een unieke kleur: reserveer per klant de kleur van z'n eerste project; bij botsing een nieuwe.
 const BEGCOL='#e8e8ea';   // Begeister = wij → bijna-wit, overal
 function _isBeg(c){ return /^begeister$/i.test(String(c||'').trim()); }
+// Klanten zonder klanttraject: onszelf en de privé-bakjes. Geen briefing, geen factuur.
+function _geenTraject(client){ const c=String(client||'').trim(); return _isBeg(c) || /(^|\s)prive$/i.test(c) || /(^|\s)privé$/i.test(c); }
 let _colorDedupDone=false;
 async function _ensureUniqueClientColors(){
   const byC={}, order=[]; (state.projects||[]).forEach(p=>{ if(p.id==='__inbox__'||!p.client)return; if(!byC[p.client]){byC[p.client]=[];order.push(p.client);} byC[p.client].push(p); });
