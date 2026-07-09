@@ -922,6 +922,43 @@
   /* Bijlagen bij een bron: één grote stage + een strip eronder als er meer zijn.
      De generieke .fmp-stage rekent met calc(100% - 130px); in deze kolom is er geen
      vaste hoogte om vanaf te rekenen, vandaar een eigen maat. */
+  /* Postvak In — zelfde ritme en typografie als de andere lijsten in de app. */
+  #postvakWrap{padding:0 22px 40px;max-width:920px}
+  .pv-top{display:flex;align-items:center;gap:14px;padding:0 0 16px}
+  .pv-top-tel{font-size:13px;color:var(--mut2)}
+  .pv-bulk{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:0 0 16px;border-bottom:1px solid var(--lin);margin-bottom:2px}
+  .pv-bulk-lbl{font-size:12px;color:var(--mut2);margin-right:2px}
+  .pv-bulk .btn{font-size:12px;padding:5px 11px}
+  .pv-rest{font-size:11.5px;color:var(--mut2)}
+  .pv-row{border-top:1px solid var(--lin);padding:16px 0;display:flex;gap:12px;align-items:flex-start}
+  .pv-ic{width:20px;flex:none;text-align:center;color:var(--mut2);font-size:13px;line-height:20px}
+  .pv-body{flex:1;min-width:0}
+  .pv-kop{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+  .pv-titel{font-size:13.5px;font-weight:600}
+  .pv-dat{font-size:11.5px;color:var(--mut2)}
+  .pv-chip{font-size:11px;border:1px solid var(--lin);border-radius:3px;padding:1px 6px}
+  .pv-reden{font-size:11.5px;color:var(--mut2)}
+  .pv-tekst{font-size:12.5px;color:var(--mut2);margin:5px 0 10px;line-height:1.45}
+  .pv-voorstel{font-size:12.5px;color:var(--mut2);margin:0 0 10px}
+  .pv-voorstel b{color:var(--txt);font-weight:600}
+  .pv-acties{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .pv-acties select{max-width:280px}
+  .pv-leeg{padding:48px 0;text-align:center;color:var(--mut2);font-size:13.5px}
+  /* Voortgang op het projectbord: zes stappen, gevuld tot en met de huidige. */
+  .pb-fase{display:flex;gap:0;align-items:flex-start;padding:2px 0 4px}
+  .pb-fasestap{flex:1;min-width:0;background:none;border:none;padding:0;cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;gap:6px;position:relative;color:var(--mut2)}
+  .pb-fasestap::before{content:"";position:absolute;top:5px;left:-50%;width:100%;height:1px;background:var(--lin)}
+  .pb-fasestap:first-child::before{display:none}
+  .pb-fasestap.done::before{background:var(--fcol)}
+  .pb-fasedot{width:11px;height:11px;border-radius:50%;border:1.5px solid var(--lin);background:var(--bg);
+    position:relative;z-index:1;transition:background .15s,border-color .15s}
+  .pb-fasestap.done .pb-fasedot{background:var(--fcol);border-color:var(--fcol)}
+  .pb-fasestap.nu .pb-fasedot{box-shadow:0 0 0 3px color-mix(in srgb, var(--fcol) 28%, transparent)}
+  .pb-faselbl{font-size:10.5px;letter-spacing:.01em;text-align:center;line-height:1.2;white-space:nowrap;
+    overflow:hidden;text-overflow:ellipsis;max-width:100%}
+  .pb-fasestap.nu .pb-faselbl{color:var(--txt);font-weight:600}
+  .pb-fasestap:hover .pb-faselbl{color:var(--txt)}
   .bron-atts{margin-top:16px}
   .bron-stage{height:auto;min-height:0;aspect-ratio:4/3;max-height:62vh;position:relative}
   .bron-stage .fmp-frame{width:100%;height:100%}
@@ -1780,7 +1817,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v177</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v179</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -2121,9 +2158,6 @@
       </div>
       <div id="view-postvak" class="hidden">
         <div id="postvakWrap"></div>
-      </div>
-      <div id="view-dossier" class="hidden">
-        <div id="dossierWrap"></div>
       </div>
       <div id="view-wachter" class="hidden">
         <div id="wachterBlock">
@@ -2704,7 +2738,9 @@ function chipTip(x){const di=dueInfo(x.it.due);return (escapeHtml(x.it.t)+' — 
 
 // ---------- view switch ----------
 // welke views horen op desktop in de eerste kolom (#rail)
-const RAILVIEWS=['bronnen','beheer','financien','contacten','archief','files'];
+// Views die de eerste kolom overnemen. 'postvak' hoorde hier ook bij: zonder dat bleef
+// de kolom "In afwachting" ernaast staan, wat nergens op sloeg.
+const RAILVIEWS=['bronnen','beheer','financien','contacten','archief','files','postvak'];
 function openPlanning(){ const n=document.getElementById('nav'); if(n)n.classList.remove('open'); setView(isDesk3()?'taken':'wachter'); }
 function setView(v){
   // Sluit zwevende overlays zodat ze niet in een kolom blijven hangen bij menu-wissel
@@ -2734,11 +2770,10 @@ function setView(v){
   document.getElementById('view-archief').classList.toggle('hidden', v!=='archief');
   document.getElementById('view-files').classList.toggle('hidden', v!=='files');
   document.getElementById('view-postvak').classList.toggle('hidden', v!=='postvak');
-  document.getElementById('view-dossier').classList.toggle('hidden', v!=='dossier');
   // eerste kolom (#wachterBlock) verbergen wanneer er een rail-view getoond wordt
   const wb=document.getElementById('wachterBlock'); if(wb) wb.classList.toggle('hidden', d3 && railView);
   if(typeof _ensureRailCloses==='function') _ensureRailCloses();
-  document.getElementById('viewTitle').textContent={home:'',taken:'Taken',agenda:'Agenda',afspraken:'Afspraken',wachter:'In afwachting',bronnen:'Bronnen',beheer:'Klanten & projecten',financien:'Financiën',contacten:'Contacten',archief:'Archief',files:'Bestanden',postvak:'Postvak In',dossier:(_dosPid?_dosTitle():'Dossier')}[v];
+  document.getElementById('viewTitle').textContent={home:'',taken:'Taken',agenda:'Agenda',afspraken:'Afspraken',wachter:'In afwachting',bronnen:'Bronnen',beheer:'Klanten & projecten',financien:'Financiën',contacten:'Contacten',archief:'Archief',files:'Bestanden',postvak:'Postvak In'}[v];
   // desktop-werkblad: Taken (midden) + Agenda (rechts) tegelijk zichtbaar — op desktop ALTIJD aan
   const ws = d3;
   const main=document.querySelector('.main'); if(main) main.classList.toggle('workspace',ws);
@@ -2864,7 +2899,6 @@ function render(){
   if(view==='archief')renderArchief();
   if(view==='files')renderFiles();
   if(view==='postvak')renderPostvak();
-  if(view==='dossier')renderDossier();
   save();
   _animateNext=false;
   if(typeof _syncMobTrack==='function') _syncMobTrack();
@@ -2915,10 +2949,10 @@ function _pvProjOptions(sel){
 // Alleen als de AI daadwerkelijk iets nieuws voorstelt en er geen bestaand project is.
 function _pvVoorstelRegel(s, sug){
   if(!sug || !sug.nieuw_klant || sug.project_id) return '';
-  return '<div style="font-size:12.5px;color:var(--mut2);margin:0 0 10px">'
+  return '<div class="pv-voorstel">'
     + (sug.klant_bestaat?'Nieuw project bij ':'Nieuwe klant ')
-    + '<b style="color:var(--txt)">'+escapeHtml(sug.nieuw_klant)+'</b>'
-    + (sug.nieuw_project?' · <b style="color:var(--txt)">'+escapeHtml(sug.nieuw_project)+'</b>':'')
+    + '<b>'+escapeHtml(sug.nieuw_klant)+'</b>'
+    + (sug.nieuw_project?' · <b>'+escapeHtml(sug.nieuw_project)+'</b>':'')
     + ' <button class="btn ghost" style="font-size:11.5px;padding:3px 9px;margin-left:6px" '
     + 'onclick="pvMaakUitVoorstel(\''+s.id+'\')">Aanmaken</button></div>';
 }
@@ -2926,55 +2960,47 @@ function renderPostvak(){
   const wrap=document.getElementById('postvakWrap'); if(!wrap)return;
   const inbox=state.inbox||[];
   if(!inbox.length){
-    wrap.innerHTML='<div class="fin-mid-hint" style="padding:40px 0;text-align:center">Postvak In is leeg. Alles wat binnenkwam heeft een plek.</div>';
+    wrap.innerHTML='<div class="pv-leeg">Postvak In is leeg. Alles wat binnenkwam heeft een plek.</div>';
     return;
   }
   const nSug=Object.keys(_pvSug).length;
-  let h='<div style="display:flex;align-items:baseline;gap:14px;margin-bottom:18px">'
-      + '<div style="font-size:13.5px;color:var(--mut2)">'+inbox.length+' item'+(inbox.length===1?'':'s')+' wacht'+(inbox.length===1?'':'en')+' op een plek</div>'
-      + '<div class="spacer" style="flex:1"></div>'
+  let h='<div class="pv-top">'
+      + '<div class="pv-top-tel">'+inbox.length+' item'+(inbox.length===1?'':'s')+' wacht'+(inbox.length===1?'':'en')+' op een plek</div>'
+      + '<span style="flex:1"></span>'
       + '<button class="btn ghost" id="pvAiBtn" onclick="pvSuggestAll()"'+(_pvBusy?' disabled':'')+'>'
       + (_pvBusy?'Bezig…':(nSug?'✦ Opnieuw voorstellen':'✦ Laat de AI voorstellen doen'))+'</button></div>';
 
-  // Bulk-balk: pas zichtbaar zodra er voorstellen liggen. Niets gebeurt zonder bevestiging.
   if(nSug){
     const b=_pvBuckets();
     const knop=(kind,tekst)=> (b[kind]&&b[kind].length)
-      ? '<button class="btn ghost" style="font-size:12px;padding:5px 11px" onclick="pvBulk(\''+kind+'\')">'
-        + b[kind].length+' × '+tekst+'</button>' : '';
+      ? '<button class="btn ghost" onclick="pvBulk(\''+kind+'\')">'+b[kind].length+' × '+tekst+'</button>' : '';
     const rest=b.werkZonderProject.length
-      ? '<span style="font-size:11.5px;color:var(--mut2)">'+b.werkZonderProject.length+' × werk zonder project — met de hand</span>' : '';
+      ? '<span class="pv-rest">'+b.werkZonderProject.length+' × werk zonder project — met de hand</span>' : '';
     const knoppen=[knop('werk','naar project'),knop('inspiratie','inspiratie'),knop('prive','privé'),knop('ruis','ruis')].filter(Boolean).join('');
-    if(knoppen||rest){
-      h+='<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:0 0 18px;border-bottom:1px solid var(--lin);margin-bottom:6px">'
-       + '<span style="font-size:12px;color:var(--mut2);margin-right:4px">Alles in één keer:</span>'+knoppen+rest+'</div>';
-    }
+    if(knoppen||rest) h+='<div class="pv-bulk"><span class="pv-bulk-lbl">Alles in één keer:</span>'+knoppen+rest+'</div>';
   }
 
   inbox.forEach(s=>{
     const sug=_pvSug[s.id]||null;
-    const kind=sug?sug.kind:'';
-    const k=_PV_KIND[kind];
+    const k=sug?_PV_KIND[sug.kind]:null;
     const dt=s.received_at?new Date(s.received_at).toLocaleDateString('nl-NL',{day:'2-digit',month:'short'}):'';
-    h+='<div class="pv-row" data-sid="'+s.id+'" style="border-top:1px solid var(--lin);padding:14px 0">'
-     +   '<div style="display:flex;gap:12px;align-items:flex-start">'
-     +     '<div style="width:20px;text-align:center;color:var(--mut2);font-size:13px;flex:none;line-height:20px">'+(_PV_ICON[s.channel]||'•')+'</div>'
-     +     '<div style="flex:1;min-width:0">'
-     +       '<div style="display:flex;gap:10px;align-items:baseline">'
-     +         '<span style="font-size:13.5px;font-weight:600">'+escapeHtml(s.subject||s.sender||s.channel||'Bron')+'</span>'
-     +         '<span style="font-size:11.5px;color:var(--mut2)">'+escapeHtml(dt)+'</span>'
-     +         (k?'<span style="font-size:11px;color:'+k.kleur+';border:1px solid var(--lin);border-radius:3px;padding:1px 6px">'+k.lbl+'</span>':'')
-     +         (sug&&sug.reden?'<span style="font-size:11.5px;color:var(--mut2)">'+escapeHtml(sug.reden)+'</span>':'')
-     +       '</div>'
-     +       '<div style="font-size:12.5px;color:var(--mut2);margin:4px 0 10px">'+escapeHtml(_pvSnippet(s))+'</div>'
-     +       _pvVoorstelRegel(s, sug)
-     +       '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">'
-     +         '<select class="pv-proj" style="max-width:280px">'+_pvProjOptions(sug?sug.project_id:'')+'</select>'
-     +         '<button class="btn" onclick="pvAssign(\''+s.id+'\')">Naar project</button>'
-     +         '<button class="btn ghost" onclick="pvTriage(\''+s.id+'\',\'inspiratie\')">Inspiratie</button>'
-     +         '<button class="btn ghost" onclick="pvTriage(\''+s.id+'\',\'prive\')">Privé</button>'
-     +         '<button class="btn ghost" onclick="pvTriage(\''+s.id+'\',\'ruis\')" title="Uit het postvak, blijft bij Bronnen staan">Ruis</button>'
-     +       '</div>'
+    h+='<div class="pv-row" data-sid="'+s.id+'">'
+     +   '<div class="pv-ic">'+(_PV_ICON[s.channel]||'•')+'</div>'
+     +   '<div class="pv-body">'
+     +     '<div class="pv-kop">'
+     +       '<span class="pv-titel">'+escapeHtml(s.subject||s.sender||s.channel||'Bron')+'</span>'
+     +       '<span class="pv-dat">'+escapeHtml(dt)+'</span>'
+     +       (k?'<span class="pv-chip" style="color:'+k.kleur+'">'+k.lbl+'</span>':'')
+     +       (sug&&sug.reden?'<span class="pv-reden">'+escapeHtml(sug.reden)+'</span>':'')
+     +     '</div>'
+     +     '<div class="pv-tekst">'+escapeHtml(_pvSnippet(s))+'</div>'
+     +     _pvVoorstelRegel(s, sug)
+     +     '<div class="pv-acties">'
+     +       '<select class="pv-proj">'+_pvProjOptions(sug?sug.project_id:'')+'</select>'
+     +       '<button class="btn" onclick="pvAssign(\''+s.id+'\')">Naar project</button>'
+     +       '<button class="btn ghost" onclick="pvTriage(\''+s.id+'\',\'inspiratie\')">Inspiratie</button>'
+     +       '<button class="btn ghost" onclick="pvTriage(\''+s.id+'\',\'prive\')">Privé</button>'
+     +       '<button class="btn ghost" onclick="pvTriage(\''+s.id+'\',\'ruis\')" title="Uit het postvak, blijft bij Bronnen staan">Ruis</button>'
      +     '</div>'
      +   '</div>'
      + '</div>';
@@ -3140,8 +3166,6 @@ async function pvBulk(kind){
    Bewust intern: hier staat ook inkoop en marge. Het klantportaal krijgt straks
    een eigen voorkant die alleen documents.visible_to_client mag zien.
    ============================================================================ */
-var _dosPid=null;
-
 const _DOS_PHASES=[
   {k:'briefing',    l:'Briefing'},
   {k:'debrief',     l:'Debrief'},
@@ -3153,120 +3177,7 @@ const _DOS_PHASES=[
 // Vaste mappen, gelijk aan api/sortfiles.mjs — geen nieuwe namen verzinnen.
 const _DOS_CATS=['Concept','Lichtontwerp','Decor','Tekeningen','Plattegronden','Draaiboek','Planning','Leveranciers','Techniek','Offertes','Media'];
 
-function _dosTitle(){ const p=projById(_dosPid); return p?((p.client||'')+(p.project?' · '+p.project:'')):'Dossier'; }
-function openDossier(pid){ _dosPid=pid; setView('dossier'); }
 
-function _dosSection(title, count, inner){
-  return '<section style="margin:0 0 34px">'
-    + '<div style="display:flex;align-items:baseline;gap:10px;margin-bottom:12px">'
-    +   '<h3 style="font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;margin:0">'+escapeHtml(title)+'</h3>'
-    +   '<span style="font-size:12px;color:var(--mut2)">'+count+'</span>'
-    + '</div>'
-    + (inner||'<div style="font-size:12.5px;color:var(--mut2)">Nog niets.</div>')
-    + '</section>';
-}
-function _dosBytes(n){ if(!n)return''; const u=['B','KB','MB','GB']; let i=0,v=Number(n); while(v>=1024&&i<u.length-1){v/=1024;i++;} return v.toFixed(v<10&&i>0?1:0)+' '+u[i]; }
-
-function renderDossier(){
-  const wrap=document.getElementById('dossierWrap'); if(!wrap)return;
-  const p=projById(_dosPid);
-  if(!p){ wrap.innerHTML='<div class="fin-mid-hint" style="padding:40px 0;text-align:center">Kies een project bij Klanten.</div>'; return; }
-
-  const docs=(state.documents||[]).filter(d=>String(d.project_id)===String(p.id));
-  const taken=(p.items||[]).filter(i=>i.status!=='done');
-  const klaar=(p.items||[]).filter(i=>i.status==='done');
-  const appts=(state.appointments||[]).filter(a=>String(a.projectId)===String(p.id));
-  const cons=(state.contacts||[]).filter(c=>String(c.project_id)===String(p.id));
-  const srcs=(state.sources||[]).filter(s=>String(s.proj)===String(p.id));
-  const phase=p.phase||'briefing';
-
-  // ---- kop + fasebalk
-  let h='<div style="margin-bottom:30px">'
-   + '<div style="display:flex;align-items:center;gap:12px">'
-   +   '<span class="kbadge" style="background:'+(p.color||'#888')+'">'+escapeHtml((p.client||'?')[0].toUpperCase())+'</span>'
-   +   '<div><div style="font-size:19px;font-weight:600">'+escapeHtml(p.project||p.client||'Project')+'</div>'
-   +   '<div style="font-size:12.5px;color:var(--mut2)">'+escapeHtml(p.client||'')+(p.role?' — '+escapeHtml(p.role):'')+'</div></div>'
-   +   '<span style="flex:1"></span>'
-   +   (p.projectprijs!=null?'<div style="font-size:15px;font-weight:600">€'+fmtEur(p.projectprijs)+'</div>':'')
-   + '</div></div>';
-
-  h+='<div style="display:flex;gap:6px;margin-bottom:34px;flex-wrap:wrap">';
-  const cur=_DOS_PHASES.findIndex(x=>x.k===phase);
-  _DOS_PHASES.forEach((f,i)=>{
-    const done=i<=cur;
-    h+='<button class="btn ghost" onclick="dosSetPhase(\''+f.k+'\')" style="font-size:12px;padding:5px 11px;'
-      + (done?'border-color:'+(p.color||'#888')+';color:var(--txt)':'opacity:.5')
-      + (i===cur?';font-weight:600':'')+'">'+f.l+'</button>';
-  });
-  h+='</div>';
-
-  // ---- documenten, gegroepeerd op vaste map
-  let dh='';
-  if(docs.length){
-    const byCat={};
-    docs.forEach(d=>{ const c=(_DOS_CATS.includes(d.category)?d.category:'Overig'); (byCat[c]=byCat[c]||[]).push(d); });
-    const cats=_DOS_CATS.filter(c=>byCat[c]).concat(byCat['Overig']?['Overig']:[]);
-    dh=cats.map(c=>{
-      const rows=byCat[c].map(d=>{
-        const href=d.link||d.dropbox_path||'';
-        const nm=escapeHtml(d.filename||'bestand');
-        const naam=href?'<a href="'+escapeHtml(href)+'" target="_blank" rel="noopener" style="color:inherit">'+nm+'</a>':nm;
-        return '<div style="display:flex;gap:12px;align-items:baseline;padding:5px 0;font-size:13px">'
-          + '<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+naam+'</span>'
-          + '<span style="font-size:11.5px;color:var(--mut2);flex:none">'+_dosBytes(d.size)+'</span>'
-          + '<label style="font-size:11.5px;color:var(--mut2);flex:none;display:flex;gap:5px;align-items:center;cursor:pointer" title="Zichtbaar voor de klant in het portaal">'
-          +   '<input type="checkbox" '+(d.visible_to_client?'checked':'')+' onchange="dosToggleClient(\''+d.id+'\',this.checked)"> klant'
-          + '</label></div>';
-      }).join('');
-      return '<div style="margin-bottom:18px"><div style="font-size:12px;color:var(--mut2);margin-bottom:4px">'+escapeHtml(c)+'</div>'+rows+'</div>';
-    }).join('');
-  }
-  h+=_dosSection('Documenten', docs.length, dh);
-
-  // ---- taken
-  const th=taken.length?taken.map(i=>'<div style="display:flex;gap:10px;padding:4px 0;font-size:13px">'
-      + '<span style="flex:1">'+escapeHtml(i.t||'')+'</span>'
-      + '<span style="font-size:11.5px;color:var(--mut2)">'+escapeHtml(i.owner||'')+'</span>'
-      + '<span style="font-size:11.5px;color:var(--mut2)">'+escapeHtml(i.due||'')+'</span></div>').join(''):'';
-  h+=_dosSection('Taken', taken.length+' open · '+klaar.length+' klaar', th);
-
-  // ---- afspraken
-  const ah=appts.length?appts.map(a=>'<div style="display:flex;gap:10px;padding:4px 0;font-size:13px">'
-      + '<span style="font-size:11.5px;color:var(--mut2);width:92px;flex:none">'+escapeHtml((a.date||'')+(a.start?' '+a.start:''))+'</span>'
-      + '<span style="flex:1">'+escapeHtml(a.t||'')+'</span>'
-      + '<span style="font-size:11.5px;color:var(--mut2)">'+escapeHtml(a.location||'')+'</span></div>').join(''):'';
-  h+=_dosSection('Afspraken', appts.length, ah);
-
-  // ---- contacten
-  const ch=cons.length?cons.map(c=>'<div style="display:flex;gap:10px;padding:4px 0;font-size:13px">'
-      + '<span style="flex:1">'+escapeHtml(c.name||'')+'</span>'
-      + '<span style="font-size:11.5px;color:var(--mut2)">'+escapeHtml(c.role||c.company||'')+'</span>'
-      + '<span style="font-size:11.5px;color:var(--mut2)">'+escapeHtml(c.email||c.phone||'')+'</span></div>').join(''):'';
-  h+=_dosSection('Contacten', cons.length, ch);
-
-  // ---- tijdlijn van bronnen
-  const sh=srcs.length?srcs.slice(0,40).map(s=>{
-    const dt=s.ts?new Date(s.ts).toLocaleDateString('nl-NL',{day:'2-digit',month:'short',year:'2-digit'}):'';
-    return '<div style="display:flex;gap:10px;padding:4px 0;font-size:12.5px">'
-      + '<span style="color:var(--mut2);width:74px;flex:none">'+escapeHtml(dt)+'</span>'
-      + '<span style="color:var(--mut2);width:16px;flex:none">'+(_PV_ICON[s.channel]||'•')+'</span>'
-      + '<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escapeHtml(s.subject||s.summary||s.text||'')+'</span></div>';
-  }).join(''):'';
-  h+=_dosSection('Tijdlijn', srcs.length+' bron'+(srcs.length===1?'':'nen'), sh);
-
-  wrap.innerHTML=h;
-}
-
-async function dosSetPhase(k){
-  const p=projById(_dosPid); if(!p)return;
-  p.phase=k;
-  try{ await sb.from('projects').update({phase:k}).eq('id',_dosPid); }catch(_){}
-  renderDossier();
-}
-async function dosToggleClient(did,on){
-  try{ await sb.from('documents').update({visible_to_client:!!on}).eq('id',did); }catch(_){}
-  const d=(state.documents||[]).find(x=>String(x.id)===String(did)); if(d)d.visible_to_client=!!on;
-}
 
 let lastAddedIds=[];   // net opgeslagen taken → tijdelijk bovenaan
 function urgencyRank(it){
@@ -3732,6 +3643,12 @@ function _renderProjBoard(){
     return `<div class="pb-row pb-ink" data-tid="${x.id}"${x.image?` data-img="${escapeHtml(x.image)}"`:''}><button class="pb-chk" onclick="pbInkOrdered('${x.id}')" title="${x.status==='besteld'?'Terugzetten naar te bestellen':'Markeer als besteld'}">${_pbChk(x.status==='besteld')}</button>${nameCell}${priceCell}<button class="pb-move" onclick="event.preventDefault();event.stopPropagation();pbMoveOpen('one','${x.id}')" title="Verplaats naar ander project/klant">${_tIc('<path d="M17 3l4 4l-4 4"/><path d="M21 7h-13"/><path d="M7 21l-4 -4l4 -4"/><path d="M3 17h13"/>',15,1.4)}</button><button class="pb-del" onclick="event.preventDefault();pbDel('${x.id}')" title="Verwijderen">×</button></div>`; };
   const doneInkRow=(x)=>`<div class="pb-row pb-donerow"><button class="pb-chk" onclick="pbInkCheck('${x.id}',false)" title="Terugzetten">${_pbChk(true)}</button><span class="pb-tx done">${esc(x.text||'')}</span></div>`;
   const apptRow=(a)=>{ const d=a.date?d3date(a.date):''; return `<div class="pb-row pb-appt"><span class="pb-tx">${esc(a.t||'Afspraak')}</span><span class="pb-when">${esc(d)}${a.start?' · '+esc(String(a.start).slice(0,5)):''}</span><button class="pb-edit" onclick="openApptModal('${a.id}')" title="Bewerken">${_penIc}</button></div>`; };
+  // Voortgang: waar staan we in het traject. Klik een fase om 'm te zetten.
+  const _fase=p.phase||'briefing';
+  const _fIdx=_DOS_PHASES.findIndex(x=>x.k===_fase);
+  const secFase=`<div class="pb-sec"><div class="pb-h">Voortgang</div><div class="pb-fase">`
+    + _DOS_PHASES.map((f,i)=>`<button class="pb-fasestap${i<=_fIdx?' done':''}${i===_fIdx?' nu':''}" style="--fcol:${col}" onclick="pbSetPhase('${f.k}')" title="${f.l}"><span class="pb-fasedot"></span><span class="pb-faselbl">${f.l}</span></button>`).join('')
+    + `</div></div>`;
   const secWait=`<div class="pb-sec"><div class="pb-h">In afwachting <button class="pb-hadd" onclick="openModal(null,'wachter','wait','${_pbPid}')" title="Toevoegen">+</button></div>${waitT.length?waitT.map(waitRow).join(''):'<div class="pb-empty">Niets in afwachting.</div>'}</div>`;
   const secTaken=`<div class="pb-sec"><div class="pb-h">Taken <button class="pb-hadd" onclick="openModal(null,null,'todo','${_pbPid}')" title="Toevoegen">+</button></div>${takenT.length?takenT.map(taskRow).join(''):'<div class="pb-empty">Geen actiepunten.</div>'}</div>`;
   const doneInk=inkopen.filter(x=>x.done); const _doneN=doneT.length+doneInk.length;
@@ -3759,10 +3676,10 @@ function _renderProjBoard(){
   const _bestBesteld=inkopenOpen.filter(x=>x.status==='besteld');
   const _openTot=inkopenOpen.reduce((s,x)=>s+((x.price!=null&&x.price!=='')?Number(x.price):0)*(x.qty||1),0);
   const secBestel=`<div class="pb-sec"><div class="pb-h"><span>Bestellijst</span><span class="pb-hbtns">${inkopen.length?`<button class="pb-ai" onclick="pbOrderAll()" title="Zet de hele lijst in één keer in je Amazon-mandje">${_tIc('<path d="M6 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M17 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M17 17h-11v-14h-2"/><path d="M6 5l14 1l-1 7h-13"/>',16,1.7)}</button>`:''}<button class="pb-ai" onclick="pbInkPaste()" title="Plak een verlanglijst of winkelwagen — AI maakt er regels van">${_tIc(_TABCHAN.asterisk,15,1.7)}<span>lijst</span></button>${inkopen.length?`<button class="pb-ai" onclick="pbMoveOpen('all')" title="Hele bestellijst naar een ander project/klant verplaatsen">${_tIc('<path d="M17 3l4 4l-4 4"/><path d="M21 7h-13"/><path d="M7 21l-4 -4l4 -4"/><path d="M3 17h13"/>',15,1.5)}</button><button class="pb-listdel" onclick="pbDelBestel()" title="Hele bestellijst verwijderen"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/></svg></button>`:''}</span></div>${_masterLink}${_bestNietBesteld.length?_bestNietBesteld.map(inkRow).join(''):(_bestBesteld.length?'':'<div class="pb-empty">Nog geen bestellingen.</div>')}<div class="pb-add"><input class="pb-in" data-kind="inkoop" placeholder="+ artikel toevoegen…" onkeydown="pbAddKey(event,'inkoop')"></div>${inkopenOpen.length?`<div class="pb-besteltot"><span class="pb-btlbl">Totaal</span><span class="pb-btval"><b>€${fmtEur(_openTot)}</b><span class="pb-btsub">excl. €${fmtEur(_openTot/(1+btwPct/100))}</span></span></div>`:''}${_bestBesteld.length?`<div class="pb-besteld-sec"><div class="pb-h">Besteld <span class="pb-donecnt">${_bestBesteld.length}</span></div>${_bestBesteld.map(inkRow).join('')}</div>`:''}</div>`;
-  const _body=(_pbMode==='financien')?secBestel:(secWait+secTaken+secBestel+secDone+secAppt+secFiles+secPrijs+secNotes+secCmt);
+  const _body=(_pbMode==='financien')?secBestel:(secFase+secWait+secTaken+secBestel+secDone+secAppt+secFiles+secPrijs+secNotes+secCmt);
   const _head=`<div class="pb-head"><span class="kbadge" style="background:${col}">${esc(initial)}</span><div class="pb-title"><b>${esc(p.client||'')}</b>${p.project?'<span> · '+esc(p.project)+'</span>':''}${_pbMode==='financien'?'<span style="color:'+col+'"> · inkoop</span>':''}</div></div>`;
   if(_pbTarget==='finmid'||_pbTarget==='finright'){ const el=document.getElementById(_pbTarget==='finright'?'finRightWrap':'finMidWrap'); const _cls=(_pbTarget==='finright')?'pb-inline pb-board-inline':'pb-inline'; const _h=(_pbTarget==='finright')?'':_head; if(el)el.innerHTML=`<div class="${_cls}" style="--scol:${col}">${_h}${_body}</div>`; return; }
-  if(_pbTarget==='beheer'){ const el=document.getElementById('beheerBoardWrap'); if(el)el.innerHTML=`<div class="pb-inline pb-board-inline" style="--scol:${col}"><div class="pb-grid"><div class="pb-colL">${secWait}${secTaken}${secBestel}${secDone}</div><div class="pb-colR">${secAppt}${secFiles}${secPrijs}${secNotes}${secCmt}</div></div></div>`; return; }
+  if(_pbTarget==='beheer'){ const el=document.getElementById('beheerBoardWrap'); if(el)el.innerHTML=`<div class="pb-inline pb-board-inline" style="--scol:${col}"><div class="pb-grid"><div class="pb-colL">${secFase}${secWait}${secTaken}${secBestel}${secDone}</div><div class="pb-colR">${secAppt}${secFiles}${secPrijs}${secNotes}${secCmt}</div></div></div>`; return; }
   if(!ov)return;
   ov.innerHTML=`<div class="modal pb-modal" style="--scol:${col};width:100%;max-width:none">
     <button class="modal-close" onclick="closeProjectBoard()" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
@@ -3848,6 +3765,16 @@ function _parseEur(v){ v=String(v||'').replace(/[^0-9,.\-]/g,'').replace(/\.(?=\
 async function pbSetPrice(id,val){ const price=_parseEur(val); const x=_pbItems.find(i=>i.id===id); if(x)x.price=price; try{ await sb.from('project_board').update({price}).eq('id',id); }catch(_){} _renderProjBoard(); }
 async function pbSetBudget(val){ const budget=_parseEur(val); const p=projById(_pbPid); if(p)p.budget=budget; try{ await sb.from('projects').update({budget}).eq('id',_pbPid); }catch(_){} _renderProjBoard(); }
 async function pbSetProjectprijs(val){ const v=_parseEur(val); const p=projById(_pbPid); if(p)p.projectprijs=v; try{ await sb.from('projects').update({projectprijs:v}).eq('id',_pbPid); }catch(_){} _renderProjBoard(); try{ if(view==='financien')renderFinancien(); }catch(_){} }
+// Voortgang van het project. Klik dezelfde fase nogmaals om een stap terug te gaan.
+async function pbSetPhase(k){
+  const p=projById(_pbPid); if(!p)return;
+  const huidig=p.phase||'briefing';
+  const i=_DOS_PHASES.findIndex(x=>x.k===k);
+  const nieuw=(huidig===k && i>0) ? _DOS_PHASES[i-1].k : k;
+  p.phase=nieuw;
+  try{ await sb.from('projects').update({phase:nieuw}).eq('id',_pbPid); }catch(_){}
+  _renderProjBoard();
+}
 // Marge-gezondheid (geen groen — verlies=rood, dun=amber, gezond=klantkleur/licht)
 function _margeHealth(om,marge){ if(om==null||om<=0||marge==null)return null; const pct=Math.round(marge/om*100);
   if(marge<0)return{label:'verlies',cls:'neg',pct}; if(pct<15)return{label:'dun',cls:'dun',pct}; if(pct<40)return{label:'oké',cls:'ok',pct}; return{label:'sterk',cls:'ok',pct}; }
@@ -4617,61 +4544,104 @@ async function openAiInsight(kind, ref){
     if(typeof loadUsage==='function')loadUsage();
   }catch(e){ if(_fvAiTimer){clearInterval(_fvAiTimer);_fvAiTimer=null;} body.innerHTML=`<div class="fvai-err">Lezen lukte niet.<br><span style="opacity:.7;font-size:12px">${escapeHtml(String(e&&e.message||e))}</span><br><button class="fv-btn" onclick="openAiInsight('${kind}','${ref}')">Opnieuw proberen</button></div>`; }
 }
-function _isAttImg(name){ return /\.(png|jpe?g|gif|webp|heic|heif|bmp|tiff?|svg)$/i.test(name||''); }
+/* ============================================================================
+   BESTANDEN — één plek die weet hoe je aan een bestand komt en hoe je het toont.
+   Vervangt zes losse URL-bouwers en vijf eigen renderers. De bediening (hernoemen,
+   verwijderen, bladeren) blijft per pagina verschillen; alleen deze onderlaag is gedeeld.
+
+   Een "bestand" is elk object met minstens één van:
+     storage_path  → Supabase Storage, of "dropbox:<link>"
+     link          → een Dropbox- of externe link
+     url           → een externe afbeelding (bv. een Instagram-thumb)
+   ============================================================================ */
+const _BEELD_EXT=/\.(png|jpe?g|gif|webp|heic|heif|bmp|tiff?|svg|avif)$/i;
+function _isAttImg(name){ return _BEELD_EXT.test(name||''); }
 function _isAttPdf(name){ return /\.pdf$/i.test(name||''); }
+function _bestandSoort(name){ return _isAttImg(name)?'beeld':(_isAttPdf(name)?'pdf':'anders'); }
+
 // PDF's zonder de zwevende zoombalk van de browser en passend op de breedte.
-// De bestandsviewer deed dit al; de bronpreview vergat het.
 function _attSrc(url,name){ return _isAttPdf(name) ? (url+'#toolbar=0&navpanes=0&view=FitH') : url; }
 
-async function _attUrl(a){
-  const sp=(a&&a.storage_path)||''; if(!sp) return '';
-  try{
-    if(sp.indexOf('dropbox:')===0) return '/api/fileproxy?u='+encodeURIComponent(_fvRaw(sp.slice(8)));
-    const sg=await sb.storage.from('intake').createSignedUrl(sp,3600);
-    if(sg&&sg.data&&sg.data.signedUrl) return sg.data.signedUrl;
-    const pub=sb.storage.from('intake').getPublicUrl(sp);
-    return (pub&&pub.data)?pub.data.publicUrl:'';
-  }catch(_){ return ''; }
+// DE url-resolver. Alles gaat hierlangs.
+async function _bestandUrl(f){
+  if(!f) return '';
+  const sp=f.storage_path||'';
+  if(sp){
+    try{
+      if(sp.indexOf('dropbox:')===0) return '/api/fileproxy?u='+encodeURIComponent(_fvRaw(sp.slice(8)));
+      const sg=await sb.storage.from('intake').createSignedUrl(sp,3600);
+      if(sg&&sg.data&&sg.data.signedUrl) return sg.data.signedUrl;
+      const pub=sb.storage.from('intake').getPublicUrl(sp);
+      if(pub&&pub.data&&pub.data.publicUrl) return pub.data.publicUrl;
+    }catch(_){}
+  }
+  if(f.link) return '/api/fileproxy?u='+encodeURIComponent(_fvRaw(f.link));
+  if(f.url)  return f.url;      // externe afbeelding, bv. een Instagram-thumb
+  return '';
+}
+// Oude naam, nog in gebruik op een paar plekken. Zelfde functie.
+const _attUrl=_bestandUrl;
+
+// DE preview-renderer. Geeft HTML terug; de aanroeper bepaalt waar het landt.
+// `k` zijn de klassenamen voor beeld en frame, want elke pagina heeft eigen maten.
+function _bestandPreviewHTML(url, naam, k){
+  k=k||{img:'fmp-img', frame:'fmp-frame', none:'fmp-none'};
+  if(!url) return '<div class="'+k.none+'">Kon dit bestand niet laden.</div>';
+  const soort=_bestandSoort(naam);
+  if(soort==='beeld') return '<img class="'+k.img+'" src="'+escapeHtml(url)+'" alt="'+escapeHtml(naam||'')+'">';
+  if(soort==='pdf')   return '<iframe class="'+k.frame+'" src="'+escapeHtml(_attSrc(url,naam))+'" title="'+escapeHtml(naam||'PDF')+'"></iframe>';
+  return '<div class="'+k.none+'">'+(typeof _fileGlyph==='function'?_fileGlyph(naam):'')+'<p>Geen voorvertoning voor dit bestandstype.</p></div>';
+}
+// Vult achteraf elke <img data-sp="..."> of <img data-link="..."> met een echte URL.
+// Eén lazy-loader voor de bronnenlijst, het inspiratiebord en de fotostapel.
+async function _vulBeeldjes(scope){
+  const root=scope||document;
+  const imgs=root.querySelectorAll('img[data-sp]:not([data-done]), img[data-link]:not([data-done])');
+  for(const im of imgs){
+    im.setAttribute('data-done','1');
+    const f={ storage_path: im.getAttribute('data-sp')||'', link: im.getAttribute('data-link')||'' };
+    const u=await _bestandUrl(f);
+    if(u) im.src=u;
+  }
 }
 async function _bronLoadAttachment(a, stageId){
   const stage=document.getElementById(stageId||'bronStage'); if(!stage)return;
-  const url=await _attUrl(a), name=a.filename||'';
-  if(!url){ stage.innerHTML='<div class="fmp-none">Kon preview niet laden.</div>'; return; }
-  stage.innerHTML=_isAttImg(name)
-    ? `<img class="fmp-img" src="${url}">`
-    : `<iframe class="fmp-frame" src="${_attSrc(url,name)}"></iframe>`;
+  stage.innerHTML=_bestandPreviewHTML(await _bestandUrl(a), a.filename||'');
 }
 
 /* ---- Meerdere bijlagen in één bron: stapel met een strip eronder ---- */
 var _bronAtts=[], _bronAttUrls=[], _bronAttIdx=0;
 async function _bronLoadAlleBijlagen(atts){
   _bronAtts=atts||[]; _bronAttIdx=0;
-  _bronAttUrls=await Promise.all(_bronAtts.map(a=>_attUrl(a)));
+  _bronAttUrls=await Promise.all(_bronAtts.map(a=>_bestandUrl(a)));
   _bronPaintAtt();
+}
+// De fotostapel: één grote weergave met een strip eronder. Herbruikbaar — geeft HTML terug.
+function _fotoStapelHTML(items, idx, opts){
+  opts=opts||{};
+  const ga=opts.ga||'bronAttGa', stap=opts.stap||'bronAttStap';
+  if(!items || items.length<2) return '';
+  return '<div class="bs-bar">'
+    + '<button class="bs-nav" onclick="'+stap+'(-1)" aria-label="Vorige">‹</button>'
+    + '<div class="bs-thumbs">'
+    + items.map((x,i)=>{
+        const n=x.naam||'', u=x.url||'';
+        const on=(i===idx)?' on':'';
+        return '<button class="bs-thumb'+on+'" onclick="'+ga+'('+i+')" title="'+escapeHtml(n)+'">'
+          + (_isAttImg(n)&&u ? '<img src="'+escapeHtml(u)+'" alt="">' : '<span class="bs-ext">'+escapeHtml((n.split('.').pop()||'?').toUpperCase())+'</span>')
+          + '</button>';
+      }).join('')
+    + '</div>'
+    + '<button class="bs-nav" onclick="'+stap+'(1)" aria-label="Volgende">›</button>'
+    + '<span class="bs-tel">'+(idx+1)+' / '+items.length+'</span>'
+    + '</div>';
 }
 function _bronPaintAtt(){
   const stage=document.getElementById('bronStage'); if(!stage)return;
   const a=_bronAtts[_bronAttIdx]||{}, url=_bronAttUrls[_bronAttIdx]||'';
-  const naam=a.filename||'bijlage';
-  stage.innerHTML = !url ? '<div class="fmp-none">Kon deze bijlage niet laden.</div>'
-    : (_isAttImg(naam) ? `<img class="fmp-img" src="${url}" alt="${escapeHtml(naam)}">`
-                       : `<iframe class="fmp-frame" src="${_attSrc(url,naam)}" title="${escapeHtml(naam)}"></iframe>`);
+  stage.innerHTML=_bestandPreviewHTML(url, a.filename||'bijlage');
   const strip=document.getElementById('bronStrip'); if(!strip)return;
-  if(_bronAtts.length<2){ strip.innerHTML=''; return; }
-  strip.innerHTML='<div class="bs-bar">'
-    + '<button class="bs-nav" onclick="bronAttStap(-1)" aria-label="Vorige">‹</button>'
-    + '<div class="bs-thumbs">'
-    + _bronAtts.map((x,i)=>{
-        const u=_bronAttUrls[i]||''; const n=x.filename||'';
-        const on=(i===_bronAttIdx)?' on':'';
-        return '<button class="bs-thumb'+on+'" onclick="bronAttGa('+i+')" title="'+escapeHtml(n)+'">'
-          + (_isAttImg(n)&&u ? '<img src="'+u+'" alt="">' : '<span class="bs-ext">'+escapeHtml((n.split('.').pop()||'?').toUpperCase())+'</span>')
-          + '</button>';
-      }).join('')
-    + '</div>'
-    + '<button class="bs-nav" onclick="bronAttStap(1)" aria-label="Volgende">›</button>'
-    + '<span class="bs-tel">'+(_bronAttIdx+1)+' / '+_bronAtts.length+'</span>'
-    + '</div>';
+  strip.innerHTML=_fotoStapelHTML(_bronAtts.map((x,i)=>({naam:x.filename||'', url:_bronAttUrls[i]||''})), _bronAttIdx);
   try{ const act=strip.querySelector('.bs-thumb.on'); if(act&&act.scrollIntoView) act.scrollIntoView({block:'nearest',inline:'nearest'}); }catch(_){}
 }
 function bronAttGa(i){ if(i<0||i>=_bronAtts.length)return; _bronAttIdx=i; _bronPaintAtt(); }
@@ -4715,16 +4685,12 @@ function _bronTreeMobile(wrap){
   if(noneN) h+=cliRow('Overig','#555','·',noneN,'__none__');
   wrap.innerHTML=h||'<div class="hint">Nog geen bronnen. Ze verschijnen hier uit binnengekomen berichten of via Plakken.</div>';
 }
-// Thumbnails van afbeeldings-bijlagen laden (intake-bucket of Dropbox) via signed/proxy-URL.
+// Thumbnails van afbeeldings-bijlagen laden. Gaat via de gedeelde url-resolver.
 async function _fillSrcThumbs(){
   const imgs=document.querySelectorAll('.srow-thumb[data-sp]:not([data-done])');
   for(const im of imgs){
     im.setAttribute('data-done','1');
-    const sp=im.getAttribute('data-sp')||''; let url='';
-    try{
-      if(sp.indexOf('dropbox:')===0){ url='/api/fileproxy?u='+encodeURIComponent(_fvRaw(sp.slice(8))); }
-      else { const sg=await sb.storage.from('intake').createSignedUrl(sp,3600); url=sg&&sg.data?sg.data.signedUrl:''; }
-    }catch(_){}
+    const url=await _bestandUrl({storage_path: im.getAttribute('data-sp')||''});
     if(url){ im.onload=()=>im.classList.remove('ph'); im.src=url; }
   }
 }
@@ -4754,9 +4720,8 @@ async function srcFullscreen(id){
 }
 function _previewOverlay(name, url){
   const ov=document.createElement('div'); ov.className='pvw-ov';
-  const isImg=/\.(png|jpe?g|gif|webp|heic|heif|bmp|tiff?|svg)$/i.test(name||'');
   ov.innerHTML='<button class="pvw-x" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>'
-    +'<div class="pvw-stage">'+(isImg?('<img class="pvw-img" src="'+url+'">'):('<iframe class="pvw-frame" src="'+url+'"></iframe>'))+'</div>';
+    +'<div class="pvw-stage">'+_bestandPreviewHTML(url, name, {img:'pvw-img', frame:'pvw-frame', none:'fmp-none'})+'</div>';
   document.body.appendChild(ov); requestAnimationFrame(()=>ov.classList.add('open'));
   const close=()=>{ov.classList.remove('open');setTimeout(()=>ov.remove(),300);};
   ov.querySelector('.pvw-x').onclick=close;
@@ -4766,15 +4731,7 @@ async function openAttachment(id,i){
   const s=state.sources.find(x=>x.id===id); if(!s)return;
   const atts=(s.attachFull&&s.attachFull.length)?s.attachFull:[];
   const a=atts[i]; if(!a)return;
-  const sp=a.storage_path||'';
-  if(sp.indexOf('dropbox:')===0){ const link=sp.slice(8); _previewOverlay(a.filename, '/api/fileproxy?u='+encodeURIComponent(_fvRaw(link))); return; }
-  if(!sp){ return; }
-  let url='';
-  try{
-    const signed=await sb.storage.from('intake').createSignedUrl(sp,3600);
-    url=signed&&signed.data?signed.data.signedUrl:'';
-    if(!url){ const pub=sb.storage.from('intake').getPublicUrl(sp); url=pub&&pub.data?pub.data.publicUrl:''; }
-  }catch(_){}
+  const url=await _bestandUrl(a);
   if(url) _previewOverlay(a.filename, url);
 }
 async function srcDelete(id){
@@ -4884,7 +4841,7 @@ function renderConMid(){
   const rows=list.map(c=>{ const on=(_conContact===c.id)?' on':'';
     return `<div class="con-li${on}" data-id="${c.id}" onclick="selectConContact('${c.id}')"><div class="cmain"><div class="cname">${escapeHtml(c.name||'(naamloos)')}</div>${c.role?`<div class="crole">${escapeHtml(c.role)}</div>`:''}</div><div class="cquick">${_conQuick(c)}</div></div>`;
   }).join('');
-  w.innerHTML=`<div class="con-midhdr"><input id="con_search" placeholder="Zoek in deze klant…" autocomplete="off" value="${escapeHtml(_conSearch||'')}" oninput="_conFilter(this.value)"><button class="chdr-add" onclick="openContactModal()" title="Nieuw contact">+</button></div>`+(rows||'<div class="hint">Geen contacten bij deze klant.</div>');
+  w.innerHTML=`<div class="con-midhdr"><input id="con_search" placeholder="Zoek in deze klant…" autocomplete="off" value="${escapeHtml(_conSearch||'')}" oninput="_conFilter(this.value)"><button class="chdr-add" onclick="openContactModal(null)" title="Nieuw contact">+</button></div>`+(rows||'<div class="hint">Geen contacten bij deze klant.</div>');
 }
 // Kolom 3: contactdetail + gekleurde initialen
 function renderConRight(){
@@ -4964,15 +4921,18 @@ function _contactLinkedHTML(c){
   return h;
 }
 let contactEditId=null;
+// Een nieuw contact erft de klant die links geselecteerd staat. Zonder dat belandde
+// het contact bij "Overig" en leek het alsof er niets was opgeslagen.
 function openContactModal(id){
   const c=id?(state.contacts||[]).find(x=>x.id===id):null;
   contactEditId=c?c.id:null;
+  const _voorstelKlant = (!c && _conClient && _conClient!=='__none__') ? _conClient : '';
   const full=((c&&c.name)||'').trim(); const sp=full.indexOf(' ');
   document.getElementById('c_first').value= c? (sp<0?full:full.slice(0,sp)) : '';
   document.getElementById('c_last').value = c? (sp<0?'':full.slice(sp+1)) : '';
   document.getElementById('c_email').value=c?(c.email||''):'';
   document.getElementById('c_phone').value=c?(c.phone||''):'';
-  _fillContactClient(document.getElementById('c_client'), c?(c.company||''):'');
+  _fillContactClient(document.getElementById('c_client'), c?(c.company||''):_voorstelKlant);
   document.getElementById('c_role').value=c?(c.role||''):'';
   document.getElementById('c_del').style.display=contactEditId?'':'none';
   document.getElementById('contactModalTitle').textContent=contactEditId?'Contact bewerken':'Nieuw contact';
@@ -5265,16 +5225,10 @@ async function fvRender(){
   document.getElementById('fv_name').textContent=f.name||'bestand';
   document.getElementById('fv_ic').innerHTML=_fileGlyph(f.name||'');
   document.getElementById('fv_count').textContent=_fvList.length>1?`${_fvIdx+1} / ${_fvList.length}`:'';
-  const ext=((f.name||'').split('.').pop()||'').toLowerCase();
   const st=document.getElementById('fv_stage');
-  // Dropbox-bestanden gaan via de proxy; mailbijlagen liggen in Supabase Storage.
-  let url='';
-  if(f.link) url='/api/fileproxy?u='+encodeURIComponent(_fvRaw(f.link));
-  else if(f.storage_path){ st.innerHTML='<div class="fv-none">Laden…</div>'; url=await _attUrl(f); }
-  if(!url){ st.innerHTML=`<div class="fv-none">${_fileGlyph(f.name)}<p>Kon dit bestand niet laden.</p></div>`; return; }
-  if(['png','jpg','jpeg','gif','webp','bmp','svg','heic','heif'].includes(ext)) st.innerHTML=`<img class="fv-img" src="${escapeHtml(url)}" alt="">`;
-  else if(ext==='pdf') st.innerHTML=`<iframe class="fv-frame" src="${escapeHtml(url)}#toolbar=0&navpanes=0&view=FitH" title="PDF"></iframe>`;
-  else st.innerHTML=`<div class="fv-none">${_fileGlyph(f.name)}<p>Geen voorvertoning voor dit bestandstype.</p><p>Gebruik “Download origineel”${f.link?' of “Open in Dropbox”':''}.</p></div>`;
+  st.innerHTML='<div class="fv-none">Laden…</div>';
+  const url=await _bestandUrl(f);
+  st.innerHTML=_bestandPreviewHTML(url, f.name||'', {img:'fv-img', frame:'fv-frame', none:'fv-none'});
   const multi=_fvList.length>1; const pv=document.querySelector('.fv-prev'),nx=document.querySelector('.fv-next'); if(pv)pv.style.display=multi?'':'none'; if(nx)nx.style.display=multi?'':'none';
 }
 if(!window._fvKeyInit){window._fvKeyInit=true; document.addEventListener('keydown',e=>{ const v=document.getElementById('fileViewer'); if(!v||!v.classList.contains('open'))return; if(e.key==='Escape')closeFileViewer(); else if(e.key==='ArrowLeft')fvNav(-1); else if(e.key==='ArrowRight')fvNav(1); });}
@@ -5541,7 +5495,6 @@ function renderProjecten(){
         <button class="kdot" style="background:${p.color}" onclick="event.stopPropagation();openColorPicker(event,'proj','${p.id}')" title="Kleur"></button>
         ${pname}
         <button class="kicon kpen" onclick="event.stopPropagation();kEditStart('${p.id}')" title="Naam bewerken">${_penIc}</button>
-        <button class="kicon" onclick="event.stopPropagation();openDossier('${p.id}')" title="Projectdossier openen"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></button>
         <span class="kspring"></span>
         <button class="kicon" onclick="event.stopPropagation();deleteProject('${p.id}')" title="Verwijderen"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/></svg></button>
         </div>
@@ -5907,7 +5860,7 @@ async function fmRenameAI(){
     done++; if(btn)btn.textContent='Leest '+done+'/'+files.length+'…';
     let subject='';
     if(_isReadableForAI(f.name)) try{
-      const resp=await fetch('/api/fileproxy?u='+encodeURIComponent(_fvRaw(f.link)));
+      const resp=await fetch(await _bestandUrl(f));   // ook mailbijlagen kunnen nu door de AI gelezen worden
       const blob=await resp.blob();
       if(blob.size<=18*1024*1024){
         const b64=await _blobB64(blob);
@@ -5992,14 +5945,8 @@ async function fmPreview(id){
   const sel=document.querySelector('#fmTree .fm-file[data-fid="'+id+'"]'); if(sel)sel.classList.add('sel');
   const f=(state.files||[]).find(x=>x.id===id);
   if(!f){ pane.innerHTML='<div class="fmp-empty">Kies een bestand</div>'; return; }
-  const ext=((f.name||'').split('.').pop()||'').toLowerCase();
-  // Dropbox-bestand → proxy-link; mailbijlage → signed URL uit Supabase Storage.
-  const url = f.link ? ('/api/fileproxy?u='+encodeURIComponent(_fvRaw(f.link))) : await _attUrl(f);
-  let body;
-  if(!url) body='<div class="fmp-none">'+_fileGlyph(f.name)+'<p>Kon dit bestand niet laden</p></div>';
-  else if(['png','jpg','jpeg','gif','webp','bmp','svg','heic','heif'].includes(ext)) body='<img class="fmp-img" src="'+escapeHtml(url)+'" alt="">';
-  else if(ext==='pdf') body='<iframe class="fmp-frame" src="'+escapeHtml(url)+'#toolbar=0&navpanes=0&view=FitH" title="PDF"></iframe>';
-  else body='<div class="fmp-none">'+_fileGlyph(f.name)+'<p>Geen voorvertoning</p></div>';
+  const url = await _bestandUrl(f);
+  const body = _bestandPreviewHTML(url, f.name||'');
   const dlKnop = url?'<button class="fv-btn" onclick="window.open(\''+escapeHtml(f.link?_fvDl(f.link):url)+'\',\'_blank\',\'noopener\')">Download origineel</button>':'';
   const dbKnop = f.link?'<button class="fv-btn" onclick="window.open(\''+escapeHtml(f.link)+'\',\'_blank\',\'noopener\')">Open in Dropbox</button>':'';
   pane.innerHTML='<div class="fmp-head"><span class="fmp-ic">'+_fileGlyph(f.name)+'</span><span class="fmp-name">'+escapeHtml(f.name||'bestand')+'</span><button class="fmp-x" onclick="fmClosePreview()" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><div class="fmp-stage">'+body+'</div><div class="fmp-foot"><button class="fv-btn fmp-aibtn" onclick="openAiInsight(\'file\',\''+id+'\')">✦ Laat AI lezen</button>'+dlKnop+dbKnop+'</div><div id="fmAiResults" class="bron-airesults"></div>';
@@ -6168,7 +6115,15 @@ function uiConfirm(title,opts){
 }
 // kleur per klant: nieuwe klanten krijgen automatisch een volgende paletkleur
 function _nextClientColor(){ const taken=new Set(); (state.projects||[]).forEach(p=>{ if(p.id!=='__inbox__'&&p.color) taken.add(String(p.color).toLowerCase()); }); return _freshColor(taken); }
-function _clientColor(client){ const p=state.projects.find(x=>x.id!=='__inbox__'&&x.client===client&&x.color); return p?p.color:_nextClientColor(); }
+// LET OP: deze functie stond twee keer in dit bestand; de tweede overschreef de eerste
+// stilzwijgend en gaf '#888' voor een onbekende klant. Nu één versie: eerst de kleur uit
+// de gedeelde kleurentabel, dan de opgeslagen kleur, en pas als laatste een verse kleur.
+function _clientColor(client){
+  const p=(state.projects||[]).find(x=>x.id!=='__inbox__'&&x.client===client);
+  if(!p) return (typeof _nextClientColor==='function')?_nextClientColor():'#888';
+  try{ const c=_projColor(p); if(c && c!=='#888') return c; }catch(_){}
+  return p.color || ((typeof _nextClientColor==='function')?_nextClientColor():'#888');
+}
 async function _newClientPrompt(){
   const name=((await uiPrompt('Naam nieuwe klant:'))||'').trim(); if(!name)return null;
   const icon=(name[0]||'?').toUpperCase();
@@ -6493,13 +6448,18 @@ async function refresh(){ await sbLoad(); if(!_colorDedupDone){ _colorDedupDone=
 // Zijn er vragen bijgekomen sinds de vorige keer? Dan het welkomstscherm naar voren halen.
 // Stond het al open, dan alleen het wolkje bijwerken — niet opnieuw laten opspringen.
 var _vraagVorigAantal=null;
+function _welkomStaatOpen(){ const o=document.getElementById('welcomeOverlay'); return !!o && !o.classList.contains('dismissed'); }
 function _vraagNaRefresh(){
   const n=(state.vragen||[]).length;
   const eerste=(_vraagVorigAantal===null);
-  const erbij=(!eerste && n>_vraagVorigAantal);
   _vraagVorigAantal=n;
-  if(!n){ const el=document.getElementById('welcomeVraag'); if(el)el.innerHTML=''; return; }
-  if(eerste||erbij) summonWelcomeIfVraag(); else renderWelcomeVraag();
+  const el=document.getElementById('welcomeVraag');
+  if(!n){ if(el)el.innerHTML=''; return; }
+  // Het welkomstscherm mag NIET voor je neus springen terwijl je aan het werk bent.
+  // Het toont de vraag bij het opstarten, of als het scherm toch al openstaat. Anders
+  // brak elke bulk-actie af doordat refresh() je terugwierp naar het beginscherm.
+  if(eerste || _welkomStaatOpen()) summonWelcomeIfVraag();
+  else if(el) el.innerHTML='';   // de vraag wacht rustig tot je zelf naar het beginscherm gaat
 }
 
 // Nieuw binnengekomen bronnen die de AI nog nooit zag, één keer per sessie laten beoordelen.
@@ -6868,8 +6828,9 @@ async function _vraagAf(sid, status){
   try{ await sb.from('sources').update({vraag_status:status}).eq('id',sid); }catch(_){}
   state.vragen=(state.vragen||[]).filter(x=>String(x.id)!==String(sid));
   _vraagIdx=0;
-  if(!_vraagOpen().length){ renderWelcomeVraag(); dismissWelcome(); }
-  else renderWelcomeVraag();
+  const _open=_welkomStaatOpen();
+  renderWelcomeVraag();
+  if(_open && !_vraagOpen().length) dismissWelcome();   // alleen sluiten als het ook echt openstond
 }
 // Maakt (zo nodig) de klant en daarna het project. Geeft het nieuwe project-id terug.
 // Bestaat de klant al, dan wordt zijn schrijfwijze en kleur overgenomen.
@@ -6904,13 +6865,14 @@ async function vraagVerwijderBron(sid){
   try{ await sb.from('sources').delete().eq('id',sid); }catch(_){}
   state.vragen=(state.vragen||[]).filter(x=>String(x.id)!==String(sid));
   _vraagIdx=0;
-  if(!_vraagOpen().length){ renderWelcomeVraag(); dismissWelcome(); } else renderWelcomeVraag();
+  const _open=_welkomStaatOpen();
+  renderWelcomeVraag();
+  if(_open && !_vraagOpen().length) dismissWelcome();
   await refresh();
 }
-function vraagLater(){ const v=_vraagOpen(); _vraagIdx=(_vraagIdx+1)%Math.max(v.length,1); if(v.length<=1) dismissWelcome(); else renderWelcomeVraag(); }
+function vraagLater(){ const v=_vraagOpen(); _vraagIdx=(_vraagIdx+1)%Math.max(v.length,1); if(v.length<=1){ if(_welkomStaatOpen()) dismissWelcome(); } else renderWelcomeVraag(); }
 // ===== Dagoverzicht-overlay =====
 function _projColor(p){ try{ return (PROJCOL&&PROJCOL[p.id])||'#888'; }catch(_){ return '#888'; } }
-function _clientColor(client){ const p=(state.projects||[]).find(x=>x.client===client&&x.id!=='__inbox__'); return p?_projColor(p):'#888'; }
 function _dayData(){
   const today=[],week=[],waiting=[],perClient={};
   (state.projects||[]).forEach(p=>{ if(p.id==='__inbox__')return;
@@ -7009,7 +6971,8 @@ function _renderInspGrid(body){
   }
   body.innerHTML=head+grid; _inspFillThumbs();
 }
-async function _inspFillThumbs(){ const imgs=document.querySelectorAll('#inspOverlay img[data-sp]:not([data-done])'); for(const im of imgs){ im.setAttribute('data-done','1'); const sp=im.getAttribute('data-sp')||''; try{ const sg=await sb.storage.from('intake').createSignedUrl(sp,3600); const url=sg&&sg.data?sg.data.signedUrl:''; if(url) im.src=url; }catch(_){} } }
+// Zelfde lazy-loader als de bronnenlijst; gaat via de gedeelde url-resolver.
+async function _inspFillThumbs(){ await _vulBeeldjes(document.getElementById('inspOverlay')||document); }
 function inspOpenBoard(id){ _inspBoard=id; const ov=document.getElementById('inspOverlay'); if(ov)ov.scrollTop=0; renderInsp(); }
 function inspBack(){ _inspBoard=null; renderInsp(); }
 async function inspNewBoard(){ const name=((await uiPrompt('Naam thema:'))||'').trim(); if(!name)return; try{ const r=await sb.from('insp_boards').insert({name,sort:_inspBoards.length}).select().single(); if(r&&r.data)_inspBoards.push(r.data); }catch(_){} renderInsp(); }
@@ -7063,7 +7026,7 @@ function _inspPreview(it){
   const _isVid = !!it.video || /\/(reel|tv)\//i.test(it.url||'');
   let _imgs=[], _idx=0;
   const _embedUrl=u=>{ try{ return (u||'').split('?')[0].replace(/\/+$/,'')+'/embed/'; }catch(_){ return ''; } };
-  const _resolve=async e=>{ if(e&&e.sp){ try{ const sg=await sb.storage.from('intake').createSignedUrl(e.sp,3600); return sg&&sg.data?sg.data.signedUrl:''; }catch(_){ return ''; } } return e; };
+  const _resolve=async e=> (e&&e.sp) ? await _bestandUrl({storage_path:e.sp}) : e;   // via de gedeelde resolver
   const _show=async i=>{ if(!_imgs.length)return; _idx=(i+_imgs.length)%_imgs.length; const u=await _resolve(_imgs[_idx]); const im=ov.querySelector('#ispvwimg'); if(im){ if(u)im.src=u; else im.style.display='none'; } const c=ov.querySelector('#ispvwcount'); if(c)c.textContent=String(_idx+1); };
   ov._ispNav=d=>_show(_idx+d);
   (async()=>{ const box=ov.querySelector('#ispvwmedia'); if(!box)return;
