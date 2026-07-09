@@ -688,6 +688,12 @@
   .pb-in{width:100%;background:transparent;border:none;border-bottom:1px solid var(--line);padding:7px 2px;font-size:14px;font-family:inherit}
   .pb-in:focus{outline:none;border-bottom-color:var(--mut2)}
   .pb-notes{width:100%;min-height:150px;background:transparent;border:1px solid var(--line);border-radius:11px;padding:11px 12px;font-size:14px;font-family:inherit;resize:vertical;margin-top:2px}
+  /* Projectomschrijving: één alinea, in te klappen met het pijltje. */
+  .pb-omsh{cursor:pointer;user-select:none}
+  .pb-omschev{transition:transform .18s ease;opacity:.6;margin-left:4px}
+  .pb-omschev.open{transform:rotate(180deg)}
+  .pb-oms{min-height:74px;line-height:1.5}
+  .pb-omsmsg{font-size:11.5px;color:var(--mut2);margin-top:6px;line-height:1.45}
   /* Inkopen: regels met prijs/link + totaal/budget */
   .pb-hbtns{display:flex;gap:6px}
   .pb-ink .pb-qty{font-size:12px;color:var(--mut2)}
@@ -1275,7 +1281,13 @@
   .duepop .dpc:hover{background:var(--panel2)}
   .duepop .dpc.other{color:var(--mut2);opacity:.45}
   .duepop .dpc.today{box-shadow:inset 0 0 0 1px var(--mut)}
+  /* Nieuwe afspraak op mobiel: knop in de agendakop. */
+  .cal-add{width:32px;height:32px;flex:0 0 auto;margin-left:8px;border:1px solid var(--line);border-radius:9px;background:transparent;color:var(--txt);font-size:19px;line-height:1;cursor:pointer}
+  .cal-add:active{background:rgba(255,255,255,.08)}
   .duepop .dpc.sel{background:#fff;color:#000;font-weight:700}
+  /* Meerdaagse afspraak: de dagen tussen begin en eind. */
+  .duepop .dpc.reeks{background:rgba(255,255,255,.14);border-radius:0}
+  .duepop .dphint{font-size:11px;color:var(--mut2);line-height:1.4;margin-top:9px}
   .duepop .dpfoot{display:flex;justify-content:space-between;margin-top:10px}
   .duepop .dpfoot button{background:transparent;border:none;color:var(--primary2);cursor:pointer;font-size:12.5px}
   /* tijdkiezer */
@@ -1872,28 +1884,18 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v184</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v186</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
     <div id="usagePop" class="usage-pop" hidden></div>
     <div class="logo" id="logoSlot" onclick="goHome()" style="cursor:pointer" title="Beginscherm">
-      <svg viewBox="0 0 294.78 55.06" role="img" aria-label="Begeister — beginscherm" style="height:24px;width:auto;display:block">
-        <g fill="none" stroke="currentColor" stroke-width="1.5" stroke-miterlimit="10">
+      <!-- Beeldmerk: de asterisk uit het woordmerk, wit. Het volledige logo stond hier eerst. -->
+      <svg viewBox="0 0 54.21 52.44" role="img" aria-label="Begeister — beginscherm" style="height:26px;width:auto;display:block">
+        <g fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-miterlimit="10">
           <line x1="27.1" y1="6.47" x2="27.1" y2="45.97"/>
           <line x1="10" y1="16.34" x2="44.21" y2="36.09"/>
           <line x1="10" y1="36.09" x2="44.21" y2="16.34"/>
-        </g>
-        <g fill="currentColor">
-          <path d="M54.76,42.38V10.1h1.53v32.27h-1.53ZM55.53,42.38v-1.38h11.22c2.61,0,4.7-.68,6.28-2.05,1.58-1.37,2.36-3.18,2.36-5.44,0-1.46-.34-2.75-1.03-3.87-.68-1.11-1.63-1.99-2.84-2.63-1.21-.64-2.61-.95-4.2-.95h-11.79v-1.29h11.55c2.1,0,3.75-.6,4.96-1.79,1.21-1.19,1.81-2.81,1.81-4.85s-.69-3.69-2.05-4.87c-1.37-1.18-3.2-1.77-5.49-1.77h-10.79v-1.38h10.79c1.85,0,3.44.32,4.8.96,1.35.64,2.4,1.54,3.15,2.72.75,1.18,1.12,2.59,1.12,4.25,0,1.91-.48,3.53-1.43,4.85-.95,1.32-2.34,2.25-4.15,2.79l.24-.57c2.16.51,3.86,1.51,5.08,3.01,1.22,1.5,1.84,3.29,1.84,5.39,0,1.78-.43,3.34-1.29,4.68s-2.07,2.37-3.63,3.1c-1.56.73-3.41,1.1-5.54,1.1h-10.98Z"/>
-          <path d="M83.74,42.38V10.1h1.53v32.27h-1.53ZM84.6,11.49v-1.38h15.62v1.38h-15.62ZM84.6,26.48v-1.34h15.48v1.34h-15.48ZM84.6,42.38v-1.38h15.91v1.38h-15.91Z"/>
-          <path d="M122.66,42.81c-2.36,0-4.53-.41-6.52-1.24-1.99-.83-3.71-1.98-5.16-3.46s-2.57-3.23-3.37-5.25c-.8-2.02-1.19-4.23-1.19-6.61s.41-4.59,1.22-6.61c.81-2.02,1.95-3.79,3.41-5.3,1.46-1.51,3.18-2.68,5.16-3.51,1.97-.83,4.14-1.24,6.49-1.24,2.64,0,5.04.53,7.21,1.6,2.16,1.07,3.92,2.59,5.25,4.56l-1.15,1.15c-1.27-1.88-2.87-3.32-4.8-4.32-1.93-1-4.1-1.5-6.52-1.5-2.83,0-5.36.66-7.57,1.98-2.21,1.32-3.95,3.13-5.2,5.42s-1.89,4.9-1.89,7.83.62,5.48,1.86,7.76c1.24,2.28,2.95,4.06,5.13,5.35,2.18,1.29,4.69,1.93,7.52,1.93,2.67,0,5-.57,6.97-1.72,1.97-1.15,3.51-2.79,4.61-4.94,1.1-2.15,1.66-4.7,1.69-7.66l.57.48h-14.42v-1.38h15.42v.29c0,3.44-.6,6.38-1.81,8.83-1.21,2.45-2.92,4.33-5.13,5.63-2.21,1.31-4.81,1.96-7.81,1.96Z"/>
-          <path d="M144,42.38V10.1h1.53v32.27h-1.53ZM144.86,11.49v-1.38h16.62v1.38h-16.62ZM144.86,26.48v-1.34h15.48v1.34h-15.48ZM144.86,42.38v-1.38h16.91v1.38h-16.91Z"/>
-          <path d="M171.11,42.38V10.1h1.53v32.27h-1.53Z"/>
-          <path d="M189.35,42.86c-2.48,0-4.65-.48-6.49-1.46-1.85-.97-3.42-2.3-4.73-3.99l1.1-1.05c1.34,1.81,2.85,3.11,4.54,3.89,1.69.78,3.58,1.17,5.68,1.17,2.36,0,4.28-.57,5.78-1.72,1.5-1.15,2.24-2.74,2.24-4.77,0-1.53-.31-2.78-.93-3.75-.62-.97-1.44-1.76-2.46-2.36-1.02-.6-2.13-1.14-3.34-1.6-1.21-.46-2.42-.92-3.63-1.38-1.21-.46-2.32-1.03-3.34-1.72-1.02-.68-1.84-1.56-2.46-2.63-.62-1.07-.93-2.43-.93-4.08,0-1.56.37-2.92,1.12-4.08.75-1.16,1.79-2.07,3.13-2.72,1.34-.65,2.9-.98,4.68-.98,2.07,0,3.91.4,5.54,1.19,1.62.8,3.01,1.94,4.15,3.44l-1.1,1.05c-1.08-1.37-2.32-2.42-3.7-3.15-1.38-.73-3.02-1.1-4.89-1.1-2.17,0-3.93.56-5.3,1.67-1.37,1.11-2.05,2.66-2.05,4.63,0,1.43.31,2.6.93,3.51.62.91,1.44,1.66,2.46,2.24s2.13,1.1,3.34,1.53c1.21.43,2.42.88,3.63,1.36,1.21.48,2.32,1.07,3.34,1.77,1.02.7,1.84,1.6,2.46,2.7.62,1.1.93,2.49.93,4.18,0,2.71-.87,4.75-2.6,6.13-1.73,1.38-4.1,2.08-7.09,2.08Z"/>
-          <path d="M203.57,11.49v-1.38h22.07v1.38h-22.07ZM213.84,42.38V11.01h1.53v31.37h-1.53Z"/>
-          <path d="M233.75,42.38V10.1h1.53v32.27h-1.53ZM234.61,11.49v-1.38h16.62v1.38h-16.62ZM234.61,26.48v-1.34h15.48v1.34h-15.48ZM234.61,42.38v-1.38h16.91v1.38h-16.91Z"/>
-          <path d="M259.87,42.38V10.1h1.53v32.27h-1.53ZM260.63,27.2v-1.38h9.6c2.64,0,4.65-.66,6.01-1.98,1.37-1.32,2.05-3.05,2.05-5.18s-.69-3.9-2.05-5.2c-1.37-1.3-3.37-1.96-6.01-1.96h-9.6v-1.38h9.36c2.13,0,3.93.36,5.4,1.07,1.46.72,2.58,1.72,3.34,3.01.76,1.29,1.15,2.78,1.15,4.46s-.38,3.17-1.15,4.46c-.76,1.29-1.88,2.29-3.34,3.01-1.46.72-3.26,1.07-5.4,1.07h-9.36ZM277.25,42.38l-9.94-15.85,1.67-.29,10.32,16.14h-2.05Z"/>
         </g>
       </svg>
     </div>
@@ -2085,11 +2087,29 @@
       .pb-row.pb-ink .pb-ptot{display:flex;align-items:baseline;justify-content:flex-end;gap:3px;font-size:14px;font-weight:600;color:var(--txt);font-variant-numeric:tabular-nums}
       .pb-row.pb-ink .pb-ptot .pb-eur{color:var(--mut2);font-weight:400;font-size:12px}
       .pb-row.pb-ink .pb-ptot .pb-tnum{display:inline-block;width:66px;text-align:right;font-variant-numeric:tabular-nums}
-      .pb-row.pb-ink .pb-punit{font-size:11px;color:var(--mut2);display:flex;align-items:baseline;gap:2px}
+      /* Totaal en prijs-per-stuk delen dezelfde twee kolommen: een vast euroteken links
+         en een bedrag van 66px dat rechts uitlijnt. Anders zweeft de € met de tekst mee. */
+      .pb-row.pb-ink .pb-punit{font-size:11px;color:var(--mut2);display:flex;align-items:baseline;justify-content:flex-end;gap:3px}
+      .pb-row.pb-ink .pb-qty{white-space:nowrap}
+      .pb-row.pb-ink .pb-punit .pb-eur{font-size:11px;width:9px;text-align:right;flex:none}
+      .pb-row.pb-ink .pb-ptot .pb-eur{width:9px;text-align:right;flex:none}
       .pb-row.pb-ink .pb-price{background:transparent;border:none;border-bottom:1px solid color-mix(in srgb,var(--scol) 32%,var(--line));color:var(--txt);text-align:right;font-size:14px;font-weight:600;padding:1px 0;width:66px;font-variant-numeric:tabular-nums}
       .pb-row.pb-ink .pb-price:focus{outline:none;border-bottom-color:var(--scol)}
-      .pb-row.pb-ink .pb-punitin{width:46px;font-size:11px;font-weight:400;color:var(--mut2);border-bottom:none}
-      .pb-besteltot{display:flex;justify-content:space-between;align-items:baseline;margin-top:10px;padding-top:10px;border-top:1px solid color-mix(in srgb,var(--scol) 28%,transparent);font-size:13px;color:var(--scol)}
+      .pb-row.pb-ink .pb-punitin{width:66px;text-align:right;font-size:11px;font-weight:400;color:var(--mut2);border-bottom:none}
+      /* De verplaats- en verwijderknop zweefden rechts van het bedrag en duwden het naar
+         links; het totaal eronder had ze niet en stond dus verder naar rechts. Nu staan ze
+         absoluut in een vaste marge, zodat elk bedrag én het totaal op dezelfde rechterlijn
+         eindigen en de euro's exact onder elkaar staan. */
+      .pb-row.pb-ink{position:relative;padding-right:46px}
+      .pb-row.pb-ink .pb-move{position:absolute;right:24px;top:4px;margin:0}
+      .pb-row.pb-ink .pb-del{position:absolute;right:0;top:2px;margin:0}
+      .pb-besteltot{display:flex;justify-content:space-between;align-items:baseline;margin-top:10px;padding-top:10px;padding-right:46px;border-top:1px solid color-mix(in srgb,var(--scol) 28%,transparent);font-size:13px;color:var(--scol)}
+      .pb-besteltot .pb-btnum{display:flex;align-items:baseline;justify-content:flex-end;gap:3px;font-variant-numeric:tabular-nums}
+      .pb-besteltot .pb-btnum .pb-eur{width:9px;text-align:right;flex:none;color:var(--mut2);font-weight:400;font-size:12px}
+      .pb-besteltot .pb-btnum b{display:inline-block;width:66px;text-align:right}
+      .pb-besteltot .pb-btsub{display:flex;align-items:baseline;justify-content:flex-end;gap:3px;font-variant-numeric:tabular-nums}
+      .pb-besteltot .pb-btsub .pb-eur{width:9px;text-align:right;flex:none;font-size:11px}
+      .pb-besteltot .pb-btsub .pb-btsnum{display:inline-block;width:66px;text-align:right}
       #finRightWrap .pb-in{border-bottom-color:color-mix(in srgb,var(--scol) 26%,transparent)}
       #finRightWrap .pb-sec{border-top:1px solid color-mix(in srgb,var(--scol) 28%,transparent)}
       #finRightWrap .pb-sec:first-of-type{border-top:none}
@@ -2442,7 +2462,7 @@
     <div class="appt-head"><h3 id="apptModalTitle">Nieuwe afspraak</h3><div class="appt-who" id="a_whoToggle"></div><button class="modal-close" onclick="closeApptModal()" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
     <input id="a_t" placeholder="Omschrijving" autocomplete="off" />
     <div class="twocol">
-      <div><input type="hidden" id="a_date" /><div class="datefield" id="a_date_f" onclick="openDuePicker(event,'appt')"><span id="a_date_lbl" class="ph">Datum</span><span class="cal-ic"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z"/><path d="M16 3v4"/><path d="M8 3v4"/><path d="M4 11h16"/></svg></span></div></div>
+      <div><input type="hidden" id="a_date" /><input type="hidden" id="a_date_end" /><div class="datefield" id="a_date_f" onclick="openDuePicker(event,'appt')"><span id="a_date_lbl" class="ph">Datum</span><span class="cal-ic"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z"/><path d="M16 3v4"/><path d="M8 3v4"/><path d="M4 11h16"/></svg></span></div></div>
       <div><select id="a_kind"><option value="">Type</option><option value="fysiek">Fysiek</option><option value="bel">Telefonisch</option></select></div>
     </div>
     <div class="twocol">
@@ -3142,11 +3162,15 @@ async function _inspOngesorteerdBord(){
     return (ins&&ins.data)?ins.data.id:null;
   }catch(_){ return null; }
 }
+// De eerste http-link in een tekst. Een appje met een Instagram-reel heeft geen `url`-kolom;
+// de link staat gewoon in de body. Daar zochten we niet, en dus bleef élk inspiratie-item staan.
+function _eersteLink(t){ const m=String(t||'').match(/https?:\/\/[^\s<>"')]+/); return m?m[0]:''; }
+function _bronLink(s){ return (s&&s.url) || _eersteLink(s&&(s.body||s.subject)) || ''; }
 // Heeft deze bron iets te tónen? Zonder beeld of link valt er niets op een bord te zetten.
 function _bronHeeftBeeld(sid){
   const s=(state.inbox||[]).find(x=>String(x.id)===String(sid));
   if(!s) return false;
-  if(s.url) return true;
+  if(_bronLink(s)) return true;
   return (state.documents||[]).some(d=>String(d.source_id)===String(sid) && (d.storage_path||d.link));
 }
 // Geeft het aantal bronnen terug dat daadwerkelijk is weggezet.
@@ -3165,12 +3189,23 @@ async function _pvTriageMany(ids, kind){
       const s=(state.inbox||[]).find(x=>String(x.id)===String(sid)); if(!s)return;
       const att=(state.documents||[]).find(d=>String(d.source_id)===String(sid) && (d.storage_path||d.link));
       const sp=att?att.storage_path:null;
-      const url=s.url||(att?att.link:null)||null;
+      const url=_bronLink(s)||(att?att.link:null)||null;
+      const titel=(s.summary||s.subject||s.body||'Inspiratie').replace(/https?:\/\/\S+/g,'').trim()||'Inspiratie';
       rows.push({ board_id:bordId, type: sp?'image':'link',
-        title:(s.subject||s.body||'Inspiratie').slice(0,120),
+        title:titel.slice(0,120),
         url, storage_path:sp, project_id:s.project_id||null, sort:0 });
     });
-    if(rows.length){ try{ await sb.from('insp_items').insert(rows); }catch(_){} }
+    if(rows.length){
+      try{
+        const ins=await sb.from('insp_items').insert(rows).select('id,url,storage_path');
+        // Bewaar de preview meteen als eigen bestand. Doen we dat niet, dan verloopt de
+        // ondertekende Instagram-url over een paar dagen en staat er een zwart vlak.
+        const nieuwe=(ins&&ins.data)||[];
+        await Promise.all(nieuwe.filter(r=>r.url&&!r.storage_path).map(r=>
+          fetch('/api/inspthumb',{method:'POST',headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({url:r.url,id:r.id})}).catch(()=>{})));
+      }catch(_){}
+    }
     // taken die per ongeluk uit deze bronnen zijn ontstaan horen hier niet
     try{ await sb.from('items').delete().in('source_id',doen).is('project_id',null); }catch(_){}
   }
@@ -3460,6 +3495,9 @@ function renderAgenda(){
     wrap.innerHTML=bar+afsprakenGroupsHTML(); return;
   }
   const bar = isDesk3() ? `<div class="colbar"><span class="cb-title">Agenda</span><div class="cb-spacer"></div><button class="cb-toggle" onclick="setAgendaCol('afspraken')">Afspraken</button><button class="cb-add" onclick="openApptModal()" title="Nieuwe afspraak" aria-label="Nieuwe afspraak">+</button></div>` : '';
+  // Op mobiel bestaat de kolombalk niet en is het tabblad "Afspraken" verborgen: dan was er
+  // geen enkele knop om een afspraak toe te voegen. Hier staat hij wél.
+  const mobAdd = isDesk3() ? '' : `<button class="cal-add" onclick="openApptModal()" title="Nieuwe afspraak" aria-label="Nieuwe afspraak">+</button>`;
   const seg=`<div class="cal-head">
     <div class="seg">
       <button class="${calMode==='lijst'?'active':''}" onclick="setCal('lijst')">Lijst</button>
@@ -3470,6 +3508,7 @@ function renderAgenda(){
     ${calMode!=='lijst'?`<button class="navbtn" onclick="calNav(-1)">‹</button>
       <span class="label" id="calLabel"></span>
       <button class="navbtn" onclick="calNav(1)">›</button>`:''}
+    ${mobAdd}
   </div>`;
   if(calMode==='lijst')wrap.innerHTML=bar+seg+agendaList();
   else if(calMode==='week')wrap.innerHTML=bar+seg+agendaWeek();
@@ -3499,7 +3538,7 @@ function agendaList(){
   }).join('')||'<div class="hint">Geen geplande actiepunten of afspraken — items zonder datum staan bij Taken en In afwachting.</div>';
 }
 // gecombineerde dagrijen: eerst afspraken (op tijd), dan taken
-function dayRows(di){return apptsOn(di).map(apptRow).join('')+itemsOn(di).map(evRow).join('');}
+function dayRows(di){return apptsOn(di).map(a=>apptRow(a,di)).join('')+itemsOn(di).map(evRow).join('');}
 
 function itemsOn(dayIso){return allItems().filter(x=>x.it.status!=='done'&&x.it.due===dayIso);}
 function evRow(x){const di=dueInfo(x.it.due);
@@ -3557,12 +3596,19 @@ function apptKindIcon(kind){
   if(kind==='bel')return `<svg class="kindic" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`;
   return `<svg class="kindic" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`;
 }
-function apptsOn(di){return (state.appointments||[]).filter(a=>a.date===di).sort((a,b)=>(a.start||'~')<(b.start||'~')?-1:1);}
-function apptRow(a){
+// Een meerdaagse afspraak loopt van date t/m endDate en hoort op elke tussenliggende dag.
+function _apptLoopt(a,di){ if(!a.date)return false; if(!a.endDate)return a.date===di; return di>=a.date && di<=a.endDate; }
+function _apptDagen(a){ if(!a.endDate||a.endDate===a.date)return 1; return Math.round((d(a.endDate)-d(a.date))/86400000)+1; }
+function _apptDagNr(a,di){ if(!a.endDate)return 0; return Math.round((d(di)-d(a.date))/86400000)+1; }
+function apptsOn(di){return (state.appointments||[]).filter(a=>_apptLoopt(a,di)).sort((a,b)=>(a.start||'~')<(b.start||'~')?-1:1);}
+function apptRow(a,di){
   const col=apptColor(a);
   const proj=a.projectId?projName(a.projectId):'';
-  const sub=[a.kind==='bel'?'Telefonisch':'Fysiek',a.contact,a.location,proj].filter(Boolean).join(' · ');
-  const time=a.start?`${escapeHtml(a.start)}${a.end?`<span class="apptend">${escapeHtml(a.end)}</span>`:''}`:'<span class="apptnotime">—</span>';
+  const n=_apptDagen(a);
+  const dagLbl = n>1 ? (di?('dag '+_apptDagNr(a,di)+'/'+n):(n+' dagen')) : '';
+  const sub=[a.kind==='bel'?'Telefonisch':'Fysiek',dagLbl,a.contact,a.location,proj].filter(Boolean).join(' · ');
+  const time=(n>1&&!a.start)?'<span class="apptnotime">hele dag</span>'
+           :(a.start?`${escapeHtml(a.start)}${a.end?`<span class="apptend">${escapeHtml(a.end)}</span>`:''}`:'<span class="apptnotime">—</span>');
   return `<div class="evrow appt" data-id="ap-${a.id}" onclick="openApptModal('${a.id}')">
     <div class="apptime">${time}</div>
     <span class="evdot" style="background:${col}"></span>
@@ -3596,7 +3642,7 @@ function openApptModal(id, presetPid){
   const a = id ? (state.appointments||[]).find(x=>x.id===id) : null;
   apptEditId = a?a.id:null;
   document.getElementById('a_t').value=a?a.t:'';
-  setApptDate(a?a.date:iso(TODAY));
+  setApptDate(a?a.date:iso(TODAY), a?a.endDate:null);
   setTimeField('a_start',a?a.start:'');
   setTimeField('a_end',a?a.end:'');
   document.getElementById('a_kind').value=a?a.kind:'';
@@ -3693,7 +3739,7 @@ function _renderProjBoard(){
     const unitVal=pr!=null?String(pr).replace('.',','):'';
     const nameCell=`<div class="pb-ink-name"><a class="pb-tx pb-itxlink" href="${href}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="${ttl}">${esc(_cleanInkName(x.text))}</a></div>`;
     const priceCell=(qty>1)
-      ? `<div class="pb-pcell"><div class="pb-ptot"><span class="pb-eur">€</span><span class="pb-tnum">${pr!=null?fmtEur(pr*qty):'—'}</span></div><div class="pb-punit">${qty} × €<input class="pb-price pb-punitin" type="text" inputmode="decimal" value="${unitVal}" placeholder="—" onclick="event.stopPropagation()" onchange="pbSetPrice('${x.id}',this.value)" title="Prijs per stuk"></div></div>`
+      ? `<div class="pb-pcell"><div class="pb-ptot"><span class="pb-eur">€</span><span class="pb-tnum">${pr!=null?fmtEur(pr*qty):'—'}</span></div><div class="pb-punit"><span class="pb-qty">${qty} ×</span><span class="pb-eur">€</span><input class="pb-price pb-punitin" type="text" inputmode="decimal" value="${unitVal}" placeholder="—" onclick="event.stopPropagation()" onchange="pbSetPrice('${x.id}',this.value)" title="Prijs per stuk"></div></div>`
       : `<div class="pb-pcell"><div class="pb-ptot"><span class="pb-eur">€</span><input class="pb-price" type="text" inputmode="decimal" value="${unitVal}" placeholder="—" onclick="event.stopPropagation()" onchange="pbSetPrice('${x.id}',this.value)" title="Prijs"></div></div>`;
     return `<div class="pb-row pb-ink" data-tid="${x.id}"${x.image?` data-img="${escapeHtml(x.image)}"`:''}><button class="pb-chk" onclick="pbInkOrdered('${x.id}')" title="${x.status==='besteld'?'Terugzetten naar te bestellen':'Markeer als besteld'}">${_pbChk(x.status==='besteld')}</button>${nameCell}${priceCell}<button class="pb-move" onclick="event.preventDefault();event.stopPropagation();pbMoveOpen('one','${x.id}')" title="Verplaats naar ander project/klant">${_tIc('<path d="M17 3l4 4l-4 4"/><path d="M21 7h-13"/><path d="M7 21l-4 -4l4 -4"/><path d="M3 17h13"/>',15,1.4)}</button><button class="pb-del" onclick="event.preventDefault();pbDel('${x.id}')" title="Verwijderen">×</button></div>`; };
   const doneInkRow=(x)=>`<div class="pb-row pb-donerow"><button class="pb-chk" onclick="pbInkCheck('${x.id}',false)" title="Terugzetten">${_pbChk(true)}</button><span class="pb-tx done">${esc(x.text||'')}</span></div>`;
@@ -3722,7 +3768,8 @@ function _renderProjBoard(){
   const secInk=`<div class="pb-sec"><div class="pb-h"><span>Inkopen</span><span class="pb-hbtns"><button class="pb-ai" onclick="pbInkPaste()" title="Plak een winkelwagen of lijst — AI maakt er een bestellijst van">${_tIc(_TABCHAN.asterisk,15,1.7)}<span>lijst</span></button><button class="pb-ai" onclick="pbInkLink()" title="Toevoegen via productlink">+ link</button></span></div>${inkopen.map(inkRow).join('')}<div class="pb-add"><input class="pb-in" data-kind="inkoop" placeholder="+ inkoop toevoegen…" onkeydown="pbAddKey(event,'inkoop')"></div><div class="pb-ink-foot"><span class="pb-tot">Inkoop <b>€${fmtEur(inkTotal)}</b></span><span class="pb-budwrap">Projectprijs excl. €<input class="pb-bud" type="text" inputmode="decimal" value="${omzetEx!=null?String(omzetEx).replace('.',','):''}" placeholder="—" onchange="pbSetProjectprijs(this.value)"></span>${omzetEx!=null?`<span class="pb-rest">incl. €${fmtEur(omzetIn)}</span><span class="pb-rest ${marge<0?'over':''}">marge €${fmtEur(marge)}</span>`:''}<span class="pb-budwrap">Klantbudget €<input class="pb-bud" type="text" inputmode="decimal" value="${budget!=null?String(budget).replace('.',','):''}" placeholder="—" onchange="pbSetBudget(this.value)"></span></div></div>`;
   const secAppt=`<div class="pb-sec"><div class="pb-h">Afspraken <button class="pb-hadd" onclick="openApptModal(null,'${_pbPid}')" title="Afspraak toevoegen">+</button></div>${appts.length?appts.map(apptRow).join(''):'<div class="pb-empty">Nog geen afspraken.</div>'}</div>`;
   const secNotes=`<div class="pb-sec"><div class="pb-h">Notities</div><textarea class="pb-notes" placeholder="Vrije notities voor dit project…" onblur="pbSaveNotes(this.value)">${esc(p.notes||'')}</textarea></div>`;
-  const secCmt=`<div class="pb-sec"><div class="pb-h">Opmerkingen</div>${typeof _cmtBtnHTML==='function'?_cmtBtnHTML('project',_pbPid):''}</div>`;
+  // "Opmerkingen" is vervallen: Notities doet hetzelfde en stond er al.
+  const secOms=_omsSectie(p);
   const secFiles=`<div class="pb-sec"><div class="pb-h">Bestanden <button class="pb-hadd" onclick="dropboxPick('project','${_pbPid}')" title="Bestand koppelen">+</button></div>${_bestandenPerSoort(_filesFor('project',_pbPid), col, !_geenPrive(p.client))}</div>`;
   // Bestellijst — dezelfde inkoop-items als 'Inkopen' in Financiën, met masterlink naar de hele verlanglijst
   const _inkSrcCnt={}; inkopen.forEach(x=>{ if(x.source_id)_inkSrcCnt[x.source_id]=(_inkSrcCnt[x.source_id]||0)+1; });
@@ -3735,11 +3782,11 @@ function _renderProjBoard(){
   const _bestNietBesteld=inkopenOpen.filter(x=>x.status!=='besteld');
   const _bestBesteld=inkopenOpen.filter(x=>x.status==='besteld');
   const _openTot=inkopenOpen.reduce((s,x)=>s+((x.price!=null&&x.price!=='')?Number(x.price):0)*(x.qty||1),0);
-  const secBestel=`<div class="pb-sec"><div class="pb-h"><span>Bestellijst</span><span class="pb-hbtns">${inkopen.length?`<button class="pb-ai" onclick="pbOrderAll()" title="Zet de hele lijst in één keer in je Amazon-mandje">${_tIc('<path d="M6 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M17 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M17 17h-11v-14h-2"/><path d="M6 5l14 1l-1 7h-13"/>',16,1.7)}</button>`:''}<button class="pb-ai" onclick="pbInkPaste()" title="Plak een verlanglijst of winkelwagen — AI maakt er regels van">${_tIc(_TABCHAN.asterisk,15,1.7)}<span>lijst</span></button>${inkopen.length?`<button class="pb-ai" onclick="pbMoveOpen('all')" title="Hele bestellijst naar een ander project/klant verplaatsen">${_tIc('<path d="M17 3l4 4l-4 4"/><path d="M21 7h-13"/><path d="M7 21l-4 -4l4 -4"/><path d="M3 17h13"/>',15,1.5)}</button><button class="pb-listdel" onclick="pbDelBestel()" title="Hele bestellijst verwijderen"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/></svg></button>`:''}</span></div>${_masterLink}${_bestNietBesteld.length?_bestNietBesteld.map(inkRow).join(''):(_bestBesteld.length?'':'<div class="pb-empty">Nog geen bestellingen.</div>')}<div class="pb-add"><input class="pb-in" data-kind="inkoop" placeholder="+ artikel toevoegen…" onkeydown="pbAddKey(event,'inkoop')"></div>${inkopenOpen.length?`<div class="pb-besteltot"><span class="pb-btlbl">Totaal</span><span class="pb-btval"><b>€${fmtEur(_openTot)}</b><span class="pb-btsub">excl. €${fmtEur(_openTot/(1+btwPct/100))}</span></span></div>`:''}${_bestBesteld.length?`<div class="pb-besteld-sec"><div class="pb-h">Besteld <span class="pb-donecnt">${_bestBesteld.length}</span></div>${_bestBesteld.map(inkRow).join('')}</div>`:''}</div>`;
-  const _body=(_pbMode==='financien')?secBestel:(secFase+secWait+secTaken+secBestel+secDone+secAppt+secFiles+secPrijs+secNotes+secCmt);
+  const secBestel=`<div class="pb-sec"><div class="pb-h"><span>Bestellijst</span><span class="pb-hbtns">${inkopen.length?`<button class="pb-ai" onclick="pbOrderAll()" title="Zet de hele lijst in één keer in je Amazon-mandje">${_tIc('<path d="M6 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M17 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M17 17h-11v-14h-2"/><path d="M6 5l14 1l-1 7h-13"/>',16,1.7)}</button>`:''}<button class="pb-ai" onclick="pbInkPaste()" title="Plak een verlanglijst of winkelwagen — AI maakt er regels van">${_tIc(_TABCHAN.asterisk,15,1.7)}<span>lijst</span></button>${inkopen.length?`<button class="pb-ai" onclick="pbMoveOpen('all')" title="Hele bestellijst naar een ander project/klant verplaatsen">${_tIc('<path d="M17 3l4 4l-4 4"/><path d="M21 7h-13"/><path d="M7 21l-4 -4l4 -4"/><path d="M3 17h13"/>',15,1.5)}</button><button class="pb-listdel" onclick="pbDelBestel()" title="Hele bestellijst verwijderen"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/></svg></button>`:''}</span></div>${_masterLink}${_bestNietBesteld.length?_bestNietBesteld.map(inkRow).join(''):(_bestBesteld.length?'':'<div class="pb-empty">Nog geen bestellingen.</div>')}<div class="pb-add"><input class="pb-in" data-kind="inkoop" placeholder="+ artikel toevoegen…" onkeydown="pbAddKey(event,'inkoop')"></div>${inkopenOpen.length?`<div class="pb-besteltot"><span class="pb-btlbl">Totaal</span><span class="pb-btval"><span class="pb-btnum"><span class="pb-eur">€</span><b>${fmtEur(_openTot)}</b></span><span class="pb-btsub">excl. <span class="pb-eur">€</span><span class="pb-btsnum">${fmtEur(_openTot/(1+btwPct/100))}</span></span></span></div>`:''}${_bestBesteld.length?`<div class="pb-besteld-sec"><div class="pb-h">Besteld <span class="pb-donecnt">${_bestBesteld.length}</span></div>${_bestBesteld.map(inkRow).join('')}</div>`:''}</div>`;
+  const _body=(_pbMode==='financien')?secBestel:(secOms+secFase+secWait+secTaken+secBestel+secDone+secAppt+secFiles+secPrijs+secNotes);
   const _head=`<div class="pb-head"><span class="kbadge" style="background:${col}">${esc(initial)}</span><div class="pb-title"><b>${esc(p.client||'')}</b>${p.project?'<span> · '+esc(p.project)+'</span>':''}${_pbMode==='financien'?'<span style="color:'+col+'"> · inkoop</span>':''}</div></div>`;
   if(_pbTarget==='finmid'||_pbTarget==='finright'){ const el=document.getElementById(_pbTarget==='finright'?'finRightWrap':'finMidWrap'); const _cls=(_pbTarget==='finright')?'pb-inline pb-board-inline':'pb-inline'; const _h=(_pbTarget==='finright')?'':_head; if(el)el.innerHTML=`<div class="${_cls}" style="--scol:${col}">${_h}${_body}</div>`; return; }
-  if(_pbTarget==='beheer'){ const el=document.getElementById('beheerBoardWrap'); if(el)el.innerHTML=`<div class="pb-inline pb-board-inline" style="--scol:${col}"><div class="pb-grid"><div class="pb-colL">${secFase}${secWait}${secTaken}${secBestel}${secDone}</div><div class="pb-colR">${secAppt}${secFiles}${secPrijs}${secNotes}${secCmt}</div></div></div>`; return; }
+  if(_pbTarget==='beheer'){ const el=document.getElementById('beheerBoardWrap'); if(el)el.innerHTML=`<div class="pb-inline pb-board-inline" style="--scol:${col}"><div class="pb-grid"><div class="pb-colL">${secOms}${secFase}${secWait}${secTaken}${secBestel}${secDone}</div><div class="pb-colR">${secAppt}${secFiles}${secPrijs}${secNotes}</div></div></div>`; return; }
   if(!ov)return;
   ov.innerHTML=`<div class="modal pb-modal" style="--scol:${col};width:100%;max-width:none">
     <button class="modal-close" onclick="closeProjectBoard()" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
@@ -3862,6 +3909,57 @@ function _pbBalVlag(bal, klant){
   }
   return '<span class="pb-vlag pb-vlag-onder">Begeister</span>';
 }
+/* ---------------------------------------------------------------------------
+   PROJECTOMSCHRIJVING — één alinea, geen taken. Staat bovenaan de linkerkolom,
+   is met het pijltje in/uit te klappen en gewoon te typen. De ✦-knop laat AI
+   de omschrijving uit een projectdocument (briefing, pitch, offerte) halen.
+   --------------------------------------------------------------------------- */
+var _pbOmsDicht=new Set();
+function _omsOpen(p){ return !_pbOmsDicht.has(String(p.id)); }
+function pbToggleOms(){ const k=String(_pbPid); if(_pbOmsDicht.has(k))_pbOmsDicht.delete(k); else _pbOmsDicht.add(k); _renderProjBoard(); }
+function _omsSectie(p){
+  const open=_omsOpen(p), oms=(p.description||'').trim();
+  const chev='<svg class="pb-omschev'+(open?' open':'')+'" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6l6 -6"/></svg>';
+  const knop='<button class="pb-ai" onclick="event.stopPropagation();pbAiOms(this)" title="Haal een korte omschrijving uit een projectdocument">'+_tIc(_TABCHAN.asterisk,15,1.7)+'</button>';
+  const kop='<div class="pb-h pb-omsh" onclick="pbToggleOms()"><span>Omschrijving</span><span class="pb-hbtns">'+knop+chev+'</span></div>';
+  if(!open) return '<div class="pb-sec pb-omssec">'+kop+'</div>';
+  const ta='<textarea class="pb-notes pb-oms" placeholder="Waar gaat dit project over? Eén alinea." onblur="pbSaveOms(this.value)">'+escapeHtml(oms)+'</textarea>';
+  return '<div class="pb-sec pb-omssec">'+kop+ta+'</div>';
+}
+async function pbSaveOms(v){
+  const p=projById(_pbPid); if(!p)return;
+  const t=String(v||'').trim(); if(t===(p.description||'').trim())return;
+  p.description=t;
+  try{ await sb.from('projects').update({description:t||null}).eq('id',_pbPid); }catch(_){}
+}
+// Welk bestand beschrijft dit project het best? Een briefing/pitch/brief wint; anders het
+// eerste leesbare document. Foto's slaan we over — daar staat geen omschrijving in.
+function _omsBron(pid){
+  const lijst=(_filesFor('project',pid)||[]).filter(f=>/\.(pdf|docx?|txt|md|rtf)$/i.test(f.name||''));
+  if(!lijst.length) return null;
+  const goed=lijst.find(f=>/(briefing|brief|pitch|voorstel|plan|concept|offerte)/i.test(f.name||''));
+  return goed||lijst[0];
+}
+async function pbAiOms(btn){
+  const p=projById(_pbPid); if(!p)return;
+  const f=_omsBron(_pbPid);
+  const sec=btn&&btn.closest('.pb-omssec');
+  const zet=(m)=>{ const el=sec&&sec.querySelector('.pb-omsmsg'); if(el)el.textContent=m; else if(sec)sec.insertAdjacentHTML('beforeend','<div class="pb-omsmsg">'+escapeHtml(m)+'</div>'); };
+  if(!f){ zet('Geen leesbaar document bij dit project — sleep er een briefing of pitch in.'); return; }
+  if(btn)btn.disabled=true; zet('Lezen uit '+(f.name||'document')+'…');
+  try{
+    const pl=await _aiLeesPayload(f);
+    const r=await fetch('/api/readfile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({mode:'text'},pl))});
+    const d=await r.json(); if(d&&d.error) throw new Error(d.error);
+    const sum=String((d&&d.summary)||'').trim();
+    if(!sum) throw new Error('geen omschrijving gevonden');
+    p.description=sum;
+    await sb.from('projects').update({description:sum}).eq('id',_pbPid);
+    _pbOmsDicht.delete(String(_pbPid));
+    _renderProjBoard();
+    if(typeof loadUsage==='function')loadUsage();
+  }catch(e){ if(btn)btn.disabled=false; zet('Lukte niet: '+String(e&&e.message||e)); }
+}
 // Voortgang van het project. Klik dezelfde fase nogmaals om een stap terug te gaan.
 async function pbSetPhase(k){
   const p=projById(_pbPid); if(!p)return;
@@ -3871,6 +3969,9 @@ async function pbSetPhase(k){
   p.phase=nieuw;
   try{ await sb.from('projects').update({phase:nieuw}).eq('id',_pbPid); }catch(_){}
   _renderProjBoard();
+  // De Financiën-pagina toont dezelfde balk maar rendert via een eigen functie.
+  const fmw=document.getElementById('finMidWrap');
+  if(fmw && fmw.innerHTML.trim() && typeof renderFinancien==='function') renderFinancien();
 }
 // Marge-gezondheid (geen groen — verlies=rood, dun=amber, gezond=klantkleur/licht)
 function _margeHealth(om,marge){ if(om==null||om<=0||marge==null)return null; const pct=Math.round(marge/om*100);
@@ -4033,7 +4134,16 @@ async function renderFinancien(){
       else if(st==='gefactureerd'){ openLbl='Openstaand'+(_dt?' · sinds '+_dt:''); openVal=_E+fmtEur(omIncl); openCls='open'; }
       else { openLbl='Nog te factureren'; openVal=_E+fmtEur(omIncl); openCls='todo'; }
     }
+    // Dezelfde fasebalk als op de Klanten-pagina — dit is hetzelfde project, dus dezelfde voortgang.
+    const _fb=_pbBal(p), _fvlag=_pbBalVlag(_fb,p.client);
+    const _ffi=_DOS_PHASES.findIndex(x=>x.k===(p.phase||'briefing'));
+    const _fbTitel = _fb.staat==='wacht' ? ('De bal ligt bij '+_fb.wie+(_fb.dagen!=null?' · al '+_fb.dagen+' dag'+(_fb.dagen===1?'':'en'):''))
+                   : _fb.staat==='ons' ? ('Wij zijn aan zet: '+_fb.wie+' · '+_fb.aantal+' open') : 'Niets openstaand';
+    const finFase=_geenTraject(p.client) ? '' : (`<div class="pb-sec"><div class="pb-h">Voortgang</div><div class="pb-fase pb-fase-${_fb.staat}">`
+      + _DOS_PHASES.map((f,i)=>`<button class="pb-fasestap${i<=_ffi?' done':''}${i===_ffi?' nu':''}" style="--fcol:${col}" onclick="pbSetPhase('${f.k}')" title="${escapeHtml(i===_ffi?_fbTitel:f.l)}">${i===_ffi?_fvlag:''}<span class="pb-fasedot"></span><span class="pb-faselbl">${f.l}</span></button>`).join('')
+      + `</div></div>`);
     if(fmw) fmw.innerHTML=`<div class="pb-inline pb-board-inline finB-flat" style="--scol:${col};--ccol:${col}">
+      ${finFase}
       <div class="pb-sec finB-ovsec"><div class="finB-ov">${_finDonut(om!=null?om:0,inkEx,col)}<div class="finB-ovstats">
         <div class="pb-finline"><span>Inkomsten</span><b>${om!=null?'€'+fmtEur(om):'—'}</b></div>
         <div class="pb-finline"><span>Kosten</span><b>€${fmtEur(inkEx)}</b></div>
@@ -4042,7 +4152,7 @@ async function renderFinancien(){
       <div class="pb-sec"><div class="pb-h">Offerte &amp; Factuur</div>
         <div class="finB-pills">${pills}</div>
         ${om!=null?`<div class="pb-finline finB-openrow ${openCls}"><span>${openLbl}</span><b>${openVal}</b></div>`:'<div class="finB-openhint">Vul een projectprijs in om facturatie te volgen.</div>'}
-        <div class="finB-docs">${_intakeDocsFor(_pbPid).map(_intakeDocRow).join('')}${(_filesFor('project',_pbPid)||[]).map(_fileRow).join('')}<div class="finB-doclinks"><button class="finB-doctext" onclick="dropboxPick('project','${_pbPid}')">+ offerte toevoegen</button><button class="finB-doctext" onclick="dropboxPick('project','${_pbPid}')">+ factuur toevoegen</button></div></div>
+        <div class="finB-docs">${_intakeDocsFor(_pbPid).map(_intakeDocRow).join('')}${_financieleDocs(_pbPid).map(_fileRow).join('')||'<div class="pb-empty">Nog geen offertes, bonnen of facturen. Sleep ze de app in.</div>'}</div>
       </div>
       <div class="pb-sec"><div class="pb-h">Prijs</div>
         <div class="finB-prow"><span class="finB-plabel">Projectprijs</span><span class="finB-pval">€<input class="finB-priceinput" type="text" inputmode="decimal" value="${om!=null?String(om).replace('.',','):''}" placeholder="—" onchange="pbSetProjectprijs(this.value)"></span></div>
@@ -4245,6 +4355,7 @@ async function saveAppt(){
   const rec={
     title:document.getElementById('a_t').value.trim(),
     date:document.getElementById('a_date').value||null,
+    end_date:document.getElementById('a_date_end').value||null,
     start_time:document.getElementById('a_start').value||null,
     end_time:document.getElementById('a_end').value||null,
     kind:document.getElementById('a_kind').value||'fysiek',
@@ -4272,7 +4383,16 @@ async function deleteAppt(){
 }
 // eigen tijdkiezer (donker, geen iOS-wiel)
 function setTimeField(id,val){const h=document.getElementById(id);if(h)h.value=val||'';const lbl=document.getElementById(id+'_lbl');if(lbl){const ph=id==='a_end'?'Eindtijd':'Begintijd';lbl.textContent=val||ph;lbl.classList.toggle('ph',!val);}}
-function setApptDate(val){const h=document.getElementById('a_date');if(h)h.value=val||'';const lbl=document.getElementById('a_date_lbl');if(lbl){lbl.textContent=val?d(val).toLocaleDateString('nl-NL',{weekday:'short',day:'numeric',month:'long',year:'numeric'}):'Datum';lbl.classList.toggle('ph',!val);}}
+// Eén veld, twee datums. Een afspraak zonder einddatum is gewoon eendaags.
+function setApptDate(val,eind){
+  const h=document.getElementById('a_date'); if(h)h.value=val||'';
+  const he=document.getElementById('a_date_end'); if(he)he.value=(eind&&eind!==val)?eind:'';
+  const lbl=document.getElementById('a_date_lbl'); if(!lbl)return;
+  const lang=(x)=>d(x).toLocaleDateString('nl-NL',{weekday:'short',day:'numeric',month:'long',year:'numeric'});
+  const kort=(x)=>d(x).toLocaleDateString('nl-NL',{day:'numeric',month:'short'});
+  lbl.textContent = !val ? 'Datum' : (he&&he.value ? kort(val)+' t/m '+lang(he.value) : lang(val));
+  lbl.classList.toggle('ph',!val);
+}
 let _timeTarget=null,_tH='',_tM='';
 function openTimePop(target){
   _timeTarget=target;
@@ -4586,9 +4706,10 @@ async function fmAiRead(id){
   box.innerHTML=`<div class="fvai-load"><img class="think-anim" src="/thinking.webp" alt=""><div class="fvai-status" id="fvaiStatus">${steps[0]}</div></div>`;
   const stx=document.getElementById('fvaiStatus'); if(_fvAiTimer)clearInterval(_fvAiTimer); _fvAiTimer=setInterval(()=>{ si=(si+1)%steps.length; if(stx)stx.textContent=steps[si]; },1500);
   try{
-    const r=await fetch('/api/readfile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({link:f.link,name:f.name,mode:'text'})});
+    const _pl=await _aiLeesPayload(f);
+    const r=await fetch('/api/readfile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({mode:'text'},_pl))});
     const d=await r.json(); if(d&&d.error) throw new Error(d.error);
-    const data={ summary:(d&&d.summary)||'', tasks:(d&&d.tasks)||[], appointments:(d&&d.appointments)||[], money:(d&&d.money)||[], thin:!!(d&&d.thin), canVision:!!(d&&d.canVision), visionDone:false, projectId:(typeof _fileProject==='function'&&_fileProject(f))?_fileProject(f).id:null, reRead:{link:f.link,name:f.name}, boxId:'fmAiResults', key };
+    const data={ summary:(d&&d.summary)||'', tasks:(d&&d.tasks)||[], appointments:(d&&d.appointments)||[], money:(d&&d.money)||[], thin:!!(d&&d.thin), canVision:!!(d&&d.canVision), visionDone:false, projectId:(typeof _fileProject==='function'&&_fileProject(f))?_fileProject(f).id:null, reRead:_pl, boxId:'fmAiResults', key };
     _fvAiData[key]=data;
     if(data.summary){ f.summary=data.summary; await _fileUpdate(f,{summary:data.summary}); }
     if(_fvAiTimer){clearInterval(_fvAiTimer);_fvAiTimer=null;}
@@ -4606,21 +4727,30 @@ async function kfileAiRead(id){
   if(typeof _isReadableForAI==='function' && !_isReadableForAI(f.name)){ box.innerHTML='<span class="fvai-status">Dit bestandstype kan ik nog niet lezen (pdf en tekst wel).</span>'; return; }
   box.innerHTML='<div class="fvai-load"><img class="think-anim" src="/thinking.webp" alt=""><div class="fvai-status">Lezen…</div></div>';
   try{
-    const r=await fetch('/api/readfile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({link:f.link,name:f.name,mode:'text'})});
+    const _pl=await _aiLeesPayload(f);
+    const r=await fetch('/api/readfile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({mode:'text'},_pl))});
     const d=await r.json(); if(d&&d.error) throw new Error(d.error);
-    const data={ summary:(d&&d.summary)||'', tasks:(d&&d.tasks)||[], appointments:(d&&d.appointments)||[], money:(d&&d.money)||[], thin:!!(d&&d.thin), canVision:!!(d&&d.canVision), visionDone:false, projectId:(typeof _fileProject==='function'&&_fileProject(f))?_fileProject(f).id:null, reRead:{link:f.link,name:f.name}, boxId:'fsum_'+id, key };
+    const data={ summary:(d&&d.summary)||'', tasks:(d&&d.tasks)||[], appointments:(d&&d.appointments)||[], money:(d&&d.money)||[], thin:!!(d&&d.thin), canVision:!!(d&&d.canVision), visionDone:false, projectId:(typeof _fileProject==='function'&&_fileProject(f))?_fileProject(f).id:null, reRead:_pl, boxId:'fsum_'+id, key };
     _fvAiData[key]=data;
     if(data.summary){ f.summary=data.summary; await _fileUpdate(f,{summary:data.summary}); }
     box.innerHTML=_fvAiResultHTML(null,data);
     if(typeof loadUsage==='function')loadUsage();
   }catch(e){ box.innerHTML=`<div class="fvai-err">Lezen lukte niet.<br><span style="opacity:.7;font-size:12px">${escapeHtml(String(e&&e.message||e))}</span><br><button class="fv-btn" onclick="kfileAiRead('${id}')">Opnieuw</button></div>`; }
 }
+// Wat sturen we naar /api/readfile voor een bestand? Niet f.link — dat is leeg bij een
+// mailbijlage; die staat in Supabase Storage. _bestandUrl() weet de weg. Relatieve
+// proxy-url's maken we absoluut, want de server haalt het bestand zelf op.
+async function _aiLeesPayload(f){
+  let u=await _bestandUrl(f);
+  if(u && u.charAt(0)==='/') u=location.origin+u;
+  return { link:u||'', name:f.name||'bestand' };
+}
 // ✦ AI-inzicht als POPUP — één paneel, overal hetzelfde (bestand, bron, klant-bord, viewer).
 function closeAiInsight(){ const ov=document.getElementById('aiInsightOverlay'); if(ov)ov.classList.remove('open'); if(_fvAiTimer){clearInterval(_fvAiTimer);_fvAiTimer=null;} }
 async function openAiInsight(kind, ref){
   const ov=document.getElementById('aiInsightOverlay'), body=document.getElementById('aiInsightBody'), title=document.getElementById('aiModalTitle'); if(!ov||!body)return;
   let name='', key='', payload=null, projectId=null, reRead=null, readable=true;
-  if(kind==='file'){ const f=(state.files||[]).find(x=>x.id===ref); if(!f)return; name=f.name||'bestand'; key='file:'+f.id; payload={link:f.link,name:f.name}; reRead={link:f.link,name:f.name}; projectId=(typeof _fileProject==='function'&&_fileProject(f))?_fileProject(f).id:null; readable=(typeof _isReadableForAI!=='function')||_isReadableForAI(f.name); }
+  if(kind==='file'){ const f=(state.files||[]).find(x=>x.id===ref); if(!f)return; name=f.name||'bestand'; key='file:'+f.id; payload=await _aiLeesPayload(f); reRead=payload; projectId=(typeof _fileProject==='function'&&_fileProject(f))?_fileProject(f).id:null; readable=(typeof _isReadableForAI!=='function')||_isReadableForAI(f.name); }
   else if(kind==='bron'){ const s=(state.sources||[]).find(x=>x.id===ref); if(!s)return; name=(typeof _srcTitle==='function')?_srcTitle(s):'bron'; key='bron:'+s.id; const raw=s.full||s.text||s.summary||''; payload={text:raw,name}; projectId=s.proj||null; }
   else return;
   if(title)title.textContent=name;
@@ -5112,7 +5242,10 @@ function _docKind(s){
 function _intakeDocsFor(pid){
   const out=[];
   (state.sources||[]).forEach(s=>{ if(String(s.proj)!==String(pid))return; const k=_docKind(s); if(!k)return;
-    (s.attachFull||[]).forEach((a,i)=>{ if(!a.storage_path)return; out.push({sid:s.id,idx:i,name:a.filename||'bijlage',kind:k}); }); });
+    (s.attachFull||[]).forEach((a,i)=>{ if(!a.storage_path)return;
+      // Een offerte-mail bevat ook foto's. Die horen bij Bestanden, niet bij Financiën.
+      if(!_FIN_DOC_EXT.test(String(a.filename||'').toLowerCase()))return;
+      out.push({sid:s.id,idx:i,name:a.filename||'bijlage',kind:k}); }); });
   return out;
 }
 function _intakeDocRow(d){
@@ -5124,7 +5257,6 @@ function _fileRow(f){
   const ic=_fileGlyph(f.name||'');
   return `<div class="kfile"><div class="kfile-main" onclick="event.stopPropagation();openFileViewer('${f.id}')" title="Voorvertonen"><span class="kfile-ic">${ic}</span><span class="kfile-name">${escapeHtml(f.name||'bestand')}</span></div>`
     +`<button class="kfile-ai" title="AI leest dit bestand — samenvatting, taken, afspraken & bedrag" onclick="event.stopPropagation();openAiInsight('file','${f.id}')">${_tIc(_TABCHAN.asterisk,16,1.7)}</button>`
-    +(f.summary?`<button class="kfile-ai kfile-collapse" title="Samenvatting inklappen" onclick="event.stopPropagation();var s=document.getElementById('fsum_${f.id}');if(s)s.classList.remove('on')">${_tIc('<path d="M6 9l6 6l6 -6"/>',16,1.7)}</button>`:'')
     +`<button class="kfile-del" title="Bestand verwijderen" onclick="event.stopPropagation();deleteFile('${f.id}')">${_tIc('<path d="M18 6l-12 12"/><path d="M6 6l12 12"/>',16,1.7)}</button>`
     +`<div class="kfile-sum" id="fsum_${f.id}">${escapeHtml(f.summary||'')}</div></div>`;
 }
@@ -5149,14 +5281,20 @@ function _bestandSoortMap(naam){
   return 'Overig';
 }
 // In welke financiënmap hoort dit bestand? De opgeslagen categorie wint; anders de naam.
+// Een foto komt hier ALLEEN in als de categorie het expliciet zegt. Raden op de bestandsnaam
+// deed te veel schermafbeeldingen in Inkoop belanden — en "bon" zit ook in "carbon" en
+// "abonnement", "order" in "recorder". Vandaar de woordgrenzen én de extensie-eis.
+const _FIN_DOC_EXT=/\.(pdf|docx?|xlsx?|xlsm|csv|numbers|pages|rtf|txt)$/;
 function _finMapVan(f){
   const cat=String((f&&f.icon)||'').trim();
   const hit=_FIN_MAPPEN.find(m=>m.toLowerCase()===cat.toLowerCase());
   if(hit) return hit;
   const n=String((f&&f.name)||'').toLowerCase();
-  if(/(offerte|quote|prijsopgave)/.test(n)) return 'Offertes';
-  if(/(factuur|invoice|rekening)/.test(n)) return 'Facturen';
-  if(/(bon|kassabon|bestelbevestiging|inkoop|receipt|order)/.test(n)) return 'Inkoop';
+  if(!_FIN_DOC_EXT.test(n)) return null;
+  const w=(re)=>new RegExp('(^|[^a-z])(' + re + ')([^a-z]|$)').test(n);
+  if(w('offerte|offertes|quote|prijsopgave')) return 'Offertes';
+  if(w('factuur|facturen|invoice|rekening')) return 'Facturen';
+  if(w('bon|bonnen|bonnetje|kassabon|bestelbevestiging|inkoop|receipt|order')) return 'Inkoop';
   return null;
 }
 
@@ -5171,6 +5309,11 @@ function _pbMapKop(naam, aantal, dicht, extraKlasse){
     + '<span class="pb-mapcnt">'+aantal+'</span></button>';
 }
 
+// De sectie "Offerte & Factuur" toonde ELK projectbestand — sinds mailbijlagen meetellen
+// dus ook schermafbeeldingen. Alleen wat in een financiënmap hoort.
+function _financieleDocs(pid){
+  return (_filesFor('project',pid)||[]).filter(f=>!!_finMapVan(f));
+}
 function _bestandenPerSoort(lijst, kleur, toonFinancien){
   lijst=lijst||[];
   let h='';
@@ -5347,7 +5490,8 @@ function fvOpenDropbox(){ const f=_fvList[_fvIdx]; if(f)window.open(f.link,'_bla
 let _fvAiTimer=null,_fvAiBullets=[],_fvAiData={},_aiCtx=null;
 function _fvAiReset(){ if(_fvAiTimer){clearInterval(_fvAiTimer);_fvAiTimer=null;} const fv=document.getElementById('fileViewer'); if(fv)fv.classList.remove('fv-split'); const b=document.getElementById('fv_results'); if(b)b.innerHTML=''; }
 async function _fvAiFetch(f,mode){
-  const r=await fetch('/api/readfile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({link:f.link,name:f.name,mode:mode||'text'})});
+  const pl=await _aiLeesPayload(f);
+  const r=await fetch('/api/readfile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({mode:mode||'text'},pl))});
   return await r.json();
 }
 async function fvAiRead(){
@@ -5364,7 +5508,7 @@ async function fvAiRead(){
     if(typeof _isReadableForAI==='function' && !_isReadableForAI(f.name)) throw new Error('Dit bestandstype kan ik nog niet lezen.');
     const d=await _fvAiFetch(f,'text');
     if(d&&d.error) throw new Error(d.error);
-    const data={ summary:(d&&d.summary)||'', tasks:(d&&d.tasks)||[], appointments:(d&&d.appointments)||[], money:(d&&d.money)||[], thin:!!(d&&d.thin), canVision:!!(d&&d.canVision), visionDone:false, projectId:(typeof _fileProject==='function'&&_fileProject(f))?_fileProject(f).id:null, reRead:{link:f.link,name:f.name}, boxId:'fv_results', key:f.id };
+    const data={ summary:(d&&d.summary)||'', tasks:(d&&d.tasks)||[], appointments:(d&&d.appointments)||[], money:(d&&d.money)||[], thin:!!(d&&d.thin), canVision:!!(d&&d.canVision), visionDone:false, projectId:(typeof _fileProject==='function'&&_fileProject(f))?_fileProject(f).id:null, reRead:await _aiLeesPayload(f), boxId:'fv_results', key:f.id };
     _fvAiData[f.id]=data;
     if(data.summary){ f.summary=data.summary; await _fileUpdate(f,{summary:data.summary}); }
     if(_fvAiTimer){clearInterval(_fvAiTimer);_fvAiTimer=null;}
@@ -6494,27 +6638,46 @@ function _cmtPick(name){ const inp=document.getElementById('cmtInput'); if(!inp)
 function _cmtMenuHide(){ const menu=document.getElementById('cmtMenu'); if(menu){ menu.classList.remove('open'); menu.innerHTML=''; } }
 
 // eigen datumkiezer
+// Voor een afspraak is dit ook een périodekiezer: eerste klik = begindag, tweede klik = einddag.
+// Eén dag? Klik dezelfde dag nog eens, of druk op Klaar. Voor taken blijft het één klik, één datum.
 function _dueCur(){return _dueTarget==='appt'?(document.getElementById('a_date').value||null):mDue;}
+function _dueEnd(){const e=document.getElementById('a_date_end');return (_dueTarget==='appt'&&e)?(e.value||null):null;}
 function _dueAnchor(){return _dueTarget==='appt'?'a_date_f':'m_due_field';}
-function openDuePicker(e,target){e.stopPropagation();_dueTarget=target||'task';duePickerRef=_dueCur()||iso(TODAY);renderDuePicker();
+var _dueBezig=false;   // true zodra er een begindag ligt en we op de einddag wachten
+function openDuePicker(e,target){e.stopPropagation();_dueTarget=target||'task';_dueBezig=false;duePickerRef=_dueCur()||iso(TODAY);renderDuePicker();
   const el=document.getElementById('duepop');el.classList.add('open');
   const fr=document.getElementById(_dueAnchor()).getBoundingClientRect();
-  let top=fr.bottom+6;if(top+340>window.innerHeight)top=Math.max(8,fr.top-348);
+  let top=fr.bottom+6;if(top+380>window.innerHeight)top=Math.max(8,fr.top-388);
   el.style.left=Math.min(fr.left,window.innerWidth-320)+'px';el.style.top=top+'px';}
 function dueNav(dir){const r=d(duePickerRef);duePickerRef=iso(new Date(r.getFullYear(),r.getMonth()+dir,1));renderDuePicker();}
-function setDue(di){if(_dueTarget==='appt')setApptDate(di);else{mDue=di;updateDueLabel();}document.getElementById('duepop').classList.remove('open');}
-function clearDue(){if(_dueTarget==='appt')setApptDate(null);else{mDue=null;updateDueLabel();}document.getElementById('duepop').classList.remove('open');}
-function dueToday(){if(_dueTarget==='appt')setApptDate(iso(TODAY));else{mDue=iso(TODAY);updateDueLabel();}document.getElementById('duepop').classList.remove('open');}
+function dueSluit(){document.getElementById('duepop').classList.remove('open');_dueBezig=false;}
+function setDue(di){
+  if(_dueTarget!=='appt'){ mDue=di; updateDueLabel(); dueSluit(); return; }
+  if(!_dueBezig){                       // klik 1 — begindag, kiezer blijft open
+    setApptDate(di,null); _dueBezig=true; renderDuePicker(); return;
+  }
+  const start=_dueCur();                // klik 2 — einddag (omgekeerd geklikt? dan draaien we om)
+  if(di<start) setApptDate(di,start); else setApptDate(start,di);
+  dueSluit();
+}
+function dueKlaar(){ dueSluit(); }
+function clearDue(){if(_dueTarget==='appt')setApptDate(null,null);else{mDue=null;updateDueLabel();}dueSluit();}
+function dueToday(){if(_dueTarget==='appt')setApptDate(iso(TODAY),null);else{mDue=iso(TODAY);updateDueLabel();}dueSluit();}
 function renderDuePicker(){
   const r=d(duePickerRef);const first=new Date(r.getFullYear(),r.getMonth(),1);const gs=monday(first);
   const lbl=first.toLocaleDateString('nl-NL',{month:'long',year:'numeric'});
   const names=['ma','di','wo','do','vr','za','zo'].map(n=>`<div>${n}</div>`).join('');
   let cells='';
-  const _cur=_dueCur();
-  for(let i=0;i<42;i++){const day=addDays(gs,i);const di=iso(day);const other=day.getMonth()!==r.getMonth();const today=di===iso(TODAY);const sel=di===_cur;
-    cells+=`<div class="dpc ${other?'other':''} ${today?'today':''} ${sel?'sel':''}" onclick="setDue('${di}')">${day.getDate()}</div>`;
+  const _cur=_dueCur(), _eind=_dueEnd();
+  for(let i=0;i<42;i++){const day=addDays(gs,i);const di=iso(day);const other=day.getMonth()!==r.getMonth();const today=di===iso(TODAY);
+    const sel=di===_cur||di===_eind;
+    const tussen=_cur&&_eind&&di>_cur&&di<_eind;
+    cells+=`<div class="dpc ${other?'other':''} ${today?'today':''} ${sel?'sel':''} ${tussen?'reeks':''}" onclick="setDue('${di}')">${day.getDate()}</div>`;
     if(i%7===6){const nx=addDays(gs,i+1);if(nx.getMonth()!==r.getMonth()&&i>=27)break;}}
-  document.getElementById('duepop').innerHTML=`<div class="dphd"><span class="lbl">${lbl}</span><span class="dpnav"><button onclick="event.stopPropagation();dueNav(-1)">‹</button><button onclick="event.stopPropagation();dueNav(1)">›</button></span></div><div class="dphdr">${names}</div><div class="dpgrid">${cells}</div><div class="dpfoot"><button onclick="event.stopPropagation();clearDue()">Wissen</button><button onclick="event.stopPropagation();dueToday()">Vandaag</button></div>`;
+  const hint=(_dueTarget==='appt')
+    ? `<div class="dphint">${_dueBezig?'Kies de laatste dag — of klik dezelfde dag voor één dag.':'Kies de eerste dag. Meerdaags? Klik daarna de laatste.'}</div>` : '';
+  const klaar=(_dueTarget==='appt'&&_dueBezig)?`<button onclick="event.stopPropagation();dueKlaar()">Klaar</button>`:`<button onclick="event.stopPropagation();dueToday()">Vandaag</button>`;
+  document.getElementById('duepop').innerHTML=`<div class="dphd"><span class="lbl">${lbl}</span><span class="dpnav"><button onclick="event.stopPropagation();dueNav(-1)">‹</button><button onclick="event.stopPropagation();dueNav(1)">›</button></span></div><div class="dphdr">${names}</div><div class="dpgrid">${cells}</div>${hint}<div class="dpfoot"><button onclick="event.stopPropagation();clearDue()">Wissen</button>${klaar}</div>`;
 }
 document.addEventListener('click',e=>{const dp=document.getElementById('duepop');if(dp&&dp.classList.contains('open')){const f=document.getElementById('m_due_field');const f2=document.getElementById('a_date_f');if(!dp.contains(e.target)&&!(f&&f.contains(e.target))&&!(f2&&f2.contains(e.target)))dp.classList.remove('open');}});
 
@@ -6576,7 +6739,7 @@ save = function(){};
 
 // ── data laden uit Supabase ──
 function _mapItem(i){return {id:i.id,t:i.title,owner:i.owner||'',contact:i.contact||'',due:i.due,status:i.status,src:i.source_id,created:i.created_at?new Date(i.created_at).getTime():0,archived:i.archived_at?new Date(i.archived_at).getTime():0};}
-function _mapAppt(a){return {id:a.id,projectId:a.project_id||null,t:a.title,owner:a.owner||'',contact:a.contact||'',kind:a.kind||'fysiek',location:a.location||'',date:a.date,start:(a.start_time||'').slice(0,5),end:(a.end_time||'').slice(0,5),note:a.note||'',created:a.created_at?new Date(a.created_at).getTime():0};}
+function _mapAppt(a){return {id:a.id,projectId:a.project_id||null,t:a.title,owner:a.owner||'',contact:a.contact||'',kind:a.kind||'fysiek',location:a.location||'',date:a.date,endDate:a.end_date||null,start:(a.start_time||'').slice(0,5),end:(a.end_time||'').slice(0,5),note:a.note||'',created:a.created_at?new Date(a.created_at).getTime():0};}
 function _mapSource(s,atts){
   const kind = s.channel==='whatsapp'?'chat':(s.channel==='email'?'email':'paste');
   const text = s.channel==='email' ? (s.summary||s.body||'') : (s.body||'');
@@ -6625,7 +6788,7 @@ async function sbLoad(){
   state.appointments = (ap && ap.data ? ap.data : []).map(_mapAppt);
   const _mapProj=pr=>({id:pr.id,client:pr.client,project:pr.project,color:pr.color,icon:pr.icon,role:pr.role,
     projectprijs:pr.projectprijs, btw:pr.btw, budget:pr.budget, notes:pr.notes,
-    invoice_status:pr.invoice_status, invoice_date:pr.invoice_date, phase:pr.phase||'briefing',
+    invoice_status:pr.invoice_status, invoice_date:pr.invoice_date, phase:pr.phase||'briefing', description:pr.description||'',
     created: pr.created_at?new Date(pr.created_at).getTime():0,
     items: items.filter(x=>x.project_id===pr.id).map(_mapItem)});
   const activeProjects=projects.filter(pr=>!pr.archived);
