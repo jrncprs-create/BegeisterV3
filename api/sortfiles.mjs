@@ -5,7 +5,7 @@ const KEY = (process.env.ANTHROPIC_API_KEY || "").trim();
 const anthropic = KEY ? new Anthropic({ apiKey: KEY }) : null;
 const MODEL = "claude-haiku-4-5-20251001";
 
-const PROJ = ["Concept","Lichtontwerp","Decor","Tekeningen","Plattegronden","Draaiboek","Planning","Leveranciers","Techniek","Offertes","Media"];
+const PROJ = ["Concept","Lichtontwerp","Decor","Tekeningen","Plattegronden","Draaiboek","Planning","Leveranciers","Techniek","Offertes","Inkoop","Facturen","Media"];
 const CLIENT = ["Contracten","Huisstijl","Logo's","Facturen","Overig"];
 
 export default async function handler(req, res) {
@@ -28,7 +28,8 @@ export default async function handler(req, res) {
 TAAK 1 — CATEGORIE: kies voor ELK bestand precies één mapnaam uit de toegestane lijst voor zijn scope. Verzin GEEN nieuwe namen.
 PROJECT-mappen: ${PROJ.join(", ")}.
 KLANT-mappen: ${CLIENT.join(", ")}.
-Baseer je op de bestandsnaam (extensie + woorden in de naam). Voorbeelden: een .ai/.psd/.indd of "logo"/"huisstijl" → Huisstijl of Logo's (klant) of Decor/Tekeningen (project); "offerte"/"quote" → Offertes; "factuur"/"invoice" → Facturen; "contract" → Contracten; "draaiboek"/"runsheet" → Draaiboek; "planning"/"schema" → Planning; "plattegrond"/"floorplan" → Plattegronden; "patch"/"rigging"/"stroom" → Techniek; beeldbestanden (jpg/png/mp4/mov) zonder duidelijke functie → Media.
+Baseer je op de bestandsnaam (extensie + woorden in de naam). Voorbeelden: een .ai/.psd/.indd of "logo"/"huisstijl" → Huisstijl of Logo's (klant) of Decor/Tekeningen (project); "offerte"/"quote"/"prijsopgave" → Offertes; "factuur"/"invoice" → Facturen; "bon"/"kassabon"/"bestelbevestiging"/"inkoop"/"receipt"/"order" → Inkoop; "contract" → Contracten; "draaiboek"/"runsheet" → Draaiboek; "planning"/"schema" → Planning; "plattegrond"/"floorplan" → Plattegronden; "patch"/"rigging"/"stroom" → Techniek; beeldbestanden (jpg/png/mp4/mov) zonder duidelijke functie → Media.
+Offertes, Inkoop en Facturen zijn de drie financiële mappen: een uitgaande prijsopgave is een Offerte, een binnenkomende bon of bestelbevestiging is Inkoop, een verstuurde of ontvangen rekening is een Factuur.
 Bij twijfel: project → "Concept", klant → "Overig".
 
 TAAK 2 — JUISTE KLANT: elk bestand staat nu bij een klant/project ("nu="). Bepaal of de bestandsnaam ONMISKENBAAR bij een ANDERE bekende klant/project hoort uit onderstaande lijst. Alleen dan stel je een verplaatsing voor. Kies UITSLUITEND uit de lijst — verzin nooit een klant. Twijfel je ook maar iets, of staat het bestand al goed? Laat 'move' weg. Voorbeeld: een bestand met "Begeisterung"/"Begeister" in de naam hoort bij klant "Begeister" (de eigen pitch/huisstijl van het bedrijf), niet bij een externe klant.
