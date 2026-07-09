@@ -950,22 +950,20 @@
   .pv-acties{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
   .pv-acties select{max-width:280px}
   .pv-leeg{padding:48px 0;text-align:center;color:var(--mut2);font-size:13.5px}
-  /* Waar ligt de bal — in de balk zelf. Massieve stip: wij zijn aan zet.
-     Open ring: we wachten op iemand anders. Eronder één fluisterregel. */
-  .pb-fase-wacht .pb-fasestap.nu .pb-fasedot{background:var(--bg);border-color:var(--fcol);border-width:2px}
-  .pb-fase-wacht .pb-fasestap.nu .pb-fasedot::after{content:"";position:absolute;inset:-6px;border-radius:50%;
-    border:1px solid var(--fcol);opacity:.28}
-  .pb-fase-rust .pb-fasestap.nu .pb-fasedot{box-shadow:none}
-  /* Het vlaggetje aan de actieve stip: boven = bij de klant, onder = bij ons. */
-  .pb-fase{padding:26px 0 30px}
+  /* Waar ligt de bal — in de knop op de balk. Lichte kern: wij zijn aan zet.
+     Holle kern met halo: we wachten op iemand anders. */
+  .pb-fase-wacht .pb-fasestap.nu .pb-fasedot::before{background:var(--bg)}
+  .pb-fase-wacht .pb-fasestap.nu .pb-fasedot::after{content:"";position:absolute;left:50%;top:50%;
+    width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;border:1px solid var(--fcol);opacity:.3}
+  /* Het vlaggetje aan de knop: boven = bij de klant, onder = bij ons. */
   .pb-vlag{position:absolute;left:50%;transform:translateX(-50%);white-space:nowrap;
-    font-size:10.5px;font-weight:600;letter-spacing:.01em;line-height:1;
-    padding:5px 9px;border-radius:5px;color:var(--bg);background:var(--fcol);z-index:2}
+    font-size:11px;font-weight:700;letter-spacing:.01em;line-height:1;
+    padding:7px 11px;border-radius:8px;color:var(--bg);background:var(--fcol);z-index:3}
   .pb-vlag::after{content:"";position:absolute;left:50%;transform:translateX(-50%);
-    border:5px solid transparent}
-  .pb-vlag-boven{bottom:calc(100% - 4px)}
+    border:6px solid transparent}
+  .pb-vlag-boven{bottom:calc(100% + 15px)}
   .pb-vlag-boven::after{top:100%;border-top-color:var(--fcol)}
-  .pb-vlag-onder{top:calc(100% + 5px)}
+  .pb-vlag-onder{top:calc(100% + 8px)}
   .pb-vlag-onder::after{bottom:100%;border-bottom-color:var(--fcol)}
   /* Bestanden op het bord: mapjes per soort, kop in de klantkleur. */
   .pb-map{margin:0 0 6px}
@@ -983,19 +981,22 @@
   .pb-map-sub .pb-maph{padding:4px 0;opacity:.92}
   .pb-map-sub .pb-mapkids{padding-left:14px}
   .pb-mapleeg{font-size:11.5px;color:var(--mut2);padding:3px 0 5px 2px}
-  /* Voortgang op het projectbord: zes stappen, gevuld tot en met de huidige. */
-  .pb-fase{display:flex;gap:0;align-items:flex-start}
+  /* Voortgang op het projectbord: één dikke staaf, gevuld tot de knop.
+     De zes stappen liggen er als onzichtbare knoppen overheen — labels eronder.
+     --vul is het percentage tot het midden van de huidige stap. */
+  .pb-fase{position:relative;display:flex;gap:0;align-items:flex-start;padding:38px 0 30px}
+  .pb-fase::before,.pb-fase::after{content:"";position:absolute;left:0;top:38px;height:10px;border-radius:999px}
+  .pb-fase::before{right:0;background:rgba(255,255,255,.10)}
+  .pb-fase::after{width:var(--vul,0%);background:var(--fcol);transition:width .25s ease}
+  .pb-fase-rust::after{opacity:.55}
   .pb-fasestap{flex:1;min-width:0;background:none;border:none;padding:0;cursor:pointer;
-    display:flex;flex-direction:column;align-items:center;gap:6px;position:relative;color:var(--mut2)}
-  .pb-fasestap::before{content:"";position:absolute;top:5px;left:-50%;width:100%;height:1px;background:var(--lin)}
-  .pb-fasestap:first-child::before{display:none}
-  .pb-fasestap.done::before{background:var(--fcol)}
-  .pb-fasedot{width:11px;height:11px;border-radius:50%;border:1.5px solid var(--lin);background:var(--bg);
-    position:relative;z-index:1;transition:background .15s,border-color .15s}
-  .pb-fasestap.done .pb-fasedot{background:var(--fcol);border-color:var(--fcol)}
-  .pb-fasestap.nu .pb-fasedot{box-shadow:0 0 0 3px color-mix(in srgb, var(--fcol) 28%, transparent)}
-  .pb-faselbl{font-size:10.5px;letter-spacing:.01em;text-align:center;line-height:1.2;white-space:nowrap;
-    overflow:hidden;text-overflow:ellipsis;max-width:100%}
+    display:flex;flex-direction:column;align-items:center;gap:0;position:relative;color:var(--mut2);z-index:1}
+  .pb-fasedot{width:10px;height:10px;flex:none;position:relative}
+  .pb-fasestap.nu .pb-fasedot::before{content:"";position:absolute;left:50%;top:50%;
+    width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;
+    border:5px solid var(--fcol);background:#d5d5da;box-shadow:0 0 0 2px var(--bg)}
+  .pb-faselbl{margin-top:16px;font-size:10.5px;letter-spacing:.01em;text-align:center;line-height:1.2;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
   .pb-fasestap.nu .pb-faselbl{color:var(--fcol);font-weight:600}
   .pb-fasestap:hover .pb-faselbl{color:var(--txt)}
   /* Omgezet Word-document: leesbaar vel papier in plaats van 'geen voorvertoning'. */
@@ -1884,7 +1885,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v186</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v187</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -3752,7 +3753,8 @@ function _renderProjBoard(){
   const _balTitel = _bal.staat==='wacht' ? ('De bal ligt bij '+_bal.wie+(_bal.dagen!=null?' · al '+_bal.dagen+' dag'+(_bal.dagen===1?'':'en'):''))
                   : _bal.staat==='ons' ? ('Wij zijn aan zet: '+_bal.wie+' · '+_bal.aantal+' open') : 'Niets openstaand';
   const _vlag=_pbBalVlag(_bal, p.client);
-  const secFase=_geenTraject(p.client) ? '' : (`<div class="pb-sec"><div class="pb-h">Voortgang</div><div class="pb-fase pb-fase-${_bal.staat}">`
+  const _vul=(( _fIdx+0.5)/_DOS_PHASES.length*100).toFixed(2)+'%';
+  const secFase=_geenTraject(p.client) ? '' : (`<div class="pb-sec"><div class="pb-h">Voortgang</div><div class="pb-fase pb-fase-${_bal.staat}" style="--fcol:${col};--vul:${_vul}">`
     + _DOS_PHASES.map((f,i)=>`<button class="pb-fasestap${i<=_fIdx?' done':''}${i===_fIdx?' nu':''}" style="--fcol:${col}" onclick="pbSetPhase('${f.k}')" title="${i===_fIdx?esc(_balTitel):f.l}">${i===_fIdx?_vlag:''}<span class="pb-fasedot"></span><span class="pb-faselbl">${f.l}</span></button>`).join('')
     + `</div></div>`);
   const secWait=`<div class="pb-sec"><div class="pb-h">In afwachting <button class="pb-hadd" onclick="openModal(null,'wachter','wait','${_pbPid}')" title="Toevoegen">+</button></div>${waitT.length?waitT.map(waitRow).join(''):'<div class="pb-empty">Niets in afwachting.</div>'}</div>`;
@@ -4139,7 +4141,8 @@ async function renderFinancien(){
     const _ffi=_DOS_PHASES.findIndex(x=>x.k===(p.phase||'briefing'));
     const _fbTitel = _fb.staat==='wacht' ? ('De bal ligt bij '+_fb.wie+(_fb.dagen!=null?' · al '+_fb.dagen+' dag'+(_fb.dagen===1?'':'en'):''))
                    : _fb.staat==='ons' ? ('Wij zijn aan zet: '+_fb.wie+' · '+_fb.aantal+' open') : 'Niets openstaand';
-    const finFase=_geenTraject(p.client) ? '' : (`<div class="pb-sec"><div class="pb-h">Voortgang</div><div class="pb-fase pb-fase-${_fb.staat}">`
+    const _fvul=((_ffi+0.5)/_DOS_PHASES.length*100).toFixed(2)+'%';
+    const finFase=_geenTraject(p.client) ? '' : (`<div class="pb-sec"><div class="pb-h">Voortgang</div><div class="pb-fase pb-fase-${_fb.staat}" style="--fcol:${col};--vul:${_fvul}">`
       + _DOS_PHASES.map((f,i)=>`<button class="pb-fasestap${i<=_ffi?' done':''}${i===_ffi?' nu':''}" style="--fcol:${col}" onclick="pbSetPhase('${f.k}')" title="${escapeHtml(i===_ffi?_fbTitel:f.l)}">${i===_ffi?_fvlag:''}<span class="pb-fasedot"></span><span class="pb-faselbl">${f.l}</span></button>`).join('')
       + `</div></div>`);
     if(fmw) fmw.innerHTML=`<div class="pb-inline pb-board-inline finB-flat" style="--scol:${col};--ccol:${col}">
