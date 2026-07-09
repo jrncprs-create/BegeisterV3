@@ -1725,6 +1725,7 @@
       <button data-v="taken" onclick="setView('taken')">Taken <span class="badge" id="nb-taken"></span></button>
       <button data-v="afspraken" onclick="setView('afspraken')">Afspraken <span class="badge" id="nb-afspraken"></span></button>
       <button data-v="agenda" onclick="setView('agenda')">Agenda</button>
+      <button data-v="postvak" onclick="setView('postvak')">Postvak In <span class="badge" id="nb-postvak"></span></button>
       <button data-v="beheer" onclick="setView('beheer')">Klanten</button>
       <button data-v="financien" onclick="setView('financien')">Financiën</button>
       <button data-v="files" onclick="setView('files')">Bestanden</button>
@@ -1737,7 +1738,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v167</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v168</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -2075,6 +2076,12 @@
       </div>
       <div id="view-files" class="hidden">
         <div id="filesWrap"></div>
+      </div>
+      <div id="view-postvak" class="hidden">
+        <div id="postvakWrap"></div>
+      </div>
+      <div id="view-dossier" class="hidden">
+        <div id="dossierWrap"></div>
       </div>
       <div id="view-wachter" class="hidden">
         <div id="wachterBlock">
@@ -2683,10 +2690,12 @@ function setView(v){
   document.getElementById('view-contacten').classList.toggle('hidden', d3 ? (v!=='contacten') : v!=='contacten');
   document.getElementById('view-archief').classList.toggle('hidden', v!=='archief');
   document.getElementById('view-files').classList.toggle('hidden', v!=='files');
+  document.getElementById('view-postvak').classList.toggle('hidden', v!=='postvak');
+  document.getElementById('view-dossier').classList.toggle('hidden', v!=='dossier');
   // eerste kolom (#wachterBlock) verbergen wanneer er een rail-view getoond wordt
   const wb=document.getElementById('wachterBlock'); if(wb) wb.classList.toggle('hidden', d3 && railView);
   if(typeof _ensureRailCloses==='function') _ensureRailCloses();
-  document.getElementById('viewTitle').textContent={home:'',taken:'Taken',agenda:'Agenda',afspraken:'Afspraken',wachter:'In afwachting',bronnen:'Bronnen',beheer:'Klanten & projecten',financien:'Financiën',contacten:'Contacten',archief:'Archief',files:'Bestanden'}[v];
+  document.getElementById('viewTitle').textContent={home:'',taken:'Taken',agenda:'Agenda',afspraken:'Afspraken',wachter:'In afwachting',bronnen:'Bronnen',beheer:'Klanten & projecten',financien:'Financiën',contacten:'Contacten',archief:'Archief',files:'Bestanden',postvak:'Postvak In',dossier:(_dosPid?_dosTitle():'Dossier')}[v];
   // desktop-werkblad: Taken (midden) + Agenda (rechts) tegelijk zichtbaar — op desktop ALTIJD aan
   const ws = d3;
   const main=document.querySelector('.main'); if(main) main.classList.toggle('workspace',ws);
@@ -2811,6 +2820,8 @@ function render(){
   if(view==='contacten'||ws)renderContacten();
   if(view==='archief')renderArchief();
   if(view==='files')renderFiles();
+  if(view==='postvak')renderPostvak();
+  if(view==='dossier')renderDossier();
   save();
   _animateNext=false;
   if(typeof _syncMobTrack==='function') _syncMobTrack();
@@ -2820,6 +2831,266 @@ function renderBadges(){
   document.getElementById('nb-bron').textContent=state.sources.length;
   const ab=document.getElementById('nb-afspraken');
   if(ab){const ti=iso(TODAY);ab.textContent=(state.appointments||[]).filter(a=>a.date>=ti).length;}
+  const pb=document.getElementById('nb-postvak');
+  if(pb){ const n=(state.inbox||[]).length; pb.textContent=n?String(n):''; }
+}
+
+/* ============================================================================
+   POSTVAK IN — alles wat binnenkwam maar nog geen plek heeft.
+   Vier uitgangen: naar een project (werk), naar Inspiratie, naar Privé, of weg (ruis).
+   Inspiratie levert NOOIT taken op — dat is een uitdrukkelijke keuze.
+   ============================================================================ */
+var _pvSug={};              // bron-id -> {kind, project_id, reden} (AI-voorstel)
+var _pvBusy=false;
+
+const _PV_KIND={
+  werk:       {lbl:'Werk',       kleur:'var(--txt)'},
+  inspiratie: {lbl:'Inspiratie', kleur:'#a78bfa'},
+  prive:      {lbl:'Privé',      kleur:'#60a5fa'},
+  ruis:       {lbl:'Ruis',       kleur:'var(--mut2)'},
+};
+const _PV_ICON={email:'✉',whatsapp:'✆',drop:'⇩',voice:'●',camera:'▣',chat:'✎',paste:'⧉'};
+
+function _pvSnippet(s){
+  const t=(s.summary||s.body||'').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
+  return t.length>150?t.slice(0,150)+'…':(t||'(leeg)');
+}
+function _pvProjOptions(sel){
+  const ps=(state.projects||[]).filter(p=>p.id!=='__inbox__');
+  const byC={}, order=[];
+  ps.forEach(p=>{ if(!byC[p.client]){byC[p.client]=[];order.push(p.client);} byC[p.client].push(p); });
+  let h='<option value="">— kies klant · project —</option>';
+  order.forEach(c=>{
+    h+='<optgroup label="'+escapeHtml(c)+'">';
+    byC[c].forEach(p=>{ const lbl=p.project?p.project:'(algemeen)';
+      h+='<option value="'+p.id+'"'+(String(sel)===String(p.id)?' selected':'')+'>'+escapeHtml(lbl)+'</option>'; });
+    h+='</optgroup>';
+  });
+  return h;
+}
+function renderPostvak(){
+  const wrap=document.getElementById('postvakWrap'); if(!wrap)return;
+  const inbox=state.inbox||[];
+  if(!inbox.length){
+    wrap.innerHTML='<div class="fin-mid-hint" style="padding:40px 0;text-align:center">Postvak In is leeg. Alles wat binnenkwam heeft een plek.</div>';
+    return;
+  }
+  const nSug=Object.keys(_pvSug).length;
+  let h='<div style="display:flex;align-items:baseline;gap:14px;margin-bottom:18px">'
+      + '<div style="font-size:13.5px;color:var(--mut2)">'+inbox.length+' item'+(inbox.length===1?'':'s')+' wacht'+(inbox.length===1?'':'en')+' op een plek</div>'
+      + '<div class="spacer" style="flex:1"></div>'
+      + '<button class="btn ghost" id="pvAiBtn" onclick="pvSuggestAll()"'+(_pvBusy?' disabled':'')+'>'
+      + (_pvBusy?'Bezig…':(nSug?'✦ Opnieuw voorstellen':'✦ Laat de AI voorstellen doen'))+'</button></div>';
+
+  inbox.forEach(s=>{
+    const sug=_pvSug[s.id]||null;
+    const kind=sug?sug.kind:'';
+    const k=_PV_KIND[kind];
+    const dt=s.received_at?new Date(s.received_at).toLocaleDateString('nl-NL',{day:'2-digit',month:'short'}):'';
+    h+='<div class="pv-row" data-sid="'+s.id+'" style="border-top:1px solid var(--lin);padding:14px 0">'
+     +   '<div style="display:flex;gap:12px;align-items:flex-start">'
+     +     '<div style="width:20px;text-align:center;color:var(--mut2);font-size:13px;flex:none;line-height:20px">'+(_PV_ICON[s.channel]||'•')+'</div>'
+     +     '<div style="flex:1;min-width:0">'
+     +       '<div style="display:flex;gap:10px;align-items:baseline">'
+     +         '<span style="font-size:13.5px;font-weight:600">'+escapeHtml(s.subject||s.sender||s.channel||'Bron')+'</span>'
+     +         '<span style="font-size:11.5px;color:var(--mut2)">'+escapeHtml(dt)+'</span>'
+     +         (k?'<span style="font-size:11px;color:'+k.kleur+';border:1px solid var(--lin);border-radius:3px;padding:1px 6px">'+k.lbl+'</span>':'')
+     +         (sug&&sug.reden?'<span style="font-size:11.5px;color:var(--mut2)">'+escapeHtml(sug.reden)+'</span>':'')
+     +       '</div>'
+     +       '<div style="font-size:12.5px;color:var(--mut2);margin:4px 0 10px">'+escapeHtml(_pvSnippet(s))+'</div>'
+     +       '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">'
+     +         '<select class="pv-proj" style="max-width:280px">'+_pvProjOptions(sug?sug.project_id:'')+'</select>'
+     +         '<button class="btn" onclick="pvAssign(\''+s.id+'\')">Naar project</button>'
+     +         '<button class="btn ghost" onclick="pvTriage(\''+s.id+'\',\'inspiratie\')">Inspiratie</button>'
+     +         '<button class="btn ghost" onclick="pvTriage(\''+s.id+'\',\'prive\')">Privé</button>'
+     +         '<button class="btn ghost" onclick="pvTriage(\''+s.id+'\',\'ruis\')" title="Uit het postvak, blijft bij Bronnen staan">Ruis</button>'
+     +       '</div>'
+     +     '</div>'
+     +   '</div>'
+     + '</div>';
+  });
+  wrap.innerHTML=h;
+}
+
+// Eén AI-call over het hele postvak. Vult de dropdowns voor, kiest niets definitief.
+async function pvSuggestAll(){
+  if(_pvBusy)return; _pvBusy=true; renderPostvak();
+  try{
+    const catalog=(state.projects||[]).filter(p=>p.id!=='__inbox__')
+      .map(p=>({project_id:p.id,client:p.client||'',project:p.project||''}));
+    const sources=(state.inbox||[]).slice(0,60).map(s=>({id:s.id,channel:s.channel,sender:s.sender,subject:s.subject,body:(s.summary||s.body||'').slice(0,300)}));
+    const r=await fetch('/api/triage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sources,catalog})});
+    const d=await r.json();
+    _pvSug=(d&&d.suggestions)||{};
+  }catch(_){ _pvSug={}; }
+  try{ loadUsage(); }catch(_){}
+  _pvBusy=false; renderPostvak();
+}
+
+async function pvAssign(sid){
+  const row=document.querySelector('.pv-row[data-sid="'+sid+'"]');
+  const sel=row?row.querySelector('.pv-proj'):null;
+  const pid=sel&&sel.value?sel.value:'';
+  if(!pid){ try{ await uiConfirm('Kies eerst een klant en project.',{ok:'Oké',danger:false}); }catch(_){} return; }
+  try{ await sb.from('sources').update({project_id:pid, triage:null}).eq('id',sid); }catch(_){}
+  // bijbehorende documenten en losse taken verhuizen mee
+  try{ await sb.from('documents').update({project_id:pid}).eq('source_id',sid); }catch(_){}
+  try{ await sb.from('items').update({project_id:pid}).eq('source_id',sid).is('project_id',null); }catch(_){}
+  delete _pvSug[sid];
+  await refresh();
+}
+
+// Inspiratie / Privé / Ruis: uit het postvak, zonder een project te verzinnen.
+// Inspiratie belandt op het inspiratiebord en levert nadrukkelijk GEEN taken op.
+async function pvTriage(sid,kind){
+  const s=(state.inbox||[]).find(x=>String(x.id)===String(sid)); if(!s)return;
+  if(kind==='inspiratie'){
+    try{
+      const att=(state.documents||[]).find(d=>String(d.source_id)===String(sid));
+      await sb.from('insp_items').insert({
+        type:'image', title:(s.subject||s.body||'Inspiratie').slice(0,120),
+        url:s.url||(att?att.link:null)||null,
+        storage_path:att?att.storage_path:null, project_id:s.project_id||null, sort:0 });
+    }catch(_){}
+    // taken die per ongeluk uit deze bron zijn ontstaan horen hier niet
+    try{ await sb.from('items').delete().eq('source_id',sid).is('project_id',null); }catch(_){}
+  }
+  try{ await sb.from('sources').update({triage:kind}).eq('id',sid); }catch(_){}
+  delete _pvSug[sid];
+  await refresh();
+}
+
+/* ============================================================================
+   PROJECTDOSSIER — één project, alles bij elkaar.
+   Bewust intern: hier staat ook inkoop en marge. Het klantportaal krijgt straks
+   een eigen voorkant die alleen documents.visible_to_client mag zien.
+   ============================================================================ */
+var _dosPid=null;
+
+const _DOS_PHASES=[
+  {k:'briefing',    l:'Briefing'},
+  {k:'debrief',     l:'Debrief'},
+  {k:'akkoord',     l:'Akkoord'},
+  {k:'uitvoering',  l:'Uitvoering'},
+  {k:'oplevering',  l:'Oplevering'},
+  {k:'gefactureerd',l:'Gefactureerd'},
+];
+// Vaste mappen, gelijk aan api/sortfiles.mjs — geen nieuwe namen verzinnen.
+const _DOS_CATS=['Concept','Lichtontwerp','Decor','Tekeningen','Plattegronden','Draaiboek','Planning','Leveranciers','Techniek','Offertes','Media'];
+
+function _dosTitle(){ const p=projById(_dosPid); return p?((p.client||'')+(p.project?' · '+p.project:'')):'Dossier'; }
+function openDossier(pid){ _dosPid=pid; setView('dossier'); }
+
+function _dosSection(title, count, inner){
+  return '<section style="margin:0 0 34px">'
+    + '<div style="display:flex;align-items:baseline;gap:10px;margin-bottom:12px">'
+    +   '<h3 style="font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;margin:0">'+escapeHtml(title)+'</h3>'
+    +   '<span style="font-size:12px;color:var(--mut2)">'+count+'</span>'
+    + '</div>'
+    + (inner||'<div style="font-size:12.5px;color:var(--mut2)">Nog niets.</div>')
+    + '</section>';
+}
+function _dosBytes(n){ if(!n)return''; const u=['B','KB','MB','GB']; let i=0,v=Number(n); while(v>=1024&&i<u.length-1){v/=1024;i++;} return v.toFixed(v<10&&i>0?1:0)+' '+u[i]; }
+
+function renderDossier(){
+  const wrap=document.getElementById('dossierWrap'); if(!wrap)return;
+  const p=projById(_dosPid);
+  if(!p){ wrap.innerHTML='<div class="fin-mid-hint" style="padding:40px 0;text-align:center">Kies een project bij Klanten.</div>'; return; }
+
+  const docs=(state.documents||[]).filter(d=>String(d.project_id)===String(p.id));
+  const taken=(p.items||[]).filter(i=>i.status!=='done');
+  const klaar=(p.items||[]).filter(i=>i.status==='done');
+  const appts=(state.appointments||[]).filter(a=>String(a.projectId)===String(p.id));
+  const cons=(state.contacts||[]).filter(c=>String(c.project_id)===String(p.id));
+  const srcs=(state.sources||[]).filter(s=>String(s.proj)===String(p.id));
+  const phase=p.phase||'briefing';
+
+  // ---- kop + fasebalk
+  let h='<div style="margin-bottom:30px">'
+   + '<div style="display:flex;align-items:center;gap:12px">'
+   +   '<span class="kbadge" style="background:'+(p.color||'#888')+'">'+escapeHtml((p.client||'?')[0].toUpperCase())+'</span>'
+   +   '<div><div style="font-size:19px;font-weight:600">'+escapeHtml(p.project||p.client||'Project')+'</div>'
+   +   '<div style="font-size:12.5px;color:var(--mut2)">'+escapeHtml(p.client||'')+(p.role?' — '+escapeHtml(p.role):'')+'</div></div>'
+   +   '<span style="flex:1"></span>'
+   +   (p.projectprijs!=null?'<div style="font-size:15px;font-weight:600">€'+fmtEur(p.projectprijs)+'</div>':'')
+   + '</div></div>';
+
+  h+='<div style="display:flex;gap:6px;margin-bottom:34px;flex-wrap:wrap">';
+  const cur=_DOS_PHASES.findIndex(x=>x.k===phase);
+  _DOS_PHASES.forEach((f,i)=>{
+    const done=i<=cur;
+    h+='<button class="btn ghost" onclick="dosSetPhase(\''+f.k+'\')" style="font-size:12px;padding:5px 11px;'
+      + (done?'border-color:'+(p.color||'#888')+';color:var(--txt)':'opacity:.5')
+      + (i===cur?';font-weight:600':'')+'">'+f.l+'</button>';
+  });
+  h+='</div>';
+
+  // ---- documenten, gegroepeerd op vaste map
+  let dh='';
+  if(docs.length){
+    const byCat={};
+    docs.forEach(d=>{ const c=(_DOS_CATS.includes(d.category)?d.category:'Overig'); (byCat[c]=byCat[c]||[]).push(d); });
+    const cats=_DOS_CATS.filter(c=>byCat[c]).concat(byCat['Overig']?['Overig']:[]);
+    dh=cats.map(c=>{
+      const rows=byCat[c].map(d=>{
+        const href=d.link||d.dropbox_path||'';
+        const nm=escapeHtml(d.filename||'bestand');
+        const naam=href?'<a href="'+escapeHtml(href)+'" target="_blank" rel="noopener" style="color:inherit">'+nm+'</a>':nm;
+        return '<div style="display:flex;gap:12px;align-items:baseline;padding:5px 0;font-size:13px">'
+          + '<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+naam+'</span>'
+          + '<span style="font-size:11.5px;color:var(--mut2);flex:none">'+_dosBytes(d.size)+'</span>'
+          + '<label style="font-size:11.5px;color:var(--mut2);flex:none;display:flex;gap:5px;align-items:center;cursor:pointer" title="Zichtbaar voor de klant in het portaal">'
+          +   '<input type="checkbox" '+(d.visible_to_client?'checked':'')+' onchange="dosToggleClient(\''+d.id+'\',this.checked)"> klant'
+          + '</label></div>';
+      }).join('');
+      return '<div style="margin-bottom:18px"><div style="font-size:12px;color:var(--mut2);margin-bottom:4px">'+escapeHtml(c)+'</div>'+rows+'</div>';
+    }).join('');
+  }
+  h+=_dosSection('Documenten', docs.length, dh);
+
+  // ---- taken
+  const th=taken.length?taken.map(i=>'<div style="display:flex;gap:10px;padding:4px 0;font-size:13px">'
+      + '<span style="flex:1">'+escapeHtml(i.t||'')+'</span>'
+      + '<span style="font-size:11.5px;color:var(--mut2)">'+escapeHtml(i.owner||'')+'</span>'
+      + '<span style="font-size:11.5px;color:var(--mut2)">'+escapeHtml(i.due||'')+'</span></div>').join(''):'';
+  h+=_dosSection('Taken', taken.length+' open · '+klaar.length+' klaar', th);
+
+  // ---- afspraken
+  const ah=appts.length?appts.map(a=>'<div style="display:flex;gap:10px;padding:4px 0;font-size:13px">'
+      + '<span style="font-size:11.5px;color:var(--mut2);width:92px;flex:none">'+escapeHtml((a.date||'')+(a.start?' '+a.start:''))+'</span>'
+      + '<span style="flex:1">'+escapeHtml(a.t||'')+'</span>'
+      + '<span style="font-size:11.5px;color:var(--mut2)">'+escapeHtml(a.location||'')+'</span></div>').join(''):'';
+  h+=_dosSection('Afspraken', appts.length, ah);
+
+  // ---- contacten
+  const ch=cons.length?cons.map(c=>'<div style="display:flex;gap:10px;padding:4px 0;font-size:13px">'
+      + '<span style="flex:1">'+escapeHtml(c.name||'')+'</span>'
+      + '<span style="font-size:11.5px;color:var(--mut2)">'+escapeHtml(c.role||c.company||'')+'</span>'
+      + '<span style="font-size:11.5px;color:var(--mut2)">'+escapeHtml(c.email||c.phone||'')+'</span></div>').join(''):'';
+  h+=_dosSection('Contacten', cons.length, ch);
+
+  // ---- tijdlijn van bronnen
+  const sh=srcs.length?srcs.slice(0,40).map(s=>{
+    const dt=s.ts?new Date(s.ts).toLocaleDateString('nl-NL',{day:'2-digit',month:'short',year:'2-digit'}):'';
+    return '<div style="display:flex;gap:10px;padding:4px 0;font-size:12.5px">'
+      + '<span style="color:var(--mut2);width:74px;flex:none">'+escapeHtml(dt)+'</span>'
+      + '<span style="color:var(--mut2);width:16px;flex:none">'+(_PV_ICON[s.channel]||'•')+'</span>'
+      + '<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escapeHtml(s.subject||s.summary||s.text||'')+'</span></div>';
+  }).join(''):'';
+  h+=_dosSection('Tijdlijn', srcs.length+' bron'+(srcs.length===1?'':'nen'), sh);
+
+  wrap.innerHTML=h;
+}
+
+async function dosSetPhase(k){
+  const p=projById(_dosPid); if(!p)return;
+  p.phase=k;
+  try{ await sb.from('projects').update({phase:k}).eq('id',_dosPid); }catch(_){}
+  renderDossier();
+}
+async function dosToggleClient(did,on){
+  try{ await sb.from('documents').update({visible_to_client:!!on}).eq('id',did); }catch(_){}
+  const d=(state.documents||[]).find(x=>String(x.id)===String(did)); if(d)d.visible_to_client=!!on;
 }
 
 let lastAddedIds=[];   // net opgeslagen taken → tijdelijk bovenaan
@@ -5036,6 +5307,7 @@ function renderProjecten(){
         <button class="kdot" style="background:${p.color}" onclick="event.stopPropagation();openColorPicker(event,'proj','${p.id}')" title="Kleur"></button>
         ${pname}
         <button class="kicon kpen" onclick="event.stopPropagation();kEditStart('${p.id}')" title="Naam bewerken">${_penIc}</button>
+        <button class="kicon" onclick="event.stopPropagation();openDossier('${p.id}')" title="Projectdossier openen"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></button>
         <span class="kspring"></span>
         <button class="kicon" onclick="event.stopPropagation();deleteProject('${p.id}')" title="Verwijderen"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/></svg></button>
         </div>
@@ -5881,7 +6153,7 @@ function _mapSource(s,atts){
 }
 async function sbLoad(){
   await _archCleanup();   // afgevinkte taken ouder dan 2 weken opruimen vóór het laden
-  const [p,i,s,a,ap,c,f,cx,fo,cm] = await Promise.all([
+  const [p,i,s,a,ap,c,f,cx,fo,cm,dc] = await Promise.all([
     sb.from('projects').select('*').order('sort'),
     sb.from('items').select('*').order('created_at'),
     sb.from('sources').select('*').order('received_at',{ascending:false}),
@@ -5892,8 +6164,10 @@ async function sbLoad(){
     sb.from('app_context').select('*'),
     sb.from('folders').select('*').order('sort'),
     sb.from('comments').select('*').order('created_at'),
+    sb.from('documents').select('*').order('created_at',{ascending:false}),
   ]);
   state.comments = (cm && cm.data) ? cm.data : [];
+  state.documents = (dc && dc.data) ? dc.data : [];
   state.folders = (fo && fo.data) ? fo.data : [];
   const projects=p.data||[], items=i.data||[], sources=s.data||[], atts=a.data||[];
   state.contacts = (c && c.data) ? c.data : [];
@@ -5902,7 +6176,7 @@ async function sbLoad(){
   state.appointments = (ap && ap.data ? ap.data : []).map(_mapAppt);
   const _mapProj=pr=>({id:pr.id,client:pr.client,project:pr.project,color:pr.color,icon:pr.icon,role:pr.role,
     projectprijs:pr.projectprijs, btw:pr.btw, budget:pr.budget, notes:pr.notes,
-    invoice_status:pr.invoice_status, invoice_date:pr.invoice_date,
+    invoice_status:pr.invoice_status, invoice_date:pr.invoice_date, phase:pr.phase||'briefing',
     created: pr.created_at?new Date(pr.created_at).getTime():0,
     items: items.filter(x=>x.project_id===pr.id).map(_mapItem)});
   const activeProjects=projects.filter(pr=>!pr.archived);
@@ -5916,6 +6190,8 @@ async function sbLoad(){
       items:orphans.map(_mapItem)});
   }
   state.sources = sources.map(src=>_mapSource(src,atts));
+  // Postvak In: binnengekomen, nog geen project én nog niet bewust weggezet (inspiratie/privé/ruis).
+  state.inbox = sources.filter(src=>(!src.project_id || !known.has(src.project_id)) && !src.triage);
   if(activeTab!=='all' && !state.projects.find(x=>x.id===activeTab)) activeTab='all';
 }
 async function refresh(){ await sbLoad(); if(!_colorDedupDone){ _colorDedupDone=true; try{ await _ensureUniqueClientColors(); }catch(_){} } render(); try{ if(_pbTarget&&_pbPid)_renderProjBoard(); }catch(_){} }
@@ -6528,8 +6804,10 @@ function _priceFromText(s){ const m=String(s||'').match(/€\s*([0-9]+(?:\.[0-9]
 function _webshopName(u){ try{ let h=new URL(u).hostname.replace(/^www\./,''); const base=(h.split('.')[0]||h); return base.charAt(0).toUpperCase()+base.slice(1); }catch(_){ return 'Lijst'; } }
 async function _dropProcess(f){
   _dzShow('Bestand lezen…', f.name, 'reading');
-  let src=null; const _wurl=await _weblocUrl(f);
-  try{ const r=await sb.from('sources').insert({channel:'drop',sender:who||'Sleep',body:f.name,url:_wurl||null,processed:true}).select().single(); src=r.data||null; }catch(_){}
+  const _wurl=await _weblocUrl(f);
+  // LET OP: hier wordt bewust GEEN bron weggeschreven. Dat gebeurt pas in _saveDropToWait(),
+  // op het moment dat je écht opslaat. Anders laat elke mislukte read en elke geannuleerde
+  // review een lege bron achter (dat leverde ooit 16 kopieën van hetzelfde pdf op).
   _dropFileObj=f; _dropFileDone=false;   // bestand vasthouden; pas bij opslaan naar Dropbox /In afwachting/
   let data=null;
   try{
@@ -6573,14 +6851,35 @@ async function _dropProcess(f){
   if(res.project_id){ _fileProjectId=res.project_id; q=null; }            // gebruiker koos expliciet een project in de dropdown
   else if(res.client){ _fileProjectId=null; q=null; }                     // klant gekozen zonder project
   if(q){ try{ await _createFromDrop(q, res.project); }catch(_){} }   // nieuwe klant/project aanmaken
-  await _saveDropToWait(items, summary, src?src.id:null, _dropFileObj, _wurl);
+  await _saveDropToWait(items, summary, {name:f.name, url:_wurl, kind:(data.kind||'werk')}, _dropFileObj, _wurl);
   _dropFileObj=null; _dropFileDone=false;
   _dzHide(); _dropRunNext();
 }
 
 // ✓ op de samenvatting: alle gevonden punten direct in In-afwachting (status wait) + bestand naar /In afwachting/.
-async function _saveDropToWait(items, summary, srcId, fileObj, listUrl){
+async function _saveDropToWait(items, summary, srcMeta, fileObj, listUrl){
   const pid=_fileProjectId||null;
+  // De bron wordt hier aangemaakt — niet eerder. Zo laat een mislukte read of een ✕ niets achter.
+  // We zetten meteen project_id én summary; die bleven vroeger allebei leeg.
+  const _kind=(srcMeta&&srcMeta.kind)||'werk';
+  let srcId=null;
+  try{
+    const _name=(srcMeta&&srcMeta.name)||(fileObj&&fileObj.name)||'Bestand';
+    const _url=(srcMeta&&srcMeta.url)||listUrl||null;
+    const r=await sb.from('sources').insert({channel:'drop', sender:who||'Sleep', body:_name,
+      summary:((summary||'').trim().slice(0,2000))||null, url:_url, project_id:pid, processed:true,
+      triage:(_kind!=='werk'&&!pid)?_kind:null})
+      .select('id').single();
+    srcId=(r&&r.data)?r.data.id:null;
+  }catch(_){}
+  // Inspiratie gaat naar het inspiratiebord — geen taken, niet in het Postvak In, niet in Taken.
+  if(_kind==='inspiratie'){
+    try{ await sb.from('insp_items').insert({type:'image', title:(summary||(fileObj&&fileObj.name)||'Inspiratie').slice(0,120),
+      url:(srcMeta&&srcMeta.url)||listUrl||null, project_id:pid||null, sort:0}); }catch(_){}
+    try{ notifyPartner((who||'Iemand')+' zette iets op het inspiratiebord.'); }catch(_){}
+    try{ await refresh(); }catch(_){}
+    return;
+  }
   // Amazon-(verlang)lijst → bestelregels op de Bestellijst (inkoop), NIET als taken
   const _isBestel = (items&&items.length>=1) && ( (listUrl&&/amazon\./i.test(listUrl)) || items.filter(it=>/€\s*\d|verlanglijst|winkelwagen|^\s*bestel\b/i.test(it.title||'')).length>=Math.max(2,Math.ceil(items.length*0.6)) );
   if(_isBestel){
@@ -6601,7 +6900,14 @@ async function _saveDropToWait(items, summary, srcId, fileObj, listUrl){
     try{ const ins=await sb.from('items').insert(rec).select('id').single(); if(ins&&ins.data&&!firstId)firstId=ins.data.id; }catch(_){}
   }
   if(fileObj && firstId){ try{ const b64=await fileToB64(fileObj); const aiName=_intakeName(fileObj); const up=await fetch('/api/dropbox/list',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'upload',name:aiName,b64,target:'In afwachting',owner_type:'task',owner_id:firstId,cat:_dropCat||'Concept'})}).then(r=>r.json());
-    if(up&&up.file&&up.file.link&&srcId){ try{ await sb.from('attachments').insert({source_id:srcId, filename:aiName, storage_path:'dropbox:'+up.file.link, mime:fileObj.type||''}); }catch(_){} } }catch(_){}}
+    if(up&&up.file&&up.file.link&&srcId){
+      try{ await sb.from('attachments').insert({source_id:srcId, filename:aiName, storage_path:'dropbox:'+up.file.link, mime:fileObj.type||''}); }catch(_){}
+      // Nieuw canoniek model: elk document hangt direct aan het project.
+      try{ await sb.from('documents').insert({project_id:pid, source_id:srcId, scope:'project',
+        category:_dropCat||'Concept', filename:aiName, dropbox_path:up.file.link, link:up.file.link,
+        mime:fileObj.type||'', size:fileObj.size||null, summary:(summary||'').slice(0,2000)||null,
+        origin:'drop'}); }catch(_){}
+    } }catch(_){}}
   try{ notifyPartner((who||'Iemand')+' zette '+list.length+' punt(en) in afwachting uit een bestand.'); }catch(_){}
   try{ await refresh(); }catch(_){}
 }
