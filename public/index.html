@@ -1262,6 +1262,20 @@
   .welcome-overlay.playing .home-author{animation:fadeUp 1.4s ease 3.5s both}
   .welcome-close{position:absolute;top:calc(env(safe-area-inset-top) + 16px);right:20px;z-index:4;width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.6);background:rgba(0,0,0,.2);color:rgba(255,255,255,.6);font-size:22px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:border-color .15s,color .15s}
   #welcomeChat{position:relative;z-index:2;width:min(640px,92vw);display:flex;flex-direction:column;gap:12px;margin-top:26px;max-height:min(58vh,540px)}
+  /* Tekstwolkje: de AI vraagt of iets een nieuwe klant of een nieuw project is. */
+  #welcomeVraag{position:relative;z-index:3;width:min(560px,92vw);margin-top:22px}
+  #welcomeVraag:empty{display:none}
+  .vraag-wolk{position:relative;background:rgba(22,22,22,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    border:1px solid rgba(255,255,255,.16);border-radius:14px;padding:16px 18px 14px;text-align:left;animation:fadeUp .5s ease both}
+  .vraag-wolk::after{content:"";position:absolute;left:34px;bottom:-8px;width:14px;height:14px;
+    background:rgba(22,22,22,.72);border-right:1px solid rgba(255,255,255,.16);border-bottom:1px solid rgba(255,255,255,.16);transform:rotate(45deg)}
+  .vraag-wolk .vw-kop{font-size:12px;color:var(--mut2);margin-bottom:8px;letter-spacing:.02em}
+  .vraag-wolk .vw-tekst{font-size:13.5px;line-height:1.45;margin-bottom:12px}
+  .vraag-wolk .vw-velden{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+  .vraag-wolk input{flex:1 1 150px;min-width:0;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.16);
+    border-radius:8px;padding:8px 10px;color:inherit;font:inherit;font-size:13px}
+  .vraag-wolk .vw-knoppen{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .vraag-wolk .vw-rest{font-size:11.5px;color:var(--mut2);margin-left:auto}
   .welcome-overlay #chatThread{flex:1 1 auto;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:10px;width:100%;padding:2px;margin:0}
   .welcome-overlay #chatThread:empty{display:none}
   /* berichten onderaan verankeren en omhoog laten groeien (scrollt normaal zodra vol) */
@@ -1738,7 +1752,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v172</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v173</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -2110,6 +2124,7 @@
     <h2 class="home-compliment" id="compliment"></h2>
     <div class="home-author" id="complimentAuthor"></div>
   </div>
+  <div id="welcomeVraag"></div>
   <div id="welcomeChat"></div>
 </div>
 
@@ -2868,6 +2883,17 @@ function _pvProjOptions(sel){
   });
   return h;
 }
+// Regeltje boven de knoppen: "Nieuwe klant Bar Xyz · Neonbak  [Aanmaken]".
+// Alleen als de AI daadwerkelijk iets nieuws voorstelt en er geen bestaand project is.
+function _pvVoorstelRegel(s, sug){
+  if(!sug || !sug.nieuw_klant || sug.project_id) return '';
+  return '<div style="font-size:12.5px;color:var(--mut2);margin:0 0 10px">'
+    + (sug.klant_bestaat?'Nieuw project bij ':'Nieuwe klant ')
+    + '<b style="color:var(--txt)">'+escapeHtml(sug.nieuw_klant)+'</b>'
+    + (sug.nieuw_project?' · <b style="color:var(--txt)">'+escapeHtml(sug.nieuw_project)+'</b>':'')
+    + ' <button class="btn ghost" style="font-size:11.5px;padding:3px 9px;margin-left:6px" '
+    + 'onclick="pvMaakUitVoorstel(\''+s.id+'\')">Aanmaken</button></div>';
+}
 function renderPostvak(){
   const wrap=document.getElementById('postvakWrap'); if(!wrap)return;
   const inbox=state.inbox||[];
@@ -2913,6 +2939,7 @@ function renderPostvak(){
      +         (sug&&sug.reden?'<span style="font-size:11.5px;color:var(--mut2)">'+escapeHtml(sug.reden)+'</span>':'')
      +       '</div>'
      +       '<div style="font-size:12.5px;color:var(--mut2);margin:4px 0 10px">'+escapeHtml(_pvSnippet(s))+'</div>'
+     +       _pvVoorstelRegel(s, sug)
      +       '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">'
      +         '<select class="pv-proj" style="max-width:280px">'+_pvProjOptions(sug?sug.project_id:'')+'</select>'
      +         '<button class="btn" onclick="pvAssign(\''+s.id+'\')">Naar project</button>'
@@ -2939,11 +2966,40 @@ async function pvSuggestAll(){
     const r=await fetch('/api/triage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sources,catalog})});
     const d=await r.json();
     _pvSug=(d&&d.suggestions)||{};
+    await _pvBewaarVoorstellen(_pvSug);
   }catch(_){ _pvSug={}; }
   try{ loadUsage(); }catch(_){}
   _pvBusy=false; renderPostvak();
 }
 
+// Het voorstel bij de bron bewaren. Zo overleeft het een herlaadbeurt, en kan het
+// welkomstscherm de vraag stellen — ook als het item via mail binnenkwam.
+async function _pvBewaarVoorstellen(sug){
+  const nu=new Date().toISOString();
+  for(const [sid,v] of Object.entries(sug||{})){
+    const steltVraag = (v.kind==='werk' && !v.project_id && v.nieuw_klant);
+    const rec={ suggest_kind:v.kind, suggest_project_id:v.project_id||null,
+      suggest_client:v.nieuw_klant||null, suggest_project:v.nieuw_project||null,
+      suggest_reden:v.reden||null, suggest_at:nu };
+    // Een eerder afgewezen vraag komt niet terug; anders blijf je 'm wegklikken.
+    const oud=(state.inbox||[]).find(x=>String(x.id)===String(sid));
+    if(steltVraag && (!oud || !oud.vraag_status)) rec.vraag_status='open';
+    try{ await sb.from('sources').update(rec).eq('id',sid); }catch(_){}
+  }
+}
+
+// Hetzelfde voorstel, maar dan vanuit het Postvak In in plaats van het welkomstscherm.
+async function pvMaakUitVoorstel(sid){
+  const sug=_pvSug[sid]; if(!sug||!sug.nieuw_klant)return;
+  const wat=(sug.klant_bestaat?'Project "':'Klant "')+sug.nieuw_klant+'"'
+          + (sug.nieuw_project?' · project "'+sug.nieuw_project+'"':'')+' aanmaken en dit item eraan koppelen?';
+  if(!(await uiConfirm(wat,{ok:'Aanmaken',danger:false})))return;
+  const pid=await _maakProject(sug.nieuw_klant, sug.nieuw_project);
+  if(pid) await _pvMoveToProject([sid], pid);
+  try{ await sb.from('sources').update({vraag_status:'beantwoord'}).eq('id',sid); }catch(_){}
+  delete _pvSug[sid];
+  await refresh();
+}
 async function pvAssign(sid){
   const row=document.querySelector('.pv-row[data-sid="'+sid+'"]');
   const sel=row?row.querySelector('.pv-proj'):null;
@@ -6250,9 +6306,52 @@ async function sbLoad(){
   state.sources = sources.map(src=>_mapSource(src,atts));
   // Postvak In: binnengekomen, nog geen project én nog niet bewust weggezet (inspiratie/privé/ruis).
   state.inbox = sources.filter(src=>(!src.project_id || !known.has(src.project_id)) && !src.triage);
+  // Openstaande vragen van de AI ("is dit een nieuwe klant?"). Oudste eerst — die wacht al het langst.
+  state.vragen = sources.filter(src=>src.vraag_status==='open' && !src.project_id && !src.triage)
+                        .sort((a,b)=>String(a.received_at||'').localeCompare(String(b.received_at||'')));
   if(activeTab!=='all' && !state.projects.find(x=>x.id===activeTab)) activeTab='all';
 }
-async function refresh(){ await sbLoad(); if(!_colorDedupDone){ _colorDedupDone=true; try{ await _ensureUniqueClientColors(); }catch(_){} } render(); try{ if(_pbTarget&&_pbPid)_renderProjBoard(); }catch(_){} }
+async function refresh(){ await sbLoad(); if(!_colorDedupDone){ _colorDedupDone=true; try{ await _ensureUniqueClientColors(); }catch(_){} } render(); try{ if(_pbTarget&&_pbPid)_renderProjBoard(); }catch(_){}
+  try{ _vraagNaRefresh(); }catch(_){}
+  try{ _autoTriageNieuwe(); }catch(_){}
+}
+// Zijn er vragen bijgekomen sinds de vorige keer? Dan het welkomstscherm naar voren halen.
+// Stond het al open, dan alleen het wolkje bijwerken — niet opnieuw laten opspringen.
+var _vraagVorigAantal=null;
+function _vraagNaRefresh(){
+  const n=(state.vragen||[]).length;
+  const eerste=(_vraagVorigAantal===null);
+  const erbij=(!eerste && n>_vraagVorigAantal);
+  _vraagVorigAantal=n;
+  if(!n){ const el=document.getElementById('welcomeVraag'); if(el)el.innerHTML=''; return; }
+  if(eerste||erbij) summonWelcomeIfVraag(); else renderWelcomeVraag();
+}
+
+// Nieuw binnengekomen bronnen die de AI nog nooit zag, één keer per sessie laten beoordelen.
+// Daardoor ligt er een vraag klaar zodra je de app opent, ook als het een mail was.
+var _autoTriageBezig=false, _autoTriageGedaan=false;
+async function _autoTriageNieuwe(){
+  if(_autoTriageBezig||_autoTriageGedaan)return;
+  const nieuw=(state.inbox||[]).filter(s=>!s.suggest_at).slice(0,30);
+  if(!nieuw.length){ _autoTriageGedaan=true; return; }
+  _autoTriageBezig=true;
+  try{
+    const metDoc=new Set((state.documents||[]).map(d=>String(d.source_id)));
+    const catalog=(state.projects||[]).filter(p=>p.id!=='__inbox__').map(p=>({project_id:p.id,client:p.client||'',project:p.project||''}));
+    const sources=nieuw.map(s=>({id:s.id,channel:s.channel,sender:s.sender,subject:s.subject,
+      body:(s.summary||s.body||'').slice(0,300), bijlage:metDoc.has(String(s.id))}));
+    const r=await fetch('/api/triage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sources,catalog})});
+    const d=await r.json();
+    if(d&&d.suggestions&&Object.keys(d.suggestions).length){
+      await _pvBewaarVoorstellen(d.suggestions);
+      _autoTriageGedaan=true;
+      await sbLoad(); render();
+      try{ _vraagNaRefresh(); }catch(_){}
+    } else { _autoTriageGedaan=true; }
+  }catch(_){ /* stil: dit is een gemak, geen noodzaak */ }
+  _autoTriageBezig=false;
+  try{ loadUsage(); }catch(_){}
+}
 // ---------- live updates (Supabase Realtime + poll-vangnet) met FLIP-animatie ----------
 // Nieuw item komt vanzelf binnen (geen verversen); bestaande items zakken soepel met
 // trage ease naar beneden (FLIP) terwijl het nieuwe van bovenaf infadet (.liveIn).
@@ -6534,6 +6633,91 @@ function composeMode(on){}
 function updateIntroFade(){const o=document.getElementById('welcomeOverlay');if(!o)return;const ta=document.getElementById('chatInput');const th=document.getElementById('chatThread');const active=(ta&&ta.value.trim())||(th&&th.children.length>0);o.classList.toggle('chatting',!!active);}
 function goHome(){ showWelcome(); }
 function dismissWelcome(){ hideWelcome(); _animateNext=true; render(); try{ setTimeout(maybeShowDayOverview,650); }catch(_){} }
+
+/* ============================================================================
+   DE AI STELT EEN VRAAG
+   Een mail komt binnen terwijl niemand kijkt. Het voorstel ("dit lijkt een nieuwe
+   klant") wordt daarom bij de bron bewaard, en de vraag wordt gesteld zodra iemand
+   de app opent: het welkomstscherm komt naar voren. Geen bubbel die je kunt missen.
+   Er wordt nooit iets aangemaakt zonder dat je op Aanmaken drukt.
+   ============================================================================ */
+var _vraagIdx=0;
+
+// LET OP: _clientColor bestaat twee keer in dit bestand; de tweede definitie wint en
+// geeft '#888' voor een onbekende klant. Daarom hier een eigen, expliciete opzoeker.
+function _vraagKlantKleur(client){
+  const p=(state.projects||[]).find(x=>x.id!=='__inbox__'&&x.client===client&&x.color);
+  return p?p.color:_nextClientColor();
+}
+function _vraagOpen(){ return (state.vragen||[]); }
+
+// Het welkomstscherm naar voren halen zodra er een vraag ligt.
+function summonWelcomeIfVraag(){
+  const v=_vraagOpen();
+  if(!v.length) return false;
+  if(_vraagIdx>=v.length) _vraagIdx=0;
+  const o=document.getElementById('welcomeOverlay');
+  if(o && o.classList.contains('dismissed')) showWelcome();
+  renderWelcomeVraag();
+  return true;
+}
+function renderWelcomeVraag(){
+  const el=document.getElementById('welcomeVraag'); if(!el)return;
+  const v=_vraagOpen();
+  if(!v.length){ el.innerHTML=''; return; }
+  if(_vraagIdx>=v.length) _vraagIdx=0;
+  const s=v[_vraagIdx];
+  const klant=(s.suggest_client||'').trim();
+  const proj=(s.suggest_project||'').trim();
+  const bestaat=uniqueClients().some(c=>c.toLowerCase()===klant.toLowerCase());
+  const tekst=((s.subject||s.summary||s.body||'').replace(/\s+/g,' ')).slice(0,130);
+  const rest=v.length-1;
+  el.innerHTML='<div class="vraag-wolk">'
+   + '<div class="vw-kop">'+(bestaat?'Nieuw project bij een bestaande klant?':'Nieuwe klant?')+'</div>'
+   + '<div class="vw-tekst">'+escapeHtml(tekst)+(tekst.length>=130?'…':'')+'</div>'
+   + '<div class="vw-velden">'
+   +   '<input id="vwKlant" value="'+escapeHtml(klant)+'" placeholder="Klant" autocomplete="off">'
+   +   '<input id="vwProj" value="'+escapeHtml(proj)+'" placeholder="Project" autocomplete="off">'
+   + '</div>'
+   + '<div class="vw-knoppen">'
+   +   '<button class="btn" onclick="vraagAanmaken(\''+s.id+'\')">Aanmaken en toewijzen</button>'
+   +   '<button class="btn ghost" onclick="vraagAfwijzen(\''+s.id+'\')">Nee, geen nieuw project</button>'
+   +   '<button class="btn ghost" onclick="vraagLater()">Later</button>'
+   +   (rest>0?'<span class="vw-rest">nog '+rest+' vraag'+(rest===1?'':'en')+'</span>':'')
+   + '</div></div>';
+}
+async function _vraagAf(sid, status){
+  try{ await sb.from('sources').update({vraag_status:status}).eq('id',sid); }catch(_){}
+  state.vragen=(state.vragen||[]).filter(x=>String(x.id)!==String(sid));
+  _vraagIdx=0;
+  if(!_vraagOpen().length){ renderWelcomeVraag(); dismissWelcome(); }
+  else renderWelcomeVraag();
+}
+// Maakt (zo nodig) de klant en daarna het project. Geeft het nieuwe project-id terug.
+// Bestaat de klant al, dan wordt zijn schrijfwijze en kleur overgenomen.
+async function _maakProject(klant, proj){
+  const naam=(uniqueClients().find(c=>c.toLowerCase()===klant.toLowerCase()))||klant;
+  const nieuw=!uniqueClients().some(c=>c.toLowerCase()===naam.toLowerCase());
+  const icon=(naam[0]||'?').toUpperCase();
+  const col=_vraagKlantKleur(naam);
+  try{
+    // Nieuwe klant krijgt eerst een klant-rij zonder project (zo doet de rest van de app het ook).
+    if(nieuw) await sb.from('projects').insert({client:naam,project:'',color:col,icon,sort:(state.projects.length||0)+1});
+    const ins=await sb.from('projects').insert({client:naam,project:proj||'',color:col,icon,sort:(state.projects.length||0)+2}).select('id').single();
+    return (ins&&ins.data)?ins.data.id:null;
+  }catch(_){ return null; }
+}
+async function vraagAanmaken(sid){
+  const klant=((document.getElementById('vwKlant')||{}).value||'').trim();
+  const proj=((document.getElementById('vwProj')||{}).value||'').trim();
+  if(!klant){ try{ await uiConfirm('Vul een klantnaam in.',{ok:'Oké',danger:false}); }catch(_){} return; }
+  const pid=await _maakProject(klant, proj);
+  if(pid) await _pvMoveToProject([sid], pid);   // documenten volgen via de database-trigger
+  await _vraagAf(sid,'beantwoord');
+  await refresh();
+}
+async function vraagAfwijzen(sid){ await _vraagAf(sid,'afgewezen'); await refresh(); }
+function vraagLater(){ const v=_vraagOpen(); _vraagIdx=(_vraagIdx+1)%Math.max(v.length,1); if(v.length<=1) dismissWelcome(); else renderWelcomeVraag(); }
 // ===== Dagoverzicht-overlay =====
 function _projColor(p){ try{ return (PROJCOL&&PROJCOL[p.id])||'#888'; }catch(_){ return '#888'; } }
 function _clientColor(client){ const p=(state.projects||[]).find(x=>x.client===client&&x.id!=='__inbox__'); return p?_projColor(p):'#888'; }
