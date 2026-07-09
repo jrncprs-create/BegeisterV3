@@ -13,6 +13,7 @@ import { createClient } from "@supabase/supabase-js";
 import { extractItems } from "./extract.mjs";
 import { sendToAll } from "../lib/push.mjs";
 import { beoordeelBijlage, hashVan } from "../lib/bijlagefilter.mjs";
+import { magDirect } from "../lib/dropboxsync.mjs";
 import { logUsage } from "../lib/usage.mjs";
 
 const BUCKET = "intake";
@@ -145,6 +146,18 @@ export async function run() {
               source_id: source.id, filename: att.filename, storage_path: path,
               mime: att.contentType, size: att.size,
             });
+            // Klein genoeg? Dan meteen naar Dropbox. Grote bestanden pakt de uurlijkse
+            // wachtrij op — anders staat de intake tientallen seconden stil per foto.
+            if (magDirect(att.size)) {
+              try {
+                await fetch(`http://127.0.0.1:${process.env.PORT || 8080}/api/dropbox/list`, {
+                  method: "POST", headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ action: "upload", name: att.filename,
+                    b64: att.content.toString("base64"), target: "Postvak In", owner_type: "client" }),
+                });
+              } catch (_) { /* mislukt? de uurlijkse ronde pakt 'm alsnog op */ }
+            }
+
             // Tel mee hoe vaak deze inhoud voorbijkomt. Bij drie bronnen slaat de trigger 'm dicht.
             try {
               const h = hashVan(att.content);
