@@ -1738,7 +1738,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v170</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v171</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -2882,6 +2882,21 @@ function renderPostvak(){
       + '<button class="btn ghost" id="pvAiBtn" onclick="pvSuggestAll()"'+(_pvBusy?' disabled':'')+'>'
       + (_pvBusy?'Bezig…':(nSug?'✦ Opnieuw voorstellen':'✦ Laat de AI voorstellen doen'))+'</button></div>';
 
+  // Bulk-balk: pas zichtbaar zodra er voorstellen liggen. Niets gebeurt zonder bevestiging.
+  if(nSug){
+    const b=_pvBuckets();
+    const knop=(kind,tekst)=> (b[kind]&&b[kind].length)
+      ? '<button class="btn ghost" style="font-size:12px;padding:5px 11px" onclick="pvBulk(\''+kind+'\')">'
+        + b[kind].length+' × '+tekst+'</button>' : '';
+    const rest=b.werkZonderProject.length
+      ? '<span style="font-size:11.5px;color:var(--mut2)">'+b.werkZonderProject.length+' × werk zonder project — met de hand</span>' : '';
+    const knoppen=[knop('werk','naar project'),knop('inspiratie','inspiratie'),knop('prive','privé'),knop('ruis','ruis')].filter(Boolean).join('');
+    if(knoppen||rest){
+      h+='<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:0 0 18px;border-bottom:1px solid var(--lin);margin-bottom:6px">'
+       + '<span style="font-size:12px;color:var(--mut2);margin-right:4px">Alles in één keer:</span>'+knoppen+rest+'</div>';
+    }
+  }
+
   inbox.forEach(s=>{
     const sug=_pvSug[s.id]||null;
     const kind=sug?sug.kind:'';
@@ -2932,31 +2947,71 @@ async function pvAssign(sid){
   const sel=row?row.querySelector('.pv-proj'):null;
   const pid=sel&&sel.value?sel.value:'';
   if(!pid){ try{ await uiConfirm('Kies eerst een klant en project.',{ok:'Oké',danger:false}); }catch(_){} return; }
-  try{ await sb.from('sources').update({project_id:pid, triage:null}).eq('id',sid); }catch(_){}
-  // bijbehorende documenten en losse taken verhuizen mee
-  try{ await sb.from('documents').update({project_id:pid}).eq('source_id',sid); }catch(_){}
-  try{ await sb.from('items').update({project_id:pid}).eq('source_id',sid).is('project_id',null); }catch(_){}
+  await _pvMoveToProject([sid], pid);
   delete _pvSug[sid];
   await refresh();
+}
+// Bronnen naar een project verhuizen. De documenten volgen vanzelf: daar zorgt de
+// database-trigger sources_move_documents voor. Losse taken nemen we hier mee.
+async function _pvMoveToProject(ids, pid){
+  if(!ids.length||!pid)return;
+  try{ await sb.from('sources').update({project_id:pid, triage:null}).in('id',ids); }catch(_){}
+  try{ await sb.from('items').update({project_id:pid}).in('source_id',ids).is('project_id',null); }catch(_){}
 }
 
 // Inspiratie / Privé / Ruis: uit het postvak, zonder een project te verzinnen.
 // Inspiratie belandt op het inspiratiebord en levert nadrukkelijk GEEN taken op.
 async function pvTriage(sid,kind){
-  const s=(state.inbox||[]).find(x=>String(x.id)===String(sid)); if(!s)return;
+  await _pvTriageMany([sid], kind);
+  delete _pvSug[sid];
+  await refresh();
+}
+async function _pvTriageMany(ids, kind){
+  if(!ids.length)return;
   if(kind==='inspiratie'){
-    try{
+    const rows=[];
+    ids.forEach(sid=>{
+      const s=(state.inbox||[]).find(x=>String(x.id)===String(sid)); if(!s)return;
       const att=(state.documents||[]).find(d=>String(d.source_id)===String(sid));
-      await sb.from('insp_items').insert({
-        type:'image', title:(s.subject||s.body||'Inspiratie').slice(0,120),
+      rows.push({ type:'image', title:(s.subject||s.body||'Inspiratie').slice(0,120),
         url:s.url||(att?att.link:null)||null,
         storage_path:att?att.storage_path:null, project_id:s.project_id||null, sort:0 });
-    }catch(_){}
-    // taken die per ongeluk uit deze bron zijn ontstaan horen hier niet
-    try{ await sb.from('items').delete().eq('source_id',sid).is('project_id',null); }catch(_){}
+    });
+    if(rows.length){ try{ await sb.from('insp_items').insert(rows); }catch(_){} }
+    // taken die per ongeluk uit deze bronnen zijn ontstaan horen hier niet
+    try{ await sb.from('items').delete().in('source_id',ids).is('project_id',null); }catch(_){}
   }
-  try{ await sb.from('sources').update({triage:kind}).eq('id',sid); }catch(_){}
-  delete _pvSug[sid];
+  try{ await sb.from('sources').update({triage:kind}).in('id',ids); }catch(_){}
+}
+
+// Bulk. Alleen voorstellen die de AI daadwerkelijk deed, en bij 'werk' alleen die
+// waar ook een project bij hoort — een voorstel zonder project valt terug op handwerk.
+function _pvBuckets(){
+  const b={werk:[], werkZonderProject:[], inspiratie:[], prive:[], ruis:[]};
+  (state.inbox||[]).forEach(s=>{
+    const sug=_pvSug[s.id]; if(!sug)return;
+    if(sug.kind==='werk'){ (sug.project_id?b.werk:b.werkZonderProject).push(s.id); }
+    else if(b[sug.kind]) b[sug.kind].push(s.id);
+  });
+  return b;
+}
+async function pvBulk(kind){
+  const b=_pvBuckets();
+  const ids=b[kind]||[];
+  if(!ids.length)return;
+  const lbl={werk:'naar hun voorgestelde project',inspiratie:'naar het inspiratiebord',
+             prive:'als privé wegzetten',ruis:'als ruis wegzetten'}[kind];
+  const extra=(kind==='inspiratie')?'\n\nDeze leveren geen taken op.':'';
+  if(!(await uiConfirm(ids.length+' item'+(ids.length===1?'':'s')+' '+lbl+'?'+extra,{ok:'Doen',danger:false})))return;
+
+  if(kind==='werk'){
+    const perProject={};
+    ids.forEach(sid=>{ const p=_pvSug[sid].project_id; (perProject[p]=perProject[p]||[]).push(sid); });
+    for(const [pid,sids] of Object.entries(perProject)) await _pvMoveToProject(sids, pid);
+  } else {
+    await _pvTriageMany(ids, kind);
+  }
+  ids.forEach(sid=>{ delete _pvSug[sid]; });
   await refresh();
 }
 
