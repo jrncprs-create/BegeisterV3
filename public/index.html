@@ -944,6 +944,16 @@
   .pv-acties{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
   .pv-acties select{max-width:280px}
   .pv-leeg{padding:48px 0;text-align:center;color:var(--mut2);font-size:13.5px}
+  /* Waar ligt de bal — in de balk zelf. Massieve stip: wij zijn aan zet.
+     Open ring: we wachten op iemand anders. Eronder één fluisterregel. */
+  .pb-fase-wacht .pb-fasestap.nu .pb-fasedot{background:var(--bg);border-color:var(--fcol);border-width:2px}
+  .pb-fase-wacht .pb-fasestap.nu .pb-fasedot::after{content:"";position:absolute;inset:-6px;border-radius:50%;
+    border:1px solid var(--fcol);opacity:.28}
+  .pb-fase-rust .pb-fasestap.nu .pb-fasedot{box-shadow:none}
+  .pb-balmini{display:flex;align-items:center;gap:7px;margin-top:12px;font-size:11.5px;color:var(--mut2);letter-spacing:.01em}
+  .pb-balmini b{color:var(--mut);font-weight:600}
+  .pb-balring{width:7px;height:7px;border-radius:50%;border:1.5px solid var(--mut2);flex:none}
+  .pb-balvol{width:7px;height:7px;border-radius:50%;background:var(--mut2);flex:none}
   /* Bestanden op het bord: mapjes per soort, kop in de klantkleur. */
   .pb-map{margin:0 0 6px}
   .pb-maph{display:flex;align-items:center;gap:7px;width:100%;background:none;border:0;padding:6px 0;cursor:pointer;
@@ -954,6 +964,12 @@
   .pb-mapnm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .pb-mapcnt{color:var(--mut2);font-size:11px}
   .pb-mapkids{padding-left:6px}
+  .pb-map-fin{margin-bottom:10px}
+  .pb-maph-top{font-weight:600;letter-spacing:.05em;text-transform:uppercase;font-size:11px}
+  .pb-map-sub{margin:0}
+  .pb-map-sub .pb-maph{padding:4px 0;opacity:.92}
+  .pb-map-sub .pb-mapkids{padding-left:14px}
+  .pb-mapleeg{font-size:11.5px;color:var(--mut2);padding:3px 0 5px 2px}
   /* Voortgang op het projectbord: zes stappen, gevuld tot en met de huidige. */
   .pb-fase{display:flex;gap:0;align-items:flex-start;padding:2px 0 4px}
   .pb-fasestap{flex:1;min-width:0;background:none;border:none;padding:0;cursor:pointer;
@@ -967,8 +983,21 @@
   .pb-fasestap.nu .pb-fasedot{box-shadow:0 0 0 3px color-mix(in srgb, var(--fcol) 28%, transparent)}
   .pb-faselbl{font-size:10.5px;letter-spacing:.01em;text-align:center;line-height:1.2;white-space:nowrap;
     overflow:hidden;text-overflow:ellipsis;max-width:100%}
-  .pb-fasestap.nu .pb-faselbl{color:var(--txt);font-weight:600}
+  .pb-fasestap.nu .pb-faselbl{color:var(--fcol);font-weight:600}
   .pb-fasestap:hover .pb-faselbl{color:var(--txt)}
+  /* Omgezet Word-document: leesbaar vel papier in plaats van 'geen voorvertoning'. */
+  .dox-wrap{width:100%;height:100%;overflow:auto;display:block;background:#fff;border-radius:6px}
+  .dox{max-width:760px;margin:0 auto;padding:44px 46px;color:#1a1a1a;background:#fff;
+    font:15px/1.65 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+  .dox h1,.dox h2,.dox h3{color:#111;margin:1.3em 0 .5em;line-height:1.25}
+  .dox h1{font-size:24px} .dox h2{font-size:19px} .dox h3{font-size:16px}
+  .dox p{margin:0 0 .85em}
+  .dox ul,.dox ol{margin:0 0 .9em 1.3em}
+  .dox table{border-collapse:collapse;width:100%;margin:1em 0;font-size:13.5px}
+  .dox td,.dox th{border:1px solid #ddd;padding:6px 9px;text-align:left;vertical-align:top}
+  .dox th{background:#f4f4f4}
+  .dox img{max-width:100%;height:auto}
+  .dox a{color:#0b57d0}
   .bron-atts{margin-top:16px}
   .bron-stage{height:auto;min-height:0;aspect-ratio:4/3;max-height:62vh;position:relative}
   .bron-stage .fmp-frame{width:100%;height:100%}
@@ -1836,7 +1865,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v181</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v183</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -3666,9 +3695,12 @@ function _renderProjBoard(){
   // hebben geen briefing, akkoord of factuur — daar is een fasebalk zinloos.
   const _fase=p.phase||'briefing';
   const _fIdx=_DOS_PHASES.findIndex(x=>x.k===_fase);
-  const secFase=_geenTraject(p.client) ? '' : (`<div class="pb-sec"><div class="pb-h">Voortgang</div><div class="pb-fase">`
-    + _DOS_PHASES.map((f,i)=>`<button class="pb-fasestap${i<=_fIdx?' done':''}${i===_fIdx?' nu':''}" style="--fcol:${col}" onclick="pbSetPhase('${f.k}')" title="${f.l}"><span class="pb-fasedot"></span><span class="pb-faselbl">${f.l}</span></button>`).join('')
-    + `</div></div>`);
+  const _bal=_pbBal(p);
+  const _balTitel = _bal.staat==='wacht' ? ('De bal ligt bij '+_bal.wie+(_bal.dagen!=null?' · al '+_bal.dagen+' dag'+(_bal.dagen===1?'':'en'):''))
+                  : _bal.staat==='ons' ? ('Wij zijn aan zet: '+_bal.wie+' · '+_bal.aantal+' open') : 'Niets openstaand';
+  const secFase=_geenTraject(p.client) ? '' : (`<div class="pb-sec"><div class="pb-h">Voortgang</div><div class="pb-fase pb-fase-${_bal.staat}">`
+    + _DOS_PHASES.map((f,i)=>`<button class="pb-fasestap${i<=_fIdx?' done':''}${i===_fIdx?' nu':''}" style="--fcol:${col}" onclick="pbSetPhase('${f.k}')" title="${i===_fIdx?esc(_balTitel):f.l}"><span class="pb-fasedot"></span><span class="pb-faselbl">${f.l}</span></button>`).join('')
+    + `</div>${_pbBalMini(_bal)}</div>`);
   const secWait=`<div class="pb-sec"><div class="pb-h">In afwachting <button class="pb-hadd" onclick="openModal(null,'wachter','wait','${_pbPid}')" title="Toevoegen">+</button></div>${waitT.length?waitT.map(waitRow).join(''):'<div class="pb-empty">Niets in afwachting.</div>'}</div>`;
   const secTaken=`<div class="pb-sec"><div class="pb-h">Taken <button class="pb-hadd" onclick="openModal(null,null,'todo','${_pbPid}')" title="Toevoegen">+</button></div>${takenT.length?takenT.map(taskRow).join(''):'<div class="pb-empty">Geen actiepunten.</div>'}</div>`;
   const doneInk=inkopen.filter(x=>x.done); const _doneN=doneT.length+doneInk.length;
@@ -3683,7 +3715,7 @@ function _renderProjBoard(){
   const secAppt=`<div class="pb-sec"><div class="pb-h">Afspraken <button class="pb-hadd" onclick="openApptModal(null,'${_pbPid}')" title="Afspraak toevoegen">+</button></div>${appts.length?appts.map(apptRow).join(''):'<div class="pb-empty">Nog geen afspraken.</div>'}</div>`;
   const secNotes=`<div class="pb-sec"><div class="pb-h">Notities</div><textarea class="pb-notes" placeholder="Vrije notities voor dit project…" onblur="pbSaveNotes(this.value)">${esc(p.notes||'')}</textarea></div>`;
   const secCmt=`<div class="pb-sec"><div class="pb-h">Opmerkingen</div>${typeof _cmtBtnHTML==='function'?_cmtBtnHTML('project',_pbPid):''}</div>`;
-  const secFiles=`<div class="pb-sec"><div class="pb-h">Bestanden <button class="pb-hadd" onclick="dropboxPick('project','${_pbPid}')" title="Bestand koppelen">+</button></div>${_bestandenPerSoort(_filesFor('project',_pbPid), col)}</div>`;
+  const secFiles=`<div class="pb-sec"><div class="pb-h">Bestanden <button class="pb-hadd" onclick="dropboxPick('project','${_pbPid}')" title="Bestand koppelen">+</button></div>${_bestandenPerSoort(_filesFor('project',_pbPid), col, !_geenPrive(p.client))}</div>`;
   // Bestellijst — dezelfde inkoop-items als 'Inkopen' in Financiën, met masterlink naar de hele verlanglijst
   const _inkSrcCnt={}; inkopen.forEach(x=>{ if(x.source_id)_inkSrcCnt[x.source_id]=(_inkSrcCnt[x.source_id]||0)+1; });
   const _listSid=Object.keys(_inkSrcCnt).find(sid=>_inkSrcCnt[sid]>=2);
@@ -3785,6 +3817,45 @@ function _parseEur(v){ v=String(v||'').replace(/[^0-9,.\-]/g,'').replace(/\.(?=\
 async function pbSetPrice(id,val){ const price=_parseEur(val); const x=_pbItems.find(i=>i.id===id); if(x)x.price=price; try{ await sb.from('project_board').update({price}).eq('id',id); }catch(_){} _renderProjBoard(); }
 async function pbSetBudget(val){ const budget=_parseEur(val); const p=projById(_pbPid); if(p)p.budget=budget; try{ await sb.from('projects').update({budget}).eq('id',_pbPid); }catch(_){} _renderProjBoard(); }
 async function pbSetProjectprijs(val){ const v=_parseEur(val); const p=projById(_pbPid); if(p)p.projectprijs=v; try{ await sb.from('projects').update({projectprijs:v}).eq('id',_pbPid); }catch(_){} _renderProjBoard(); try{ if(view==='financien')renderFinancien(); }catch(_){} }
+// Waar ligt de bal? Afgeleid, niet ingevuld:
+//   status 'wait'  = wij wachten op iemand anders  → de bal ligt bij hen
+//   status 'todo'  = wij zijn aan zet              → de bal ligt bij ons
+// Wachten wint: zolang je op de klant wacht, kun jij weinig.
+function _dagenSinds(ms){ if(!ms) return null; return Math.floor((Date.now()-ms)/86400000); }
+// Waar ligt de bal? Afgeleid, niet ingevuld:
+//   status 'wait'  = wij wachten op iemand anders  -> de bal ligt bij hen
+//   status 'todo'  = wij zijn aan zet              -> de bal ligt bij ons
+// Wachten wint: zolang je op de klant wacht, kun jij weinig.
+function _pbBal(p){
+  const items=(p.items||[]).filter(i=>i.status!=='done');
+  const wacht=items.filter(i=>i.status==='wait');
+  if(wacht.length){
+    const oudste=wacht.slice().sort((a,b)=>(a.created||0)-(b.created||0))[0];
+    const bij=[...new Set(wacht.map(i=>i.contact).filter(Boolean))];
+    const wie = bij.length ? bij.slice(0,2).join(' & ') + (bij.length>2?' e.a.':'') : 'de klant';
+    const d=_dagenSinds(oudste.created);
+    return {staat:'wacht', wie, dagen:d, aantal:wacht.length};
+  }
+  const todo=items.filter(i=>i.status!=='wait');
+  if(todo.length){
+    const eig=[...new Set(todo.map(i=>i.owner).filter(Boolean))];
+    const deadlines=todo.map(i=>i.due).filter(Boolean).sort();
+    return {staat:'ons', wie:(eig.length?eig.slice(0,2).join(' & '):'ons'), due:deadlines[0]||null, aantal:todo.length};
+  }
+  return {staat:'rust'};
+}
+// Eén fluisterregel onder de balk. De stip in de balk draagt dezelfde boodschap.
+function _pbBalMini(bal){
+  if(bal.staat==='rust') return '<div class="pb-balmini">niets openstaand</div>';
+  if(bal.staat==='wacht'){
+    const d=bal.dagen;
+    const sinds=(d===null)?'':(d===0?'vandaag':(d===1?'1 dag':d+' dagen'));
+    return '<div class="pb-balmini"><span class="pb-balring"></span>wacht op <b>'+escapeHtml(bal.wie)+'</b>'
+      + (sinds?' · '+sinds:'') + '</div>';
+  }
+  return '<div class="pb-balmini"><span class="pb-balvol"></span>aan zet: <b>'+escapeHtml(bal.wie)+'</b>'
+    + (bal.due?' · '+_finShortDate(bal.due):'') + '</div>';
+}
 // Voortgang van het project. Klik dezelfde fase nogmaals om een stap terug te gaan.
 async function pbSetPhase(k){
   const p=projById(_pbPid); if(!p)return;
@@ -4577,7 +4648,8 @@ async function openAiInsight(kind, ref){
 const _BEELD_EXT=/\.(png|jpe?g|gif|webp|heic|heif|bmp|tiff?|svg|avif)$/i;
 function _isAttImg(name){ return _BEELD_EXT.test(name||''); }
 function _isAttPdf(name){ return /\.pdf$/i.test(name||''); }
-function _bestandSoort(name){ return _isAttImg(name)?'beeld':(_isAttPdf(name)?'pdf':'anders'); }
+function _isAttDocx(name){ return /\.docx$/i.test(name||''); }
+function _bestandSoort(name){ return _isAttImg(name)?'beeld':(_isAttPdf(name)?'pdf':(_isAttDocx(name)?'docx':'anders')); }
 
 // PDF's zonder de zwevende zoombalk van de browser en passend op de breedte.
 function _attSrc(url,name){ return _isAttPdf(name) ? (url+'#toolbar=0&navpanes=0&view=FitH') : url; }
@@ -4610,7 +4682,24 @@ function _bestandPreviewHTML(url, naam, k){
   const soort=_bestandSoort(naam);
   if(soort==='beeld') return '<img class="'+k.img+'" src="'+escapeHtml(url)+'" alt="'+escapeHtml(naam||'')+'">';
   if(soort==='pdf')   return '<iframe class="'+k.frame+'" src="'+escapeHtml(_attSrc(url,naam))+'" title="'+escapeHtml(naam||'PDF')+'"></iframe>';
+  // Word kan de browser niet tonen. De server zet het om; _vulDocx() vult dit vak.
+  if(soort==='docx')  return '<div class="dox-wrap" data-docx="'+escapeHtml(url)+'" data-naam="'+escapeHtml(naam||'')+'"><div class="'+k.none+'">Word-document openen…</div></div>';
   return '<div class="'+k.none+'">'+(typeof _fileGlyph==='function'?_fileGlyph(naam):'')+'<p>Geen voorvertoning voor dit bestandstype.</p></div>';
+}
+// Haalt de omgezette HTML op en zet 'm in het vak. Werkt overal waar previewHTML wordt gebruikt.
+async function _vulDocx(scope){
+  const root=scope||document;
+  const vakken=root.querySelectorAll('.dox-wrap[data-docx]:not([data-done])');
+  for(const el of vakken){
+    el.setAttribute('data-done','1');
+    const url=el.getAttribute('data-docx'), naam=el.getAttribute('data-naam')||'';
+    try{
+      const r=await fetch('/api/docxview',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url,name:naam})});
+      const d=await r.json();
+      if(d && d.html) el.innerHTML='<div class="dox">'+d.html+'</div>';
+      else el.innerHTML='<div class="fmp-none"><p>'+escapeHtml((d&&d.error)||'Kon dit Word-document niet tonen.')+'</p></div>';
+    }catch(_){ el.innerHTML='<div class="fmp-none"><p>Kon dit Word-document niet tonen.</p></div>'; }
+  }
 }
 // Vult achteraf elke <img data-sp="..."> of <img data-link="..."> met een echte URL.
 // Eén lazy-loader voor de bronnenlijst, het inspiratiebord en de fotostapel.
@@ -4627,6 +4716,7 @@ async function _vulBeeldjes(scope){
 async function _bronLoadAttachment(a, stageId){
   const stage=document.getElementById(stageId||'bronStage'); if(!stage)return;
   stage.innerHTML=_bestandPreviewHTML(await _bestandUrl(a), a.filename||'');
+  _vulDocx(stage);
 }
 
 /* ---- Meerdere bijlagen in één bron: stapel met een strip eronder ---- */
@@ -4660,6 +4750,7 @@ function _bronPaintAtt(){
   const stage=document.getElementById('bronStage'); if(!stage)return;
   const a=_bronAtts[_bronAttIdx]||{}, url=_bronAttUrls[_bronAttIdx]||'';
   stage.innerHTML=_bestandPreviewHTML(url, a.filename||'bijlage');
+  _vulDocx(stage);
   const strip=document.getElementById('bronStrip'); if(!strip)return;
   strip.innerHTML=_fotoStapelHTML(_bronAtts.map((x,i)=>({naam:x.filename||'', url:_bronAttUrls[i]||''})), _bronAttIdx);
   try{ const act=strip.querySelector('.bs-thumb.on'); if(act&&act.scrollIntoView) act.scrollIntoView({block:'nearest',inline:'nearest'}); }catch(_){}
@@ -4743,6 +4834,7 @@ function _previewOverlay(name, url){
   ov.innerHTML='<button class="pvw-x" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>'
     +'<div class="pvw-stage">'+_bestandPreviewHTML(url, name, {img:'pvw-img', frame:'pvw-frame', none:'fmp-none'})+'</div>';
   document.body.appendChild(ov); requestAnimationFrame(()=>ov.classList.add('open'));
+  _vulDocx(ov);
   const close=()=>{ov.classList.remove('open');setTimeout(()=>ov.remove(),300);};
   ov.querySelector('.pvw-x').onclick=close;
   ov.querySelector('.pvw-stage').addEventListener('click',e=>{ if(e.target.classList.contains('pvw-stage')) close(); });
@@ -5026,13 +5118,22 @@ function _fileRow(f){
   const ic=_fileGlyph(f.name||'');
   return `<div class="kfile"><div class="kfile-main" onclick="event.stopPropagation();openFileViewer('${f.id}')" title="Voorvertonen"><span class="kfile-ic">${ic}</span><span class="kfile-name">${escapeHtml(f.name||'bestand')}</span></div>`
     +`<button class="kfile-ai" title="AI leest dit bestand — samenvatting, taken, afspraken & bedrag" onclick="event.stopPropagation();openAiInsight('file','${f.id}')">${_tIc(_TABCHAN.asterisk,16,1.7)}</button>`
-    +`<button class="kfile-ai kfile-collapse" title="Samenvatting inklappen" onclick="event.stopPropagation();var s=document.getElementById('fsum_${f.id}');if(s)s.classList.remove('on')">${_tIc('<path d="M6 9l6 6l6 -6"/>',16,1.7)}</button>`
+    +(f.summary?`<button class="kfile-ai kfile-collapse" title="Samenvatting inklappen" onclick="event.stopPropagation();var s=document.getElementById('fsum_${f.id}');if(s)s.classList.remove('on')">${_tIc('<path d="M6 9l6 6l6 -6"/>',16,1.7)}</button>`:'')
     +`<button class="kfile-del" title="Bestand verwijderen" onclick="event.stopPropagation();deleteFile('${f.id}')">${_tIc('<path d="M18 6l-12 12"/><path d="M6 6l12 12"/>',16,1.7)}</button>`
     +`<div class="kfile-sum" id="fsum_${f.id}">${escapeHtml(f.summary||'')}</div></div>`;
 }
-// Bestanden op het projectbord gegroepeerd per soort: Afbeeldingen, PDF's, Documenten,
-// Audio & video, Overig. De mapkoppen krijgen de kleur van de klant.
+// Bestanden op het projectbord.
+//
+// Twee lagen, en dat is met opzet:
+//   FINANCIEN  — Offertes · Inkoop · Facturen. Dit is BETEKENIS. De mappen staan er altijd,
+//                ook leeg, zodat je weet waar een offerte of bon hoort. Komt uit `category`,
+//                die de AI-sortering al toekent.
+//   PER SOORT  — Afbeeldingen, PDF's, Documenten, Audio & video, Overig. Dit is AFGELEID uit
+//                de extensie. Geen AI, geen keuze, kan nooit fout.
+// Een bestand staat nooit op twee plekken: wat in een financiënmap valt, valt uit de soorten.
+const _FIN_MAPPEN=['Offertes','Inkoop','Facturen'];
 const _SOORT_VOLGORDE=['Afbeeldingen',"PDF's",'Documenten','Audio & video','Overig'];
+
 function _bestandSoortMap(naam){
   const n=String(naam||'').toLowerCase();
   if(_isAttImg(n)) return 'Afbeeldingen';
@@ -5041,24 +5142,66 @@ function _bestandSoortMap(naam){
   if(/\.(m4a|mp3|wav|aac|mp4|mov|avi|mkv|webm)$/.test(n)) return 'Audio & video';
   return 'Overig';
 }
+// In welke financiënmap hoort dit bestand? De opgeslagen categorie wint; anders de naam.
+function _finMapVan(f){
+  const cat=String((f&&f.icon)||'').trim();
+  const hit=_FIN_MAPPEN.find(m=>m.toLowerCase()===cat.toLowerCase());
+  if(hit) return hit;
+  const n=String((f&&f.name)||'').toLowerCase();
+  if(/(offerte|quote|prijsopgave)/.test(n)) return 'Offertes';
+  if(/(factuur|invoice|rekening)/.test(n)) return 'Facturen';
+  if(/(bon|kassabon|bestelbevestiging|inkoop|receipt|order)/.test(n)) return 'Inkoop';
+  return null;
+}
+
 var _pbMapDicht=new Set();
 function pbToggleMap(soort){ if(_pbMapDicht.has(soort))_pbMapDicht.delete(soort); else _pbMapDicht.add(soort); _renderProjBoard(); }
-function _bestandenPerSoort(lijst, kleur){
-  if(!lijst || !lijst.length) return '<div class="pb-empty">Nog geen bestanden.</div>';
+
+function _pbMapKop(naam, aantal, dicht, extraKlasse){
+  return '<button class="pb-maph'+(dicht?' dicht':'')+(extraKlasse?' '+extraKlasse:'')+'" onclick="pbToggleMap(\''+naam.replace(/'/g,"\\'")+'\')">'
+    + '<svg class="pb-mapchev" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6l-6 6"/></svg>'
+    + '<svg class="pb-mapic" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>'
+    + '<span class="pb-mapnm">'+escapeHtml(naam)+'</span>'
+    + '<span class="pb-mapcnt">'+aantal+'</span></button>';
+}
+
+function _bestandenPerSoort(lijst, kleur, toonFinancien){
+  lijst=lijst||[];
+  let h='';
+
+  // 1. Financiën — altijd zichtbaar bij een project, ook zonder bestanden.
+  if(toonFinancien){
+    const inFin={}; _FIN_MAPPEN.forEach(m=>inFin[m]=[]);
+    lijst.forEach(f=>{ const m=_finMapVan(f); if(m) inFin[m].push(f); });
+    const totaal=_FIN_MAPPEN.reduce((n,m)=>n+inFin[m].length,0);
+    const dichtFin=_pbMapDicht.has('Financien');
+    h+='<div class="pb-map pb-map-fin" style="--mcol:'+kleur+'">'
+      + _pbMapKop('Financien', totaal, dichtFin, 'pb-maph-top')
+      + '<div class="pb-mapkids">'
+      + (dichtFin?'':_FIN_MAPPEN.map(m=>{
+          const dicht=_pbMapDicht.has('Financien/'+m);
+          const kids=dicht?'':(inFin[m].length?inFin[m].map(_fileRow).join(''):'<div class="pb-mapleeg">Nog niets.</div>');
+          return '<div class="pb-map pb-map-sub" style="--mcol:'+kleur+'">'
+            + _pbMapKop('Financien/'+m, inFin[m].length, dicht).replace('>Financien/'+m+'<', '>'+m+'<')
+            + '<div class="pb-mapkids">'+kids+'</div></div>';
+        }).join(''))
+      + '</div></div>';
+  }
+
+  // 2. De rest, gegroepeerd op soort. Financiële bestanden vallen hier uit — nooit dubbel.
+  const rest = toonFinancien ? lijst.filter(f=>!_finMapVan(f)) : lijst;
+  if(!rest.length && !toonFinancien) return '<div class="pb-empty">Nog geen bestanden.</div>';
   const per={};
-  lijst.forEach(f=>{ const s=_bestandSoortMap(f.name); (per[s]=per[s]||[]).push(f); });
-  return _SOORT_VOLGORDE.filter(s=>per[s]).map(soort=>{
+  rest.forEach(f=>{ const s=_bestandSoortMap(f.name); (per[s]=per[s]||[]).push(f); });
+  h+=_SOORT_VOLGORDE.filter(s=>per[s]).map(soort=>{
     const dicht=_pbMapDicht.has(soort);
-    const kids=dicht?'':per[soort].map(_fileRow).join('');
     return '<div class="pb-map" style="--mcol:'+kleur+'">'
-      + '<button class="pb-maph'+(dicht?' dicht':'')+'" onclick="pbToggleMap(\''+soort.replace(/'/g,"\\'")+'\')">'
-      +   '<svg class="pb-mapchev" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6l-6 6"/></svg>'
-      +   '<svg class="pb-mapic" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>'
-      +   '<span class="pb-mapnm">'+escapeHtml(soort)+'</span>'
-      +   '<span class="pb-mapcnt">'+per[soort].length+'</span>'
-      + '</button>'
-      + '<div class="pb-mapkids">'+kids+'</div></div>';
+      + _pbMapKop(soort, per[soort].length, dicht)
+      + '<div class="pb-mapkids">'+(dicht?'':per[soort].map(_fileRow).join(''))+'</div></div>';
   }).join('');
+
+  if(!lijst.length && !toonFinancien) return '<div class="pb-empty">Nog geen bestanden.</div>';
+  return h;
 }
 function _filesHTML(type,id){
   if(!id) return '<div class="kfiles-hint">Sla eerst op om bestanden te koppelen.</div>';
@@ -5279,6 +5422,7 @@ async function fvRender(){
   st.innerHTML='<div class="fv-none">Laden…</div>';
   const url=await _bestandUrl(f);
   st.innerHTML=_bestandPreviewHTML(url, f.name||'', {img:'fv-img', frame:'fv-frame', none:'fv-none'});
+  _vulDocx(st);
   const multi=_fvList.length>1; const pv=document.querySelector('.fv-prev'),nx=document.querySelector('.fv-next'); if(pv)pv.style.display=multi?'':'none'; if(nx)nx.style.display=multi?'':'none';
 }
 if(!window._fvKeyInit){window._fvKeyInit=true; document.addEventListener('keydown',e=>{ const v=document.getElementById('fileViewer'); if(!v||!v.classList.contains('open'))return; if(e.key==='Escape')closeFileViewer(); else if(e.key==='ArrowLeft')fvNav(-1); else if(e.key==='ArrowRight')fvNav(1); });}
@@ -6000,6 +6144,7 @@ async function fmPreview(id){
   const dlKnop = url?'<button class="fv-btn" onclick="window.open(\''+escapeHtml(f.link?_fvDl(f.link):url)+'\',\'_blank\',\'noopener\')">Download origineel</button>':'';
   const dbKnop = f.link?'<button class="fv-btn" onclick="window.open(\''+escapeHtml(f.link)+'\',\'_blank\',\'noopener\')">Open in Dropbox</button>':'';
   pane.innerHTML='<div class="fmp-head"><span class="fmp-ic">'+_fileGlyph(f.name)+'</span><span class="fmp-name">'+escapeHtml(f.name||'bestand')+'</span><button class="fmp-x" onclick="fmClosePreview()" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><div class="fmp-stage">'+body+'</div><div class="fmp-foot"><button class="fv-btn fmp-aibtn" onclick="openAiInsight(\'file\',\''+id+'\')">✦ Laat AI lezen</button>'+dlKnop+dbKnop+'</div><div id="fmAiResults" class="bron-airesults"></div>';
+  _vulDocx(pane);
 }
 function renderArchief(){
   const wrap=document.getElementById('archiefWrap'); if(!wrap)return;
@@ -6052,6 +6197,8 @@ function _freshColor(taken){ for(const c of PALETTE){ if(!taken.has(c.toLowerCas
 // Elke klant een unieke kleur: reserveer per klant de kleur van z'n eerste project; bij botsing een nieuwe.
 const BEGCOL='#e8e8ea';   // Begeister = wij → bijna-wit, overal
 function _isBeg(c){ return /^begeister$/i.test(String(c||'').trim()); }
+// Privé-bakjes hebben geen offertes of facturen; Begeister wel (eigen inkoop en rekeningen).
+function _geenPrive(client){ const c=String(client||'').trim(); return /(^|\s)prive$/i.test(c) || /(^|\s)privé$/i.test(c); }
 // Klanten zonder klanttraject: onszelf en de privé-bakjes. Geen briefing, geen factuur.
 function _geenTraject(client){ const c=String(client||'').trim(); return _isBeg(c) || /(^|\s)prive$/i.test(c) || /(^|\s)privé$/i.test(c); }
 let _colorDedupDone=false;
