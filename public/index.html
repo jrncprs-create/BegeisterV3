@@ -692,7 +692,8 @@
   .pb-omsh{cursor:pointer;user-select:none}
   .pb-omschev{transition:transform .18s ease;opacity:.6;margin-left:4px}
   .pb-omschev.open{transform:rotate(180deg)}
-  .pb-oms{min-height:74px;line-height:1.5}
+  /* Groeit mee met de tekst: geen scrollbalk, geen sleepgreep, geen vaste hoogte. */
+  .pb-oms{min-height:0;height:auto;line-height:1.5;overflow:hidden;resize:none}
   .pb-omsmsg{font-size:11.5px;color:var(--mut2);margin-top:6px;line-height:1.45}
   /* Inkopen: regels met prijs/link + totaal/budget */
   .pb-hbtns{display:flex;gap:6px}
@@ -1885,7 +1886,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v187</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v188</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -3925,9 +3926,12 @@ function _omsSectie(p){
   const knop='<button class="pb-ai" onclick="event.stopPropagation();pbAiOms(this)" title="Haal een korte omschrijving uit een projectdocument">'+_tIc(_TABCHAN.asterisk,15,1.7)+'</button>';
   const kop='<div class="pb-h pb-omsh" onclick="pbToggleOms()"><span>Omschrijving</span><span class="pb-hbtns">'+knop+chev+'</span></div>';
   if(!open) return '<div class="pb-sec pb-omssec">'+kop+'</div>';
-  const ta='<textarea class="pb-notes pb-oms" placeholder="Waar gaat dit project over? Eén alinea." onblur="pbSaveOms(this.value)">'+escapeHtml(oms)+'</textarea>';
+  const ta='<textarea class="pb-notes pb-oms" rows="1" placeholder="Waar gaat dit project over? Eén alinea." oninput="_omsGroei(this)" onblur="pbSaveOms(this.value)">'+escapeHtml(oms)+'</textarea>';
+  // De hoogte kun je pas meten als het veld in de pagina staat.
+  setTimeout(()=>document.querySelectorAll('.pb-oms').forEach(_omsGroei),0);
   return '<div class="pb-sec pb-omssec">'+kop+ta+'</div>';
 }
+function _omsGroei(el){ if(!el)return; el.style.height='auto'; el.style.height=(el.scrollHeight+2)+'px'; }
 async function pbSaveOms(v){
   const p=projById(_pbPid); if(!p)return;
   const t=String(v||'').trim(); if(t===(p.description||'').trim())return;
