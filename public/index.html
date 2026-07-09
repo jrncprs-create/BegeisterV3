@@ -1780,7 +1780,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v176</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v177</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -3052,22 +3052,49 @@ async function pvTriage(sid,kind){
   delete _pvSug[sid];
   await refresh();
 }
+// Zorgt dat er een bord "Ongesorteerd" is en geeft het id terug.
+async function _inspOngesorteerdBord(){
+  try{
+    const q=await sb.from('insp_boards').select('id').eq('name','Ongesorteerd').limit(1);
+    if(q&&q.data&&q.data.length) return q.data[0].id;
+    const ins=await sb.from('insp_boards').insert({name:'Ongesorteerd',sort:99}).select('id').single();
+    return (ins&&ins.data)?ins.data.id:null;
+  }catch(_){ return null; }
+}
+// Heeft deze bron iets te tónen? Zonder beeld of link valt er niets op een bord te zetten.
+function _bronHeeftBeeld(sid){
+  const s=(state.inbox||[]).find(x=>String(x.id)===String(sid));
+  if(!s) return false;
+  if(s.url) return true;
+  return (state.documents||[]).some(d=>String(d.source_id)===String(sid) && (d.storage_path||d.link));
+}
+// Geeft het aantal bronnen terug dat daadwerkelijk is weggezet.
 async function _pvTriageMany(ids, kind){
-  if(!ids.length)return;
+  if(!ids.length)return 0;
+  let doen=ids;
   if(kind==='inspiratie'){
+    // Een bron zonder beeld of link kan niet op het bord. Die zetten we NIET weg:
+    // hij zou uit het Postvak In verdwijnen zonder ergens zichtbaar te worden.
+    // Hij blijft staan, zodat je hem met de hand beoordeelt.
+    doen = ids.filter(_bronHeeftBeeld);
+    if(!doen.length) return 0;
+    const bordId=await _inspOngesorteerdBord();
     const rows=[];
-    ids.forEach(sid=>{
+    doen.forEach(sid=>{
       const s=(state.inbox||[]).find(x=>String(x.id)===String(sid)); if(!s)return;
-      const att=(state.documents||[]).find(d=>String(d.source_id)===String(sid));
-      rows.push({ type:'image', title:(s.subject||s.body||'Inspiratie').slice(0,120),
-        url:s.url||(att?att.link:null)||null,
-        storage_path:att?att.storage_path:null, project_id:s.project_id||null, sort:0 });
+      const att=(state.documents||[]).find(d=>String(d.source_id)===String(sid) && (d.storage_path||d.link));
+      const sp=att?att.storage_path:null;
+      const url=s.url||(att?att.link:null)||null;
+      rows.push({ board_id:bordId, type: sp?'image':'link',
+        title:(s.subject||s.body||'Inspiratie').slice(0,120),
+        url, storage_path:sp, project_id:s.project_id||null, sort:0 });
     });
     if(rows.length){ try{ await sb.from('insp_items').insert(rows); }catch(_){} }
     // taken die per ongeluk uit deze bronnen zijn ontstaan horen hier niet
-    try{ await sb.from('items').delete().in('source_id',ids).is('project_id',null); }catch(_){}
+    try{ await sb.from('items').delete().in('source_id',doen).is('project_id',null); }catch(_){}
   }
-  try{ await sb.from('sources').update({triage:kind}).in('id',ids); }catch(_){}
+  try{ await sb.from('sources').update({triage:kind}).in('id',doen); }catch(_){}
+  return doen.length;
 }
 
 // Bulk. Alleen voorstellen die de AI daadwerkelijk deed, en bij 'werk' alleen die
@@ -3091,14 +3118,20 @@ async function pvBulk(kind){
             :(kind==='ruis')?'\n\nRuis verdwijnt uit het Postvak In. De bronnen blijven bij Bronnen staan, maar je ziet ze hier niet meer. Loop ze liever eerst even na.':'';
   if(!(await uiConfirm(ids.length+' item'+(ids.length===1?'':'s')+' '+lbl+'?'+extra,{ok:'Doen',danger:(kind==='ruis')})))return;
 
+  let gedaan=ids.length;
   if(kind==='werk'){
     const perProject={};
     ids.forEach(sid=>{ const p=_pvSug[sid].project_id; (perProject[p]=perProject[p]||[]).push(sid); });
     for(const [pid,sids] of Object.entries(perProject)) await _pvMoveToProject(sids, pid);
+    ids.forEach(sid=>{ delete _pvSug[sid]; });
   } else {
-    await _pvTriageMany(ids, kind);
+    gedaan=await _pvTriageMany(ids, kind);
+    // Alleen de voorstellen wegstrepen die ook echt zijn uitgevoerd.
+    if(kind==='inspiratie') ids.filter(_bronHeeftBeeld).forEach(sid=>{ delete _pvSug[sid]; });
+    else ids.forEach(sid=>{ delete _pvSug[sid]; });
   }
-  ids.forEach(sid=>{ delete _pvSug[sid]; });
+  const over=ids.length-gedaan;
+  if(over>0){ try{ await uiConfirm(over+' item'+(over===1?'':'s')+' bleef staan: zonder afbeelding of link valt er niets op het inspiratiebord te zetten. Beoordeel die met de hand.',{ok:'Oké',danger:false}); }catch(_){} }
   await refresh();
 }
 
@@ -7273,7 +7306,10 @@ async function _saveDropToWait(items, summary, srcMeta, fileObj, listUrl){
   }catch(_){}
   // Inspiratie gaat naar het inspiratiebord — geen taken, niet in het Postvak In, niet in Taken.
   if(_kind==='inspiratie'){
-    try{ await sb.from('insp_items').insert({type:'image', title:(summary||(fileObj&&fileObj.name)||'Inspiratie').slice(0,120),
+    // Altijd op een bord, anders is het item nergens zichtbaar.
+    const bordId=await _inspOngesorteerdBord();
+    try{ await sb.from('insp_items').insert({board_id:bordId, type:'image',
+      title:(summary||(fileObj&&fileObj.name)||'Inspiratie').slice(0,120),
       url:(srcMeta&&srcMeta.url)||listUrl||null, project_id:pid||null, sort:0}); }catch(_){}
     try{ notifyPartner((who||'Iemand')+' zette iets op het inspiratiebord.'); }catch(_){}
     try{ await refresh(); }catch(_){}
