@@ -51,6 +51,7 @@ await mount("/api/readfile", "./api/readfile.mjs");
 await mount("/api/usage", "./api/usage.mjs");
 await mount("/api/spark", "./api/spark.mjs");
 await mount("/api/sortfiles", "./api/sortfiles.mjs");
+await mount("/api/triage", "./api/triage.mjs");
 await mount("/api/fileproxy", "./api/fileproxy.mjs");
 await mount("/api/notify", "./api/notify.mjs");
 await mount("/api/push", "./api/push.mjs");
