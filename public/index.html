@@ -950,10 +950,17 @@
   .pb-fase-wacht .pb-fasestap.nu .pb-fasedot::after{content:"";position:absolute;inset:-6px;border-radius:50%;
     border:1px solid var(--fcol);opacity:.28}
   .pb-fase-rust .pb-fasestap.nu .pb-fasedot{box-shadow:none}
-  .pb-balmini{display:flex;align-items:center;gap:7px;margin-top:12px;font-size:11.5px;color:var(--mut2);letter-spacing:.01em}
-  .pb-balmini b{color:var(--mut);font-weight:600}
-  .pb-balring{width:7px;height:7px;border-radius:50%;border:1.5px solid var(--mut2);flex:none}
-  .pb-balvol{width:7px;height:7px;border-radius:50%;background:var(--mut2);flex:none}
+  /* Het vlaggetje aan de actieve stip: boven = bij de klant, onder = bij ons. */
+  .pb-fase{padding:26px 0 30px}
+  .pb-vlag{position:absolute;left:50%;transform:translateX(-50%);white-space:nowrap;
+    font-size:10.5px;font-weight:600;letter-spacing:.01em;line-height:1;
+    padding:5px 9px;border-radius:5px;color:var(--bg);background:var(--fcol);z-index:2}
+  .pb-vlag::after{content:"";position:absolute;left:50%;transform:translateX(-50%);
+    border:5px solid transparent}
+  .pb-vlag-boven{bottom:calc(100% - 4px)}
+  .pb-vlag-boven::after{top:100%;border-top-color:var(--fcol)}
+  .pb-vlag-onder{top:calc(100% + 5px)}
+  .pb-vlag-onder::after{bottom:100%;border-bottom-color:var(--fcol)}
   /* Bestanden op het bord: mapjes per soort, kop in de klantkleur. */
   .pb-map{margin:0 0 6px}
   .pb-maph{display:flex;align-items:center;gap:7px;width:100%;background:none;border:0;padding:6px 0;cursor:pointer;
@@ -971,7 +978,7 @@
   .pb-map-sub .pb-mapkids{padding-left:14px}
   .pb-mapleeg{font-size:11.5px;color:var(--mut2);padding:3px 0 5px 2px}
   /* Voortgang op het projectbord: zes stappen, gevuld tot en met de huidige. */
-  .pb-fase{display:flex;gap:0;align-items:flex-start;padding:2px 0 4px}
+  .pb-fase{display:flex;gap:0;align-items:flex-start}
   .pb-fasestap{flex:1;min-width:0;background:none;border:none;padding:0;cursor:pointer;
     display:flex;flex-direction:column;align-items:center;gap:6px;position:relative;color:var(--mut2)}
   .pb-fasestap::before{content:"";position:absolute;top:5px;left:-50%;width:100%;height:1px;background:var(--lin)}
@@ -1865,7 +1872,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v183</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v184</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -3698,9 +3705,10 @@ function _renderProjBoard(){
   const _bal=_pbBal(p);
   const _balTitel = _bal.staat==='wacht' ? ('De bal ligt bij '+_bal.wie+(_bal.dagen!=null?' · al '+_bal.dagen+' dag'+(_bal.dagen===1?'':'en'):''))
                   : _bal.staat==='ons' ? ('Wij zijn aan zet: '+_bal.wie+' · '+_bal.aantal+' open') : 'Niets openstaand';
+  const _vlag=_pbBalVlag(_bal, p.client);
   const secFase=_geenTraject(p.client) ? '' : (`<div class="pb-sec"><div class="pb-h">Voortgang</div><div class="pb-fase pb-fase-${_bal.staat}">`
-    + _DOS_PHASES.map((f,i)=>`<button class="pb-fasestap${i<=_fIdx?' done':''}${i===_fIdx?' nu':''}" style="--fcol:${col}" onclick="pbSetPhase('${f.k}')" title="${i===_fIdx?esc(_balTitel):f.l}"><span class="pb-fasedot"></span><span class="pb-faselbl">${f.l}</span></button>`).join('')
-    + `</div>${_pbBalMini(_bal)}</div>`);
+    + _DOS_PHASES.map((f,i)=>`<button class="pb-fasestap${i<=_fIdx?' done':''}${i===_fIdx?' nu':''}" style="--fcol:${col}" onclick="pbSetPhase('${f.k}')" title="${i===_fIdx?esc(_balTitel):f.l}">${i===_fIdx?_vlag:''}<span class="pb-fasedot"></span><span class="pb-faselbl">${f.l}</span></button>`).join('')
+    + `</div></div>`);
   const secWait=`<div class="pb-sec"><div class="pb-h">In afwachting <button class="pb-hadd" onclick="openModal(null,'wachter','wait','${_pbPid}')" title="Toevoegen">+</button></div>${waitT.length?waitT.map(waitRow).join(''):'<div class="pb-empty">Niets in afwachting.</div>'}</div>`;
   const secTaken=`<div class="pb-sec"><div class="pb-h">Taken <button class="pb-hadd" onclick="openModal(null,null,'todo','${_pbPid}')" title="Toevoegen">+</button></div>${takenT.length?takenT.map(taskRow).join(''):'<div class="pb-empty">Geen actiepunten.</div>'}</div>`;
   const doneInk=inkopen.filter(x=>x.done); const _doneN=doneT.length+doneInk.length;
@@ -3844,17 +3852,15 @@ function _pbBal(p){
   }
   return {staat:'rust'};
 }
-// Eén fluisterregel onder de balk. De stip in de balk draagt dezelfde boodschap.
-function _pbBalMini(bal){
-  if(bal.staat==='rust') return '<div class="pb-balmini">niets openstaand</div>';
+// Het vlaggetje aan de actieve stip. Boven de balk = de bal ligt bij de klant.
+// Onder de balk = wij zijn aan zet. Geen vlag betekent: niets openstaand.
+function _pbBalVlag(bal, klant){
+  if(bal.staat==='rust') return '';
   if(bal.staat==='wacht'){
-    const d=bal.dagen;
-    const sinds=(d===null)?'':(d===0?'vandaag':(d===1?'1 dag':d+' dagen'));
-    return '<div class="pb-balmini"><span class="pb-balring"></span>wacht op <b>'+escapeHtml(bal.wie)+'</b>'
-      + (sinds?' · '+sinds:'') + '</div>';
+    const naam = (bal.wie && bal.wie!=='de klant') ? bal.wie : (klant||'de klant');
+    return '<span class="pb-vlag pb-vlag-boven">'+escapeHtml(naam)+'</span>';
   }
-  return '<div class="pb-balmini"><span class="pb-balvol"></span>aan zet: <b>'+escapeHtml(bal.wie)+'</b>'
-    + (bal.due?' · '+_finShortDate(bal.due):'') + '</div>';
+  return '<span class="pb-vlag pb-vlag-onder">Begeister</span>';
 }
 // Voortgang van het project. Klik dezelfde fase nogmaals om een stap terug te gaan.
 async function pbSetPhase(k){
