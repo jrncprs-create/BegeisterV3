@@ -35,7 +35,10 @@ export function sanitize(raw, sources, cats) {
 
     // Vangnet 2: het model ziet maar één blok en kan dus niet weten of iets dubbel is.
     // Beroept het zich tóch op dubbel-zijn, dan is dat een gok — niet wegzetten.
-    if (kind === "ruis" && /\bdubbel|duplicaat|identiek\b/i.test(reden)) kind = "werk";
+    // Let op: het model antwoordt in het Nederlands, maar glipt er soms Engels doorheen
+    // ("Duplicate spam ..."). Beide talen afvangen, en geen \b vóór een woord dat met
+    // een letter begint — dat maakte de eerste variant onbetrouwbaar.
+    if (kind === "ruis" && /(dubbel|duplicaat|duplicate|identiek|identical)/i.test(reden)) kind = "werk";
 
     const pid = projSet.has(String(val.project_id || "")) ? String(val.project_id) : "";
     out[sid] = { kind, project_id: pid, reden: reden.slice(0, 60) };
