@@ -13,6 +13,12 @@ const KINDS = ["werk", "inspiratie", "prive", "ruis"];
 // Filtert het AI-antwoord: alleen bron-ids die we zelf stuurden, alleen projecten uit de
 // catalogus, alleen bekende soorten. Een verzonnen klant is erger dan geen klant.
 // Apart en puur, zodat dit zonder AI-call te testen is.
+export function chunk(arr, n) {
+  const out = [];
+  for (let i = 0; i < arr.length; i += n) out.push(arr.slice(i, i + n));
+  return out;
+}
+
 export function sanitize(raw, sources, cats) {
   const idSet = new Set((sources || []).map(s => String(s.id)));
   const projSet = new Set((cats || []).map(c => String(c.id ?? c.project_id ?? "")));
@@ -63,29 +69,48 @@ ${catTxt}
 Antwoord ALLEEN met geldige JSON, zonder tekst eromheen:
 {"<bron-id>":{"kind":"werk","project_id":"","reden":""}}`;
 
-    const list = sources.slice(0, 60).map(s => {
-      const bits = [
-        `id=${s.id}`,
-        `kanaal=${s.channel || "?"}`,
-        s.sender ? `van="${String(s.sender).slice(0, 60)}"` : "",
-        s.subject ? `onderwerp="${String(s.subject).slice(0, 80)}"` : "",
-        `tekst="${String(s.body || "").replace(/\s+/g, " ").slice(0, 220)}"`,
-      ].filter(Boolean);
-      return bits.join(" | ");
-    }).join("\n");
+    // In blokken. Eén call over 60 bronnen liep tegen max_tokens aan: de JSON werd
+    // afgekapt, JSON.parse faalde, en er kwam stilletjes niets terug. Kleine blokken
+    // passen ruim binnen de limiet en lopen bovendien parallel.
+    const blocks = chunk(sources.slice(0, 90), 15);
+    const results = await Promise.all(blocks.map(async (blk, n) => {
+      const list = blk.map(s => {
+        const bits = [
+          `id=${s.id}`,
+          `kanaal=${s.channel || "?"}`,
+          s.sender ? `van="${String(s.sender).slice(0, 60)}"` : "",
+          s.subject ? `onderwerp="${String(s.subject).slice(0, 80)}"` : "",
+          `tekst="${String(s.body || "").replace(/\s+/g, " ").slice(0, 220)}"`,
+        ].filter(Boolean);
+        return bits.join(" | ");
+      }).join("\n");
 
-    const r = await createMessage(anthropic, {
-      model: MODEL, max_tokens: 4000, system: sys,
-      messages: [{ role: "user", content: "Bronnen:\n" + list }],
-    });
+      try {
+        const r = await createMessage(anthropic, {
+          model: MODEL, max_tokens: 2000, system: sys,
+          messages: [{ role: "user", content: "Bronnen:\n" + list }],
+        });
+        const stop = r.stop_reason;
+        let txt = (r.content && r.content[0] && r.content[0].text) || "{}";
+        const a = txt.indexOf("{"), b = txt.lastIndexOf("}");
+        if (a >= 0 && b >= 0) txt = txt.slice(a, b + 1);
+        try {
+          return sanitize(JSON.parse(txt), blk, cats);
+        } catch (_) {
+          // Niet stil falen: dit is precies de fout die we hierboven beschrijven.
+          console.error(`triage: blok ${n} onleesbaar (stop_reason=${stop}, ${txt.length} tekens)`);
+          return {};
+        }
+      } catch (e) {
+        console.error(`triage: blok ${n} mislukt —`, e && e.message);
+        return {};
+      }
+    }));
 
-    let txt = (r.content && r.content[0] && r.content[0].text) || "{}";
-    const a = txt.indexOf("{"), b = txt.lastIndexOf("}");
-    if (a >= 0 && b >= 0) txt = txt.slice(a, b + 1);
-    let raw = {};
-    try { raw = JSON.parse(txt); } catch (_) { raw = {}; }
-
-    return res.status(200).json({ suggestions: sanitize(raw, sources, cats) });
+    const suggestions = Object.assign({}, ...results);
+    const gelukt = Object.keys(suggestions).length;
+    console.log(`triage: ${gelukt}/${blocks.flat().length} bronnen voorzien van een voorstel`);
+    return res.status(200).json({ suggestions });
   } catch (e) {
     console.error("triage", e && e.message);
     return res.status(200).json({ suggestions: {}, error: "ai" });
