@@ -12,6 +12,7 @@ import { simpleParser } from "mailparser";
 import { createClient } from "@supabase/supabase-js";
 import { extractItems } from "./extract.mjs";
 import { sendToAll } from "../lib/push.mjs";
+import { beoordeelBijlage, hashVan } from "../lib/bijlagefilter.mjs";
 import { logUsage } from "../lib/usage.mjs";
 
 const BUCKET = "intake";
@@ -121,8 +122,20 @@ export async function run() {
         }).select().single();
         if (srcErr) throw srcErr;
 
-        // 2) bijlagen naar Storage
+        // 2) bijlagen naar Storage — maar niet het behang uit de handtekening.
+        //    Welke bestanden we al vaker zagen staat in bijlage_hashes; komt iets in drie
+        //    of meer bronnen voor, dan wordt het voortaan overgeslagen.
+        const { data: geblokkeerd } = await db
+          .from("bijlage_hashes").select("hash").eq("geblokkeerd", true);
+        const bekendeHashes = new Set((geblokkeerd || []).map(r => r.hash));
+
         for (const att of mail.attachments || []) {
+          const oordeel = beoordeelBijlage(att, { bekendeHashes });
+          if (!oordeel.houden) {
+            console.log(`bijlage overgeslagen (${oordeel.reden}): ${att.filename || "naamloos"}`);
+            continue;
+          }
+
           const path = `${source.id}/${att.filename || "bijlage"}`;
           const up = await db.storage.from(BUCKET).upload(path, att.content, {
             contentType: att.contentType, upsert: true,
@@ -132,11 +145,26 @@ export async function run() {
               source_id: source.id, filename: att.filename, storage_path: path,
               mime: att.contentType, size: att.size,
             });
+            // Tel mee hoe vaak deze inhoud voorbijkomt. Bij drie bronnen slaat de trigger 'm dicht.
+            try {
+              const h = hashVan(att.content);
+              const { data: bestaand } = await db
+                .from("bijlage_hashes").select("bronnen").eq("hash", h).maybeSingle();
+              if (bestaand) {
+                await db.from("bijlage_hashes")
+                  .update({ bronnen: bestaand.bronnen + 1, laatst_gezien: new Date() })
+                  .eq("hash", h);
+              } else {
+                await db.from("bijlage_hashes").insert({
+                  hash: h, filename: att.filename, mime: att.contentType, size: att.size,
+                });
+              }
+            } catch (_) { /* tellen is een gemak, geen noodzaak */ }
           }
         }
 
         // 3) Claude haalt actiepunten (en contacten) eruit
-        const { items, summary, contacts, usage } = await extractItems({
+        const { items, summary, contacts, usage, client: exClient = "", project: exProject = "" } = await extractItems({
           text: body, sender, subject: mail.subject || "", today, catalog, context,
         });
         // verbruik loggen (faalt stil)
@@ -156,7 +184,16 @@ export async function run() {
         // 3b) gevonden contacten opslaan (dedupe op e-mail; anders op naam)
         try {
           // project_id van dit bericht: het eerste item dat een eenduidig project kreeg
-          const msgProject = (items.find(it => it.project_id) || {}).project_id || null;
+          let msgProject = (items.find(it => it.project_id) || {}).project_id || null;
+          // Vangnet voor offertes/facturen met (bijna) lege body: match de door Claude herkende
+          // klant/project tegen de catalogus, zodat het document tóch aan het project hangt.
+          if (!msgProject && (exClient || exProject)) {
+            const norm = v => String(v || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+            const nc = norm(exClient), np = norm(exProject);
+            const hit = (nc && np && catalog.find(c => norm(c.client) === nc && norm(c.project) === np))
+                     || (nc && catalog.find(c => norm(c.client) === nc));
+            if (hit) msgProject = hit.project_id;
+          }
           if (msgProject) await db.from("sources").update({ project_id: msgProject }).eq("id", source.id);
           await saveContacts(db, contacts, source.id, msgProject);
         } catch (e) { console.error("contact-fout:", e.message); }
