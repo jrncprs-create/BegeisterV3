@@ -44,6 +44,7 @@ await mount("/api/scanbudget", "./api/scanbudget.mjs");
 await mount("/api/wa-subscribe", "./api/wa-subscribe.mjs");
 await mount("/api/projtodos", "./api/projtodos.mjs");
 await mount("/api/linkmeta", "./api/linkmeta.mjs");
+await mount("/api/inspthumb", "./api/inspthumb.mjs");
 await mount("/api/bestellijst", "./api/bestellijst.mjs");
 await mount("/api/chat", "./api/chat.mjs");
 await mount("/api/vision", "./api/vision.mjs");
@@ -74,6 +75,41 @@ app.get("*", (req, res, next) => {
 cron.schedule("*/2 * * * *", () => {
   intakeRun().then(r => { if (r && (r.processed || r.items)) console.log("intake", r); })
              .catch(e => console.error("cron intake", e && e.message));
+});
+
+// Dropbox-sync: elk uur. Kleine bijlagen gingen al direct mee bij binnenkomst;
+// hier zetten we de grote in de wachtrij en werken we er een paar af.
+// Bewust een kleine portie: één upload van 6 MB duurt tientallen seconden.
+cron.schedule("7 * * * *", async () => {
+  try {
+    const { svc } = await import("./lib/usage.mjs");
+    const { vulWachtrij, werkWachtrijAf } = await import("./lib/dropboxsync.mjs");
+    const db = svc();
+    if (!db) return;
+
+    const bij = await vulWachtrij(db);
+    if (bij) console.log(`dropbox-wachtrij: ${bij} bestand(en) toegevoegd`);
+
+    // De echte upload loopt via de bestaande /api/dropbox/list-route, zodat de
+    // token-verversing en de mappenstructuur op één plek blijven.
+    const uploader = async ({ buffer, filename, doel }) => {
+      const r = await fetch(`http://127.0.0.1:${process.env.PORT || 8080}/api/dropbox/list`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "upload", name: filename, b64: buffer.toString("base64"),
+          target: doel.replace(/^\//, ""), owner_type: "project",
+        }),
+      }).then(x => x.json());
+      if (r && r.error) throw new Error(String(r.error));
+      return { link: r && r.file ? r.file.link : null };
+    };
+
+    const uit = await werkWachtrijAf(db, uploader);
+    if (uit.gedaan || uit.mislukt) console.log("dropbox-wachtrij", uit);
+  } catch (e) {
+    console.error("cron dropbox", e && e.message);
+  }
 });
 
 const PORT = process.env.PORT || 3000;
