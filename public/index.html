@@ -1886,7 +1886,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v190</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v191</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -4149,21 +4149,30 @@ async function renderFinancien(){
     const finFase=_geenTraject(p.client) ? '' : (`<div class="pb-sec"><div class="pb-h">Voortgang</div><div class="pb-fase pb-fase-${_fb.staat}" style="--fcol:${col};--vul:${_fvul}">`
       + _DOS_PHASES.map((f,i)=>`<button class="pb-fasestap${i<=_ffi?' done':''}${i===_ffi?' nu':''}" style="--fcol:${col}" onclick="pbSetPhase('${f.k}')" title="${escapeHtml(i===_ffi?_fbTitel:f.l)}">${i===_ffi?_fvlag:''}<span class="pb-fasedot"></span><span class="pb-faselbl">${f.l}</span></button>`).join('')
       + `</div></div>`);
-    if(fmw) fmw.innerHTML=`<div class="pb-inline pb-board-inline finB-flat" style="--scol:${col};--ccol:${col}">
-      ${finFase}
-      <div class="pb-sec finB-ovsec"><div class="finB-ov">${_finDonut(om!=null?om:0,inkEx,col)}<div class="finB-ovstats">
+    // Intern (Begeister) en privé: geen klanttraject, dus ook geen omzet, geen marge en
+    // geen offerte/factuur. Alleen wat het kost. Een lege marge-ring zei niets.
+    const _intern=_geenTraject(p.client);
+    const finOv = _intern
+      ? `<div class="pb-sec finB-ovsec"><div class="finB-ovstats">
+        <div class="pb-finline"><span>Kosten</span><b>€${fmtEur(inkEx)}</b></div>
+      </div></div>`
+      : `<div class="pb-sec finB-ovsec"><div class="finB-ov">${_finDonut(om!=null?om:0,inkEx,col)}<div class="finB-ovstats">
         <div class="pb-finline"><span>Inkomsten</span><b>${om!=null?'€'+fmtEur(om):'—'}</b></div>
         <div class="pb-finline"><span>Kosten</span><b>€${fmtEur(inkEx)}</b></div>
         <div class="pb-finline marge ${marge!=null&&marge<0?'neg':''}"><span>Winst</span><b>${marge!=null?'€'+fmtEur(marge):'—'}</b></div>
-      </div></div></div>
-      <div class="pb-sec"><div class="pb-h">Offerte &amp; Factuur</div>
+      </div></div></div>`;
+    const finFact = _intern ? '' : `<div class="pb-sec"><div class="pb-h">Offerte &amp; Factuur</div>
         <div class="finB-pills">${pills}</div>
         ${om!=null?`<div class="pb-finline finB-openrow ${openCls}"><span>${openLbl}</span><b>${openVal}</b></div>`:'<div class="finB-openhint">Vul een projectprijs in om facturatie te volgen.</div>'}
         <div class="finB-docs">${_intakeDocsFor(_pbPid).map(_intakeDocRow).join('')}${_financieleDocs(_pbPid).map(_fileRow).join('')||'<div class="pb-empty">Nog geen offertes, bonnen of facturen. Sleep ze de app in.</div>'}</div>
-      </div>
-      <div class="pb-sec"><div class="pb-h">Prijs</div>
-        <div class="finB-prow"><span class="finB-plabel">Projectprijs</span><span class="finB-pval">€<input class="finB-priceinput" type="text" inputmode="decimal" value="${om!=null?String(om).replace('.',','):''}" placeholder="—" onchange="pbSetProjectprijs(this.value)"></span></div>
-        ${omIncl!=null?`<div class="finB-psub">incl. €${fmtEur(omIncl)}</div>`:''}
+      </div>`;
+    if(fmw) fmw.innerHTML=`<div class="pb-inline pb-board-inline finB-flat" style="--scol:${col};--ccol:${col}">
+      ${finFase}
+      ${finOv}
+      ${finFact}
+      <div class="pb-sec"><div class="pb-h">${_intern?'Budget':'Prijs'}</div>
+        <div class="finB-prow"><span class="finB-plabel">${_intern?'Budget':'Projectprijs'}</span><span class="finB-pval">€<input class="finB-priceinput" type="text" inputmode="decimal" value="${om!=null?String(om).replace('.',','):''}" placeholder="—" onchange="pbSetProjectprijs(this.value)"></span></div>
+        ${(!_intern&&omIncl!=null)?`<div class="finB-psub">incl. €${fmtEur(omIncl)}</div>`:''}
       </div>
       <div class="pb-sec finB-scansec"><div class="finB-scan" id="finBScan"><button class="finB-scanbtn" onclick="pbScanBudget(this)">${_tIc(_TABCHAN.asterisk,15,1.7)}<span>Prijs uit bronnen halen</span></button></div></div>
     </div>`;
