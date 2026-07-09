@@ -1738,7 +1738,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v169</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v170</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -6901,12 +6901,12 @@ async function _saveDropToWait(items, summary, srcMeta, fileObj, listUrl){
   }
   if(fileObj && firstId){ try{ const b64=await fileToB64(fileObj); const aiName=_intakeName(fileObj); const up=await fetch('/api/dropbox/list',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'upload',name:aiName,b64,target:'In afwachting',owner_type:'task',owner_id:firstId,cat:_dropCat||'Concept'})}).then(r=>r.json());
     if(up&&up.file&&up.file.link&&srcId){
+      // De trigger attachments_to_documents maakt de documents-rij zelf aan (geldt voor
+      // álle intake-routes). Wij vullen achteraf alleen aan wat de database niet kan weten.
       try{ await sb.from('attachments').insert({source_id:srcId, filename:aiName, storage_path:'dropbox:'+up.file.link, mime:fileObj.type||''}); }catch(_){}
-      // Nieuw canoniek model: elk document hangt direct aan het project.
-      try{ await sb.from('documents').insert({project_id:pid, source_id:srcId, scope:'project',
-        category:_dropCat||'Concept', filename:aiName, dropbox_path:up.file.link, link:up.file.link,
-        mime:fileObj.type||'', size:fileObj.size||null, summary:(summary||'').slice(0,2000)||null,
-        origin:'drop'}); }catch(_){}
+      try{ await sb.from('documents').update({category:_dropCat||'Concept', link:up.file.link,
+        dropbox_path:up.file.link, size:fileObj.size||null, summary:(summary||'').slice(0,2000)||null})
+        .eq('source_id',srcId).eq('filename',aiName); }catch(_){}
     } }catch(_){}}
   try{ notifyPartner((who||'Iemand')+' zette '+list.length+' punt(en) in afwachting uit een bestand.'); }catch(_){}
   try{ await refresh(); }catch(_){}
