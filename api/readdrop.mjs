@@ -97,7 +97,25 @@ export default async function handler(req, res) {
       return res.status(200).json({ reply: ex.summary || "Document gelezen.", items: ex.items || [], client: ex.client || "", project: ex.project || "", type: ex.type || "", from: ex.from || "", category: ex.category || "", subject: ex.subject || "" });
     }
 
-    // 4) Platte tekst (.txt/.md/etc.) → extractItems
+    // 4) HTML (.html/.htm) → tags/scripts/styles strippen, dan de leesbare tekst laten lezen.
+    //    De ruwe broncode meesturen (met <script>/CSS/base64-afbeeldingen) laat de AI stikken.
+    if (m.includes("html") || /\.html?$/i.test(name)) {
+      const raw = data ? Buffer.from(data, "base64").toString("utf8") : (text || "");
+      let t = raw
+        .replace(/<script[\s\S]*?<\/script>/gi, " ")
+        .replace(/<style[\s\S]*?<\/style>/gi, " ")
+        .replace(/<[^>]+>/g, " ")
+        .replace(/&nbsp;/gi, " ").replace(/&amp;/gi, "&").replace(/&lt;/gi, "<").replace(/&gt;/gi, ">")
+        .replace(/&quot;/gi, '"').replace(/&#3(?:9|4);|&rsquo;|&lsquo;/gi, "'")
+        .replace(/[ \t\f\r]+/g, " ").replace(/\n\s*\n\s*\n+/g, "\n\n").trim();
+      if (!t) return res.status(200).json({ reply: "Deze HTML lijkt geen leesbare tekst te bevatten.", items: [] });
+      t = t.slice(0, 24000);
+      const ex = await extractItems({ text: t, sender: who || "HTML", subject: name, today, catalog, context });
+      if (ex.usage) { try { await logUsage(null, { source: "drop-html", ...ex.usage }); } catch (_) {} }
+      return res.status(200).json({ reply: ex.summary || "HTML gelezen.", items: ex.items || [], client: ex.client || "", project: ex.project || "", type: ex.type || "", from: ex.from || "", category: ex.category || "", subject: ex.subject || "" });
+    }
+
+    // 5) Platte tekst (.txt/.md/etc.) → extractItems
     const plain = (text || "").trim() || (data ? Buffer.from(data, "base64").toString("utf8").trim() : "");
     if (plain) {
       const ex = await extractItems({ text: plain, sender: who || "Tekst", subject: name, today, catalog, context });
