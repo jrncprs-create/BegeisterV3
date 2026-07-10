@@ -108,7 +108,23 @@ export default async function handler(req, res) {
         .replace(/&nbsp;/gi, " ").replace(/&amp;/gi, "&").replace(/&lt;/gi, "<").replace(/&gt;/gi, ">")
         .replace(/&quot;/gi, '"').replace(/&#3(?:9|4);|&rsquo;|&lsquo;/gi, "'")
         .replace(/[ \t\f\r]+/g, " ").replace(/\n\s*\n\s*\n+/g, "\n\n").trim();
-      if (!t) return res.status(200).json({ reply: "Deze HTML lijkt geen leesbare tekst te bevatten.", items: [] });
+      // Een "standalone" deck (Claude Design/Keynote-export) bouwt zichzelf met JavaScript: de
+      // statische HTML is dan zo goed als leeg. Niks aan de hand — we herkennen het op de
+      // bestandsnaam en zetten het klaar (het portaal rendert het deck later gewoon live).
+      if (t.length < 300) {
+        const laag = String(name || "").toLowerCase();
+        let cli = "", prj = "";
+        for (const c of catalog || []) {
+          if (c.client && laag.includes(String(c.client).toLowerCase())) { cli = c.client; if (c.project && laag.includes(String(c.project).toLowerCase())) prj = c.project; break; }
+        }
+        const isDeck = /pitch|deck|voorstel|presentatie|slides?/.test(laag);
+        return res.status(200).json({
+          reply: isDeck ? "Pitch/deck herkend — klaar om op te slaan. (De pagina bouwt zichzelf met JavaScript, dus ik kon de inhoud niet meelezen; in het portaal opent hij gewoon.)"
+                        : "Interactieve HTML-pagina herkend — klaar om op te slaan.",
+          items: [], client: cli, project: prj, type: isDeck ? "pitchdeck" : "html", from: who || "",
+          category: "Concept & ontwerp", subject: name,
+        });
+      }
       t = t.slice(0, 24000);
       const ex = await extractItems({ text: t, sender: who || "HTML", subject: name, today, catalog, context });
       if (ex.usage) { try { await logUsage(null, { source: "drop-html", ...ex.usage }); } catch (_) {} }
