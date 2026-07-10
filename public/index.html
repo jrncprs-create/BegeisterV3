@@ -680,6 +680,21 @@
   #klantportaalOverlay .kpo-akknoot{font-size:12px;color:rgba(255,255,255,.6);margin-bottom:12px}
   #klantportaalOverlay .kpo-akkbtn{background:#fff;color:#5a1f1f;border:none;border-radius:var(--r-pil,999px);font-family:inherit;font-weight:var(--fw-nadruk);font-size:14px;padding:10px 24px;cursor:pointer}
   #klantportaalOverlay .kpo-akkbtn[disabled]{opacity:.4;cursor:default}
+  #klantportaalOverlay .kpo-vlijst{margin-top:14px}
+  #klantportaalOverlay .kpo-vrij{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid rgba(255,255,255,.14)}
+  #klantportaalOverlay .kpo-vrij:first-child{border-top:none}
+  #klantportaalOverlay .kpo-vrij .kpo-tx{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}
+  #klantportaalOverlay .kpo-seg{display:inline-flex;border:1px solid rgba(255,255,255,.3);border-radius:999px;overflow:hidden;flex:0 0 auto}
+  #klantportaalOverlay .kpo-sbtn{background:transparent;border:none;color:rgba(255,255,255,.7);font-family:inherit;font-size:12px;font-weight:var(--fw-nadruk);padding:5px 12px;cursor:pointer}
+  #klantportaalOverlay .kpo-sbtn.aan{background:#fff;color:#5a1f1f}
+  #klantportaalOverlay .kpo-poorten{margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,.2)}
+  #klantportaalOverlay .kpo-poort{display:flex;align-items:center;gap:10px;padding:8px 0}
+  #klantportaalOverlay .kpo-pdot{width:11px;height:11px;border-radius:50%;background:transparent;border:2px solid rgba(255,255,255,.45);flex:0 0 auto}
+  #klantportaalOverlay .kpo-poort.groen .kpo-pdot{background:#5bd08a;border-color:#5bd08a}
+  #klantportaalOverlay .kpo-plbl{font-weight:var(--fw-nadruk);font-size:14px}
+  #klantportaalOverlay .kpo-pst{margin-left:auto;font-size:12px;color:rgba(255,255,255,.6)}
+  #klantportaalOverlay .kpo-poort.groen .kpo-pst{color:#9ff0bd}
+  #klantportaalOverlay .kpo-poortnoot{font-size:12px;color:rgba(255,255,255,.6);margin-top:10px}
   @media(max-width:820px){#klantportaalOverlay .kpo-grid{grid-template-columns:1fr}}
   .kname-btn{background:transparent;border:none;color:var(--s1);font-size:16px;font-weight:var(--fw-nadruk);padding:3px 0;flex:0 1 auto;min-width:0;text-align:left;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .ksub-btn{background:transparent;border:none;color:var(--s1);font-size:13px;padding:2px 0;flex:0 1 auto;min-width:0;text-align:left;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -2128,7 +2143,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v221</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v222</span>
       <button id="dayBtn" class="dag-ic" onclick="openDayOverview()" title="Dagoverzicht" aria-label="Dagoverzicht"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M3 12h2M19 12h2M5.6 18.4l1.4-1.4M17 7l1.4-1.4"/></svg></button>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:14px;font-weight:var(--fw-nadruk);cursor:pointer" title="AI-context bewerken">Jeroen</span>
@@ -4122,6 +4137,15 @@ async function portaalToggleItem(soort, id){
   }catch(e){ toonToast('Opslaan mislukte: '+(e.message||e),'fout'); }
   _renderPortaalBoard();
 }
+// Een voorstel-document is een idee (wat we maken) of een budget (wat het kost). De klant
+// geeft er los akkoord op; beide poorten groen → productie. Hier kiest het team de soort.
+async function portaalVoorstelSoort(id, soort){
+  const f=_fileById(id); if(!f)return;
+  f.voorstel_soort=soort;
+  try{ await sb.from('files').update({voorstel_soort:soort}).eq('id',id); }
+  catch(e){ toonToast('Opslaan mislukte: '+(e.message||e),'fout'); }
+  _renderPortaalBoard();
+}
 function findItemById(id){ for(const p of (state.projects||[])){ const it=(p.items||[]).find(x=>String(x.id)===String(id)); if(it)return {p,it}; } return null; }
 // Publiceren: de klant ziet het portaal pas als dit aanstaat.
 async function portaalPubliceer(){
@@ -4140,6 +4164,9 @@ let _kpoMapOpen=new Set();
 // Zes vaste mappen, overal hetzelfde. Onderliggende categorie blijft bestaan (Financiën leest
 // die nog); dit is alleen de groepering.
 const _VASTE_MAPPEN=['Briefing','Concept & ontwerp','Techniek','Beeld','Financieel','Oplevering'];
+// De Bestanden-boom toont daarbovenop een vaste 'Portaal'-map: hier zet het team zelf alles
+// wat naar de klant gaat. De AI-sortering vult die map nooit automatisch.
+const _TREE_MAPPEN=_VASTE_MAPPEN.concat(['Portaal']);
 function _zesMap(cat, naam){
   const c=String(cat||'').trim().toLowerCase(); const n=String(naam||'').toLowerCase();
   const w=(re)=>new RegExp('(^|[^a-z])('+re+')([^a-z]|$)').test(n);
@@ -4201,9 +4228,19 @@ function _renderPortaalBoard(){
   L+=`<div class="kpo-sec"><div class="kpo-h"><span>Afspraken</span></div>${appts.length?appts.map(a=>rij('appt',a.id,a.t||'Afspraak',a.kz,a.date?d3date(a.date):'')).join(''):'<div class="kpo-leeg">Nog geen afspraken.</div>'}</div>`;
   L+=`<div class="kpo-sec"><div class="kpo-h"><span>Bestanden</span></div>${mappen(files,'file')}</div>`;
 
-  // Kolom rechts: dezelfde mappen, waarin je documenten als voorstel markeert. Daaronder akkoord.
+  // Kolom rechts: dezelfde mappen, waarin je documenten als voorstel markeert. Elk voorstel
+  // is een idee of een budget; de klant geeft er los akkoord op. Twee poorten groen → productie.
   let R=`<div class="kpo-h"><span>Voorstellen</span></div>${mappen(files,'voorstel')}`;
-  R+=`<div class="kpo-akkoord"><div class="kpo-akknoot">${voorstellen.length?(voorstellen.length+' document'+(voorstellen.length===1?'':'en')+' gemarkeerd als voorstel.'):'Open een map en markeer een document als voorstel.'}</div><button class="kpo-akkbtn" ${voorstellen.length?'':'disabled'}>Akkoord vragen</button></div>`;
+  if(voorstellen.length){
+    const soortKnop=(f,s,lbl)=>{ const aan=(f.voorstel_soort||'idee')===s; return `<button class="kpo-sbtn${aan?' aan':''}" onclick="portaalVoorstelSoort('${f.id}','${s}')">${lbl}</button>`; };
+    R+=`<div class="kpo-vlijst">`+voorstellen.map(f=>
+      `<div class="kpo-vrij"><span class="kpo-tx">${esc(f.name)}</span><span class="kpo-seg">${soortKnop(f,'idee','Idee')}${soortKnop(f,'budget','Budget')}</span></div>`
+    ).join('')+`</div>`;
+  }
+  // De twee poorten. Groen = de klant gaf akkoord op dat spoor.
+  const poort=(lbl,dt)=>{ const g=!!dt; return `<div class="kpo-poort${g?' groen':''}"><span class="kpo-pdot"></span><span class="kpo-plbl">${lbl}</span><span class="kpo-pst">${g?('akkoord · '+d3date(dt)):'nog geen akkoord'}</span></div>`; };
+  const beide=!!p.idee_akkoord_op&&!!p.budget_akkoord_op;
+  R+=`<div class="kpo-poorten">${poort('Idee',p.idee_akkoord_op)}${poort('Budget',p.budget_akkoord_op)}<div class="kpo-poortnoot">${beide?'Beide akkoord — dit project staat op productie.':'Zodra idee én budget akkoord zijn, schuift het project naar productie.'}</div></div>`;
 
   body.innerHTML=`<div class="kpo-grid"><div class="kpo-colL">${L}</div><div class="kpo-colR">${R}</div></div>`;
 }
@@ -5329,7 +5366,8 @@ function _isAttImg(name){ return _BEELD_EXT.test(name||''); }
 function _isAttPdf(name){ return /\.pdf$/i.test(name||''); }
 function _isAttDocx(name){ return /\.docx$/i.test(name||''); }
 function _isAttLink(name){ return /\.(webloc|url)$/i.test(name||''); }
-function _bestandSoort(name){ return _isAttImg(name)?'beeld':(_isAttPdf(name)?'pdf':(_isAttDocx(name)?'docx':(_isAttLink(name)?'snel':'anders'))); }
+function _isAttHtml(name){ return /\.html?$/i.test(name||''); }
+function _bestandSoort(name){ return _isAttImg(name)?'beeld':(_isAttPdf(name)?'pdf':(_isAttDocx(name)?'docx':(_isAttLink(name)?'snel':(_isAttHtml(name)?'html':'anders')))); }
 
 // PDF's zonder de zwevende zoombalk van de browser en passend op de breedte.
 function _attSrc(url,name){ return _isAttPdf(name) ? (url+'#toolbar=0&navpanes=0&view=FitH') : url; }
@@ -5362,6 +5400,8 @@ function _bestandPreviewHTML(url, naam, k){
   const soort=_bestandSoort(naam);
   if(soort==='beeld') return '<img class="'+k.img+'" src="'+escapeHtml(url)+'" alt="'+escapeHtml(naam||'')+'">';
   if(soort==='pdf')   return '<iframe class="'+k.frame+'" src="'+escapeHtml(_attSrc(url,naam))+'" title="'+escapeHtml(naam||'PDF')+'"></iframe>';
+  // Een HTML-deck (bv. een Claude Design-export) renderen we in een afgeschermde iframe.
+  if(soort==='html')  return '<iframe class="'+k.frame+'" src="'+escapeHtml(url)+'" title="'+escapeHtml(naam||'HTML')+'" sandbox="allow-scripts allow-popups"></iframe>';
   // Word kan de browser niet tonen. De server zet het om; _vulDocx() vult dit vak.
   if(soort==='docx')  return '<div class="dox-wrap" data-docx="'+escapeHtml(url)+'" data-naam="'+escapeHtml(naam||'')+'"><div class="'+k.none+'">Word-document openen…</div></div>';
   // Een .webloc of .url is geen document maar één link. Toon die link, klikbaar.
@@ -6621,6 +6661,22 @@ function _renderFmTree(){
   });
   // elke klant krijgt een map (ook zonder bestanden); nieuwe klanten verschijnen zo automatisch
   (typeof uniqueClients==='function'?uniqueClients():[]).forEach(c=>{ if(c && !groups[c]){ const b=_formBadge('client',c); groups[c]={col:b?b.col:'#888',projs:{},order:[]}; } });
+  // Vaste mappen: elk klantproject (dus niet Begeister of een privé-bakje) toont de zes mappen
+  // altijd, ook leeg. Categorieën die er niet in passen blijven als extra map onderaan staan.
+  (state.projects||[]).forEach(p=>{
+    if(!p || p.id==='__inbox__') return;
+    const client=p.client||'Geen klant';
+    if(_geenTraject(client)) return;
+    const b=_formBadge('client',client); const col=PROJCOL[p.id]||(b?b.col:'#888');
+    const G=groups[client]||(groups[client]={col,projs:{},order:[]});
+    if(col&&col!=='#888') G.col=col;
+    let P=G.projs[p.id]; if(!P){ P={name:p.project||'—',cats:{},order:[]}; G.projs[p.id]=P; G.order.push(p.id); }
+    _TREE_MAPPEN.forEach(cat=>{ if(!P.cats[cat]){ P.cats[cat]=[]; P.order.push(cat); } });
+    P._vast=true;
+    // vaste mappen vooraan in vaste volgorde; extra (niet-passende) mappen erachter
+    P.order.sort((a,b)=>{ const ia=_TREE_MAPPEN.indexOf(a), ib=_TREE_MAPPEN.indexOf(b);
+      if(ia<0&&ib<0) return 0; if(ia<0) return 1; if(ib<0) return -1; return ia-ib; });
+  });
   const clients=Object.keys(groups).sort((a,b)=> a==='Geen klant'?1:(b==='Geen klant'?-1:a.localeCompare(b)));
   let html='';
   clients.forEach(c=>{
@@ -6630,7 +6686,9 @@ function _renderFmTree(){
       const pr=g.projs[pid]; const catHtml=[];
       pr.order.forEach(cat=>{
         const fl=q?pr.cats[cat].filter(f=>(f.name||'').toLowerCase().includes(q)):pr.cats[cat];
-        if(!fl.length) return;
+        // Vaste mappen blijven staan, ook leeg. Overige lege mappen slaan we over.
+        const isVast=pr._vast && _TREE_MAPPEN.includes(cat);
+        if(!fl.length && !(isVast && !q)) return;
         const ckey=c+'|'+pid+'|'+cat, copen=q?true:_fmOpen.has(ckey);
         const files=fl.map(f=>`<div class="fm-file" draggable="true" data-fid="${f.id}" ondragstart="fmDragStart(event,'${f.id}')" onclick="fmFileClick('${f.id}')"><span class="fm-ic" style="color:${g.col}">${_fileGlyph(f.name||'')}</span><span class="fm-name">${escapeHtml(f.name||'bestand')}</span><button class="fm-edit" style="margin-left:auto" data-kind="file" data-fid="${f.id}" onclick="event.stopPropagation();fmRename(this)" title="Naam wijzigen">${_penGlyph()}</button><button class="fm-edit fm-del" data-fid="${f.id}" onclick="event.stopPropagation();deleteFile('${f.id}')" title="Verwijderen">${_tIc('<path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M7 7l1 13h8l1-13"/>',15,1.5)}</button></div>`).join('');
         catHtml.push(`<div class="fm-row fm-catrow${copen?' open':''}" draggable="true" ondragstart="fmFolderDragStart(event,'cat',this)" data-drop="1" data-client="${escapeHtml(c)}" data-pid="${escapeHtml(pid)}" data-cat="${escapeHtml(cat)}" ondragover="fmDragOver(event)" ondragleave="fmDragLeave(event)" ondrop="fmDrop(event)" onclick="fmToggle('${_fk(ckey)}')"><span class="fm-tw">▸</span><span class="fm-ic" style="color:${g.col}">${_folderGlyph()}</span><span class="fm-name">${escapeHtml(cat)}</span><span class="fm-cnt">${fl.length}</span><button class="fm-edit" data-kind="cat" data-client="${escapeHtml(c)}" data-pid="${escapeHtml(pid)}" data-cat="${escapeHtml(cat)}" onclick="event.stopPropagation();fmRename(this)" title="Naam wijzigen">${_penGlyph()}</button><button class="fm-edit fm-del" data-kind="cat" data-client="${escapeHtml(c)}" data-pid="${escapeHtml(pid)}" data-cat="${escapeHtml(cat)}" onclick="event.stopPropagation();fmDelete(this)" title="Verwijderen">${_trashGlyph()}</button></div><div class="fm-kids"${copen?'':' style="display:none"'}>${files}</div>`);
@@ -7443,6 +7501,7 @@ async function sbLoad(){
     projectprijs:pr.projectprijs, btw:pr.btw, budget:pr.budget, notes:pr.notes,
     invoice_status:pr.invoice_status, invoice_date:pr.invoice_date, phase:pr.phase||'briefing', description:pr.description||'',
     portal_secties:pr.portal_secties||null, portal_gepubliceerd:!!pr.portal_gepubliceerd, portal_bg:pr.portal_bg||null,
+    idee_akkoord_op:pr.idee_akkoord_op||null, budget_akkoord_op:pr.budget_akkoord_op||null,
     created: pr.created_at?new Date(pr.created_at).getTime():0,
     items: items.filter(x=>x.project_id===pr.id).map(_mapItem)});
   const activeProjects=projects.filter(pr=>!pr.archived);
