@@ -876,11 +876,9 @@
     #view-finmid::-webkit-scrollbar,#view-finright::-webkit-scrollbar,#view-conmid::-webkit-scrollbar,#view-conright::-webkit-scrollbar,#view-bronmid::-webkit-scrollbar,#view-bronright::-webkit-scrollbar{display:none}
     #view-beheerboard{grid-column:1 / -1;height:calc(100dvh - var(--tbh,52px));overflow-y:auto;scrollbar-width:none}
     #view-beheerboard::-webkit-scrollbar{display:none}
-    /* Postvak In heeft geen linkerkolom nodig: de hele breedte is de lijst. */
-    .main.workspace #view-postvak{grid-column:1 / -1;height:calc(100dvh - var(--tbh,52px));overflow-y:auto;scrollbar-width:none}
-    .main.workspace #view-postvak::-webkit-scrollbar{display:none}
-    body.pv-vol .rail{display:none}
-    body.pv-vol #chatDock{display:none}
+    /* Postvak In: drie kolommen, net als Bronnen en Contacten. */
+    #view-pvmid,#view-pvright{height:calc(100dvh - var(--tbh,52px));overflow-y:auto;scrollbar-width:none}
+    #view-pvmid::-webkit-scrollbar,#view-pvright::-webkit-scrollbar{display:none}
     .pb-board-inline .pb-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 36px;align-items:start}
     .pb-board-inline .pb-colL,.pb-board-inline .pb-colR{min-width:0}
   }
@@ -1005,41 +1003,53 @@
   /* Postvak In — één brede werkbank. Stond eerst in de smalle middenkolom met de
      acties onder elkaar; dat las als een formulier per item in plaats van een lijst.
      Nu: volle breedte, één regel per bron, keuze en acties rechts. */
-  #postvakWrap{padding:0 26px 40px}
-  .pv-top{display:flex;align-items:center;gap:14px;padding:4px 0 16px}
-  .pv-top-tel{font-size:13px;color:var(--mut2)}
-  .pv-bulk{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:0 0 14px;border-bottom:1px solid var(--lin);margin-bottom:2px}
+  #postvakWrap{padding:0}
+  .pv-bulk{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
   .pv-bulk-lbl{font-size:12px;color:var(--mut2);margin-right:2px}
   .pv-bulk .btn{font-size:12px;padding:5px 11px}
   .pv-rest{font-size:12px;color:var(--mut2)}
-  .pv-row{border-top:1px solid var(--lin);padding:11px 0;display:grid;
-    grid-template-columns:20px minmax(0,1fr) minmax(180px,260px) auto;gap:0 16px;align-items:center}
+  .pv-row{border-bottom:1px solid var(--line);padding:12px 14px;cursor:pointer}
   .pv-row:hover{background:rgba(255,255,255,.02)}
-  .pv-ic{color:var(--mut2);font-size:13px;text-align:center}
-  .pv-body{min-width:0}
-  .pv-kop{display:flex;gap:9px;align-items:baseline;min-width:0}
-  .pv-titel{font-size:14px;font-weight:var(--fw-nadruk);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:42%}
+  .pv-row.on{background:rgba(255,255,255,.05)}
+  .pv-kop{display:flex;gap:9px;align-items:center;min-width:0}
+  .pv-titel{font-size:14px;font-weight:var(--fw-nadruk);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0}
+  .pv-kop .wisknop{margin-left:auto;flex:none}
   .pv-dat{font-size:12px;color:var(--mut2);flex:none}
   .pv-chip{font-size:11px;border:1px solid var(--lin);border-radius:6px;padding:1px 6px;flex:none}
   .pv-chip.dubbel{color:#e0a45f;border-color:rgba(224,164,95,.45)}
-  .pv-reden{font-size:12px;color:var(--mut2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
-  .pv-tekst{font-size:13px;color:var(--mut2);margin:3px 0 0;line-height:1.4;
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pv-reden{font-size:12px;color:var(--mut2);margin-top:3px;line-height:1.4}
+  .pv-tekst{font-size:13px;color:var(--mut2);margin:4px 0 0;line-height:1.45;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
   .pv-voorstel{font-size:12px;color:var(--mut2);margin:4px 0 0}
   .pv-voorstel b{color:var(--txt);font-weight:var(--fw-nadruk)}
   .pv-proj{width:100%;font-size:13px}
-  .pv-acties{display:flex;gap:6px;align-items:center;justify-self:end}
+  .pv-acties{margin-top:9px;display:flex;flex-direction:column;gap:8px}
+  .pv-knoppen{display:flex;gap:6px;flex-wrap:wrap}
   .pv-acties .btn{font-size:12px;padding:5px 10px;white-space:nowrap}
-  .pv-del{background:transparent;border:none;color:var(--mut2);cursor:pointer;padding:4px;border-radius:6px;
-    display:inline-flex;line-height:0;opacity:0;transition:opacity .15s,color .15s}
-  .pv-row:hover .pv-del{opacity:.6}
-  .pv-del:hover{opacity:1;color:#e0726f}
-  .pv-del.zeker{opacity:1;color:#e0726f;font-size:12px;line-height:1;padding:4px 7px;border:1px solid rgba(224,114,111,.5)}
-  @media(max-width:1200px){
-    .pv-row{grid-template-columns:20px minmax(0,1fr);row-gap:9px}
-    .pv-proj,.pv-acties{grid-column:2}
-    .pv-acties{justify-self:start}
-  }
+  .pv-acties .cdd-btn{padding:8px 11px;font-size:13px}
+  /* Kanaal-icoon in kolom 1: geen klantkleur, dus geen gevulde badge. */
+  .pv-kdot{background:transparent!important;color:var(--mut)!important;border:1px solid var(--line)}
+  .pv-foot{padding:16px 14px 8px;border-top:1px solid var(--line);margin-top:10px;display:flex;flex-direction:column;gap:10px}
+  .pv-foot .btn{width:100%}
+  /* ---- WISKNOP --------------------------------------------------------------
+     Eén gebaar voor "definitief weg", overal hetzelfde. Het prullenbakje staat rechts.
+     Bij de eerste klik groeit de knop naar rechts uit; omdat hij rechts verankerd is,
+     schuift het bakje naar links en komt "sure?" tevoorschijn op de plek waar het stond.
+     Geen omlijning, geen dialoog. Na vier seconden schuift alles weer dicht. */
+  .wisknop{display:inline-flex;align-items:center;background:none;border:none;padding:4px;
+    color:var(--mut2);cursor:pointer;line-height:0;opacity:0;
+    transition:opacity .15s,color .15s}
+  .wisknop:hover{opacity:1;color:#e0726f}
+  .wis-ic{flex:none;display:flex;line-height:0}
+  .wis-tekst{max-width:0;opacity:0;overflow:hidden;white-space:nowrap;
+    font-size:12px;line-height:1;letter-spacing:.01em;
+    transition:max-width .3s cubic-bezier(.22,1,.36,1),opacity .18s ease .08s,margin .3s cubic-bezier(.22,1,.36,1)}
+  .wisknop.zeker{opacity:1;color:#e0726f}
+  .wisknop.zeker .wis-tekst{max-width:52px;opacity:1;margin-left:7px}
+  /* Zichtbaar zodra je de rij aanraakt — of altijd, zodra hij vraagt. */
+  .pv-row:hover .wisknop,.wisknop.zeker{opacity:.6}
+  .pv-row:hover .wisknop.zeker{opacity:1}
+
   /* Waar ligt de bal — het bolletje op de lijn. Wachten we op iemand anders,
      dan krijgt het een zachte halo. Verder blijft het een dicht bolletje. */
   .pb-fase-wacht .pb-fasestap.nu .pb-fasedot::after{content:"";position:absolute;left:50%;top:50%;
@@ -1485,15 +1495,9 @@
   .vraag-wolk .vw-knoppen{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
   .vraag-wolk .vw-rest{font-size:12px;color:var(--mut2);margin-left:auto}
   /* Prullenbak rechtsonder: de bron zelf weggooien. Enige knop hier die iets vernietigt. */
-  .vraag-wolk .vw-trash{margin-left:auto;flex:none;width:30px;height:30px;border-radius:9px;border:1px solid transparent;
-    background:transparent;color:var(--mut2);cursor:pointer;display:flex;align-items:center;justify-content:center;
-    transition:color .15s,border-color .15s}
-  .vraag-wolk .vw-trash:hover{color:#f87171;border-color:rgba(248,113,113,.4)}
-  .vraag-wolk .vw-zeker{margin-left:auto;flex:none;background:transparent;border:1px solid rgba(248,113,113,.5);
-    color:#f87171;border-radius:9px;padding:5px 12px;font:inherit;font-size:12px;cursor:pointer}
-  .vraag-wolk .vw-zeker:hover{background:rgba(248,113,113,.12)}
-  .vraag-wolk .vw-rest + .vw-zeker{margin-left:10px}
-  .vraag-wolk .vw-rest + .vw-trash{margin-left:10px}
+  .vraag-wolk .wisknop{margin-left:auto;flex:none;opacity:.55}
+  .vraag-wolk .wisknop:hover,.vraag-wolk .wisknop.zeker{opacity:1}
+  .vraag-wolk .vw-rest + .wisknop{margin-left:10px}
   .welcome-overlay #chatThread{flex:1 1 auto;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:10px;width:100%;padding:2px;margin:0}
   .welcome-overlay #chatThread:empty{display:none}
   /* berichten onderaan verankeren en omhoog laten groeien (scrollt normaal zodra vol) */
@@ -1970,7 +1974,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v197</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v199</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:14px;font-weight:var(--fw-nadruk);cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -2014,6 +2018,8 @@
       <div id="view-conright" class="hidden"><div id="conRightWrap"></div></div>
       <div id="view-bronmid" class="hidden"><div id="bronMidWrap"></div></div>
       <div id="view-bronright" class="hidden"><div id="bronRightWrap"></div></div>
+      <div id="view-pvmid" class="hidden"><div id="pvMidWrap"></div></div>
+      <div id="view-pvright" class="hidden"><div id="pvRightWrap"></div></div>
       <div id="view-beheerboard" class="hidden"><div id="beheerBoardWrap"></div></div>
 
       <div id="view-afspraken" class="hidden"></div>
@@ -2936,8 +2942,7 @@ function setView(v){
   document.getElementById('view-postvak').classList.toggle('hidden', v!=='postvak');
   // eerste kolom (#wachterBlock) verbergen wanneer er een rail-view getoond wordt
   const wb=document.getElementById('wachterBlock'); if(wb) wb.classList.toggle('hidden', d3 && railView);
-  // Postvak In vult de hele werkbank; de lege linkerkolom hoort er niet te staan.
-  document.body.classList.toggle('pv-vol', d3 && v==='postvak');
+
   if(typeof _ensureRailCloses==='function') _ensureRailCloses();
   document.getElementById('viewTitle').textContent={home:'',taken:'Taken',agenda:'Agenda',afspraken:'Afspraken',wachter:'In afwachting',bronnen:'Bronnen',beheer:'Klanten & projecten',financien:'Financiën',contacten:'Contacten',archief:'Archief',files:'Bestanden',postvak:'Postvak In'}[v];
   // desktop-werkblad: Taken (midden) + Agenda (rechts) tegelijk zichtbaar — op desktop ALTIJD aan
@@ -2958,6 +2963,9 @@ function setView(v){
     const bm=document.getElementById('view-bronmid'),brt=document.getElementById('view-bronright');
     if(bm)bm.classList.toggle('hidden',v!=='bronnen');
     if(brt)brt.classList.toggle('hidden',v!=='bronnen');
+    const pm=document.getElementById('view-pvmid'),prt=document.getElementById('view-pvright');
+    if(pm)pm.classList.toggle('hidden',v!=='postvak');
+    if(prt)prt.classList.toggle('hidden',v!=='postvak');
     const _railHintViews=['beheer','archief'];
     const beheerBoardOn=(v==='beheer' && _pbTarget==='beheer' && !!_pbPid);
     const bb=document.getElementById('view-beheerboard'); if(bb)bb.classList.toggle('hidden',!beheerBoardOn);
@@ -3122,82 +3130,145 @@ function _pvVoorstelRegel(s, sug){
     + ' <button class="btn ghost" style="font-size:12px;padding:3px 9px;margin-left:6px" '
     + 'onclick="pvMaakUitVoorstel(\''+s.id+'\')">Aanmaken</button></div>';
 }
+/* ============================================================================
+   POSTVAK IN — drie kolommen, net als Bronnen en Contacten.
+     1. kanaal   — waar kwam het vandaan? Mail, WhatsApp, Voice, Drop.
+     2. items    — de bronnen uit dat kanaal, met AI-oordeel en de vier acties.
+     3. preview  — dezelfde bronpreview als op de Bronnen-pagina.
+   Het stond eerst als één brede lijst met de acties per item onder elkaar; dat las
+   als een formulier per bron in plaats van als een postvak.
+   ============================================================================ */
+var _pvKanaal=null, _pvSel=null;
+const _PV_KANAAL=[
+  {k:'email',    l:'Mail'},
+  {k:'whatsapp', l:'WhatsApp'},
+  {k:'voice',    l:'Voice'},
+  {k:'drop',     l:'Binnengesleept'},
+];
+function _pvKanaalVan(s){ const c=String(s.channel||'').toLowerCase(); return _PV_KANAAL.some(x=>x.k===c)?c:'overig'; }
+function selectPvKanaal(k){ _pvKanaal=k; _pvSel=null; renderPostvak(); }
+function selectPvBron(id){ _pvSel=id; renderPvRight();
+  document.querySelectorAll('#pvMidWrap .pv-row').forEach(el=>el.classList.toggle('on', el.dataset.sid===String(id))); }
+
+// Kolom 1 — de kanalen, met tellers en de knoppen die over álles gaan.
 function renderPostvak(){
   const wrap=document.getElementById('postvakWrap'); if(!wrap)return;
   const inbox=state.inbox||[];
   if(!inbox.length){
     wrap.innerHTML='<div class="pv-leeg">Postvak In is leeg. Alles wat binnenkwam heeft een plek.</div>';
-    return;
+    renderPvMid(); renderPvRight(); return;
   }
-  const nSug=Object.keys(_pvSug).length;
-  let h='<div class="pv-top">'
-      + '<div class="pv-top-tel">'+inbox.length+' item'+(inbox.length===1?'':'s')+' wacht'+(inbox.length===1?'':'en')+' op een plek</div>'
-      + '<span style="flex:1"></span>'
-      + '<button class="btn ghost" id="pvAiBtn" onclick="pvSuggestAll()"'+(_pvBusy?' disabled':'')+'>'
-      + (_pvBusy?'Bezig…':(nSug?'✦ Opnieuw voorstellen':'✦ Laat de AI voorstellen doen'))+'</button></div>';
+  const tel={}; inbox.forEach(s=>{ const k=_pvKanaalVan(s); tel[k]=(tel[k]||0)+1; });
+  if(_pvKanaal && !tel[_pvKanaal]) _pvKanaal=null;
 
+  const rij=(k,l,n)=>{ const on=(_pvKanaal===k)?' on':'';
+    return '<div class="con-crow'+on+'" onclick="selectPvKanaal(\''+k+'\')">'
+      + '<span class="con-cdot pv-kdot">'+(_PV_ICON[k]||'\u00b7')+'</span>'
+      + '<div class="con-cmain"><div class="con-cnm">'+escapeHtml(l)+'</div></div>'
+      + '<span class="con-ccnt">'+n+'</span></div>'; };
+
+  let rows='';
+  const allesOn=(_pvKanaal===null)?' on':'';
+  rows+='<div class="con-crow'+allesOn+'" onclick="selectPvKanaal(null)">'
+     + '<span class="con-cdot pv-kdot">'+_tIc(_TABCHAN.asterisk,15,1.7)+'</span>'
+     + '<div class="con-cmain"><div class="con-cnm">Alles</div></div>'
+     + '<span class="con-ccnt">'+inbox.length+'</span></div>';
+  _PV_KANAAL.forEach(x=>{ if(tel[x.k]) rows+=rij(x.k,x.l,tel[x.k]); });
+  if(tel.overig) rows+=rij('overig','Overig',tel.overig);
+
+  const nSug=Object.keys(_pvSug).length;
+  let foot='<div class="pv-foot">'
+    + '<button class="btn ghost" id="pvAiBtn" onclick="pvSuggestAll()"'+(_pvBusy?' disabled':'')+'>'
+    + (_pvBusy?'Bezig\u2026':(nSug?'\u2726 Opnieuw voorstellen':'\u2726 Laat de AI voorstellen doen'))+'</button>';
   if(nSug){
     const b=_pvBuckets();
     const knop=(kind,tekst)=> (b[kind]&&b[kind].length)
-      ? '<button class="btn ghost" onclick="pvBulk(\''+kind+'\')">'+b[kind].length+' × '+tekst+'</button>' : '';
-    const rest=b.werkZonderProject.length
-      ? '<span class="pv-rest">'+b.werkZonderProject.length+' × werk zonder project — met de hand</span>' : '';
-    const knoppen=[knop('werk','naar project'),knop('inspiratie','inspiratie'),knop('prive','privé'),knop('ruis','ruis')].filter(Boolean).join('');
-    if(knoppen||rest) h+='<div class="pv-bulk"><span class="pv-bulk-lbl">Alles in één keer:</span>'+knoppen+rest+'</div>';
+      ? '<button class="btn ghost" onclick="pvBulk(\''+kind+'\')">'+b[kind].length+' \u00d7 '+tekst+'</button>' : '';
+    const knoppen=[knop('werk','naar project'),knop('inspiratie','inspiratie'),knop('prive','priv\u00e9'),knop('ruis','ruis')].filter(Boolean).join('');
+    if(knoppen) foot+='<div class="pv-bulk"><span class="pv-bulk-lbl">Alles in \u00e9\u00e9n keer:</span>'+knoppen+'</div>';
+    if(b.werkZonderProject.length) foot+='<span class="pv-rest">'+b.werkZonderProject.length+' \u00d7 werk zonder project \u2014 met de hand</span>';
   }
+  foot+='</div>';
 
-  // Twee appjes met dezelfde link zijn geen twee ideeën. Markeer ze, zodat je ziet
-  // waarom hetzelfde item er twee keer lijkt te staan.
+  wrap.innerHTML=rows+foot;
+  renderPvMid(); renderPvRight();
+}
+
+// Kolom 2 — de items zelf.
+function renderPvMid(){
+  const w=document.getElementById('pvMidWrap'); if(!w)return;
+  const inbox=(state.inbox||[]).filter(s=>!_pvKanaal||_pvKanaalVan(s)===_pvKanaal);
+  if(!inbox.length){ w.innerHTML='<div class="fin-mid-hint">Niets in dit kanaal.</div>'; return; }
+
+  // Twee appjes met dezelfde link zijn geen twee idee\u00ebn. Markeer ze.
   const linkTel={};
-  inbox.forEach(s=>{ const l=_bronLink(s); if(l) linkTel[l]=(linkTel[l]||0)+1; });
+  (state.inbox||[]).forEach(s=>{ const l=_bronLink(s); if(l) linkTel[l]=(linkTel[l]||0)+1; });
 
+  const kop='<div class="con-midhdr"><span class="con-midttl">'
+    + escapeHtml(_pvKanaal?((_PV_KANAAL.find(x=>x.k===_pvKanaal)||{}).l||'Overig'):'Alles')
+    + '</span><span class="con-ccnt">'+inbox.length+'</span></div>';
+
+  let h='';
   inbox.forEach(s=>{
     const sug=_pvSug[s.id]||null;
     const k=sug?_PV_KIND[sug.kind]:null;
     const dt=s.received_at?new Date(s.received_at).toLocaleDateString('nl-NL',{day:'2-digit',month:'short'}):'';
     const lnk=_bronLink(s);
     const dubbel=(lnk&&linkTel[lnk]>1)
-      ? '<span class="pv-chip dubbel" title="Deze link staat '+linkTel[lnk]+'× in het postvak">'+linkTel[lnk]+'× dezelfde link</span>' : '';
-    h+='<div class="pv-row" data-sid="'+s.id+'">'
-     +   '<div class="pv-ic">'+(_PV_ICON[s.channel]||'•')+'</div>'
-     +   '<div class="pv-body">'
-     +     '<div class="pv-kop">'
-     +       '<span class="pv-titel">'+escapeHtml(s.subject||s.sender||s.channel||'Bron')+'</span>'
-     +       '<span class="pv-dat">'+escapeHtml(dt)+'</span>'
-     +       (k?'<span class="pv-chip" style="color:'+k.kleur+'">'+k.lbl+'</span>':'')
-     +       dubbel
-     +       (sug&&sug.reden?'<span class="pv-reden">'+escapeHtml(sug.reden)+'</span>':'')
-     +     '</div>'
-     +     '<div class="pv-tekst">'+escapeHtml(_pvSnippet(s))+'</div>'
-     +     _pvVoorstelRegel(s, sug)
+      ? '<span class="pv-chip dubbel" title="Deze link staat '+linkTel[lnk]+'\u00d7 in het postvak">'+linkTel[lnk]+'\u00d7 dezelfde link</span>' : '';
+    const on=(String(_pvSel)===String(s.id))?' on':'';
+    h+='<div class="pv-row'+on+'" data-sid="'+s.id+'" onclick="selectPvBron(\''+s.id+'\')">'
+     +   '<div class="pv-kop">'
+     +     '<span class="pv-titel">'+escapeHtml(s.subject||s.sender||s.channel||'Bron')+'</span>'
+     +     '<span class="pv-dat">'+escapeHtml(dt)+'</span>'
+     +     (k?'<span class="pv-chip" style="color:'+k.kleur+'">'+k.lbl+'</span>':'')
+     +     dubbel
+     +     _wisknopHTML("event.stopPropagation();pvVerwijder('"+s.id+"',this)", !!_pvDelWacht[s.id])
      +   '</div>'
-     +   '<select class="pv-proj">'+_pvProjOptions(sug?sug.project_id:'')+'</select>'
-     +   '<div class="pv-acties">'
-     +     '<button class="btn" onclick="pvAssign(\''+s.id+'\')">Naar project</button>'
-     +     '<button class="btn ghost" onclick="pvTriage(\''+s.id+'\',\'inspiratie\')">Inspiratie</button>'
-     +     '<button class="btn ghost" onclick="pvTriage(\''+s.id+'\',\'prive\')">Privé</button>'
-     +     '<button class="btn ghost" onclick="pvTriage(\''+s.id+'\',\'ruis\')" title="Uit het postvak, blijft bij Bronnen staan">Ruis</button>'
-     +     '<button class="pv-del" onclick="pvVerwijder(\''+s.id+'\',this)" title="Bron definitief verwijderen">'
-     +       '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/></svg>'
-     +     '</button>'
+     +   '<div class="pv-tekst">'+escapeHtml(_pvSnippet(s))+'</div>'
+     +   (sug&&sug.reden?'<div class="pv-reden">'+escapeHtml(sug.reden)+'</div>':'')
+     +   _pvVoorstelRegel(s, sug)
+     +   '<div class="pv-acties" onclick="event.stopPropagation()">'
+     +     '<select class="pv-proj">'+_pvProjOptions(sug?sug.project_id:'')+'</select>'
+     +     '<div class="pv-knoppen">'
+     +       '<button class="btn" onclick="pvAssign(\''+s.id+'\')">Naar project</button>'
+     +       '<button class="btn ghost" onclick="pvTriage(\''+s.id+'\',\'inspiratie\')">Inspiratie</button>'
+     +       '<button class="btn ghost" onclick="pvTriage(\''+s.id+'\',\'prive\')">Priv\u00e9</button>'
+     +       '<button class="btn ghost" onclick="pvTriage(\''+s.id+'\',\'ruis\')" title="Uit het postvak, blijft bij Bronnen staan">Ruis</button>'
+     +     '</div>'
      +   '</div>'
      + '</div>';
   });
-  wrap.innerHTML=h;
-  _uniformeSelects(wrap);   // laatste native <select>'s in de app krijgen dezelfde dropdown
+  w.innerHTML=kop+h;
+  _uniformeSelects(w);
 }
-// Definitief weg. Twee klikken: het prullenbakje wordt "Zeker?" en vervalt na 4 seconden.
+
+// Kolom 3 — dezelfde bronpreview als op de Bronnen-pagina.
+function renderPvRight(){ _bronPreview('pvRightWrap', _pvSel, 'Kies links een bericht voor de preview.'); }
+
+// Definitief weg. Twee klikken: het prullenbakje schuift open en toont "sure?".
 var _pvDelWacht={};
 async function pvVerwijder(sid, btn){
   if(!_pvDelWacht[sid]){
-    _pvDelWacht[sid]=setTimeout(()=>{ delete _pvDelWacht[sid]; try{ renderPostvak(); }catch(_){} },4000);
-    btn.classList.add('zeker'); btn.innerHTML='Zeker?'; return;
+    _pvDelWacht[sid]=setTimeout(()=>{ delete _pvDelWacht[sid]; const b=document.querySelector('.pv-row[data-sid="'+sid+'"] .wisknop'); if(b)b.classList.remove('zeker'); },4000);
+    btn.classList.add('zeker');   // de tekst staat er al; hij schuift alleen open
+    return;
   }
   clearTimeout(_pvDelWacht[sid]); delete _pvDelWacht[sid];
   try{ await sb.from('sources').delete().eq('id',sid); toonToast('Bron verwijderd.'); }
   catch(e){ toonToast('Verwijderen mislukte.','fout'); console.warn('verwijderen',e); }
+  if(String(_pvSel)===String(sid)) _pvSel=null;
   await refresh();
 }
+
+// De wisknop: prullenbak + verborgen "sure?". Dezelfde in het Postvak In en het wolkje.
+const _WIS_IC='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/></svg>';
+function _wisknopHTML(onclick, zeker){
+  return '<button class="wisknop'+(zeker?' zeker':'')+'" onclick="'+onclick+'" '
+    + 'title="'+(zeker?'Klik nogmaals om definitief te verwijderen':'Definitief verwijderen')+'" aria-label="Verwijderen">'
+    + '<span class="wis-ic">'+_WIS_IC+'</span><span class="wis-tekst">sure?</span></button>';
+}
+
 
 // Eén AI-call over het hele postvak. Vult de dropdowns voor, kiest niets definitief.
 async function pvSuggestAll(){
@@ -4809,10 +4880,13 @@ function renderBronMid(){
   }).join('');
   w.innerHTML=`<div class="con-midhdr"><span class="con-midttl">${escapeHtml(_bronClient==='__none__'?'Overig':_bronClient)}</span></div>`+(rows||'<div class="hint">Geen bronnen bij deze klant.</div>');
 }
-function renderBronRight(){
-  const w=document.getElementById('bronRightWrap'); if(!w)return;
-  const s=_bronSrc?(state.sources||[]).find(x=>x.id===_bronSrc):null;
-  if(!s){ w.innerHTML='<div class="fin-mid-hint">Kies een bron voor de preview.</div>'; return; }
+function renderBronRight(){ _bronPreview('bronRightWrap', _bronSrc, 'Kies een bron voor de preview.'); }
+// Eén bronpreview. Bronnen en Postvak In tonen hetzelfde ding; ze verschillen alleen in
+// welke bron je hebt aangeklikt.
+function _bronPreview(wrapId, sid, leegTekst){
+  const w=document.getElementById(wrapId); if(!w)return;
+  const s=sid?(state.sources||[]).find(x=>String(x.id)===String(sid)):null;
+  if(!s){ w.innerHTML='<div class="fin-mid-hint">'+escapeHtml(leegTekst||'Kies een bron voor de preview.')+'</div>'; return; }
   const col=(s.proj&&PROJCOL[s.proj])||'var(--primary2)';
   const atts=(s.attachFull&&s.attachFull.length)?s.attachFull:[];
   const raw=s.full||s.text||s.summary||'';
@@ -7380,11 +7454,7 @@ function renderWelcomeVraag(){
    +   '<button class="btn ghost" onclick="vraagAfwijzen(\''+s.id+'\')">Nee, geen nieuw project</button>'
    +   '<button class="btn ghost" onclick="vraagLater()">Later</button>'
    +   (rest>0?'<span class="vw-rest">nog '+rest+' vraag'+(rest===1?'':'en')+'</span>':'')
-   +   (String(_vraagBevestig)===String(s.id)
-        ? '<button class="vw-zeker" onclick="vraagVerwijderBron(\''+s.id+'\')" title="Klik nogmaals om te verwijderen">Zeker?</button>'
-        : '<button class="vw-trash" onclick="vraagVerwijderBron(\''+s.id+'\')" title="Deze bron verwijderen" aria-label="Verwijderen">'
-          + '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/></svg>'
-          + '</button>')
+   +   _wisknopHTML("vraagVerwijderBron('"+s.id+"')", String(_vraagBevestig)===String(s.id))
    + '</div></div>';
 }
 async function _vraagAf(sid, status){
