@@ -1946,9 +1946,18 @@
   .dov-weerico{flex:none;color:#e6c07a}
   .dov-weerreg{font-size:12.5px;color:var(--mut2);margin-top:6px}
   .dov-weernat{color:#7db0e6}
-  /* Kleine kaarten */
-  .dov-klein{grid-column:span 2}
-  .dov-vol{grid-column:span 3}
+  /* Halve kaarten — drie van de zes kolommen */
+  .dov-half{grid-column:span 3}
+  /* Korte lijstjes in een kaart. De lange lijsten onderaan de pagina zijn hierin opgegaan. */
+  .dov-klijst{margin-top:10px;display:flex;flex-direction:column}
+  .dov-krij{display:flex;align-items:center;gap:10px;padding:6px 0;background:transparent;border:none;
+    text-align:left;font:inherit;cursor:pointer;width:100%;min-width:0}
+  .dov-krij:hover .dov-ktxt{color:#fff}
+  .dov-ktxt{flex:1;min-width:0;font-size:13px;color:var(--mut);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:color .15s}
+  .dov-kwie{font-size:12px;color:var(--mut2);flex:none}
+  .dov-meer{font-size:12px;color:var(--mut2);padding-top:5px}
+  .dov-inspttl{font-size:14px;color:#cfcfcf;line-height:1.35;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
   /* Inspiratie van de ander */
   .dov-insp{grid-column:span 3;flex-direction:row;align-items:center;gap:16px}
   .dov-inspbeeld{width:96px;height:96px;flex:none;border-radius:9px;overflow:hidden;background:#141416}
@@ -1960,8 +1969,7 @@
   .dov-atxt{flex:1;min-width:0;font-size:13.5px;color:#cfcfcf;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   @media(max-width:900px){
     .dov-bento{grid-template-columns:repeat(2,1fr)}
-    .dov-bal,.dov-weer,.dov-klein,.dov-vol,.dov-insp{grid-column:span 2}
-    .dov-insp{flex-direction:row}
+    .dov-bal,.dov-weer,.dov-half,.dov-insp{grid-column:span 2}
   }
   .dov-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0 0 22px}
   .dov-right{display:flex;align-items:center;gap:16px}
@@ -2056,7 +2064,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v207</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v208</span>
       <button id="dayBtn" class="dag-ic" onclick="openDayOverview()" title="Dagoverzicht" aria-label="Dagoverzicht"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M3 12h2M19 12h2M5.6 18.4l1.4-1.4M17 7l1.4-1.4"/></svg></button>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:14px;font-weight:var(--fw-nadruk);cursor:pointer" title="AI-context bewerken">Jeroen</span>
@@ -6344,9 +6352,26 @@ async function fmRename(btn){
   if(k==='cat'){ const client=btn.dataset.client, pid=btn.dataset.pid, cat=btn.dataset.cat;
     const cc=(pid==='__alg__')?_clientColor(client):((projById(pid)||{}).color||'');
     const nv=((await uiPrompt('Nieuwe mapnaam:', cat||'', cc?{accent:cc}:{}))||'').trim(); if(!nv||nv===cat)return;
-    try{ let q=sb.from('files').update({icon:nv}).eq('icon',cat||''); if(pid==='__alg__'){ q=q.eq('owner_type','client').eq('owner_id',client); } else { q=q.eq('owner_type','project').eq('owner_id',pid); } await q; }catch(_){}
+    // "Niet gesorteerd" is geen map maar de afwezigheid van een map. In `files` staat dat als
+    // een lege string, in `documents` als NULL. Wie op '' filtert, raakt de documenten niet —
+    // en dan sprong de mapnaam terug alsof er niets gebeurd was.
+    const leeg = !cat;
+    try{
+      let q=sb.from('files').update({icon:nv});
+      q = leeg ? q.or('icon.is.null,icon.eq.') : q.eq('icon',cat);
+      if(pid==='__alg__'){ q=q.eq('owner_type','client').eq('owner_id',client); }
+      else { q=q.eq('owner_type','project').eq('owner_id',pid); }
+      const r=await q; if(r.error) throw r.error;
+    }catch(e){ toonToast('Map hernoemen mislukte: '+(e.message||e),'fout'); return; }
     // Dezelfde mapnaam ook bij de documenten (mailbijlagen); die kennen alleen projecten.
-    if(pid!=='__alg__'){ try{ await sb.from('documents').update({category:nv}).eq('category',cat||'').eq('project_id',pid); }catch(_){} }
+    if(pid!=='__alg__'){
+      try{
+        let q=sb.from('documents').update({category:nv}).eq('project_id',pid);
+        q = leeg ? q.or('category.is.null,category.eq.') : q.eq('category',cat);
+        const r=await q; if(r.error) throw r.error;
+      }catch(e){ toonToast('Map hernoemen mislukte bij de documenten: '+(e.message||e),'fout'); }
+    }
+    toonToast('Map heet nu "'+nv+'".');
     await refresh(); return; }
 }
 function _cat(f){ return (f && f.icon || '').trim(); }
@@ -7698,22 +7723,6 @@ function _dovLangstStil(){
   return stilste ? {project:stilste, dagen} : null;
 }
 
-// Nog te factureren + openstaand, in één cijfer.
-function _dovGeld(){
-  let teFact=0, openstaand=0;
-  (state.projects||[]).forEach(p=>{
-    if(p.id==='__inbox__' || _geenTraject(p.client)) return;
-    const om=(p.projectprijs!=null&&p.projectprijs!=='')?Number(p.projectprijs):null;
-    if(om==null) return;
-    const btw=(p.btw!=null&&p.btw!=='')?Number(p.btw):21;
-    const incl=om*(1+btw/100);
-    const st=_statusUitFase(p.phase, p.invoice_status);
-    if(st==='gefactureerd') openstaand+=incl;
-    else if(st!=='betaald') teFact+=incl;
-  });
-  return {teFact, openstaand};
-}
-
 // Het laatste beeld dat de ánder op een inspiratiebord zette. Wij zien elkaars vondsten
 // pas als we ernaar zoeken; hier komt het naar je toe.
 function _dovInspAnder(){
@@ -7725,6 +7734,12 @@ function _dovInspAnder(){
   return {item:it, bord:bord?bord.name:'', ander};
 }
 
+// Instagram-titels zitten vol &#x2019; en lopen door. Kort en leesbaar maken.
+function _dovKortTitel(t){
+  const d=document.createElement('textarea'); d.innerHTML=String(t||'');
+  const schoon=d.value.replace(/\s+/g,' ').trim();
+  return schoon.length>90 ? schoon.slice(0,89).trimEnd()+'…' : (schoon||'Inspiratie');
+}
 // Afspraken van vandaag, op tijd gesorteerd.
 function _dovAgenda(){
   const ti=iso(TODAY);
@@ -7780,7 +7795,6 @@ function renderDayOverview(){
   const vandaag=D.today.filter(mijn), wacht=D.waiting.filter(mijn);
 
   const bal=_dovBal();
-  const geld=_dovGeld();
   const stil=_dovLangstStil();
   const agenda=_dovAgenda();
   const insp=_dovInspAnder();
@@ -7805,62 +7819,69 @@ function renderDayOverview(){
     <div class="dov-sub">Laden…</div>
   </div>`;
 
-  // 3. Openstaand, groot.
-  const openKaart=`<div class="dov-card dov-klein klik" onclick="dovNaarTaken()">
+  // 3. Van jou vandaag — teller plus de eerste drie regels. Ze stonden onderaan de pagina
+  //    in een aparte lijst; daar keek je niet meer naar.
+  const kortRij=(it,p)=>`<button class="dov-krij" onclick="event.stopPropagation();dovOpenItem('${it.id}')"><span class="dov-dot" style="background:${p?_projColor(p):'#686868'}"></span><span class="dov-ktxt">${esc(it.t||'')}</span></button>`;
+  const vandaagLijst = vandaag.length
+    ? vandaag.slice(0,3).map(({it,p})=>kortRij(it,p)).join('') + (vandaag.length>3?`<div class="dov-meer">+${vandaag.length-3} meer</div>`:'')
+    : '<div class="dov-sub">Niets met deadline vandaag.</div>';
+  const openKaart=`<div class="dov-card dov-half klik" onclick="dovNaarTaken()">
     <div class="dov-lbl">Van jou vandaag</div>
-    <div class="dov-big">${vandaag.length}</div>
-    <div class="dov-sub">${wacht.length} in afwachting</div>
+    <div class="dov-mid">${vandaag.length}</div>
+    <div class="dov-klijst">${vandaagLijst}</div>
   </div>`;
 
-  // 4. Cashflow in één cijfer.
-  const geldKaart=`<div class="dov-card dov-klein klik" onclick="closeDayOverview();setTimeout(()=>setView('financien'),220)">
-    <div class="dov-lbl">Nog te factureren</div>
-    <div class="dov-mid">€${fmtEur(geld.teFact)}</div>
-    <div class="dov-sub">€${fmtEur(geld.openstaand)} staat open</div>
+  // 4. Wacht op — bij wie ligt het, en waarop.
+  const wachtLijst = wacht.length
+    ? wacht.slice(0,3).map(({it,p})=>`<button class="dov-krij" onclick="event.stopPropagation();dovOpenItem('${it.id}')"><span class="dov-dot" style="background:${_projColor(p)}"></span><span class="dov-ktxt">${esc(it.t||'')}</span>${it.contact?`<span class="dov-kwie">${esc(it.contact)}</span>`:''}</button>`).join('') + (wacht.length>3?`<div class="dov-meer">+${wacht.length-3} meer</div>`:'')
+    : '<div class="dov-sub">Niemand om op te wachten.</div>';
+  const wachtKaart=`<div class="dov-card dov-half klik" onclick="closeDayOverview();setTimeout(()=>setView('wachter'),220)">
+    <div class="dov-lbl">Wacht op</div>
+    <div class="dov-mid">${wacht.length}</div>
+    <div class="dov-klijst">${wachtLijst}</div>
   </div>`;
 
-  // 5. Agenda van vandaag, als lijst.
+  // 5. Net binnen — alleen als er iets is. Een lege kaart is geen informatie.
+  const netKaart = D.net.length ? `<div class="dov-card dov-half klik" onclick="closeDayOverview();setTimeout(()=>setView('postvak'),220)">
+    <div class="dov-lbl">Net binnen</div>
+    <div class="dov-mid">${D.net.length}</div>
+    <div class="dov-klijst">${D.net.slice(0,3).map(it=>kortRij(it,null)).join('')}</div>
+  </div>` : '';
+
+  // 6. Agenda van vandaag, als lijst.
   const agRijen = agenda.length
     ? agenda.slice(0,5).map(a=>`<div class="dov-arow"><span class="dov-atijd">${esc(a.start||'—')}</span><span class="dov-atxt">${esc(a.t||'Afspraak')}</span></div>`).join('')
     : '<div class="dov-sub">Geen afspraken vandaag.</div>';
-  const agendaKaart=`<div class="dov-card dov-vol dov-agenda klik" onclick="closeDayOverview();setTimeout(()=>setView('agenda'),220)">
+  const agendaKaart=`<div class="dov-card dov-half dov-agenda klik" onclick="closeDayOverview();setTimeout(()=>setView('agenda'),220)">
     <div class="dov-lbl">Vandaag in de agenda</div>
     <div style="margin-top:6px">${agRijen}</div>
   </div>`;
 
-  // 6. Wat de ander vond.
+  // 7. Wat de ander vond.
   const inspKaart = insp
     ? `<div class="dov-card dov-insp klik" onclick="dovNaarInspiratie('${insp.item.id}')">
         <div class="dov-inspbeeld"><img ${_ispAttr(insp.item)} alt="" onerror="this.style.display='none'"></div>
         <div class="dov-inspmain">
           <div class="dov-lbl">Laatst gevonden</div>
-          <div class="dov-sub" style="color:#cfcfcf;font-size:14px">${esc(insp.item.title||'Inspiratie')}</div>
+          <div class="dov-inspttl">${esc(_dovKortTitel(insp.item.title))}</div>
           <div class="dov-sub">${insp.bord?esc(insp.bord):'Ongesorteerd'}</div>
         </div>
       </div>`
-    : `<div class="dov-card dov-insp"><div class="dov-inspmain"><div class="dov-lbl">Inspiratie</div><div class="dov-sub">Nog niets op de borden.</div></div></div>`;
+    : '';
 
-  // 7. Langst stil — onaangenaam en nuttig.
+  // 8. Langst stil — onaangenaam en nuttig.
   const stilKaart = stil
-    ? `<div class="dov-card dov-vol klik" onclick="dovOpenClient('${esc(stil.project.client).replace(/'/g,"\\'")}')">
+    ? `<div class="dov-card dov-half klik" onclick="dovOpenClient('${esc(stil.project.client).replace(/'/g,"\\'")}')">
         <div class="dov-lbl">Langst stil</div>
         <div class="dov-mid" style="font-size:22px">${esc(stil.project.client)}${stil.project.project?' · '+esc(stil.project.project):''}</div>
         <div class="dov-sub">${stil.dagen} dag${stil.dagen===1?'':'en'} geen beweging</div>
       </div>`
     : '';
 
-  const bento=`<div class="dov-bento">${balKaart}${weerKaart}${openKaart}${geldKaart}${agendaKaart}${inspKaart}${stilKaart}</div>`;
+  const bento=`<div class="dov-bento">${balKaart}${weerKaart}${openKaart}${wachtKaart}${agendaKaart}${inspKaart}${netKaart}${stilKaart}</div>`;
 
-  // Onder het raster: de lijsten die er al waren, nu gefilterd op jou.
-  const rowItem=({it,p})=>`<button class="dov-row" onclick="dovOpenItem('${it.id}')"><span class="dov-dot" style="background:${_projColor(p)}"></span><span class="tt">${esc(it.t||'')}</span>${it.owner?`<span class="meta">${esc(it.owner)}</span>`:''}${_dovPill(it.status)?`<span class="dov-pill">${_dovPill(it.status)}</span>`:''}</button>`;
-  const todayHtml=vandaag.length?vandaag.slice(0,8).map(rowItem).join(''):'<div class="dov-empty">Niets met deadline vandaag.</div>';
-  const netHtml=D.net.length?D.net.slice(0,6).map((it)=>`<button class="dov-row" onclick="dovOpenItem('${it.id}')"><span class="dov-dot" style="background:#686868"></span><span class="tt">${esc(it.t||'')}</span>${it.owner?`<span class="meta">${esc(it.owner)}</span>`:''}</button>`).join(''):'<div class="dov-empty">Geen nieuwe binnenkomers.</div>';
-  const waitHtml=wacht.length?wacht.slice(0,8).map(({it,p})=>`<button class="dov-row" onclick="dovOpenItem('${it.id}')"><span class="dov-dot" style="background:${_projColor(p)}"></span><span class="tt">${esc(it.t||'')}</span>${it.contact?`<span class="meta">↳ ${esc(it.contact)}</span>`:(it.owner?`<span class="meta">${esc(it.owner)}</span>`:'')}</button>`).join(''):'<div class="dov-empty">Niemand om op te wachten.</div>';
-
-  body.innerHTML=kop+bento
-    + `<div class="dov-sec"><div class="dov-h">Vandaag</div>${todayHtml}</div>`
-    + `<div class="dov-sec"><div class="dov-h">Net binnen</div>${netHtml}</div>`
-    + `<div class="dov-sec"><div class="dov-h">Wacht op</div>${waitHtml}</div>`;
+  // De drie lange lijsten onderaan zijn vervallen: ze herhaalden wat de kaarten al zeggen.
+  body.innerHTML=kop+bento;
 
   _dovAchtergrond();
   _dovVulWeer();
