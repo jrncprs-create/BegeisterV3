@@ -8,654 +8,362 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500&display=swap" rel="stylesheet">
 <style>
-/* Tokens uit HUISSTIJL.md. Dit blok is de enige plek waar kleuren en maten staan.
-   Als de Claude Design-mal binnenkomt, vervangen we dit blok en niets anders. */
+/* Tokens uit HUISSTIJL.md. Enige plek met kleuren en maten; komt de Claude Design-mal,
+   dan vervangen we dit blok. */
 :root{
   --bg:#0d0d0d; --panel:#1a1a1a; --panel2:#212121; --line:#454545;
-  --warn:#fbbf24; --risk:#fb923c; --late:#f87171;
+  --warn:#fbbf24; --risk:#fb923c; --late:#f87171; --ok:#86efac;
   --fw:300; --fw-nadruk:500;
   --r-sm:6px; --r-md:9px; --r-lg:12px; --r-pil:999px;
-
-  /* Het portaal is geen gereedschap maar een gezicht: de teamapp staat standaard uit,
-     dit staat aan. --s1 op de modal-waarde, en de klantkleur permanent zichtbaar. */
-  --s1:#c0c0c0; --s2:#e2e2e2; --s4:#ffffff;
-  --txt:var(--s1); --mut:#8b8b8b; --mut2:#6a6a6a;
-  --ccol:#8a8a8a;
+  /* Het portaal staat aan waar de teamapp uit staat: --s1 omhoog, klantkleur permanent. */
+  --s1:#c0c0c0; --s2:#e2e2e2; --s4:#ffffff; --mut:#8b8b8b; --mut2:#6a6a6a;
+  --txt:var(--s1); --ccol:#8a8a8a;
 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
   font-family:'Outfit',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   font-weight:var(--fw);font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased}
+html.embed,html.embed body{background:transparent}
 b,strong{font-weight:var(--fw-nadruk)}
 a{color:inherit}
 button{font-family:inherit;font-weight:var(--fw);cursor:pointer}
 :focus-visible{outline:none;box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--mut2)}
 
 .wrap{max-width:820px;margin:0 auto;padding:0 22px 90px}
+.embed .wrap{max-width:none;padding:0 4px 60px}
 
-/* ---- kop ---- */
+/* kop */
 .kop{position:sticky;top:0;z-index:5;background:var(--bg);display:flex;align-items:center;gap:12px;
   padding:16px 0 14px;border-bottom:1px solid var(--line)}
+.embed .kop{display:none}
 .merk{width:22px;height:26px;flex:none;color:var(--s4)}
 .kop-naam{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.kop-naam b{color:var(--ccol)}
-.kop-naam span{color:var(--mut2)}
+.kop-naam b{color:var(--ccol)} .kop-naam span{color:var(--mut2)}
 .kop-status{font-size:12px;border:1px solid var(--line);border-radius:var(--r-pil);padding:3px 11px;color:var(--s2);flex:none}
 .kop-uit{font-size:12px;color:var(--mut2);background:none;border:none;padding:6px 2px}
 .kop-uit:hover{color:var(--s4)}
-.kop-geld{display:flex;gap:18px;font-size:12px;color:var(--mut);flex:none;font-variant-numeric:tabular-nums}
-.kop-geld b{display:block;color:var(--s2);font-weight:var(--fw-nadruk)}
 
-/* ---- fases ---- */
-.fases{display:flex;gap:5px;margin:26px 0 8px}
-.fase-bar{flex:1;height:2px;border-radius:var(--r-pil);background:#2a2a2a}
-.fase-bar.aan{background:var(--ccol)}
-.fase-lbl{display:flex;gap:5px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:34px}
-.fase-lbl>span{flex:1;color:var(--mut2)}
-.fase-lbl>span.aan{color:var(--ccol)}
-
-/* ---- teambalk ---- */
-.teambalk{display:flex;align-items:center;gap:10px;margin:16px 0 0;padding:9px 13px;border-radius:var(--r-md);
+/* teambalk (alleen in embed/teammodus) */
+.teambalk{display:flex;align-items:center;gap:10px;margin:14px 0 4px;padding:9px 13px;border-radius:var(--r-md);
   border:1px solid color-mix(in srgb,var(--warn) 34%,transparent);color:var(--warn);font-size:12px}
 .teambalk .tb-chip{border:1px solid currentColor;border-radius:var(--r-sm);padding:0 6px;font-size:11px}
-.teambalk .knop{font-size:12px;padding:5px 11px;color:var(--warn);border-color:color-mix(in srgb,var(--warn) 34%,transparent)}
-.teambalk .knop:hover:not([disabled]){color:#fff;border-color:var(--warn)}
-.teambalk select{background:var(--bg);color:var(--warn);border:1px solid color-mix(in srgb,var(--warn) 34%,transparent);
-  border-radius:var(--r-md);font-family:inherit;font-size:12px;padding:5px 8px;max-width:280px}
 
-/* Bewerkvelden dragen dezelfde typografie als het resultaat: je typt in het eindbeeld. */
-.bew-titel,.bew-intro,.bew-body{width:100%;background:transparent;border:1px dashed #333;border-radius:var(--r-md);
-  color:var(--txt);font-family:inherit;font-weight:var(--fw);padding:10px 12px;margin-bottom:12px}
-.bew-titel{font-size:30px;line-height:1.15;color:var(--s4)}
-.bew-intro{font-size:14px;color:var(--mut);min-height:64px;resize:vertical}
-.bew-body{font-size:14px;min-height:190px;resize:vertical;line-height:1.6}
-.bew-titel:focus,.bew-intro:focus,.bew-body:focus{border-style:solid;border-color:var(--line)}
+/* fases */
+.fases{display:flex;gap:5px;margin:24px 0 8px}
+.fase-bar{flex:1;height:2px;border-radius:var(--r-pil);background:#2a2a2a}
+.fase-bar.aan{background:var(--ccol)}
+.fase-lbl{display:flex;gap:5px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px}
+.fase-lbl>span{flex:1;color:var(--mut2)} .fase-lbl>span.aan{color:var(--ccol)}
 
-/* ---- secties ---- */
-.sec{margin:34px 0}
+/* secties */
+.sec{margin:26px 0}
 .sec-h{font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut2);
-  font-weight:var(--fw-nadruk);margin:0 0 14px;display:flex;justify-content:space-between;align-items:center}
-.kaart{border:1px solid var(--line);border-radius:var(--r-lg);padding:20px 22px}
-.kaart.dicht{opacity:.45;display:flex;justify-content:space-between;align-items:center;padding:15px 18px}
-.dicht-noot{font-size:12px;color:var(--mut2)}
+  font-weight:var(--fw-nadruk);margin:0 0 12px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.kaart{border:1px solid var(--line);border-radius:var(--r-lg);padding:18px 20px}
+.sec.uit{opacity:.4}
+.sec.uit .kaart{border-style:dashed}
 
-/* ---- document ---- */
-.doc-h{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:18px}
-.doc-titel{font-size:30px;line-height:1.15;color:var(--s4);font-weight:var(--fw);margin:0}
-.doc-intro{color:var(--mut);margin:0 0 22px;max-width:60ch}
-.doc-body{max-width:64ch}
-.doc-body p{margin:0 0 14px}
-.doc-body h2{font-size:16px;font-weight:var(--fw-nadruk);color:var(--s2);margin:26px 0 10px}
-.dl-lijst{margin:26px 0 0;padding:0;list-style:none}
-.dl-lijst li{display:flex;gap:12px;padding:11px 0;border-top:1px solid #262626}
-.dl-dot{width:6px;height:6px;border-radius:50%;background:var(--ccol);flex:none;margin-top:9px}
-.dl-lbl{color:var(--s2)}
-.dl-toe{color:var(--mut2);font-size:13px}
+/* zichtbaarheidsschakelaar (team) */
+.zicht{display:inline-flex;align-items:center;gap:7px;font-size:11px;letter-spacing:0;text-transform:none;
+  color:var(--mut2);background:none;border:1px solid var(--line);border-radius:var(--r-pil);padding:3px 5px 3px 10px}
+.zicht b{font-weight:var(--fw)}
+.zicht .tog{width:30px;height:17px;border-radius:var(--r-pil);background:#2a2a2a;position:relative;transition:background .15s}
+.zicht .tog::after{content:"";position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;background:#777;transition:left .15s,background .15s}
+.zicht.aan{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 40%,transparent)}
+.zicht.aan .tog{background:color-mix(in srgb,var(--ok) 55%,transparent)}
+.zicht.aan .tog::after{left:15px;background:#0d0d0d}
+
+/* inhoud */
+.tekst{color:var(--s2);max-width:64ch}
+.tekst p{margin:0 0 12px} .tekst p:last-child{margin:0}
+.tekst h2{font-size:16px;font-weight:var(--fw-nadruk);color:var(--s2);margin:22px 0 8px}
+.rij{display:flex;gap:11px;align-items:baseline;padding:9px 0;border-top:1px solid #262626}
+.rij:first-child{border-top:none}
+.rij .dot{width:6px;height:6px;border-radius:50%;background:var(--ccol);flex:none;position:relative;top:6px}
+.rij.klaar .lbl{color:var(--mut2);text-decoration:line-through}
+.lbl{flex:1;color:var(--s2)} .meta{font-size:12px;color:var(--mut2);flex:none}
+.leegsec{color:var(--mut2);font-size:13px}
+.best a{display:flex;gap:9px;align-items:center;padding:9px 0;border-top:1px solid #262626;font-size:13px;text-decoration:none;color:var(--s2)}
+.best a:first-child{border-top:none}
+.best a:hover{color:var(--s4)}
+.prijs-tot{display:flex;justify-content:space-between;align-items:baseline;font-variant-numeric:tabular-nums}
+.prijs-tot .groot{font-size:22px;color:var(--s4)} .prijs-sub{font-size:12px;color:var(--mut2);margin-top:4px}
+
+/* opmerkingen-harmonica */
+.opm{margin-top:14px;border-top:1px solid #262626;padding-top:10px}
+.opm-knop{background:none;border:none;color:var(--mut2);font-size:12px;padding:2px 0;display:flex;align-items:center;gap:7px}
+.opm-knop:hover{color:var(--s2)}
+.opm-knop .chev{transition:transform .18s} .opm.open .opm-knop .chev{transform:rotate(90deg)}
+.opm-body{max-height:0;overflow:hidden;transition:max-height .28s cubic-bezier(.16,1,.3,1)}
+.opm.open .opm-body{max-height:1400px}
+.opm-rij{padding:9px 0;border-top:1px solid #262626}
+.opm-rij:first-child{border-top:none;margin-top:8px}
+.opm-wie{font-size:11px;color:var(--mut2);margin-bottom:2px} .opm-wie b{color:var(--ccol);font-weight:var(--fw-nadruk)}
+.opm-wie.van-ons b{color:var(--s2)}
+.opm textarea{width:100%;background:transparent;border:1px solid var(--line);border-radius:var(--r-md);
+  color:var(--txt);font-family:inherit;font-size:13px;font-weight:var(--fw);padding:9px 11px;margin-top:10px;resize:vertical;min-height:60px}
+.opm textarea::placeholder{color:var(--mut2)}
 
 .knop{background:transparent;border:1px solid var(--line);border-radius:var(--r-md);color:var(--txt);
   font-size:13px;padding:7px 13px;transition:color .15s,border-color .15s}
-.knop:hover{color:var(--s4);border-color:var(--mut2)}
-.knop[disabled]{opacity:.4;cursor:default}
+.knop:hover:not([disabled]){color:var(--s4);border-color:var(--mut2)} .knop[disabled]{opacity:.4;cursor:default}
 .knop.groot{font-size:14px;padding:11px 26px}
 
-/* ---- reacties ---- */
-.reactie{padding:12px 0;border-top:1px solid #262626}
-.reactie-wie{font-size:12px;color:var(--mut2);margin-bottom:3px}
-.reactie-wie b{color:var(--ccol);font-weight:var(--fw-nadruk)}
-textarea{width:100%;background:transparent;border:1px solid var(--line);border-radius:var(--r-md);
-  color:var(--txt);font-family:inherit;font-size:14px;font-weight:var(--fw);padding:11px 13px;resize:vertical;min-height:80px}
-textarea::placeholder{color:var(--mut2)}
+/* akkoord */
+.akkoord{text-align:center;padding:28px 22px}
+.akkoord-noot{font-size:12px;color:var(--mut2);margin-top:12px}
+.akkoord.vast{border-color:color-mix(in srgb,var(--ccol) 34%,transparent)}
+.akkoord .groot{font-size:20px;color:var(--s4)}
 
-/* ---- akkoord ---- */
-.akkoord{text-align:center;padding:34px 22px}
-.akkoord-noot{font-size:12px;color:var(--mut2);margin-top:13px}
-.akkoord-vast{border-color:color-mix(in srgb,var(--ccol) 34%,transparent)}
-.akkoord-vast .akkoord-groot{font-size:22px;color:var(--s4)}
-
-/* ---- aanleveringen ---- */
-.aan-groep+.aan-groep{margin-top:26px;padding-top:22px;border-top:1px solid #262626}
-.aan-kop{font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut2);font-weight:var(--fw-nadruk)}
-.aan-sub{font-size:13px;color:var(--mut2);margin:2px 0 14px}
-.aan-rij{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-top:1px solid #262626}
-.aan-soort{font-size:11px;border:1px solid var(--line);border-radius:var(--r-sm);padding:1px 7px;color:var(--mut2);
-  flex:none;width:82px;text-align:center;margin-top:3px}
-.aan-rij.blok .aan-soort{border-color:color-mix(in srgb,var(--late) 45%,transparent);color:var(--late)}
-.aan-mid{flex:1;min-width:0}
-.aan-lbl{color:var(--s2)}
-.aan-toe{font-size:13px;color:var(--mut2)}
-.aan-in{display:flex;gap:8px;margin-top:9px}
-.aan-in input{flex:1;max-width:260px;background:transparent;border:1px solid var(--line);border-radius:var(--r-md);
-  color:var(--txt);font-family:inherit;font-size:13px;padding:7px 11px}
-.aan-klaar{font-size:13px;color:var(--mut);flex:none;margin-top:3px}
-
-/* ---- offerte ---- */
-table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
-td,th{padding:9px 0;text-align:left;font-weight:var(--fw)}
-th{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut2);font-weight:var(--fw-nadruk)}
-td.num,th.num{text-align:right;white-space:nowrap}
-tbody tr{border-top:1px solid #262626}
-tfoot tr{border-top:1px solid var(--line)}
-tfoot td{color:var(--s2)}
-tfoot tr:last-child td{font-weight:var(--fw-nadruk);color:var(--s4)}
-
-/* ---- bestanden + contact ---- */
-.twee{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.best-rij{display:flex;gap:10px;align-items:center;padding:9px 0;border-top:1px solid #262626;font-size:13px}
-.contact{display:flex;gap:12px;align-items:center}
-.contact-bol{width:38px;height:38px;border-radius:50%;background:var(--panel2);flex:none}
-.contact-mail{font-size:12px;color:var(--mut2)}
-
-/* ---- login ---- */
+/* login */
 .login{max-width:340px;margin:16vh auto;text-align:center}
 .login .merk{width:34px;height:40px;margin:0 auto 26px}
 .login input{width:100%;background:transparent;border:1px solid var(--line);border-radius:var(--r-md);
   color:var(--txt);font-family:inherit;font-size:14px;padding:11px 13px;margin-bottom:10px}
 .login .knop{width:100%;margin-top:6px;padding:11px}
 .login-fout{color:var(--late);font-size:13px;min-height:20px;margin-top:12px}
-/* Chrome vult velden in met een knalwitte achtergrond. Overschrijven kan alleen zo. */
 input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus{
-  -webkit-text-fill-color:var(--txt);caret-color:var(--txt);
-  -webkit-box-shadow:0 0 0 40px var(--bg) inset;transition:background-color 9999s}
+  -webkit-text-fill-color:var(--txt);caret-color:var(--txt);-webkit-box-shadow:0 0 0 40px var(--bg) inset;transition:background-color 9999s}
 
 .leeg{color:var(--mut2);text-align:center;padding:60px 0}
 #toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(12px);opacity:0;
   background:var(--panel2);border:1px solid var(--line);border-radius:var(--r-md);padding:10px 16px;
   font-size:13px;transition:opacity .2s,transform .2s;pointer-events:none;z-index:20}
-#toast.aan{opacity:1;transform:translateX(-50%)}
-#toast.fout{border-color:color-mix(in srgb,var(--late) 45%,transparent);color:var(--late)}
+#toast.aan{opacity:1;transform:translateX(-50%)} #toast.fout{border-color:color-mix(in srgb,var(--late) 45%,transparent);color:var(--late)}
 
-@media (max-width:640px){ .twee{grid-template-columns:1fr} .doc-titel{font-size:24px} .kop-geld{display:none} }
-
-/* Downloaden = de browser laten printen. Eén stylesheet, dezelfde typografie. */
 @media print{
   :root{--bg:#fff;--txt:#111;--s1:#111;--s2:#333;--s4:#000;--mut:#555;--mut2:#777;--line:#ccc}
-  .kop,.fases,.fase-lbl,.teambalk,.knop,textarea,#toast,.geen-print{display:none!important}
-  .wrap{max-width:none;padding:0}
-  .kaart{border:none;padding:0}
-  .doc-titel{font-size:26pt}
-  body{font-size:11pt}
+  .kop,.fases,.fase-lbl,.teambalk,.knop,.zicht,.opm textarea,#toast,.geen-print{display:none!important}
+  .wrap{max-width:none;padding:0} .kaart{border:none;padding:0}
 }
 </style>
 </head>
 <body>
-
 <div id="app"></div>
 <div id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
-// Deze sleutel mag publiek zijn: hij geeft alleen toegang tot `auth`. Alle tabellen staan
-// op slot achter `is_team()`, en de portaaldata loopt via /api/portal met de service-role.
 const SB_URL = "https://rwevsqwvgqbzypaudzuj.supabase.co";
 const SB_KEY = "sb_publishable_m_mWsrZEQXlok9gEWFeTbQ_80vnBEQL";
 const sb = supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
 
 const MERK = '<svg viewBox="0 0 147.39 172.8" fill="none" stroke="currentColor" stroke-width="4" width="100%" height="100%">'
   + '<path d="M73.7 4v164.8"/><path d="M6 40l135.4 92.8"/><path d="M141.4 40L6 132.8"/></svg>';
+const CHEV = '<svg class="chev" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6l-6 6"/></svg>';
 
-let DATA = null, ACTIEF = 0;
-const UITGEKLAPT = new Set();   // documenten die akkoord zijn maar die de klant weer opent
+const EMBED = new URLSearchParams(location.search).get('embed') === '1';
+if(EMBED) document.documentElement.classList.add('embed');
 
-// Teammodus: Jeroen en Marlon zien exact de klantpagina, maar kunnen erin schrijven.
-// Geen aparte preview — een preview die naast het echte scherm leeft, gaat er altijd
-// een keer van afwijken.
-let TEAM = false, TEAMDATA = null, PROJECT_ID = null, VUIL = false;
+let TEAM = false, DATA = null, ACTIEF = 0, PROJECT_ID = null;
+const OPEN_OPM = new Set();   // welke opmerking-draadjes openstaan
 
-function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-function eur(n){ return '€' + Number(n||0).toLocaleString('nl-NL',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+const SEC_ORDER = ['omschrijving','voortgang','taken','afspraken','bestanden','projectprijs','notities'];
+const SEC_TITEL = { omschrijving:'Omschrijving', voortgang:'Voortgang', taken:'Taken',
+  afspraken:'Afspraken', bestanden:'Bestanden', projectprijs:'Projectprijs', notities:'Notities' };
+
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function eur(n){ return '€'+Number(n||0).toLocaleString('nl-NL',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function datum(s){ if(!s) return ''; return new Date(s).toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'}); }
+function toast(t,soort){ const el=document.getElementById('toast'); el.textContent=t; el.className='aan'+(soort==='fout'?' fout':''); clearTimeout(el._t); el._t=setTimeout(()=>el.className='',3200); }
+function mini(md){ const uit=[]; let a=[]; const spoel=()=>{ if(a.length){uit.push('<p>'+a.join('<br>')+'</p>');a=[];} };
+  String(md||'').split('\n').forEach(r=>{ const t=r.trim(); if(!t){spoel();return;}
+    if(/^##\s+/.test(t)){spoel();uit.push('<h2>'+vet(esc(t.replace(/^##\s+/,'')))+'</h2>');return;} a.push(vet(esc(t))); }); spoel(); return uit.join(''); }
+function vet(s){ return s.replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>'); }
 
-function toast(tekst, soort){
-  const t = document.getElementById('toast');
-  t.textContent = tekst; t.className = 'aan' + (soort==='fout' ? ' fout' : '');
-  clearTimeout(t._t); t._t = setTimeout(() => { t.className = ''; }, 3200);
-}
-
-// Kleine markdown: alinea's, koppen, vet. Meer heeft een debrief niet nodig.
-// Per regel kijken, niet per blok — anders plakt een kop aan de alinea eronder.
-function mini(md){
-  const uit = [];
-  let alinea = [];
-  const spoel = () => { if(alinea.length){ uit.push('<p>'+alinea.join('<br>')+'</p>'); alinea = []; } };
-  String(md||'').split('\n').forEach(regel => {
-    const t = regel.trim();
-    if(!t){ spoel(); return; }
-    if(/^##\s+/.test(t)){ spoel(); uit.push('<h2>'+vet(esc(t.replace(/^##\s+/,'')))+'</h2>'); return; }
-    alinea.push(vet(esc(t)));
-  });
-  spoel();
-  return uit.join('');
-}
-function vet(s){ return s.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>'); }
-
-async function post(pad, action, extra){
-  const s = await sb.auth.getSession();
-  const token = s.data.session && s.data.session.access_token;
-  if(!token) { toonLogin(); throw new Error('niet ingelogd'); }
-  const r = await fetch(pad, {
-    method:'POST',
-    headers:{ 'Content-Type':'application/json', Authorization:'Bearer ' + token },
-    body: JSON.stringify(Object.assign({ action }, extra||{})),
-  });
-  const j = await r.json().catch(()=>({error:'onleesbaar antwoord'}));
-  if(!r.ok){ const e = new Error(j.error || 'er ging iets mis'); e.status = r.status; throw e; }
+async function post(pad,action,extra){
+  const s=await sb.auth.getSession(); const token=s.data.session&&s.data.session.access_token;
+  if(!token){ toonLogin(); throw new Error('niet ingelogd'); }
+  const r=await fetch(pad,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify(Object.assign({action},extra||{}))});
+  const j=await r.json().catch(()=>({error:'onleesbaar antwoord'}));
+  if(!r.ok){ const e=new Error(j.error||'er ging iets mis'); e.status=r.status; throw e; }
   return j;
 }
-const api    = (action, extra) => post('/api/portal', action, extra);
-const beheer = (action, extra) => post('/api/portalbeheer', action, extra);
+const api=(a,x)=>post('/api/portal',a,x);
+const beheer=(a,x)=>post('/api/portalbeheer',a,x);
 
-/* ============================ login ============================ */
+/* ---------------- login ---------------- */
 function toonLogin(fout){
-  document.getElementById('app').innerHTML =
-    '<div class="login">'
-    + '<div class="merk">'+MERK+'</div>'
-    + '<input id="lgMail" type="email" placeholder="E-mailadres" autocomplete="username">'
-    + '<input id="lgWw" type="password" placeholder="Wachtwoord" autocomplete="current-password">'
-    + '<button class="knop" id="lgKnop">Inloggen</button>'
-    + '<div class="login-fout">'+esc(fout||'')+'</div>'
-    + '</div>';
-  const doe = async () => {
-    const email = document.getElementById('lgMail').value.trim();
-    const ww = document.getElementById('lgWw').value;
-    if(!email || !ww) return;
-    const k = document.getElementById('lgKnop'); k.disabled = true; k.textContent = 'Momentje…';
-    const { error } = await sb.auth.signInWithPassword({ email, password: ww });
-    if(error){ toonLogin('Inloggen lukte niet. Klopt het wachtwoord?'); return; }
-    start();
-  };
-  document.getElementById('lgKnop').onclick = doe;
-  document.getElementById('lgWw').onkeydown = e => { if(e.key==='Enter') doe(); };
+  document.getElementById('app').innerHTML='<div class="login"><div class="merk">'+MERK+'</div>'
+    +'<input id="lgMail" type="email" placeholder="E-mailadres" autocomplete="username">'
+    +'<input id="lgWw" type="password" placeholder="Wachtwoord" autocomplete="current-password">'
+    +'<button class="knop" id="lgKnop">Inloggen</button><div class="login-fout">'+esc(fout||'')+'</div></div>';
+  const doe=async()=>{ const email=document.getElementById('lgMail').value.trim(); const ww=document.getElementById('lgWw').value;
+    if(!email||!ww)return; const k=document.getElementById('lgKnop'); k.disabled=true; k.textContent='Momentje…';
+    const {error}=await sb.auth.signInWithPassword({email,password:ww});
+    if(error){ toonLogin('Inloggen lukte niet. Klopt het wachtwoord?'); return; } start(); };
+  document.getElementById('lgKnop').onclick=doe;
+  document.getElementById('lgWw').onkeydown=e=>{ if(e.key==='Enter')doe(); };
 }
-
 async function uitloggen(){ await sb.auth.signOut(); toonLogin(); }
 
-/* ============================ pagina ============================ */
+/* ---------------- render ---------------- */
 function statusTekst(p){
-  const debrief = p.docs.find(d => d.kind === 'debrief');
-  if(debrief && !debrief.akkoord) return 'wacht op jouw akkoord';
-  const open = p.aanleveringen.filter(a => a.status === 'open' && a.blokkeert).length;
-  if(open) return open + (open === 1 ? ' ding nodig' : ' dingen nodig');
-  return p.fases[p.fase_index] ? p.fases[p.fase_index].l.toLowerCase() : '';
+  if(p.akkoord) return 'akkoord op '+datum(p.akkoord.approved_at);
+  if(p.fase==='debrief') return 'wacht op jouw akkoord';
+  return (p.fases[p.fase_index]||{}).l ? (p.fases[p.fase_index].l.toLowerCase()) : '';
 }
 
 function render(){
   if(!DATA) return;
-  // De klantkleur staat permanent aan — dat is het verschil met de teamapp.
   if(DATA.klant.kleur) document.documentElement.style.setProperty('--ccol', DATA.klant.kleur);
-  const p = DATA.projecten[ACTIEF];
-  if(!p){
-    document.getElementById('app').innerHTML =
-      '<div class="wrap">' + kopHtml(null) + '<div class="leeg">Er staat nog niets voor je klaar.<br>We laten het weten zodra dat verandert.</div></div>';
-    document.getElementById('kopUit').onclick = uitloggen;
-    return;
-  }
+  const p=DATA.projecten[ACTIEF];
+  if(!p){ document.getElementById('app').innerHTML='<div class="wrap">'+kopHtml(null)+'<div class="leeg">Er staat nog niets voor je klaar.</div></div>';
+    if(!EMBED){ const u=document.getElementById('kopUit'); if(u)u.onclick=uitloggen; } return; }
 
-  document.getElementById('app').innerHTML = '<div class="wrap">' + kopHtml(p) + fasesHtml(p)
-    + (TEAM ? teambalkHtml(p) : '')
-    + p.docs.slice().sort(volgorde).map(d => (TEAM ? docBewerkHtml(d) : docHtml(d, p))).join('')
-    + (TEAM ? '' : ontbrekendHtml(p))
-    + aanleveringenHtml(p)
-    + offerteHtml(p)
-    + onderkantHtml(p)
+  const secs = SEC_ORDER.map(s=>secHtml(s,p)).filter(Boolean).join('');
+  document.getElementById('app').innerHTML='<div class="wrap">'
+    + kopHtml(p)
+    + (TEAM?teambalkHtml(p):'')
+    + secs
+    + akkoordHtml(p)
     + '</div>';
-
   bind(p);
-  if(TEAM) bindTeam(p);
-}
-
-// Het document van de huidige fase staat open, de rest klapt dicht.
-function volgorde(a, b){
-  const rang = k => (k === 'ontwerp' ? 0 : 1);
-  return rang(a.kind) - rang(b.kind);
-}
-// De pagina groeit met de fase mee: wat afgehandeld is, zakt in tot één regel.
-function isOpen(d){
-  if(UITGEKLAPT.has(d.id)) return true;
-  return !d.akkoord;
 }
 
 function kopHtml(p){
-  const kleur = DATA.klant.kleur || '#8a8a8a';
-  const geld = p && p.geld
-    ? '<div class="kop-geld"><div>totaal<b>'+eur(p.geld.totaal)+'</b></div></div>' : '';
-  return '<div class="kop">'
-    + '<div class="merk">'+MERK+'</div>'
-    + '<div class="kop-naam"><b>'+esc(DATA.klant.naam)+'</b>'
-    + (p ? ' <span>· '+esc(p.naam)+'</span>' : '') + '</div>'
-    + geld
-    + (p ? '<div class="kop-status">'+esc(statusTekst(p))+'</div>' : '')
-    + '<button class="kop-uit" id="kopUit">uitloggen</button>'
+  if(EMBED) return '';
+  return '<div class="kop"><div class="merk">'+MERK+'</div>'
+    +'<div class="kop-naam"><b>'+esc(DATA.klant.naam)+'</b>'+(p?' <span>· '+esc(p.naam)+'</span>':'')+'</div>'
+    +(p?'<div class="kop-status">'+esc(statusTekst(p))+'</div>':'')
+    +'<button class="kop-uit" id="kopUit">uitloggen</button></div>';
+}
+
+function teambalkHtml(p){
+  return '<div class="teambalk geen-print"><span class="tb-chip">klant-edit</span>'
+    +'<span style="flex:1">Zet per onderdeel aan wat '+esc(DATA.klant.naam)+' mag zien.</span></div>';
+}
+
+// Een sectie: bij de klant alleen als hij aan staat; bij het team altijd, met schakelaar.
+function secHtml(sectie, p){
+  const aan = !!p.secties[sectie];
+  if(!TEAM && !aan) return '';
+  const inhoud = secInhoud(sectie, p);
+  if(!TEAM && !inhoud) return '';   // aan maar niets te tonen: bij de klant overslaan
+  const kop = '<div class="sec-h"><span>'+SEC_TITEL[sectie]+'</span>'
+    + (TEAM ? '<button class="zicht'+(aan?' aan':'')+'" data-tog="'+sectie+'"><b>'+(aan?'zichtbaar':'verborgen')+'</b><span class="tog"></span></button>' : '')
     + '</div>';
-}
-
-function fasesHtml(p){
-  const bars = p.fases.map((f,i) => '<div class="fase-bar'+(i<=p.fase_index?' aan':'')+'"></div>').join('');
-  const lbls = p.fases.map((f,i) => '<span class="'+(i<=p.fase_index?'aan':'')+'">'+esc(f.l)+'</span>').join('');
-  return '<div class="fases">'+bars+'</div><div class="fase-lbl">'+lbls+'</div>';
-}
-
-function docHtml(d, p){
-  const titel = d.kind === 'debrief' ? 'Debrief' : 'Ontwerpvoorstel';
-  if(!isOpen(d)){
-    return '<div class="sec"><div class="kaart dicht">'
-      + '<div>'+esc(titel)+' — akkoord op '+esc(datum(d.akkoord.approved_at))+'</div>'
-      + '<button class="knop" data-open="'+d.id+'">Bekijken</button></div></div>';
-  }
-
-  const dl = d.deliverables.length
-    ? '<ul class="dl-lijst">' + d.deliverables.map(x =>
-        '<li><span class="dl-dot"></span><div><div class="dl-lbl">'+esc(x.label)+'</div>'
-        + (x.toelichting ? '<div class="dl-toe">'+esc(x.toelichting)+'</div>' : '') + '</div></li>').join('') + '</ul>'
-    : '';
-
-  const doc = '<div class="sec"><div class="sec-h"><span>'+esc(titel)+'</span>'
-    + '<button class="knop geen-print" onclick="window.print()">Downloaden</button></div>'
-    + '<div class="kaart"><div class="doc-h"><h1 class="doc-titel">'+esc(d.title)+'</h1></div>'
-    + (d.intro ? '<p class="doc-intro">'+esc(d.intro)+'</p>' : '')
-    + '<div class="doc-body">'+mini(d.body)+'</div>'
-    + (dl ? '<div class="sec-h" style="margin-top:30px">Wat wij leveren</div>'+dl : '')
-    + '</div></div>';
-
-  return doc + reactiesHtml(d) + akkoordHtml(d);
-}
-
-function reactiesHtml(d){
-  if(d.akkoord) return '';
-  const lijst = d.reacties.map(c =>
-    '<div class="reactie"><div class="reactie-wie"><b>'+esc(c.author)+'</b> · '+esc(datum(c.created_at))+'</div>'
-    + '<div>'+esc(c.body)+'</div></div>').join('');
-  return '<div class="sec geen-print"><div class="sec-h">Klopt dit?</div><div class="kaart">'
-    + lijst
-    + '<div style="margin-top:'+(lijst?'16px':'0')+'">'
-    + '<textarea id="rt_'+d.id+'" placeholder="Laat het weten als we iets verkeerd hebben begrepen…"></textarea>'
-    + '<div style="margin-top:10px"><button class="knop" data-reactie="'+d.id+'">Versturen</button></div>'
-    + '</div></div></div>';
-}
-
-function akkoordHtml(d){
-  if(d.akkoord){
-    return '<div class="sec"><div class="kaart akkoord akkoord-vast">'
-      + '<div class="akkoord-groot">Akkoord op '+esc(datum(d.akkoord.approved_at))+'</div>'
-      + '<div class="akkoord-noot">Dit is de opdrachtbevestiging. Vastgelegd onder '
-      + '<span style="font-family:ui-monospace,monospace">'+esc(String(d.akkoord.snapshot_sha).slice(0,12))+'</span>.</div>'
-      + '</div></div>';
-  }
-  return '<div class="sec geen-print"><div class="kaart akkoord">'
-    + '<button class="knop groot" data-akkoord="'+d.id+'">Akkoord — dit is de opdracht</button>'
-    + '<div class="akkoord-noot">Hierna staan de debrief en de offerte vast.</div>'
+  return '<div class="sec'+(TEAM&&!aan?' uit':'')+'"><div class="kaart">'
+    + kop
+    + (inhoud||'<div class="leegsec">Nog niets ingevuld.</div>')
+    + opmHtml(sectie, p)
     + '</div></div>';
 }
 
-function ontbrekendHtml(p){
-  if(p.docs.some(d => d.kind === 'ontwerp')) return '';
-  if(p.fase_index < 3) return '<div class="sec"><div class="kaart dicht">'
-    + '<div>Ontwerpvoorstel</div><div class="dicht-noot">volgt in de uitvoeringsfase</div></div></div>';
+function secInhoud(sectie, p){
+  if(sectie==='voortgang'){
+    const bars=p.fases.map((f,i)=>'<div class="fase-bar'+(i<=p.fase_index?' aan':'')+'"></div>').join('');
+    const lbls=p.fases.map((f,i)=>'<span class="'+(i<=p.fase_index?'aan':'')+'">'+esc(f.l)+'</span>').join('');
+    return '<div class="fases">'+bars+'</div><div class="fase-lbl">'+lbls+'</div>';
+  }
+  if(sectie==='omschrijving') return (p.omschrijving||'').trim() ? '<div class="tekst">'+mini(p.omschrijving)+'</div>' : '';
+  if(sectie==='notities')     return (p.notities||'').trim()     ? '<div class="tekst">'+mini(p.notities)+'</div>'     : '';
+  if(sectie==='taken'){
+    const t=p.taken||[]; if(!t.length) return '';
+    return t.map(it=>'<div class="rij'+(it.done?' klaar':'')+'"><span class="dot"></span><span class="lbl">'+esc(it.t||'')+'</span></div>').join('');
+  }
+  if(sectie==='afspraken'){
+    const a=p.afspraken||[]; if(!a.length) return '';
+    return a.map(x=>'<div class="rij"><span class="lbl">'+esc(x.t||'Afspraak')+'</span><span class="meta">'+esc(datum(x.date))+(x.start?' · '+esc(String(x.start).slice(0,5)):'')+'</span></div>').join('');
+  }
+  if(sectie==='bestanden'){
+    const b=p.bestanden||[]; if(!b.length) return '';
+    return '<div class="best">'+b.map(f=>'<a href="'+esc(f.link||'#')+'" target="_blank" rel="noopener">'+esc(f.name||'bestand')+'</a>').join('')+'</div>';
+  }
+  if(sectie==='projectprijs'){
+    if(!p.prijs) return '';
+    return '<div class="prijs-tot"><span class="lbl">Totaal</span><span class="groot">'+eur(p.prijs.incl)+'</span></div><div class="prijs-sub">incl. '+p.prijs.btw+'% btw</div>';
+  }
   return '';
 }
 
-function aanleveringenHtml(p){
-  if(!p.aanleveringen.length) return '';
-  const groep = (rijen, kop, sub) => rijen.length
-    ? '<div class="aan-groep"><div class="aan-kop">'+kop+'</div><div class="aan-sub">'+sub+'</div>'
-      + rijen.map(aanRij).join('') + '</div>' : '';
-  const blok  = p.aanleveringen.filter(a => a.blokkeert && a.status === 'open');
-  const later = p.aanleveringen.filter(a => !a.blokkeert && a.status === 'open');
-  const klaar = p.aanleveringen.filter(a => a.status === 'aangeleverd');
-
-  return '<div class="sec"><div class="sec-h">Wat wij van je nodig hebben</div><div class="kaart">'
-    + groep(blok,  'Hier wachten we op', 'Zonder deze kunnen we niet verder.')
-    + groep(later, 'Kan alvast',          'Nog geen haast, wel handig.')
-    + groep(klaar, 'Binnen',              'Dank je.')
-    + '</div></div>';
+// Het inklapbare opmerkingen-draadje onder een sectie.
+function opmHtml(sectie, p){
+  const lijst=(p.opmerkingen&&p.opmerkingen[sectie])||[];
+  const open=OPEN_OPM.has(sectie);
+  const draad=lijst.map(c=>'<div class="opm-rij"><div class="opm-wie'+(c.van_klant?'':' van-ons')+'"><b>'+esc(c.author||'')+'</b> · '+esc(datum(c.created_at))+'</div><div>'+esc(c.body)+'</div></div>').join('');
+  const veld='<textarea id="ot_'+sectie+'" placeholder="'+(TEAM?'Antwoord de klant…':'Een opmerking bij dit onderdeel…')+'"></textarea>'
+    +'<div style="margin-top:8px"><button class="knop" data-opm="'+sectie+'">Plaatsen</button></div>';
+  return '<div class="opm'+(open?' open':'')+'"><button class="opm-knop" data-opmtoggle="'+sectie+'">'+CHEV
+    +'Opmerkingen'+(lijst.length?' ('+lijst.length+')':'')+'</button>'
+    +'<div class="opm-body">'+draad+veld+'</div></div>';
 }
 
-function aanRij(a){
-  const klaar = a.status === 'aangeleverd';
-  const veld = klaar ? '<div class="aan-klaar">'+esc(toonWaarde(a))+'</div>' : invulHtml(a);
-  return '<div class="aan-rij'+(a.blokkeert && !klaar ? ' blok' : '')+'">'
-    + '<span class="aan-soort">'+esc(a.soort)+'</span>'
-    + '<div class="aan-mid"><div class="aan-lbl">'+esc(a.label)+'</div>'
-    + (a.toelichting ? '<div class="aan-toe">'+esc(a.toelichting)+'</div>' : '')
-    + (klaar ? '' : veld) + '</div>'
-    + (klaar ? veld : '') + '</div>';
-}
-function toonWaarde(a){
-  if(a.soort === 'bedrag') return eur(a.waarde);
-  if(a.soort === 'bevestiging') return 'akkoord';
-  return String(a.waarde==null?'':a.waarde);
-}
-function invulHtml(a){
-  if(a.soort === 'bevestiging')
-    return '<div class="aan-in geen-print"><button class="knop" data-aan="'+a.id+'" data-ja="1">Bevestigen</button></div>';
-  if(a.soort === 'bestand')
-    return '<div class="aan-in geen-print"><input id="an_'+a.id+'" placeholder="Link naar het bestand">'
-      + '<button class="knop" data-aan="'+a.id+'">Opslaan</button></div>';
-  const type = (a.soort === 'bedrag' || a.soort === 'aantal') ? 'number' : 'text';
-  const ph = a.soort === 'bedrag' ? 'Bedrag in euro' : a.soort === 'aantal' ? 'Aantal' : 'Je antwoord';
-  return '<div class="aan-in geen-print"><input id="an_'+a.id+'" type="'+type+'" placeholder="'+ph+'">'
-    + '<button class="knop" data-aan="'+a.id+'">Opslaan</button></div>';
+function akkoordHtml(p){
+  if(p.akkoord){
+    return '<div class="sec"><div class="kaart akkoord vast"><div class="groot">Akkoord op '+esc(datum(p.akkoord.approved_at))+'</div>'
+      +'<div class="akkoord-noot">Vastgelegd onder <span style="font-family:ui-monospace,monospace">'+esc(String(p.akkoord.snapshot_sha).slice(0,12))+'</span>.</div></div></div>';
+  }
+  if(TEAM){
+    return '<div class="sec geen-print"><div class="kaart akkoord"><div class="akkoord-noot">De klant heeft nog geen akkoord gegeven.</div></div></div>';
+  }
+  return '<div class="sec geen-print"><div class="kaart akkoord">'
+    +'<button class="knop groot" data-akkoord="1">Akkoord geven</button>'
+    +'<div class="akkoord-noot">Hiermee bevestig je de opdracht.</div></div></div>';
 }
 
-function offerteHtml(p){
-  if(!p.offerte) return '<div class="sec"><div class="kaart dicht">'
-    + '<div>Offerte</div><div class="dicht-noot">nog niet vrijgegeven</div></div></div>';
-  const o = p.offerte;
-  return '<div class="sec"><div class="sec-h">Offerte</div><div class="kaart"><table>'
-    + '<thead><tr><th>Post</th><th class="num">Aantal</th><th class="num">Stukprijs</th><th class="num">Totaal</th></tr></thead><tbody>'
-    + o.posten.map(r => '<tr><td>'+esc(r.label)+'</td><td class="num">'+r.aantal+'</td>'
-        + '<td class="num">'+eur(r.stukprijs)+'</td><td class="num">'+eur(r.totaal)+'</td></tr>').join('')
-    + '</tbody><tfoot>'
-    + '<tr><td colspan="3">Subtotaal</td><td class="num">'+eur(o.subtotaal)+'</td></tr>'
-    + '<tr><td colspan="3">Btw</td><td class="num">'+eur(o.btw)+'</td></tr>'
-    + '<tr><td colspan="3">Totaal</td><td class="num">'+eur(o.totaal)+'</td></tr>'
-    + '</tfoot></table></div></div>';
-}
-
-function onderkantHtml(p){
-  const best = p.bestanden.length
-    ? p.bestanden.map(f => '<div class="best-rij"><a href="'+esc(f.link||'#')+'" target="_blank" rel="noopener">'+esc(f.name)+'</a></div>').join('')
-    : '<div class="dicht-noot" style="padding-top:8px">Nog niets gedeeld.</div>';
-  return '<div class="sec twee geen-print">'
-    + '<div><div class="sec-h">Bestanden</div><div class="kaart">'+best+'</div></div>'
-    + '<div><div class="sec-h">Je contact</div><div class="kaart"><div class="contact">'
-    + '<div class="contact-bol"></div><div><div>Jeroen Cuypers</div>'
-    + '<div class="contact-mail">jeroen@begeister.nl</div></div></div></div></div>'
-    + '</div>';
-}
-
-/* ============================ teammodus ============================ */
-const STATUSTEKST = { concept:'Concept — de klant ziet dit nog niet.', gedeeld:'Gedeeld — de klant kan dit lezen.', akkoord:'Akkoord — vastgelegd.' };
-
-function teambalkHtml(p){
-  const d = p.docs.find(x => x.kind === 'debrief');
-  const st = d ? d.status : 'concept';
-  const knop = st === 'concept'
-    ? '<button class="knop" data-pub="gedeeld">Publiceren</button>'
-    : st === 'gedeeld'
-      ? '<button class="knop" data-pub="concept">Terugtrekken</button>'
-      : '<button class="knop" data-pub="concept">Heropenen</button>';
-  const kiezer = TEAMDATA.projecten.length > 1
-    ? '<select id="tbProj">' + TEAMDATA.projecten.map(x =>
-        '<option value="'+x.id+'"'+(x.id===PROJECT_ID?' selected':'')+'>'+esc(x.klantnaam)+' · '+esc(x.project)+'</option>').join('') + '</select>'
-    : '';
-  return '<div class="teambalk geen-print"><span class="tb-chip">team</span>'
-    + '<span style="flex:1">'+esc(STATUSTEKST[st])+'</span>'
-    + kiezer
-    + '<button class="knop" id="tbSave"'+(VUIL?'':' disabled')+'>Opslaan</button>'
-    + knop + '</div>';
-}
-
-function docBewerkHtml(d){
-  if(d.status === 'akkoord') return docHtml(d, null);   // vast is vast
-  const dl = (d.deliverables||[]).map(x => x.label + (x.toelichting ? ' | ' + x.toelichting : '')).join('\n');
-  return '<div class="sec"><div class="sec-h"><span>Debrief</span>'
-    + '<span class="dicht-noot">Dit is precies wat de klant ziet.</span></div>'
-    + '<div class="kaart">'
-    + '<input class="bew-titel" id="bwTitle" value="'+esc(d.title)+'" placeholder="Titel van de debrief">'
-    + '<textarea id="bwIntro" class="bew-intro" placeholder="We spraken elkaar op …">'+esc(d.intro)+'</textarea>'
-    + '<textarea id="bwBody" class="bew-body" placeholder="Zo hebben wij het begrepen…&#10;&#10;## Een kop begint met twee hekjes&#10;En daaronder de tekst.">'+esc(d.body)+'</textarea>'
-    + '<div class="sec-h" style="margin-top:26px">Wat wij leveren</div>'
-    + '<textarea id="bwDelv" class="bew-body" placeholder="Eén per regel. Toelichting achter een streepje:&#10;Lichtontwerp | tekening en sfeerbeelden">'+esc(dl)+'</textarea>'
-    + '<div class="dicht-noot" style="margin-top:8px">Eén per regel. Alles achter een <b>|</b> wordt de toelichting.</div>'
-    + '</div></div>';
-}
-
-function bindTeam(p){
-  const vuil = () => { VUIL = true; const b = document.getElementById('tbSave'); if(b) b.disabled = false; };
-  ['bwTitle','bwIntro','bwBody','bwDelv'].forEach(id => {
-    const el = document.getElementById(id); if(el) el.oninput = vuil;
-  });
-
-  const kiez = document.getElementById('tbProj');
-  if(kiez) kiez.onchange = async () => {
-    if(VUIL && !confirm('Er zijn niet-opgeslagen wijzigingen. Toch wisselen?')) { kiez.value = PROJECT_ID; return; }
-    VUIL = false; PROJECT_ID = kiez.value;
-    history.replaceState(null, '', '/portaal?p=' + PROJECT_ID);
-    await teamLaad();
-  };
-
-  const save = document.getElementById('tbSave');
-  if(save) save.onclick = async () => {
-    save.disabled = true; save.textContent = 'Momentje…';
-    try { await teamOpslaan(); VUIL = false; toast('Opgeslagen.'); await teamLaad(); }
-    catch(e){ toast(e.message, 'fout'); save.disabled = false; save.textContent = 'Opslaan'; }
-  };
-
-  document.querySelectorAll('[data-pub]').forEach(b => b.onclick = async () => {
-    const d = p.docs.find(x => x.kind === 'debrief'); if(!d) return;
-    const naar = b.dataset.pub;
-    if(d.status === 'akkoord' && !confirm('Heropenen laat het akkoord vervallen. Zeker weten?')) return;
-    b.disabled = true;
-    try {
-      if(VUIL) await teamOpslaan();
-      await beheer('status', { doc_id:d.id, naar });
-      VUIL = false;
-      toast(naar === 'gedeeld' ? 'De klant kan het nu lezen.' : 'Teruggetrokken.');
-      await teamLaad();
-    } catch(e){ toast(e.message, 'fout'); b.disabled = false; }
-  });
-}
-
-async function teamOpslaan(){
-  const d = TEAMDATA.doc;
-  const regels = (document.getElementById('bwDelv').value || '').split('\n')
-    .map(r => r.trim()).filter(Boolean)
-    .map(r => { const i = r.indexOf('|');
-      return i < 0 ? { label:r } : { label:r.slice(0,i).trim(), toelichting:r.slice(i+1).trim() }; });
-  await beheer('opslaan', {
-    doc_id: d.id,
-    title: document.getElementById('bwTitle').value,
-    intro: document.getElementById('bwIntro').value,
-    body:  document.getElementById('bwBody').value,
-    deliverables: regels,
-  });
-}
-
-// Bouwt dezelfde structuur als /api/portal teruggeeft, zodat render() niets hoeft te weten
-// van de teammodus behalve waar de invoervelden staan.
-async function teamLaad(){
-  const lijst = await beheer('projecten');
-  const klantVan = id => lijst.klanten.find(k => k.id === id) || { name:'—', color:'#8a8a8a' };
-  const projecten = lijst.projecten.map(p => Object.assign({}, p, { klantnaam: klantVan(p.client_id).name }))
-    .sort((a,b) => (a.klantnaam+a.project).localeCompare(b.klantnaam+b.project));
-  if(!projecten.length){ document.getElementById('app').innerHTML = '<div class="wrap"><div class="leeg">Geen projecten.</div></div>'; return; }
-
-  if(!PROJECT_ID || !projecten.some(p => p.id === PROJECT_ID)) PROJECT_ID = projecten[0].id;
-  const proj = projecten.find(p => p.id === PROJECT_ID);
-  const klant = klantVan(proj.client_id);
-
-  const j = await beheer('doc', { project_id: PROJECT_ID });
-  TEAMDATA = { doc:j.doc, projecten, klanten:lijst.klanten };
-
-  const FASES = ['briefing','debrief','akkoord','uitvoering','oplevering','gefactureerd'];
-  const LBL = { briefing:'Briefing', debrief:'Debrief', akkoord:'Akkoord', uitvoering:'Uitvoering', oplevering:'Oplevering', gefactureerd:'Afgerond' };
-
-  DATA = {
-    klant: { naam: klant.name, kleur: klant.color },
-    projecten: [{
-      id: proj.id, naam: proj.project, fase: proj.phase,
-      fase_index: Math.max(0, FASES.indexOf(proj.phase)),
-      fases: FASES.map(k => ({ k, l: LBL[k] })),
-      docs: [Object.assign({}, j.doc, {
-        deliverables: j.deliverables, reacties: [], akkoord: j.akkoord,
-      })],
-      aanleveringen: (j.aanleveringen || []).map(a => ({
-        id:a.id, label:a.label, toelichting:a.toelichting, soort:a.soort, blokkeert:a.blokkeert,
-        status:a.status, waarde: (a.soort==='bedrag'||a.soort==='aantal') ? a.waarde_getal : a.waarde_tekst,
-      })),
-      bestanden: [],
-      offerte: null,
-      geld: null,
-    }],
-  };
-  ACTIEF = 0;
-  render();
-}
-
-/* ============================ acties ============================ */
+/* ---------------- acties ---------------- */
 function bind(p){
-  document.getElementById('kopUit').onclick = uitloggen;
+  if(!EMBED){ const u=document.getElementById('kopUit'); if(u)u.onclick=uitloggen; }
 
-  document.querySelectorAll('[data-reactie]').forEach(b => b.onclick = async () => {
-    const id = b.dataset.reactie;
-    const ta = document.getElementById('rt_' + id);
-    const tekst = (ta.value||'').trim();
-    if(!tekst) return;
-    b.disabled = true;
-    try { await api('reactie', { doc_id:id, body:tekst }); ta.value=''; toast('Verstuurd.'); await laad(); }
-    catch(e){ toast(e.message, 'fout'); b.disabled = false; }
+  document.querySelectorAll('[data-opmtoggle]').forEach(b=>b.onclick=()=>{
+    const s=b.dataset.opmtoggle; OPEN_OPM.has(s)?OPEN_OPM.delete(s):OPEN_OPM.add(s);
+    const el=b.closest('.opm'); if(el)el.classList.toggle('open');
   });
 
-  document.querySelectorAll('[data-akkoord]').forEach(b => b.onclick = async () => {
-    if(!confirm('Akkoord geven op deze debrief? Hiermee bevestig je de opdracht.')) return;
-    b.disabled = true; b.textContent = 'Momentje…';
-    try { await api('akkoord', { doc_id:b.dataset.akkoord }); toast('Akkoord vastgelegd.'); await laad(); }
-    catch(e){ toast(e.message, 'fout'); b.disabled = false; b.textContent = 'Akkoord — dit is de opdracht'; }
+  document.querySelectorAll('[data-opm]').forEach(b=>b.onclick=async()=>{
+    const s=b.dataset.opm; const ta=document.getElementById('ot_'+s); const tekst=(ta.value||'').trim();
+    if(!tekst)return; b.disabled=true;
+    try{ await (TEAM?beheer:api)('reactie',{project_id:p.id,sectie:s,body:tekst}); ta.value=''; OPEN_OPM.add(s); toast('Geplaatst.'); await herlaad(); }
+    catch(e){ toast(e.message,'fout'); b.disabled=false; }
   });
 
-  document.querySelectorAll('[data-aan]').forEach(b => b.onclick = async () => {
-    const id = b.dataset.aan;
-    const waarde = b.dataset.ja ? true : (document.getElementById('an_' + id) || {}).value;
-    b.disabled = true;
-    try { await api('aanlevering', { id, waarde }); toast('Genoteerd.'); await laad(); }
-    catch(e){ toast(e.message, 'fout'); b.disabled = false; }
+  document.querySelectorAll('[data-akkoord]').forEach(b=>b.onclick=async()=>{
+    if(!confirm('Akkoord geven? Hiermee bevestig je de opdracht.'))return;
+    b.disabled=true; b.textContent='Momentje…';
+    try{ await api('akkoord',{project_id:p.id}); toast('Akkoord vastgelegd.'); await herlaad(); }
+    catch(e){ toast(e.message,'fout'); b.disabled=false; b.textContent='Akkoord geven'; }
   });
 
-  document.querySelectorAll('[data-open]').forEach(b => b.onclick = () => {
-    UITGEKLAPT.add(b.dataset.open);
-    render();
+  document.querySelectorAll('[data-tog]').forEach(b=>b.onclick=async()=>{
+    const s=b.dataset.tog; const nu=!p.secties[s];
+    try{ await beheer('toggle',{project_id:p.id,sectie:s,aan:nu}); await herlaad(); }
+    catch(e){ toast(e.message,'fout'); }
   });
 }
+
+async function herlaad(){ TEAM ? await teamLaad(PROJECT_ID) : await laad(); }
 
 async function laad(){
-  const j = await api('data');
-  DATA = j;
-  if(ACTIEF >= DATA.projecten.length) ACTIEF = 0;
+  const j=await api('data'); DATA=j;
+  if(ACTIEF>=DATA.projecten.length) ACTIEF=0;
   render();
+}
+
+// Teammodus: één project (uit de teamapp), volledig dossier met schakelaars.
+async function teamLaad(pid){
+  const lijst=await beheer('projecten');
+  if(pid && lijst.projecten.some(p=>p.id===pid)) PROJECT_ID=pid;
+  if(!PROJECT_ID) PROJECT_ID=(lijst.projecten[0]||{}).id;
+  if(!PROJECT_ID){ document.getElementById('app').innerHTML='<div class="wrap"><div class="leeg">Geen project.</div></div>'; return; }
+  const j=await beheer('project',{project_id:PROJECT_ID});
+  DATA={ klant:{ naam:j.klant.name, kleur:j.klant.color }, projecten:[j.pagina] };
+  ACTIEF=0; render();
 }
 
 async function start(){
-  const s = await sb.auth.getSession();
+  const s=await sb.auth.getSession();
   if(!s.data.session) return toonLogin();
-
-  PROJECT_ID = new URLSearchParams(location.search).get('p');
-
-  // Hoort deze gebruiker bij het team? De server beslist dat, niet de browser.
-  try { await beheer('projecten'); TEAM = true; }
-  catch(e){ if(e.status !== 403) console.warn('teamcheck', e.message); }
-
-  try { TEAM ? await teamLaad() : await laad(); }
-  catch(e){
-    if(/niet ingelogd/.test(e.message)) return toonLogin();
-    document.getElementById('app').innerHTML =
-      '<div class="wrap"><div class="leeg">Er staat nog geen portaal voor je klaar.<br>'
-      + '<span style="font-size:13px">Neem contact op met Begeister als dit niet klopt.</span></div></div>';
-  }
+  PROJECT_ID=new URLSearchParams(location.search).get('p');
+  try{ await beheer('projecten'); TEAM=true; }catch(e){ if(e.status!==403) console.warn('teamcheck',e.message); }
+  try{ TEAM ? await teamLaad(PROJECT_ID) : await laad(); }
+  catch(e){ if(/niet ingelogd/.test(e.message)) return toonLogin();
+    document.getElementById('app').innerHTML='<div class="wrap"><div class="leeg">Er staat nog geen portaal voor je klaar.<br><span style="font-size:13px">Neem contact op met Begeister als dit niet klopt.</span></div></div>'; }
 }
 
-window.addEventListener('beforeunload', e => { if(VUIL){ e.preventDefault(); e.returnValue = ''; } });
-
-sb.auth.onAuthStateChange((e) => { if(e === 'SIGNED_OUT') toonLogin(); });
+// De teamapp kan van project wisselen zonder de iframe te herladen.
+window.addEventListener('message', e=>{ if(e.data&&e.data.begeisterPortaal&&e.data.pid){ PROJECT_ID=e.data.pid; if(TEAM) teamLaad(PROJECT_ID); } });
+sb.auth.onAuthStateChange(ev=>{ if(ev==='SIGNED_OUT') toonLogin(); });
 start();
 </script>
 </body>

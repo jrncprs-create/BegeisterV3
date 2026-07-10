@@ -617,6 +617,11 @@
   .ksub{background:transparent;border:none;color:var(--mut2);font-size:13px;padding:2px 0;width:100%;border-bottom:1px solid transparent}
   .kname:focus,.ksub:focus,.kclient .kname:focus{outline:none;background:transparent;border:none;border-bottom:1px solid var(--line);box-shadow:none}
   .kname::placeholder,.ksub::placeholder{color:var(--mut2)}
+  .kportaal{background:transparent;border:1px solid var(--line);border-radius:var(--r-pil,999px);color:var(--mut2);font-size:11px;font-weight:var(--fw);padding:3px 10px;opacity:0;transition:opacity .15s,color .15s,border-color .15s;white-space:nowrap}
+  .kgroup:hover .kportaal{opacity:1}
+  .kportaal:hover{color:var(--ccol);border-color:var(--ccol)}
+  .kportaal.aan{opacity:1;color:var(--ccol);border-color:var(--ccol)}
+  #beheerBoardWrap .portaal-frame{width:100%;height:calc(100dvh - var(--tbh,52px) - 60px);border:none;background:transparent;display:block}
   .kname-btn{background:transparent;border:none;color:var(--s1);font-size:16px;font-weight:var(--fw-nadruk);padding:3px 0;flex:0 1 auto;min-width:0;text-align:left;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .ksub-btn{background:transparent;border:none;color:var(--s1);font-size:13px;padding:2px 0;flex:0 1 auto;min-width:0;text-align:left;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .kname-btn:hover,.ksub-btn:hover{color:var(--ccol)}
@@ -2064,7 +2069,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v211</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v212</span>
       <button id="dayBtn" class="dag-ic" onclick="openDayOverview()" title="Dagoverzicht" aria-label="Dagoverzicht"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M3 12h2M19 12h2M5.6 18.4l1.4-1.4M17 7l1.4-1.4"/></svg></button>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:14px;font-weight:var(--fw-nadruk);cursor:pointer" title="AI-context bewerken">Jeroen</span>
@@ -4012,6 +4017,37 @@ function closeApptModal(){const ov=document.getElementById('apptOverlay');ov.cla
 }
 // ===== Project-werkblad: bestaande taken + eigen checklist + inkopen + afspraken + notities =====
 let _pbPid=null, _pbItems=[], _pbMode='klanten', _pbTarget=null;
+// Klantportaal ingebed in Klanten (kolom 2+3). Eén bron: dezelfde /portaal-pagina die de
+// klant ziet, hier in team-modus met de zichtbaarheidsschakelaars.
+let _portaalClient=null;
+function _portaalProjVoor(client){
+  const eigen=(state.projects||[]).filter(p=>p.id!=='__inbox__'&&(p.client||'')===client&&p.project);
+  if(!eigen.length) return null;
+  const sel=eigen.find(p=>p.id===_pbPid);
+  return (sel||eigen[0]).id;
+}
+async function toggleKlantportaal(client){
+  if(_portaalClient===client){ closeKlantportaal(); return; }
+  if(!isDesk3()){ const pid=_portaalProjVoor(client); if(pid) window.open('/portaal?p='+encodeURIComponent(pid)+'','_blank'); return; }
+  const pid=_portaalProjVoor(client);
+  if(!pid){ toonToast('Deze klant heeft nog geen project.','fout'); return; }
+  _portaalClient=client; _pbPid=pid; _pbTarget='beheer';
+  const bb=document.getElementById('view-beheerboard'); if(bb)bb.classList.remove('hidden');
+  const rh=document.getElementById('view-railhint'); if(rh)rh.classList.add('hidden');
+  _renderKlantportaal(pid);
+  try{ renderProjecten(); }catch(_){}
+}
+function closeKlantportaal(){ _portaalClient=null; _pbTarget=null; _pbPid=null;
+  const bb=document.getElementById('view-beheerboard'); if(bb)bb.classList.add('hidden');
+  if(isDesk3()){ const rh=document.getElementById('view-railhint'); if(rh&&view==='beheer')rh.classList.remove('hidden'); }
+  try{ renderProjecten(); }catch(_){}
+}
+function _renderKlantportaal(pid){
+  const el=document.getElementById('beheerBoardWrap'); if(!el)return;
+  const bestaand=el.querySelector('iframe.portaal-frame');
+  if(bestaand){ bestaand.contentWindow.postMessage({begeisterPortaal:true,pid},location.origin); return; }
+  el.innerHTML=`<iframe class="portaal-frame" src="/portaal?embed=1&p=${encodeURIComponent(pid)}" title="Klantportaal"></iframe>`;
+}
 // Financiën: render het inkoopbord INLINE in kolom 2 (geen overlay)
 async function selectFinProj(pid){
   if(!isDesk3()){ return openProjectBoard(pid,'financien'); }
@@ -4024,7 +4060,7 @@ async function selectFinProj(pid){
 // Klanten: render het volledige projectbord INLINE over kolom 2+3 (geen overlay)
 async function selectBeheerProj(pid){
   if(!isDesk3()){ return openProjectBoard(pid,'klanten'); }
-  const p=projById(pid); if(!p)return; _pbPid=pid; _pbMode='klanten'; _pbTarget='beheer';
+  const p=projById(pid); if(!p)return; _portaalClient=null; _pbPid=pid; _pbMode='klanten'; _pbTarget='beheer';
   try{ const r=await sb.from('project_board').select('*').eq('project_id',pid).order('kind').order('sort').order('created_at'); _pbItems=(r&&r.data)?r.data:[]; }catch(_){ _pbItems=[]; }
   const bb=document.getElementById('view-beheerboard'); if(bb)bb.classList.remove('hidden');
   const rh=document.getElementById('view-railhint'); if(rh)rh.classList.add('hidden');
@@ -4127,11 +4163,7 @@ function _renderProjBoard(){
   const _openTot=inkopenOpen.reduce((s,x)=>s+((x.price!=null&&x.price!=='')?Number(x.price):0)*(x.qty||1),0);
   const secBestel=`<div class="pb-sec"><div class="pb-h"><span>Bestellijst</span><span class="pb-hbtns">${inkopen.length?`<button class="pb-ai" onclick="pbOrderAll()" title="Zet de hele lijst in één keer in je Amazon-mandje">${_tIc('<path d="M6 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M17 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M17 17h-11v-14h-2"/><path d="M6 5l14 1l-1 7h-13"/>',16,1.7)}</button>`:''}<button class="pb-ai" onclick="pbInkPaste()" title="Plak een verlanglijst of winkelwagen — AI maakt er regels van">${_tIc(_TABCHAN.asterisk,15,1.7)}<span>lijst</span></button>${inkopen.length?`<button class="pb-ai" onclick="pbMoveOpen('all')" title="Hele bestellijst naar een ander project/klant verplaatsen">${_tIc('<path d="M17 3l4 4l-4 4"/><path d="M21 7h-13"/><path d="M7 21l-4 -4l4 -4"/><path d="M3 17h13"/>',15,1.5)}</button><button class="pb-listdel" onclick="pbDelBestel()" title="Hele bestellijst verwijderen"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/></svg></button>`:''}</span></div>${_masterLink}${_bestNietBesteld.length?_bestNietBesteld.map(inkRow).join(''):(_bestBesteld.length?'':'<div class="pb-empty">Nog geen bestellingen.</div>')}<div class="pb-add"><input class="pb-in" data-kind="inkoop" placeholder="+ artikel toevoegen…" onkeydown="pbAddKey(event,'inkoop')"></div>${inkopenOpen.length?`<div class="pb-besteltot"><span class="pb-btlbl">Totaal</span><span class="pb-btval"><span class="pb-btnum"><span class="pb-eur">€</span><b>${fmtEur(_openTot)}</b></span><span class="pb-btsub">excl. <span class="pb-eur">€</span><span class="pb-btsnum">${fmtEur(_openTot/(1+btwPct/100))}</span></span></span></div>`:''}${_bestBesteld.length?`<div class="pb-besteld-sec"><div class="pb-h">Besteld <span class="pb-donecnt">${_bestBesteld.length}</span></div>${_bestBesteld.map(inkRow).join('')}</div>`:''}</div>`;
   const _body=(_pbMode==='financien')?secBestel:(secOms+secFase+secWait+secTaken+secBestel+secDone+secAppt+secFiles+secPrijs+secNotes);
-  // Het klantportaal opent in een eigen tabblad, met dit project al gekozen. Wij zien daar
-  // exact wat de klant ziet, en kunnen de debrief erin schrijven.
-  const _portaalKnop = (p.id && p.id!=='__inbox__' && p.project)
-    ? `<a class="pb-ai" href="/portaal?p=${encodeURIComponent(p.id)}" target="_blank" rel="noopener" style="margin-left:auto;text-decoration:none" title="Open het klantportaal">Portaal</a>` : '';
-  const _head=`<div class="pb-head"><span class="kbadge" style="background:${col}">${esc(initial)}</span><div class="pb-title"><b>${esc(p.client||'')}</b>${p.project?'<span> · '+esc(p.project)+'</span>':''}${_pbMode==='financien'?'<span style="color:'+col+'"> · inkoop</span>':''}</div>${_portaalKnop}</div>`;
+  const _head=`<div class="pb-head"><span class="kbadge" style="background:${col}">${esc(initial)}</span><div class="pb-title"><b>${esc(p.client||'')}</b>${p.project?'<span> · '+esc(p.project)+'</span>':''}${_pbMode==='financien'?'<span style="color:'+col+'"> · inkoop</span>':''}</div></div>`;
   if(_pbTarget==='finmid'||_pbTarget==='finright'){ const el=document.getElementById(_pbTarget==='finright'?'finRightWrap':'finMidWrap'); const _cls=(_pbTarget==='finright')?'pb-inline pb-board-inline':'pb-inline'; const _h=(_pbTarget==='finright')?'':_head; if(el)el.innerHTML=`<div class="${_cls}" style="--scol:${col}">${_h}${_body}</div>`; return; }
   if(_pbTarget==='beheer'){ const el=document.getElementById('beheerBoardWrap'); if(el)el.innerHTML=`<div class="pb-inline pb-board-inline" style="--scol:${col}"><div class="pb-grid"><div class="pb-colL">${secOms}${secFase}${secWait}${secTaken}${secBestel}${secDone}</div><div class="pb-colR">${secAppt}${secFiles}${secPrijs}${secNotes}</div></div></div>`; return; }
   if(!ov)return;
@@ -6224,11 +6256,13 @@ function renderProjecten(){
     const nameEl=editingC
       ? `<input class="kname kedit-input" value="${escapeHtml(client)}" onblur="kClientSave('${esc(client)}',this.value)" onkeydown="if(event.key==='Enter')this.blur();else if(event.key==='Escape')kEditCancel()" />`
       : `<button class="kname-btn" onclick="toggleKClient('${esc(client)}')" title="Projecten in-/uitklappen">${escapeHtml(client||'—')}</button>`;
+    const _portaalAan=(_portaalClient===client);
     const head=`<div class="kclient">
       <span class="kbadge" style="background:${ccol}">${escapeHtml(initial)}</span>
       ${nameEl}
       <button class="kicon kpen" onclick="event.stopPropagation();kEditStart('c:${esc(client)}')" title="Naam bewerken">${_penIc}</button>
       <span class="kspring"></span>
+      <button class="kportaal${_portaalAan?' aan':''}" onclick="event.stopPropagation();toggleKlantportaal('${esc(client)}')" title="Klantportaal — bekijk en stel in wat de klant ziet">Klantportaal</button>
       <button class="kicon kadd" onclick="event.stopPropagation();addProjectTo('${esc(client)}')" title="Project toevoegen"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 5v14M5 12h14"/></svg></button>
     </div>`;
     const items=!isOpen?'':projs.map((p,idx)=>{const last=idx===projs.length-1; const editingP=(_kEdit===p.id); const selOn=(_pbPid===p.id&&_pbTarget==='beheer')?' on':'';
