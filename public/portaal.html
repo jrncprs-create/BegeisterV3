@@ -8,246 +8,199 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500&display=swap" rel="stylesheet">
 <style>
-/* Tokens uit HUISSTIJL.md. Enige plek met kleuren en maten; komt de Claude Design-mal,
-   dan vervangen we dit blok. */
-:root{
-  --bg:#0d0d0d; --panel:#1a1a1a; --panel2:#212121; --line:#454545;
-  --warn:#fbbf24; --risk:#fb923c; --late:#f87171; --ok:#86efac;
-  --fw:300; --fw-nadruk:500;
-  --r-sm:6px; --r-md:9px; --r-lg:12px; --r-pil:999px;
-  /* Het portaal staat aan waar de teamapp uit staat: --s1 omhoog, klantkleur permanent. */
-  --s1:#c0c0c0; --s2:#e2e2e2; --s4:#ffffff; --mut:#8b8b8b; --mut2:#6a6a6a;
-  --txt:var(--s1); --ccol:#8a8a8a;
-}
+:root{ --rood:#5a1f1f; --fw:300; --fw-nadruk:500; --r-md:9px; --r-lg:12px; --r-pil:999px; }
 *{box-sizing:border-box}
-html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
+html,body{margin:0;padding:0;background:var(--rood);color:#fff;
   font-family:'Outfit',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-  font-weight:var(--fw);font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased}
-html.embed,html.embed body{background:transparent}
+  font-weight:var(--fw);font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100dvh}
 b,strong{font-weight:var(--fw-nadruk)}
 a{color:inherit}
 button{font-family:inherit;font-weight:var(--fw);cursor:pointer}
-:focus-visible{outline:none;box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--mut2)}
+:focus-visible{outline:none;box-shadow:0 0 0 2px var(--rood),0 0 0 4px rgba(255,255,255,.5)}
 
-.wrap{max-width:820px;margin:0 auto;padding:0 22px 90px}
-.embed .wrap{max-width:none;padding:0 4px 60px}
+/* achtergrondafbeelding met donkere waas voor leesbaarheid */
+#bg{position:fixed;inset:0;z-index:-2;background-size:cover;background-position:center;display:none}
+#bgtint{position:fixed;inset:0;z-index:-1;background:rgba(90,31,31,.72);display:none}
+body.heeftbg #bg,body.heeftbg #bgtint{display:block}
 
-/* kop */
-.kop{position:sticky;top:0;z-index:5;background:var(--bg);display:flex;align-items:center;gap:12px;
-  padding:16px 0 14px;border-bottom:1px solid var(--line)}
-.embed .kop{display:none}
-.merk{width:22px;height:26px;flex:none;color:var(--s4)}
+.wrap{max-width:1200px;margin:0 auto;padding:0 26px 70px}
+.kop{position:sticky;top:0;z-index:5;background:var(--rood);display:flex;align-items:center;gap:12px;padding:18px 0 14px;border-bottom:1px solid rgba(255,255,255,.2)}
+body.heeftbg .kop{background:transparent;backdrop-filter:blur(3px)}
+.merk{width:22px;height:26px;flex:none;color:#fff}
 .kop-naam{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.kop-naam b{color:var(--ccol)} .kop-naam span{color:var(--mut2)}
-.kop-status{font-size:12px;border:1px solid var(--line);border-radius:var(--r-pil);padding:3px 11px;color:var(--s2);flex:none}
-.kop-uit{font-size:12px;color:var(--mut2);background:none;border:none;padding:6px 2px}
-.kop-uit:hover{color:var(--s4)}
+.kop-naam b{color:#fff} .kop-naam span{color:rgba(255,255,255,.6)}
+.kop-status{font-size:12px;border:1px solid rgba(255,255,255,.35);border-radius:var(--r-pil);padding:3px 11px;flex:none}
+.kop-uit{font-size:12px;color:rgba(255,255,255,.6);background:none;border:none;padding:6px 2px}
+.kop-uit:hover{color:#fff}
 
-/* teambalk (alleen in embed/teammodus) */
-.teambalk{display:flex;align-items:center;gap:10px;margin:14px 0 4px;padding:9px 13px;border-radius:var(--r-md);
-  border:1px solid color-mix(in srgb,var(--warn) 34%,transparent);color:var(--warn);font-size:12px}
-.teambalk .tb-chip{border:1px solid currentColor;border-radius:var(--r-sm);padding:0 6px;font-size:11px}
+.grid{display:grid;grid-template-columns:1.3fr 1fr;gap:26px;margin-top:26px}
+@media(max-width:820px){.grid{grid-template-columns:1fr}}
+.sec{margin-bottom:24px}
+.h{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,.65);font-weight:var(--fw-nadruk);margin:0 0 10px}
+.tekst{color:#fff;line-height:1.6;max-width:60ch;white-space:pre-wrap}
+.leeg{color:rgba(255,255,255,.5);font-size:13px}
+.rij{display:flex;align-items:baseline;gap:11px;padding:9px 0;border-top:1px solid rgba(255,255,255,.14)}
+.rij:first-of-type{border-top:none}
+.rij .dot{width:6px;height:6px;border-radius:50%;background:#fff;flex:none;position:relative;top:6px}
+.rij.klaar .tx{color:rgba(255,255,255,.45);text-decoration:line-through}
+.tx{flex:1;min-width:0}
+.meta{font-size:12px;color:rgba(255,255,255,.55);flex:none}
 
 /* fases */
-.fases{display:flex;gap:5px;margin:24px 0 8px}
-.fase-bar{flex:1;height:2px;border-radius:var(--r-pil);background:#2a2a2a}
-.fase-bar.aan{background:var(--ccol)}
-.fase-lbl{display:flex;gap:5px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px}
-.fase-lbl>span{flex:1;color:var(--mut2)} .fase-lbl>span.aan{color:var(--ccol)}
+.fases{display:flex;gap:6px}
+.fasestap{flex:1;display:flex;flex-direction:column;gap:6px}
+.fdot{height:3px;border-radius:var(--r-pil);background:rgba(255,255,255,.25)}
+.fasestap.done .fdot{background:#fff}
+.flbl{font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;color:rgba(255,255,255,.55)}
+.fasestap.done .flbl{color:#fff}
 
-/* secties */
-.sec{margin:26px 0}
-.sec-h{font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut2);
-  font-weight:var(--fw-nadruk);margin:0 0 12px;display:flex;justify-content:space-between;align-items:center;gap:10px}
-.kaart{border:1px solid var(--randlijn,var(--line));background:var(--kaartbg,transparent);border-radius:var(--r-lg);padding:18px 20px}
-.sec.uit{opacity:.5}
-.sec.uit .kaart{border-style:dashed}
+/* mappen */
+.map{margin-bottom:1px}
+.maph{display:flex;align-items:center;gap:10px;width:100%;background:transparent;border:none;border-top:1px solid rgba(255,255,255,.14);color:#fff;font-family:inherit;font-size:14px;padding:10px 0;cursor:pointer;text-align:left}
+.map:first-child .maph{border-top:none}
+.chev{display:inline-flex;color:rgba(255,255,255,.55);transition:transform .18s;flex:none}
+.chev.open{transform:rotate(90deg)}
+.mapnaam{flex:1;min-width:0} .mapcnt{font-size:12px;color:rgba(255,255,255,.5);flex:none}
+.frij{padding:8px 0 8px 6px;font-size:13px;border-top:1px solid rgba(255,255,255,.1)}
+.frij a{text-decoration:none;color:#fff}
+.frij a:hover{text-decoration:underline}
 
-/* zichtbaarheidsschakelaar (team) */
-.zicht{display:inline-flex;align-items:center;gap:7px;font-size:11px;letter-spacing:0;text-transform:none;
-  color:var(--mut2);background:none;border:1px solid var(--line);border-radius:var(--r-pil);padding:3px 5px 3px 10px}
-.zicht b{font-weight:var(--fw)}
-.zicht .tog{width:30px;height:17px;border-radius:var(--r-pil);background:#2a2a2a;position:relative;transition:background .15s}
-.zicht .tog::after{content:"";position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;background:#777;transition:left .15s,background .15s}
-.zicht.aan{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 40%,transparent)}
-.zicht.aan .tog{background:color-mix(in srgb,var(--ok) 55%,transparent)}
-.zicht.aan .tog::after{left:15px;background:#0d0d0d}
+/* rechterkolom */
+.colR{background:rgba(0,0,0,.16);border-radius:var(--r-lg);padding:18px 20px;align-self:start}
+.vst{padding:10px 0;border-top:1px solid rgba(255,255,255,.14)}
+.vst:first-of-type{border-top:none}
+.vst a{color:#fff;text-decoration:none} .vst a:hover{text-decoration:underline}
+.akkoord{margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,.2);text-align:center}
+.akknoot{font-size:12px;color:rgba(255,255,255,.6);margin:0 0 12px}
+.akkbtn{background:#fff;color:var(--rood);border:none;border-radius:var(--r-pil);font-family:inherit;font-weight:var(--fw-nadruk);font-size:14px;padding:11px 26px;cursor:pointer}
+.akkbtn[disabled]{opacity:.5;cursor:default}
+.akkoord.vast .groot{font-size:18px;color:#fff}
 
-/* inhoud */
-.tekst{color:var(--s2);max-width:64ch}
-.tekst p{margin:0 0 12px} .tekst p:last-child{margin:0}
-.tekst h2{font-size:16px;font-weight:var(--fw-nadruk);color:var(--s2);margin:22px 0 8px}
-.rij{display:flex;gap:11px;align-items:baseline;padding:9px 0;border-top:1px solid #262626}
-.rij:first-child{border-top:none}
-.rij .dot{width:6px;height:6px;border-radius:50%;background:var(--ccol);flex:none;position:relative;top:6px}
-.rij.klaar .lbl{color:var(--mut2);text-decoration:line-through}
-.lbl{flex:1;color:var(--s2)} .meta{font-size:12px;color:var(--mut2);flex:none}
-.leegsec{color:var(--mut2);font-size:13px}
-.best a{display:flex;gap:9px;align-items:center;padding:9px 0;border-top:1px solid #262626;font-size:13px;text-decoration:none;color:var(--s2)}
-.best a:first-child{border-top:none}
-.best a:hover{color:var(--s4)}
-.prijs-tot{display:flex;justify-content:space-between;align-items:baseline;font-variant-numeric:tabular-nums}
-.prijs-tot .groot{font-size:22px;color:var(--s4)} .prijs-sub{font-size:12px;color:var(--mut2);margin-top:4px}
-
-/* opmerkingen-harmonica */
-.opm{margin-top:14px;border-top:1px solid #262626;padding-top:10px}
-.opm-knop{background:none;border:none;color:var(--mut2);font-size:12px;padding:2px 0;display:flex;align-items:center;gap:7px}
-.opm-knop:hover{color:var(--s2)}
+/* opmerkingen */
+.opm{margin-top:14px;border-top:1px solid rgba(255,255,255,.14);padding-top:10px}
+.opm-knop{background:none;border:none;color:rgba(255,255,255,.65);font-size:12px;padding:2px 0;display:flex;align-items:center;gap:7px}
+.opm-knop:hover{color:#fff}
 .opm-knop .chev{transition:transform .18s} .opm.open .opm-knop .chev{transform:rotate(90deg)}
 .opm-body{max-height:0;overflow:hidden;transition:max-height .28s cubic-bezier(.16,1,.3,1)}
 .opm.open .opm-body{max-height:1400px}
-.opm-rij{padding:9px 0;border-top:1px solid #262626}
-.opm-rij:first-child{border-top:none;margin-top:8px}
-.opm-wie{font-size:11px;color:var(--mut2);margin-bottom:2px} .opm-wie b{color:var(--ccol);font-weight:var(--fw-nadruk)}
-.opm-wie.van-ons b{color:var(--s2)}
-.opm textarea{width:100%;background:transparent;border:1px solid var(--line);border-radius:var(--r-md);
-  color:var(--txt);font-family:inherit;font-size:13px;font-weight:var(--fw);padding:9px 11px;margin-top:10px;resize:vertical;min-height:60px}
-.opm textarea::placeholder{color:var(--mut2)}
-
-.knop{background:transparent;border:1px solid var(--line);border-radius:var(--r-md);color:var(--txt);
-  font-size:13px;padding:7px 13px;transition:color .15s,border-color .15s}
-.knop:hover:not([disabled]){color:var(--s4);border-color:var(--mut2)} .knop[disabled]{opacity:.4;cursor:default}
-.knop.groot{font-size:14px;padding:11px 26px}
-
-/* akkoord */
-.akkoord{text-align:center;padding:28px 22px}
-.akkoord-noot{font-size:12px;color:var(--mut2);margin-top:12px}
-.akkoord.vast{border-color:color-mix(in srgb,var(--ccol) 34%,transparent)}
-.akkoord .groot{font-size:20px;color:var(--s4)}
+.opm-rij{padding:9px 0;border-top:1px solid rgba(255,255,255,.12)} .opm-rij:first-child{border-top:none;margin-top:8px}
+.opm-wie{font-size:11px;color:rgba(255,255,255,.55);margin-bottom:2px} .opm-wie b{color:#fff}
+.opm textarea{width:100%;background:rgba(0,0,0,.14);border:1px solid rgba(255,255,255,.25);border-radius:var(--r-md);color:#fff;font-family:inherit;font-size:13px;padding:9px 11px;margin-top:10px;resize:vertical;min-height:56px}
+.opm textarea::placeholder{color:rgba(255,255,255,.5)}
+.knop{background:transparent;border:1px solid rgba(255,255,255,.3);border-radius:var(--r-md);color:#fff;font-size:13px;padding:7px 13px;margin-top:8px}
+.knop:hover{border-color:#fff}
 
 /* login */
 .login{max-width:340px;margin:16vh auto;text-align:center}
 .login .merk{width:34px;height:40px;margin:0 auto 26px}
-.login input{width:100%;background:transparent;border:1px solid var(--line);border-radius:var(--r-md);
-  color:var(--txt);font-family:inherit;font-size:14px;padding:11px 13px;margin-bottom:10px}
-.login .knop{width:100%;margin-top:6px;padding:11px}
-.login-fout{color:var(--late);font-size:13px;min-height:20px;margin-top:12px}
-input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus{
-  -webkit-text-fill-color:var(--txt);caret-color:var(--txt);-webkit-box-shadow:0 0 0 40px var(--bg) inset;transition:background-color 9999s}
+.login input{width:100%;background:rgba(0,0,0,.14);border:1px solid rgba(255,255,255,.28);border-radius:var(--r-md);color:#fff;font-family:inherit;font-size:14px;padding:11px 13px;margin-bottom:10px}
+.login input::placeholder{color:rgba(255,255,255,.55)}
+.login .akkbtn{width:100%;margin-top:6px}
+.login-fout{color:#ffd7d2;font-size:13px;min-height:20px;margin-top:12px}
+input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus{-webkit-text-fill-color:#fff;caret-color:#fff;-webkit-box-shadow:0 0 0 40px var(--rood) inset;transition:background-color 9999s}
+.midden{text-align:center;color:rgba(255,255,255,.65);padding:70px 20px}
 
-.leeg{color:var(--mut2);text-align:center;padding:60px 0}
-#toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(12px);opacity:0;
-  background:var(--panel2);border:1px solid var(--line);border-radius:var(--r-md);padding:10px 16px;
-  font-size:13px;transition:opacity .2s,transform .2s;pointer-events:none;z-index:20}
-#toast.aan{opacity:1;transform:translateX(-50%)} #toast.fout{border-color:color-mix(in srgb,var(--late) 45%,transparent);color:var(--late)}
+#toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(12px);opacity:0;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.3);border-radius:var(--r-md);padding:10px 16px;font-size:13px;transition:opacity .2s,transform .2s;pointer-events:none;z-index:20}
+#toast.aan{opacity:1;transform:translateX(-50%)}
 
-@media print{
-  :root{--bg:#fff;--txt:#111;--s1:#111;--s2:#333;--s4:#000;--mut:#555;--mut2:#777;--line:#ccc}
-  .kop,.fases,.fase-lbl,.teambalk,.knop,.zicht,.opm textarea,#toast,.geen-print{display:none!important}
-  .wrap{max-width:none;padding:0} .kaart{border:none;padding:0}
-}
+@media print{ #bgtint,#bg{display:none!important} .kop,.opm textarea,.knop,.akkbtn,#toast{display:none!important} }
 </style>
 </head>
 <body>
+<div id="bg"></div><div id="bgtint"></div>
 <div id="app"></div>
 <div id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
-const SB_URL = "https://rwevsqwvgqbzypaudzuj.supabase.co";
-const SB_KEY = "sb_publishable_m_mWsrZEQXlok9gEWFeTbQ_80vnBEQL";
-const sb = supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
+const SB_URL="https://rwevsqwvgqbzypaudzuj.supabase.co";
+const SB_KEY="sb_publishable_m_mWsrZEQXlok9gEWFeTbQ_80vnBEQL";
+const sb=supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
 
-const MERK = '<svg viewBox="0 0 147.39 172.8" fill="none" stroke="currentColor" stroke-width="4" width="100%" height="100%">'
-  + '<path d="M73.7 4v164.8"/><path d="M6 40l135.4 92.8"/><path d="M141.4 40L6 132.8"/></svg>';
-const CHEV = '<svg class="chev" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6l-6 6"/></svg>';
+const MERK='<svg viewBox="0 0 147.39 172.8" fill="none" stroke="currentColor" stroke-width="4" width="100%" height="100%"><path d="M73.7 4v164.8"/><path d="M6 40l135.4 92.8"/><path d="M141.4 40L6 132.8"/></svg>';
+const CHEV='<svg class="chev" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6l-6 6"/></svg>';
 
-const EMBED = new URLSearchParams(location.search).get('embed') === '1';
-if(EMBED) document.documentElement.classList.add('embed');
+const EMBED=new URLSearchParams(location.search).get('embed')==='1';
+let DATA=null, ACTIEF=0;
+const OPEN_OPM=new Set(), OPEN_MAP=new Set();
 
-let TEAM = false, DATA = null, ACTIEF = 0, PROJECT_ID = null;
-// EDIT: team zet dit aan om de zichtbaarheidsschakelaars te tonen. Standaard uit, zodat
-// het portaal er voor het team precies zo uitziet als voor de klant.
-let EDIT = false;
-const OPEN_OPM = new Set();   // welke opmerking-draadjes openstaan
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function datum(s){if(!s)return '';return new Date(s).toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'});}
+function kort(s){if(!s)return '';return new Date(s).toLocaleDateString('nl-NL',{day:'numeric',month:'short'});}
+function toast(t){const el=document.getElementById('toast');el.textContent=t;el.className='aan';clearTimeout(el._t);el._t=setTimeout(()=>el.className='',3000);}
+function mini(md){const uit=[];let a=[];const spoel=()=>{if(a.length){uit.push('<p style="margin:0 0 10px">'+a.join('<br>')+'</p>');a=[];}};
+  String(md||'').split('\n').forEach(r=>{const t=r.trim();if(!t){spoel();return;}a.push(esc(t).replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>'));});spoel();return uit.join('');}
 
-// Het portaal staat in de kleur van de klant: een donkere versie van die kleur als
-// achtergrond, en alle tekst, lijnen en iconen wit. Omgekeerd van de donkere teamapp.
-function _donker(hex, f){
-  let h=String(hex||'').replace('#',''); if(h.length===3) h=h.split('').map(c=>c+c).join('');
-  const n=parseInt(h,16); if(isNaN(n)) return '#3a1414';
-  const r=Math.round(((n>>16)&255)*f), g=Math.round(((n>>8)&255)*f), b=Math.round((n&255)*f);
-  return 'rgb('+r+','+g+','+b+')';
-}
-function themaVanKlant(kleur){
-  const r=document.documentElement.style;
-  if(!kleur){ return; }
-  const bg=_donker(kleur, .40);
-  r.setProperty('--bg', bg);
-  r.setProperty('--txt', '#ffffff');
-  r.setProperty('--s1', '#ffffff');
-  r.setProperty('--s2', '#ffffff');
-  r.setProperty('--s4', '#ffffff');
-  r.setProperty('--mut', 'rgba(255,255,255,.74)');
-  r.setProperty('--mut2', 'rgba(255,255,255,.52)');
-  r.setProperty('--line', 'rgba(255,255,255,.26)');
-  r.setProperty('--ccol', '#ffffff');
-  r.setProperty('--kaartbg', 'rgba(255,255,255,.06)');
-  r.setProperty('--randlijn', 'rgba(255,255,255,.16)');
-  document.body.style.background = bg;
-}
-
-const SEC_ORDER = ['omschrijving','voortgang','taken','afspraken','bestanden','projectprijs','notities'];
-const SEC_TITEL = { omschrijving:'Omschrijving', voortgang:'Voortgang', taken:'Taken',
-  afspraken:'Afspraken', bestanden:'Bestanden', projectprijs:'Projectprijs', notities:'Notities' };
-
-function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-function eur(n){ return '€'+Number(n||0).toLocaleString('nl-NL',{minimumFractionDigits:2,maximumFractionDigits:2}); }
-function datum(s){ if(!s) return ''; return new Date(s).toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'}); }
-function toast(t,soort){ const el=document.getElementById('toast'); el.textContent=t; el.className='aan'+(soort==='fout'?' fout':''); clearTimeout(el._t); el._t=setTimeout(()=>el.className='',3200); }
-function mini(md){ const uit=[]; let a=[]; const spoel=()=>{ if(a.length){uit.push('<p>'+a.join('<br>')+'</p>');a=[];} };
-  String(md||'').split('\n').forEach(r=>{ const t=r.trim(); if(!t){spoel();return;}
-    if(/^##\s+/.test(t)){spoel();uit.push('<h2>'+vet(esc(t.replace(/^##\s+/,'')))+'</h2>');return;} a.push(vet(esc(t))); }); spoel(); return uit.join(''); }
-function vet(s){ return s.replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>'); }
-
-async function post(pad,action,extra){
-  const s=await sb.auth.getSession(); const token=s.data.session&&s.data.session.access_token;
-  if(!token){ toonLogin(); throw new Error('niet ingelogd'); }
-  const r=await fetch(pad,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify(Object.assign({action},extra||{}))});
-  const j=await r.json().catch(()=>({error:'onleesbaar antwoord'}));
-  if(!r.ok){ const e=new Error(j.error||'er ging iets mis'); e.status=r.status; throw e; }
+async function api(action,extra){
+  const s=await sb.auth.getSession();const token=s.data.session&&s.data.session.access_token;
+  if(!token){toonLogin();throw new Error('niet ingelogd');}
+  const r=await fetch('/api/portal',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify(Object.assign({action},extra||{}))});
+  const j=await r.json().catch(()=>({error:'onleesbaar'}));
+  if(!r.ok){const e=new Error(j.error||'er ging iets mis');e.status=r.status;throw e;}
   return j;
 }
-const api=(a,x)=>post('/api/portal',a,x);
-const beheer=(a,x)=>post('/api/portalbeheer',a,x);
 
-/* ---------------- login ---------------- */
+/* login */
 function toonLogin(fout){
   document.getElementById('app').innerHTML='<div class="login"><div class="merk">'+MERK+'</div>'
     +'<input id="lgMail" type="email" placeholder="E-mailadres" autocomplete="username">'
     +'<input id="lgWw" type="password" placeholder="Wachtwoord" autocomplete="current-password">'
-    +'<button class="knop" id="lgKnop">Inloggen</button><div class="login-fout">'+esc(fout||'')+'</div></div>';
-  const doe=async()=>{ const email=document.getElementById('lgMail').value.trim(); const ww=document.getElementById('lgWw').value;
-    if(!email||!ww)return; const k=document.getElementById('lgKnop'); k.disabled=true; k.textContent='Momentje…';
+    +'<button class="akkbtn" id="lgKnop">Inloggen</button><div class="login-fout">'+esc(fout||'')+'</div></div>';
+  const doe=async()=>{const email=document.getElementById('lgMail').value.trim();const ww=document.getElementById('lgWw').value;
+    if(!email||!ww)return;const k=document.getElementById('lgKnop');k.disabled=true;k.textContent='Momentje…';
     const {error}=await sb.auth.signInWithPassword({email,password:ww});
-    if(error){ toonLogin('Inloggen lukte niet. Klopt het wachtwoord?'); return; } start(); };
+    if(error){toonLogin('Inloggen lukte niet. Klopt het wachtwoord?');return;}start();};
   document.getElementById('lgKnop').onclick=doe;
-  document.getElementById('lgWw').onkeydown=e=>{ if(e.key==='Enter')doe(); };
+  document.getElementById('lgWw').onkeydown=e=>{if(e.key==='Enter')doe();};
 }
-// Uitloggen brengt je terug naar de Begeister-teamapp (met een schone, niet-rode pagina).
-async function uitloggen(){ try{ await sb.auth.signOut(); }catch(_){}; location.href='/'; }
+async function uitloggen(){try{await sb.auth.signOut();}catch(_){}; location.href='/';}
 
-/* ---------------- render ---------------- */
-function statusTekst(p){
-  if(p.akkoord) return 'akkoord op '+datum(p.akkoord.approved_at);
-  if(p.fase==='debrief') return 'wacht op jouw akkoord';
-  return (p.fases[p.fase_index]||{}).l ? (p.fases[p.fase_index].l.toLowerCase()) : '';
+/* render — hetzelfde dossier als de teamoverlay, read-only */
+function statusTekst(p){ if(p.akkoord)return 'akkoord op '+kort(p.akkoord.approved_at);
+  if(p.fase==='debrief')return 'wacht op jouw akkoord';
+  return (p.fases[p.fase_index]||{}).l ? p.fases[p.fase_index].l.toLowerCase() : ''; }
+
+function achtergrond(p){
+  const b=document.body;
+  if(p&&p.bg){ document.getElementById('bg').style.backgroundImage='url("'+p.bg+'")'; b.classList.add('heeftbg'); }
+  else b.classList.remove('heeftbg');
 }
+
+function mappenHtml(files){
+  if(!files||!files.length) return '<div class="leeg">Nog niets gedeeld.</div>';
+  const groepen={},order=[];
+  files.forEach(f=>{ const n=f.map||'Overig'; if(!groepen[n]){groepen[n]=[];order.push(n);} groepen[n].push(f); });
+  return order.map(n=>{ const open=OPEN_MAP.has(n);
+    const binnen=open?groepen[n].map(f=>'<div class="frij"><a href="'+esc(f.link||'#')+'" target="_blank" rel="noopener">'+esc(f.name)+'</a></div>').join(''):'';
+    return '<div class="map"><button class="maph" onclick="mapToggle(\''+esc(n).replace(/'/g,"\\'")+'\')"><span class="chev'+(open?' open':'')+'">'+CHEV+'</span><span class="mapnaam">'+esc(n)+'</span><span class="mapcnt">'+groepen[n].length+'</span></button>'+binnen+'</div>';
+  }).join('');
+}
+function mapToggle(n){ OPEN_MAP.has(n)?OPEN_MAP.delete(n):OPEN_MAP.add(n); render(); }
 
 function render(){
-  if(!DATA) return;
-  themaVanKlant(DATA.klant.kleur);
+  if(!DATA)return;
   const p=DATA.projecten[ACTIEF];
-  if(!p){ document.getElementById('app').innerHTML='<div class="wrap">'+kopHtml(null)+'<div class="leeg">Er staat nog niets voor je klaar.</div></div>';
-    if(!EMBED){ const u=document.getElementById('kopUit'); if(u)u.onclick=uitloggen; } return; }
+  achtergrond(p);
+  if(!p){ document.getElementById('app').innerHTML='<div class="wrap">'+kopHtml(null)+'<div class="midden">Er staat nog niets voor je klaar.<br>We laten het weten zodra dat verandert.</div></div>';
+    const u=document.getElementById('kopUit'); if(u)u.onclick=uitloggen; return; }
 
-  const secs = SEC_ORDER.map(s=>secHtml(s,p)).filter(Boolean).join('');
-  document.getElementById('app').innerHTML='<div class="wrap">'
-    + kopHtml(p)
-    + (TEAM&&EDIT?teambalkHtml(p):'')
-    + secs
-    + akkoordHtml(p)
-    + '</div>';
+  let L='';
+  if(p.toon_omschrijving && (p.omschrijving||'').trim()) L+='<div class="sec"><div class="h">Omschrijving</div><div class="tekst">'+mini(p.omschrijving)+'</div>'+opmHtml('omschrijving',p)+'</div>';
+  if(p.toon_voortgang){ const bars=p.fases.map((f,i)=>'<div class="fasestap'+(i<=p.fase_index?' done':'')+'"><span class="fdot"></span><span class="flbl">'+esc(f.l)+'</span></div>').join('');
+    L+='<div class="sec"><div class="h">Voortgang</div><div class="fases">'+bars+'</div>'+opmHtml('voortgang',p)+'</div>'; }
+  if((p.wacht||[]).length) L+='<div class="sec"><div class="h">In afwachting</div>'+p.wacht.map(it=>'<div class="rij"><span class="dot"></span><span class="tx">'+esc(it.t||'')+'</span></div>').join('')+'</div>';
+  if((p.taken||[]).length) L+='<div class="sec"><div class="h">Taken</div>'+p.taken.map(it=>'<div class="rij'+(it.done?' klaar':'')+'"><span class="dot"></span><span class="tx">'+esc(it.t||'')+'</span></div>').join('')+'</div>';
+  if((p.afspraken||[]).length) L+='<div class="sec"><div class="h">Afspraken</div>'+p.afspraken.map(a=>'<div class="rij"><span class="tx">'+esc(a.t||'Afspraak')+'</span><span class="meta">'+esc(kort(a.date))+(a.start?' · '+esc(String(a.start).slice(0,5)):'')+'</span></div>').join('')+'</div>';
+  if((p.bestanden||[]).length) L+='<div class="sec"><div class="h">Bestanden</div>'+mappenHtml(p.bestanden)+'</div>';
+  if(!L) L='<div class="midden">Nog niets om te tonen.</div>';
+
+  // rechterkolom: voorstellen + akkoord
+  let R='<div class="h">Voorstellen</div>';
+  R+=(p.voorstellen||[]).length ? p.voorstellen.map(f=>'<div class="vst"><a href="'+esc(f.link||'#')+'" target="_blank" rel="noopener">'+esc(f.name)+'</a></div>').join('') : '<div class="leeg">Nog geen voorstellen.</div>';
+  if(p.akkoord) R+='<div class="akkoord vast"><div class="groot">Akkoord op '+esc(datum(p.akkoord.approved_at))+'</div><div class="akknoot" style="margin-top:8px">Dit is de opdrachtbevestiging.</div></div>';
+  else R+='<div class="akkoord"><div class="akknoot">Hiermee bevestig je de opdracht.</div><button class="akkbtn" data-akkoord="1">Akkoord geven</button></div>'+opmHtml('voorstellen',p);
+
+  document.getElementById('app').innerHTML='<div class="wrap">'+kopHtml(p)+'<div class="grid"><div class="colL">'+L+'</div><div class="colR">'+R+'</div></div></div>';
   bind(p);
 }
 
@@ -259,148 +212,34 @@ function kopHtml(p){
     +'<button class="kop-uit" id="kopUit">uitloggen</button></div>';
 }
 
-function teambalkHtml(p){
-  return '<div class="teambalk geen-print"><span class="tb-chip">klant-edit</span>'
-    +'<span style="flex:1">Zet per onderdeel aan wat '+esc(DATA.klant.naam)+' mag zien.</span></div>';
-}
-
-// Een sectie. Zonder bewerkmodus (dus zoals de klant het ziet): alleen zichtbare secties,
-// geen schakelaar. In bewerkmodus: alle secties, met een schakelaar per stuk.
-function secHtml(sectie, p){
-  const aan = !!p.secties[sectie];
-  if(!EDIT && !aan) return '';
-  const inhoud = secInhoud(sectie, p);
-  if(!EDIT && !inhoud) return '';   // aan maar niets te tonen: bij de klant overslaan
-  const kop = '<div class="sec-h"><span>'+SEC_TITEL[sectie]+'</span>'
-    + (EDIT ? '<button class="zicht'+(aan?' aan':'')+'" data-tog="'+sectie+'"><b>'+(aan?'zichtbaar':'verborgen')+'</b><span class="tog"></span></button>' : '')
-    + '</div>';
-  return '<div class="sec'+(EDIT&&!aan?' uit':'')+'"><div class="kaart">'
-    + kop
-    + (inhoud||'<div class="leegsec">Nog niets ingevuld.</div>')
-    + opmHtml(sectie, p)
-    + '</div></div>';
-}
-
-function secInhoud(sectie, p){
-  if(sectie==='voortgang'){
-    const bars=p.fases.map((f,i)=>'<div class="fase-bar'+(i<=p.fase_index?' aan':'')+'"></div>').join('');
-    const lbls=p.fases.map((f,i)=>'<span class="'+(i<=p.fase_index?'aan':'')+'">'+esc(f.l)+'</span>').join('');
-    return '<div class="fases">'+bars+'</div><div class="fase-lbl">'+lbls+'</div>';
-  }
-  if(sectie==='omschrijving') return (p.omschrijving||'').trim() ? '<div class="tekst">'+mini(p.omschrijving)+'</div>' : '';
-  if(sectie==='notities')     return (p.notities||'').trim()     ? '<div class="tekst">'+mini(p.notities)+'</div>'     : '';
-  if(sectie==='taken'){
-    const t=p.taken||[]; if(!t.length) return '';
-    return t.map(it=>'<div class="rij'+(it.done?' klaar':'')+'"><span class="dot"></span><span class="lbl">'+esc(it.t||'')+'</span></div>').join('');
-  }
-  if(sectie==='afspraken'){
-    const a=p.afspraken||[]; if(!a.length) return '';
-    return a.map(x=>'<div class="rij"><span class="lbl">'+esc(x.t||'Afspraak')+'</span><span class="meta">'+esc(datum(x.date))+(x.start?' · '+esc(String(x.start).slice(0,5)):'')+'</span></div>').join('');
-  }
-  if(sectie==='bestanden'){
-    const b=p.bestanden||[]; if(!b.length) return '';
-    return '<div class="best">'+b.map(f=>'<a href="'+esc(f.link||'#')+'" target="_blank" rel="noopener">'+esc(f.name||'bestand')+'</a>').join('')+'</div>';
-  }
-  if(sectie==='projectprijs'){
-    if(!p.prijs) return '';
-    return '<div class="prijs-tot"><span class="lbl">Totaal</span><span class="groot">'+eur(p.prijs.incl)+'</span></div><div class="prijs-sub">incl. '+p.prijs.btw+'% btw</div>';
-  }
-  return '';
-}
-
-// Het inklapbare opmerkingen-draadje onder een sectie.
-function opmHtml(sectie, p){
+function opmHtml(sectie,p){
   const lijst=(p.opmerkingen&&p.opmerkingen[sectie])||[];
   const open=OPEN_OPM.has(sectie);
-  const draad=lijst.map(c=>'<div class="opm-rij"><div class="opm-wie'+(c.van_klant?'':' van-ons')+'"><b>'+esc(c.author||'')+'</b> · '+esc(datum(c.created_at))+'</div><div>'+esc(c.body)+'</div></div>').join('');
-  const veld='<textarea id="ot_'+sectie+'" placeholder="'+(TEAM?'Antwoord de klant…':'Een opmerking bij dit onderdeel…')+'"></textarea>'
-    +'<div style="margin-top:8px"><button class="knop" data-opm="'+sectie+'">Plaatsen</button></div>';
-  return '<div class="opm'+(open?' open':'')+'"><button class="opm-knop" data-opmtoggle="'+sectie+'">'+CHEV
-    +'Opmerkingen'+(lijst.length?' ('+lijst.length+')':'')+'</button>'
-    +'<div class="opm-body">'+draad+veld+'</div></div>';
+  const draad=lijst.map(c=>'<div class="opm-rij"><div class="opm-wie"><b>'+esc(c.author||'')+'</b> · '+esc(datum(c.created_at))+'</div><div>'+esc(c.body)+'</div></div>').join('');
+  return '<div class="opm'+(open?' open':'')+'"><button class="opm-knop" data-opmtoggle="'+sectie+'">'+CHEV+'Opmerkingen'+(lijst.length?' ('+lijst.length+')':'')+'</button>'
+    +'<div class="opm-body">'+draad+'<textarea id="ot_'+sectie+'" placeholder="Een opmerking bij dit onderdeel…"></textarea><div><button class="knop" data-opm="'+sectie+'">Plaatsen</button></div></div></div>';
 }
 
-function akkoordHtml(p){
-  if(p.akkoord){
-    return '<div class="sec"><div class="kaart akkoord vast"><div class="groot">Akkoord op '+esc(datum(p.akkoord.approved_at))+'</div>'
-      +'<div class="akkoord-noot">Vastgelegd onder <span style="font-family:ui-monospace,monospace">'+esc(String(p.akkoord.snapshot_sha).slice(0,12))+'</span>.</div></div></div>';
-  }
-  if(TEAM){
-    return '<div class="sec geen-print"><div class="kaart akkoord"><div class="akkoord-noot">De klant heeft nog geen akkoord gegeven.</div></div></div>';
-  }
-  return '<div class="sec geen-print"><div class="kaart akkoord">'
-    +'<button class="knop groot" data-akkoord="1">Akkoord geven</button>'
-    +'<div class="akkoord-noot">Hiermee bevestig je de opdracht.</div></div></div>';
-}
-
-/* ---------------- acties ---------------- */
 function bind(p){
-  if(!EMBED){ const u=document.getElementById('kopUit'); if(u)u.onclick=uitloggen; }
-
-  document.querySelectorAll('[data-opmtoggle]').forEach(b=>b.onclick=()=>{
-    const s=b.dataset.opmtoggle; OPEN_OPM.has(s)?OPEN_OPM.delete(s):OPEN_OPM.add(s);
-    const el=b.closest('.opm'); if(el)el.classList.toggle('open');
-  });
-
-  document.querySelectorAll('[data-opm]').forEach(b=>b.onclick=async()=>{
-    const s=b.dataset.opm; const ta=document.getElementById('ot_'+s); const tekst=(ta.value||'').trim();
-    if(!tekst)return; b.disabled=true;
-    try{ await (TEAM?beheer:api)('reactie',{project_id:p.id,sectie:s,body:tekst}); ta.value=''; OPEN_OPM.add(s); toast('Geplaatst.'); await herlaad(); }
-    catch(e){ toast(e.message,'fout'); b.disabled=false; }
-  });
-
-  document.querySelectorAll('[data-akkoord]').forEach(b=>b.onclick=async()=>{
-    if(!confirm('Akkoord geven? Hiermee bevestig je de opdracht.'))return;
-    b.disabled=true; b.textContent='Momentje…';
-    try{ await api('akkoord',{project_id:p.id}); toast('Akkoord vastgelegd.'); await herlaad(); }
-    catch(e){ toast(e.message,'fout'); b.disabled=false; b.textContent='Akkoord geven'; }
-  });
-
-  document.querySelectorAll('[data-tog]').forEach(b=>b.onclick=async()=>{
-    const s=b.dataset.tog; const nu=!p.secties[s];
-    try{ await beheer('toggle',{project_id:p.id,sectie:s,aan:nu}); await herlaad(); }
-    catch(e){ toast(e.message,'fout'); }
-  });
+  const u=document.getElementById('kopUit'); if(u)u.onclick=uitloggen;
+  document.querySelectorAll('[data-opmtoggle]').forEach(b=>b.onclick=()=>{ const s=b.dataset.opmtoggle; OPEN_OPM.has(s)?OPEN_OPM.delete(s):OPEN_OPM.add(s); const el=b.closest('.opm'); if(el)el.classList.toggle('open'); });
+  document.querySelectorAll('[data-opm]').forEach(b=>b.onclick=async()=>{ const s=b.dataset.opm; const ta=document.getElementById('ot_'+s); const t=(ta.value||'').trim(); if(!t)return; b.disabled=true;
+    try{ await api('reactie',{project_id:p.id,sectie:s,body:t}); ta.value=''; OPEN_OPM.add(s); toast('Geplaatst.'); await laad(); }catch(e){ toast(e.message); b.disabled=false; } });
+  document.querySelectorAll('[data-akkoord]').forEach(b=>b.onclick=async()=>{ if(!confirm('Akkoord geven? Hiermee bevestig je de opdracht.'))return; b.disabled=true; b.textContent='Momentje…';
+    try{ await api('akkoord',{project_id:p.id}); toast('Akkoord vastgelegd.'); await laad(); }catch(e){ toast(e.message); b.disabled=false; b.textContent='Akkoord geven'; } });
 }
 
-async function herlaad(){ TEAM ? await teamLaad(PROJECT_ID) : await laad(); }
-
-async function laad(){
-  const j=await api('data'); DATA=j;
-  if(ACTIEF>=DATA.projecten.length) ACTIEF=0;
-  render();
-}
-
-// Teammodus: één project (uit de teamapp), volledig dossier met schakelaars.
-async function teamLaad(pid){
-  const lijst=await beheer('projecten');
-  if(pid && lijst.projecten.some(p=>p.id===pid)) PROJECT_ID=pid;
-  if(!PROJECT_ID) PROJECT_ID=(lijst.projecten[0]||{}).id;
-  if(!PROJECT_ID){ document.getElementById('app').innerHTML='<div class="wrap"><div class="leeg">Geen project.</div></div>'; return; }
-  const j=await beheer('project',{project_id:PROJECT_ID});
-  DATA={ klant:{ naam:j.klant.name, kleur:j.klant.color }, projecten:[j.pagina] };
-  ACTIEF=0; render();
-}
+async function laad(){ const j=await api('data'); DATA=j; if(ACTIEF>=DATA.projecten.length)ACTIEF=0; render(); }
 
 async function start(){
   const s=await sb.auth.getSession();
   if(!s.data.session) return toonLogin();
-  // Team hoort niet op de losse portaalpagina (die is voor klanten). Stuur ze naar de teamapp.
   const email=(s.data.session.user&&s.data.session.user.email)||'';
   if(!EMBED && /jeroen|marlon/i.test(email)){ location.replace('/'); return; }
-  PROJECT_ID=new URLSearchParams(location.search).get('p');
-  try{ await beheer('projecten'); TEAM=true; }catch(e){ if(e.status!==403) console.warn('teamcheck',e.message); }
-  try{ TEAM ? await teamLaad(PROJECT_ID) : await laad(); }
+  try{ await laad(); }
   catch(e){ if(/niet ingelogd/.test(e.message)) return toonLogin();
-    document.getElementById('app').innerHTML='<div class="wrap"><div class="leeg">Er staat nog geen portaal voor je klaar.<br><span style="font-size:13px">Neem contact op met Begeister als dit niet klopt.</span></div></div>'; }
+    document.getElementById('app').innerHTML='<div class="wrap"><div class="midden">Er staat nog geen portaal voor je klaar.<br><span style="font-size:13px">Neem contact op met Begeister als dit niet klopt.</span></div></div>'; }
 }
-
-// De teamapp stuurt via postMessage: van project wisselen, en de bewerkmodus aan/uit.
-window.addEventListener('message', e=>{
-  const d=e.data; if(!d||!d.begeisterPortaal) return;
-  if(typeof d.edit==='boolean'){ EDIT=d.edit; render(); return; }
-  if(d.pid){ PROJECT_ID=d.pid; if(TEAM) teamLaad(PROJECT_ID); }
-});
 sb.auth.onAuthStateChange(ev=>{ if(ev==='SIGNED_OUT') toonLogin(); });
 start();
 </script>
