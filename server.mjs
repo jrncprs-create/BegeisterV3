@@ -45,6 +45,7 @@ await mount("/api/wa-subscribe", "./api/wa-subscribe.mjs");
 await mount("/api/projtodos", "./api/projtodos.mjs");
 await mount("/api/linkmeta", "./api/linkmeta.mjs");
 await mount("/api/inspthumb", "./api/inspthumb.mjs");
+await mount("/api/dropboxsync", "./api/dropboxsync.mjs");
 await mount("/api/bestellijst", "./api/bestellijst.mjs");
 await mount("/api/chat", "./api/chat.mjs");
 await mount("/api/vision", "./api/vision.mjs");
