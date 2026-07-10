@@ -1,0 +1,491 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Begeister — portaal</title>
+<link rel="icon" href="/favicon-32.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500&display=swap" rel="stylesheet">
+<style>
+/* Tokens uit HUISSTIJL.md. Dit blok is de enige plek waar kleuren en maten staan.
+   Als de Claude Design-mal binnenkomt, vervangen we dit blok en niets anders. */
+:root{
+  --bg:#0d0d0d; --panel:#1a1a1a; --panel2:#212121; --line:#454545;
+  --warn:#fbbf24; --risk:#fb923c; --late:#f87171;
+  --fw:300; --fw-nadruk:500;
+  --r-sm:6px; --r-md:9px; --r-lg:12px; --r-pil:999px;
+
+  /* Het portaal is geen gereedschap maar een gezicht: de teamapp staat standaard uit,
+     dit staat aan. --s1 op de modal-waarde, en de klantkleur permanent zichtbaar. */
+  --s1:#c0c0c0; --s2:#e2e2e2; --s4:#ffffff;
+  --txt:var(--s1); --mut:#8b8b8b; --mut2:#6a6a6a;
+  --ccol:#8a8a8a;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
+  font-family:'Outfit',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  font-weight:var(--fw);font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased}
+b,strong{font-weight:var(--fw-nadruk)}
+a{color:inherit}
+button{font-family:inherit;font-weight:var(--fw);cursor:pointer}
+:focus-visible{outline:none;box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--mut2)}
+
+.wrap{max-width:820px;margin:0 auto;padding:0 22px 90px}
+
+/* ---- kop ---- */
+.kop{position:sticky;top:0;z-index:5;background:var(--bg);display:flex;align-items:center;gap:12px;
+  padding:16px 0 14px;border-bottom:1px solid var(--line)}
+.merk{width:22px;height:26px;flex:none;color:var(--s4)}
+.kop-naam{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kop-naam b{color:var(--ccol)}
+.kop-naam span{color:var(--mut2)}
+.kop-status{font-size:12px;border:1px solid var(--line);border-radius:var(--r-pil);padding:3px 11px;color:var(--s2);flex:none}
+.kop-uit{font-size:12px;color:var(--mut2);background:none;border:none;padding:6px 2px}
+.kop-uit:hover{color:var(--s4)}
+.kop-geld{display:flex;gap:18px;font-size:12px;color:var(--mut);flex:none;font-variant-numeric:tabular-nums}
+.kop-geld b{display:block;color:var(--s2);font-weight:var(--fw-nadruk)}
+
+/* ---- fases ---- */
+.fases{display:flex;gap:5px;margin:26px 0 8px}
+.fase-bar{flex:1;height:2px;border-radius:var(--r-pil);background:#2a2a2a}
+.fase-bar.aan{background:var(--ccol)}
+.fase-lbl{display:flex;gap:5px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:34px}
+.fase-lbl>span{flex:1;color:var(--mut2)}
+.fase-lbl>span.aan{color:var(--ccol)}
+
+/* ---- teambalk ---- */
+.teambalk{display:flex;align-items:center;gap:10px;margin:16px 0 0;padding:9px 13px;border-radius:var(--r-md);
+  border:1px solid color-mix(in srgb,var(--warn) 34%,transparent);color:var(--warn);font-size:12px}
+.teambalk .tb-chip{border:1px solid currentColor;border-radius:var(--r-sm);padding:0 6px;font-size:11px}
+
+/* ---- secties ---- */
+.sec{margin:34px 0}
+.sec-h{font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut2);
+  font-weight:var(--fw-nadruk);margin:0 0 14px;display:flex;justify-content:space-between;align-items:center}
+.kaart{border:1px solid var(--line);border-radius:var(--r-lg);padding:20px 22px}
+.kaart.dicht{opacity:.45;display:flex;justify-content:space-between;align-items:center;padding:15px 18px}
+.dicht-noot{font-size:12px;color:var(--mut2)}
+
+/* ---- document ---- */
+.doc-h{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:18px}
+.doc-titel{font-size:30px;line-height:1.15;color:var(--s4);font-weight:var(--fw);margin:0}
+.doc-intro{color:var(--mut);margin:0 0 22px;max-width:60ch}
+.doc-body{max-width:64ch}
+.doc-body p{margin:0 0 14px}
+.doc-body h2{font-size:16px;font-weight:var(--fw-nadruk);color:var(--s2);margin:26px 0 10px}
+.dl-lijst{margin:26px 0 0;padding:0;list-style:none}
+.dl-lijst li{display:flex;gap:12px;padding:11px 0;border-top:1px solid #262626}
+.dl-dot{width:6px;height:6px;border-radius:50%;background:var(--ccol);flex:none;margin-top:9px}
+.dl-lbl{color:var(--s2)}
+.dl-toe{color:var(--mut2);font-size:13px}
+
+.knop{background:transparent;border:1px solid var(--line);border-radius:var(--r-md);color:var(--txt);
+  font-size:13px;padding:7px 13px;transition:color .15s,border-color .15s}
+.knop:hover{color:var(--s4);border-color:var(--mut2)}
+.knop[disabled]{opacity:.4;cursor:default}
+.knop.groot{font-size:14px;padding:11px 26px}
+
+/* ---- reacties ---- */
+.reactie{padding:12px 0;border-top:1px solid #262626}
+.reactie-wie{font-size:12px;color:var(--mut2);margin-bottom:3px}
+.reactie-wie b{color:var(--ccol);font-weight:var(--fw-nadruk)}
+textarea{width:100%;background:transparent;border:1px solid var(--line);border-radius:var(--r-md);
+  color:var(--txt);font-family:inherit;font-size:14px;font-weight:var(--fw);padding:11px 13px;resize:vertical;min-height:80px}
+textarea::placeholder{color:var(--mut2)}
+
+/* ---- akkoord ---- */
+.akkoord{text-align:center;padding:34px 22px}
+.akkoord-noot{font-size:12px;color:var(--mut2);margin-top:13px}
+.akkoord-vast{border-color:color-mix(in srgb,var(--ccol) 34%,transparent)}
+.akkoord-vast .akkoord-groot{font-size:22px;color:var(--s4)}
+
+/* ---- aanleveringen ---- */
+.aan-groep+.aan-groep{margin-top:26px;padding-top:22px;border-top:1px solid #262626}
+.aan-kop{font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut2);font-weight:var(--fw-nadruk)}
+.aan-sub{font-size:13px;color:var(--mut2);margin:2px 0 14px}
+.aan-rij{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-top:1px solid #262626}
+.aan-soort{font-size:11px;border:1px solid var(--line);border-radius:var(--r-sm);padding:1px 7px;color:var(--mut2);
+  flex:none;width:82px;text-align:center;margin-top:3px}
+.aan-rij.blok .aan-soort{border-color:color-mix(in srgb,var(--late) 45%,transparent);color:var(--late)}
+.aan-mid{flex:1;min-width:0}
+.aan-lbl{color:var(--s2)}
+.aan-toe{font-size:13px;color:var(--mut2)}
+.aan-in{display:flex;gap:8px;margin-top:9px}
+.aan-in input{flex:1;max-width:260px;background:transparent;border:1px solid var(--line);border-radius:var(--r-md);
+  color:var(--txt);font-family:inherit;font-size:13px;padding:7px 11px}
+.aan-klaar{font-size:13px;color:var(--mut);flex:none;margin-top:3px}
+
+/* ---- offerte ---- */
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+td,th{padding:9px 0;text-align:left;font-weight:var(--fw)}
+th{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut2);font-weight:var(--fw-nadruk)}
+td.num,th.num{text-align:right;white-space:nowrap}
+tbody tr{border-top:1px solid #262626}
+tfoot tr{border-top:1px solid var(--line)}
+tfoot td{color:var(--s2)}
+tfoot tr:last-child td{font-weight:var(--fw-nadruk);color:var(--s4)}
+
+/* ---- bestanden + contact ---- */
+.twee{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.best-rij{display:flex;gap:10px;align-items:center;padding:9px 0;border-top:1px solid #262626;font-size:13px}
+.contact{display:flex;gap:12px;align-items:center}
+.contact-bol{width:38px;height:38px;border-radius:50%;background:var(--panel2);flex:none}
+.contact-mail{font-size:12px;color:var(--mut2)}
+
+/* ---- login ---- */
+.login{max-width:340px;margin:16vh auto;text-align:center}
+.login .merk{width:34px;height:40px;margin:0 auto 26px}
+.login input{width:100%;background:transparent;border:1px solid var(--line);border-radius:var(--r-md);
+  color:var(--txt);font-family:inherit;font-size:14px;padding:11px 13px;margin-bottom:10px}
+.login .knop{width:100%;margin-top:6px;padding:11px}
+.login-fout{color:var(--late);font-size:13px;min-height:20px;margin-top:12px}
+
+.leeg{color:var(--mut2);text-align:center;padding:60px 0}
+#toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(12px);opacity:0;
+  background:var(--panel2);border:1px solid var(--line);border-radius:var(--r-md);padding:10px 16px;
+  font-size:13px;transition:opacity .2s,transform .2s;pointer-events:none;z-index:20}
+#toast.aan{opacity:1;transform:translateX(-50%)}
+#toast.fout{border-color:color-mix(in srgb,var(--late) 45%,transparent);color:var(--late)}
+
+@media (max-width:640px){ .twee{grid-template-columns:1fr} .doc-titel{font-size:24px} .kop-geld{display:none} }
+
+/* Downloaden = de browser laten printen. Eén stylesheet, dezelfde typografie. */
+@media print{
+  :root{--bg:#fff;--txt:#111;--s1:#111;--s2:#333;--s4:#000;--mut:#555;--mut2:#777;--line:#ccc}
+  .kop,.fases,.fase-lbl,.teambalk,.knop,textarea,#toast,.geen-print{display:none!important}
+  .wrap{max-width:none;padding:0}
+  .kaart{border:none;padding:0}
+  .doc-titel{font-size:26pt}
+  body{font-size:11pt}
+}
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+<div id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+// Deze sleutel mag publiek zijn: hij geeft alleen toegang tot `auth`. Alle tabellen staan
+// op slot achter `is_team()`, en de portaaldata loopt via /api/portal met de service-role.
+const SB_URL = "https://rwevsqwvgqbzypaudzuj.supabase.co";
+const SB_KEY = "sb_publishable_m_mWsrZEQXlok9gEWFeTbQ_80vnBEQL";
+const sb = supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
+
+const MERK = '<svg viewBox="0 0 147.39 172.8" fill="none" stroke="currentColor" stroke-width="4" width="100%" height="100%">'
+  + '<path d="M73.7 4v164.8"/><path d="M6 40l135.4 92.8"/><path d="M141.4 40L6 132.8"/></svg>';
+
+let DATA = null, ACTIEF = 0;
+const UITGEKLAPT = new Set();   // documenten die akkoord zijn maar die de klant weer opent
+
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function eur(n){ return '€' + Number(n||0).toLocaleString('nl-NL',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function datum(s){ if(!s) return ''; return new Date(s).toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'}); }
+
+function toast(tekst, soort){
+  const t = document.getElementById('toast');
+  t.textContent = tekst; t.className = 'aan' + (soort==='fout' ? ' fout' : '');
+  clearTimeout(t._t); t._t = setTimeout(() => { t.className = ''; }, 3200);
+}
+
+// Kleine markdown: alinea's, koppen, vet. Meer heeft een debrief niet nodig.
+function mini(md){
+  const regels = String(md||'').split(/\n{2,}/).map(blok => {
+    const t = blok.trim(); if(!t) return '';
+    if(/^##\s+/.test(t)) return '<h2>' + vet(esc(t.replace(/^##\s+/,''))) + '</h2>';
+    return '<p>' + vet(esc(t)).replace(/\n/g,'<br>') + '</p>';
+  });
+  return regels.join('');
+}
+function vet(s){ return s.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>'); }
+
+async function api(action, extra){
+  const s = await sb.auth.getSession();
+  const token = s.data.session && s.data.session.access_token;
+  if(!token) { toonLogin(); throw new Error('niet ingelogd'); }
+  const r = await fetch('/api/portal', {
+    method:'POST',
+    headers:{ 'Content-Type':'application/json', Authorization:'Bearer ' + token },
+    body: JSON.stringify(Object.assign({ action }, extra||{})),
+  });
+  const j = await r.json().catch(()=>({error:'onleesbaar antwoord'}));
+  if(!r.ok) throw new Error(j.error || 'er ging iets mis');
+  return j;
+}
+
+/* ============================ login ============================ */
+function toonLogin(fout){
+  document.getElementById('app').innerHTML =
+    '<div class="login">'
+    + '<div class="merk">'+MERK+'</div>'
+    + '<input id="lgMail" type="email" placeholder="E-mailadres" autocomplete="username">'
+    + '<input id="lgWw" type="password" placeholder="Wachtwoord" autocomplete="current-password">'
+    + '<button class="knop" id="lgKnop">Inloggen</button>'
+    + '<div class="login-fout">'+esc(fout||'')+'</div>'
+    + '</div>';
+  const doe = async () => {
+    const email = document.getElementById('lgMail').value.trim();
+    const ww = document.getElementById('lgWw').value;
+    if(!email || !ww) return;
+    const k = document.getElementById('lgKnop'); k.disabled = true; k.textContent = 'Momentje…';
+    const { error } = await sb.auth.signInWithPassword({ email, password: ww });
+    if(error){ toonLogin('Inloggen lukte niet. Klopt het wachtwoord?'); return; }
+    start();
+  };
+  document.getElementById('lgKnop').onclick = doe;
+  document.getElementById('lgWw').onkeydown = e => { if(e.key==='Enter') doe(); };
+}
+
+async function uitloggen(){ await sb.auth.signOut(); toonLogin(); }
+
+/* ============================ pagina ============================ */
+function statusTekst(p){
+  const debrief = p.docs.find(d => d.kind === 'debrief');
+  if(debrief && !debrief.akkoord) return 'wacht op jouw akkoord';
+  const open = p.aanleveringen.filter(a => a.status === 'open' && a.blokkeert).length;
+  if(open) return open + (open === 1 ? ' ding nodig' : ' dingen nodig');
+  return p.fases[p.fase_index] ? p.fases[p.fase_index].l.toLowerCase() : '';
+}
+
+function render(){
+  if(!DATA) return;
+  const p = DATA.projecten[ACTIEF];
+  if(!p){
+    document.getElementById('app').innerHTML =
+      '<div class="wrap">' + kopHtml(null) + '<div class="leeg">Er staat nog niets voor je klaar.<br>We laten het weten zodra dat verandert.</div></div>';
+    document.getElementById('kopUit').onclick = uitloggen;
+    return;
+  }
+
+  document.getElementById('app').innerHTML = '<div class="wrap">' + kopHtml(p) + fasesHtml(p)
+    + p.docs.slice().sort(volgorde).map(d => docHtml(d, p)).join('')
+    + ontbrekendHtml(p)
+    + aanleveringenHtml(p)
+    + offerteHtml(p)
+    + onderkantHtml(p)
+    + '</div>';
+
+  bind(p);
+}
+
+// Het document van de huidige fase staat open, de rest klapt dicht.
+function volgorde(a, b){
+  const rang = k => (k === 'ontwerp' ? 0 : 1);
+  return rang(a.kind) - rang(b.kind);
+}
+// De pagina groeit met de fase mee: wat afgehandeld is, zakt in tot één regel.
+function isOpen(d){
+  if(UITGEKLAPT.has(d.id)) return true;
+  return !d.akkoord;
+}
+
+function kopHtml(p){
+  const kleur = DATA.klant.kleur || '#8a8a8a';
+  const geld = p && p.geld
+    ? '<div class="kop-geld"><div>totaal<b>'+eur(p.geld.totaal)+'</b></div></div>' : '';
+  return '<div class="kop">'
+    + '<div class="merk">'+MERK+'</div>'
+    + '<div class="kop-naam"><b style="color:'+esc(kleur)+'">'+esc(DATA.klant.naam)+'</b>'
+    + (p ? ' <span>· '+esc(p.naam)+'</span>' : '') + '</div>'
+    + geld
+    + (p ? '<div class="kop-status">'+esc(statusTekst(p))+'</div>' : '')
+    + '<button class="kop-uit" id="kopUit">uitloggen</button>'
+    + '</div>';
+}
+
+function fasesHtml(p){
+  const bars = p.fases.map((f,i) => '<div class="fase-bar'+(i<=p.fase_index?' aan':'')+'"></div>').join('');
+  const lbls = p.fases.map((f,i) => '<span class="'+(i<=p.fase_index?'aan':'')+'">'+esc(f.l)+'</span>').join('');
+  return '<div class="fases">'+bars+'</div><div class="fase-lbl">'+lbls+'</div>';
+}
+
+function docHtml(d, p){
+  const titel = d.kind === 'debrief' ? 'Debrief' : 'Ontwerpvoorstel';
+  if(!isOpen(d)){
+    return '<div class="sec"><div class="kaart dicht">'
+      + '<div>'+esc(titel)+' — akkoord op '+esc(datum(d.akkoord.approved_at))+'</div>'
+      + '<button class="knop" data-open="'+d.id+'">Bekijken</button></div></div>';
+  }
+
+  const dl = d.deliverables.length
+    ? '<ul class="dl-lijst">' + d.deliverables.map(x =>
+        '<li><span class="dl-dot"></span><div><div class="dl-lbl">'+esc(x.label)+'</div>'
+        + (x.toelichting ? '<div class="dl-toe">'+esc(x.toelichting)+'</div>' : '') + '</div></li>').join('') + '</ul>'
+    : '';
+
+  const doc = '<div class="sec"><div class="sec-h"><span>'+esc(titel)+'</span>'
+    + '<button class="knop geen-print" onclick="window.print()">Downloaden</button></div>'
+    + '<div class="kaart"><div class="doc-h"><h1 class="doc-titel">'+esc(d.title)+'</h1></div>'
+    + (d.intro ? '<p class="doc-intro">'+esc(d.intro)+'</p>' : '')
+    + '<div class="doc-body">'+mini(d.body)+'</div>'
+    + (dl ? '<div class="sec-h" style="margin-top:30px">Wat wij leveren</div>'+dl : '')
+    + '</div></div>';
+
+  return doc + reactiesHtml(d) + akkoordHtml(d);
+}
+
+function reactiesHtml(d){
+  if(d.akkoord) return '';
+  const lijst = d.reacties.map(c =>
+    '<div class="reactie"><div class="reactie-wie"><b>'+esc(c.author)+'</b> · '+esc(datum(c.created_at))+'</div>'
+    + '<div>'+esc(c.body)+'</div></div>').join('');
+  return '<div class="sec geen-print"><div class="sec-h">Klopt dit?</div><div class="kaart">'
+    + lijst
+    + '<div style="margin-top:'+(lijst?'16px':'0')+'">'
+    + '<textarea id="rt_'+d.id+'" placeholder="Laat het weten als we iets verkeerd hebben begrepen…"></textarea>'
+    + '<div style="margin-top:10px"><button class="knop" data-reactie="'+d.id+'">Versturen</button></div>'
+    + '</div></div></div>';
+}
+
+function akkoordHtml(d){
+  if(d.akkoord){
+    return '<div class="sec"><div class="kaart akkoord akkoord-vast">'
+      + '<div class="akkoord-groot">Akkoord op '+esc(datum(d.akkoord.approved_at))+'</div>'
+      + '<div class="akkoord-noot">Dit is de opdrachtbevestiging. Vastgelegd onder '
+      + '<span style="font-family:ui-monospace,monospace">'+esc(String(d.akkoord.snapshot_sha).slice(0,12))+'</span>.</div>'
+      + '</div></div>';
+  }
+  return '<div class="sec geen-print"><div class="kaart akkoord">'
+    + '<button class="knop groot" data-akkoord="'+d.id+'">Akkoord — dit is de opdracht</button>'
+    + '<div class="akkoord-noot">Hierna staan de debrief en de offerte vast.</div>'
+    + '</div></div>';
+}
+
+function ontbrekendHtml(p){
+  if(p.docs.some(d => d.kind === 'ontwerp')) return '';
+  if(p.fase_index < 3) return '<div class="sec"><div class="kaart dicht">'
+    + '<div>Ontwerpvoorstel</div><div class="dicht-noot">volgt in de uitvoeringsfase</div></div></div>';
+  return '';
+}
+
+function aanleveringenHtml(p){
+  if(!p.aanleveringen.length) return '';
+  const groep = (rijen, kop, sub) => rijen.length
+    ? '<div class="aan-groep"><div class="aan-kop">'+kop+'</div><div class="aan-sub">'+sub+'</div>'
+      + rijen.map(aanRij).join('') + '</div>' : '';
+  const blok  = p.aanleveringen.filter(a => a.blokkeert && a.status === 'open');
+  const later = p.aanleveringen.filter(a => !a.blokkeert && a.status === 'open');
+  const klaar = p.aanleveringen.filter(a => a.status === 'aangeleverd');
+
+  return '<div class="sec"><div class="sec-h">Wat wij van je nodig hebben</div><div class="kaart">'
+    + groep(blok,  'Hier wachten we op', 'Zonder deze kunnen we niet verder.')
+    + groep(later, 'Kan alvast',          'Nog geen haast, wel handig.')
+    + groep(klaar, 'Binnen',              'Dank je.')
+    + '</div></div>';
+}
+
+function aanRij(a){
+  const klaar = a.status === 'aangeleverd';
+  const veld = klaar ? '<div class="aan-klaar">'+esc(toonWaarde(a))+'</div>' : invulHtml(a);
+  return '<div class="aan-rij'+(a.blokkeert && !klaar ? ' blok' : '')+'">'
+    + '<span class="aan-soort">'+esc(a.soort)+'</span>'
+    + '<div class="aan-mid"><div class="aan-lbl">'+esc(a.label)+'</div>'
+    + (a.toelichting ? '<div class="aan-toe">'+esc(a.toelichting)+'</div>' : '')
+    + (klaar ? '' : veld) + '</div>'
+    + (klaar ? veld : '') + '</div>';
+}
+function toonWaarde(a){
+  if(a.soort === 'bedrag') return eur(a.waarde);
+  if(a.soort === 'bevestiging') return 'akkoord';
+  return String(a.waarde==null?'':a.waarde);
+}
+function invulHtml(a){
+  if(a.soort === 'bevestiging')
+    return '<div class="aan-in geen-print"><button class="knop" data-aan="'+a.id+'" data-ja="1">Bevestigen</button></div>';
+  if(a.soort === 'bestand')
+    return '<div class="aan-in geen-print"><input id="an_'+a.id+'" placeholder="Link naar het bestand">'
+      + '<button class="knop" data-aan="'+a.id+'">Opslaan</button></div>';
+  const type = (a.soort === 'bedrag' || a.soort === 'aantal') ? 'number' : 'text';
+  const ph = a.soort === 'bedrag' ? 'Bedrag in euro' : a.soort === 'aantal' ? 'Aantal' : 'Je antwoord';
+  return '<div class="aan-in geen-print"><input id="an_'+a.id+'" type="'+type+'" placeholder="'+ph+'">'
+    + '<button class="knop" data-aan="'+a.id+'">Opslaan</button></div>';
+}
+
+function offerteHtml(p){
+  if(!p.offerte) return '<div class="sec"><div class="kaart dicht">'
+    + '<div>Offerte</div><div class="dicht-noot">nog niet vrijgegeven</div></div></div>';
+  const o = p.offerte;
+  return '<div class="sec"><div class="sec-h">Offerte</div><div class="kaart"><table>'
+    + '<thead><tr><th>Post</th><th class="num">Aantal</th><th class="num">Stukprijs</th><th class="num">Totaal</th></tr></thead><tbody>'
+    + o.posten.map(r => '<tr><td>'+esc(r.label)+'</td><td class="num">'+r.aantal+'</td>'
+        + '<td class="num">'+eur(r.stukprijs)+'</td><td class="num">'+eur(r.totaal)+'</td></tr>').join('')
+    + '</tbody><tfoot>'
+    + '<tr><td colspan="3">Subtotaal</td><td class="num">'+eur(o.subtotaal)+'</td></tr>'
+    + '<tr><td colspan="3">Btw</td><td class="num">'+eur(o.btw)+'</td></tr>'
+    + '<tr><td colspan="3">Totaal</td><td class="num">'+eur(o.totaal)+'</td></tr>'
+    + '</tfoot></table></div></div>';
+}
+
+function onderkantHtml(p){
+  const best = p.bestanden.length
+    ? p.bestanden.map(f => '<div class="best-rij"><a href="'+esc(f.link||'#')+'" target="_blank" rel="noopener">'+esc(f.name)+'</a></div>').join('')
+    : '<div class="dicht-noot" style="padding-top:8px">Nog niets gedeeld.</div>';
+  return '<div class="sec twee geen-print">'
+    + '<div><div class="sec-h">Bestanden</div><div class="kaart">'+best+'</div></div>'
+    + '<div><div class="sec-h">Je contact</div><div class="kaart"><div class="contact">'
+    + '<div class="contact-bol"></div><div><div>Jeroen Cuypers</div>'
+    + '<div class="contact-mail">jeroen@begeister.nl</div></div></div></div></div>'
+    + '</div>';
+}
+
+/* ============================ acties ============================ */
+function bind(p){
+  document.getElementById('kopUit').onclick = uitloggen;
+
+  document.querySelectorAll('[data-reactie]').forEach(b => b.onclick = async () => {
+    const id = b.dataset.reactie;
+    const ta = document.getElementById('rt_' + id);
+    const tekst = (ta.value||'').trim();
+    if(!tekst) return;
+    b.disabled = true;
+    try { await api('reactie', { doc_id:id, body:tekst }); ta.value=''; toast('Verstuurd.'); await laad(); }
+    catch(e){ toast(e.message, 'fout'); b.disabled = false; }
+  });
+
+  document.querySelectorAll('[data-akkoord]').forEach(b => b.onclick = async () => {
+    if(!confirm('Akkoord geven op deze debrief? Hiermee bevestig je de opdracht.')) return;
+    b.disabled = true; b.textContent = 'Momentje…';
+    try { await api('akkoord', { doc_id:b.dataset.akkoord }); toast('Akkoord vastgelegd.'); await laad(); }
+    catch(e){ toast(e.message, 'fout'); b.disabled = false; b.textContent = 'Akkoord — dit is de opdracht'; }
+  });
+
+  document.querySelectorAll('[data-aan]').forEach(b => b.onclick = async () => {
+    const id = b.dataset.aan;
+    const waarde = b.dataset.ja ? true : (document.getElementById('an_' + id) || {}).value;
+    b.disabled = true;
+    try { await api('aanlevering', { id, waarde }); toast('Genoteerd.'); await laad(); }
+    catch(e){ toast(e.message, 'fout'); b.disabled = false; }
+  });
+
+  document.querySelectorAll('[data-open]').forEach(b => b.onclick = () => {
+    UITGEKLAPT.add(b.dataset.open);
+    render();
+  });
+}
+
+async function laad(){
+  const j = await api('data');
+  DATA = j;
+  if(ACTIEF >= DATA.projecten.length) ACTIEF = 0;
+  render();
+}
+
+async function start(){
+  const s = await sb.auth.getSession();
+  if(!s.data.session) return toonLogin();
+  try { await laad(); }
+  catch(e){
+    if(/niet ingelogd/.test(e.message)) return toonLogin();
+    document.getElementById('app').innerHTML =
+      '<div class="wrap"><div class="leeg">Er staat nog geen portaal voor je klaar.<br>'
+      + '<span style="font-size:13px">Neem contact op met Begeister als dit niet klopt.</span></div></div>';
+  }
+}
+
+sb.auth.onAuthStateChange((e) => { if(e === 'SIGNED_OUT') toonLogin(); });
+start();
+</script>
+</body>
+</html>
