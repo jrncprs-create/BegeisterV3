@@ -889,6 +889,8 @@
     /* Eén binnenmarge voor alle drie de kolommen. Kolom 1 had 16 px, kolom 2 en 3 nul:
        de inhoud plakte tegen de kolomrand. */
     #view-pvmid,#view-pvright,#view-conmid,#view-conright{padding-left:16px;padding-right:16px}
+    #view-inspmid,#view-inspright{height:calc(100dvh - var(--tbh,52px));overflow-y:auto;scrollbar-width:none;padding:0 16px 40px}
+    #view-inspmid::-webkit-scrollbar,#view-inspright::-webkit-scrollbar{display:none}
     .pb-board-inline .pb-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 36px;align-items:start}
     .pb-board-inline .pb-colL,.pb-board-inline .pb-colR{min-width:0}
   }
@@ -1853,7 +1855,14 @@
     .insp-head--board .insp-btn,.insp-head--board .dov-close{order:2}
     .insp-head--board .insp-title{order:3;flex:1 1 100%;width:100%;margin-left:0!important;overflow-wrap:normal;word-break:normal}
   }
-  .insp-boards{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:30px 26px}
+  /* Inspiratie woont nu in kolom 2 en 3 van Bestanden, niet meer in een overlay. */
+  #inspMidWrap{padding-top:14px}
+  .insp-boards{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:26px 18px}
+  .insp-side{padding-top:14px;display:flex;flex-direction:column;gap:14px}
+  .insp-side .insp-pvw-img{position:relative;width:100%;border-radius:12px;overflow:hidden;background:#141416;min-height:240px;display:flex;align-items:center;justify-content:center}
+  .insp-side .insp-pvw-img img{width:100%;height:auto;display:block}
+  .insp-side .insp-pvw-embed{width:100%;aspect-ratio:9/13;border:0}
+  .insp-tile.on{outline:2px solid var(--mut2);outline-offset:2px}
   .insp-board{cursor:pointer}
   .insp-stack{position:relative;width:100%;aspect-ratio:1/1}
   .insp-stack .sp{position:absolute;inset:10px;border-radius:12px;background:var(--card);overflow:hidden;box-shadow:0 8px 20px rgba(0,0,0,.5)}
@@ -1867,7 +1876,7 @@
   .insp-title[contenteditable]:focus{outline:none;box-shadow:inset 0 -1px 0 var(--s2)}
   .insp-bdel{float:right;background:transparent;border:none;color:var(--mut2);cursor:pointer;font-size:17px;line-height:1;padding:1px 5px;margin:-1px -5px 0 0;opacity:.55;transition:opacity .15s}
   .insp-board:hover .insp-bdel,.insp-bdel:focus,.insp-bdel:hover{opacity:1}
-  .insp-grid{column-count:4;column-gap:14px}
+  .insp-grid{column-count:2;column-gap:12px}
   .insp-tile{break-inside:avoid;margin:0 0 14px;position:relative;border-radius:12px;overflow:hidden;border:1px solid var(--line);cursor:pointer;background:var(--card)}
   .insp-tile img{width:100%;display:block}
   .insp-tile .ph{width:100%;height:150px;background:rgba(255,255,255,.04)}
@@ -1878,8 +1887,6 @@
   /* Inspiratie-preview (state 3): beeldvullend, klant+project-dropdowns, kleiner op mobiel */
   .insp-pvw{position:fixed;inset:0;z-index:120;background:rgba(8,8,8,.96);display:flex;align-items:center;justify-content:center;padding:34px;opacity:0;visibility:hidden;transition:opacity .25s}
   .insp-pvw.open{opacity:1;visibility:visible}
-  .insp-pvw-x{position:fixed;top:16px;right:18px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;background:transparent;border:none;color:#cfcfcf;cursor:pointer;z-index:2}
-  .insp-pvw-x:hover{color:#fff}
   .insp-pvw-inner{display:flex;gap:26px;max-width:1040px;width:100%;max-height:86vh;align-items:flex-start}
   .insp-pvw-img{flex:0 0 auto;max-width:62%;position:relative}
   .insp-pvw-img img{max-width:100%;max-height:86vh;border-radius:12px;display:block;border:1px solid var(--line)}
@@ -1888,7 +1895,6 @@
   .insp-pvw-nav.prev{left:10px}.insp-pvw-nav.next{right:10px}
   .insp-pvw-nav:hover{background:rgba(0,0,0,.78)}
   .insp-pvw-count{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.55);color:#fff;font-size:12px;padding:3px 10px;border-radius:999px}
-  .insp-pvw-side{flex:1;min-width:240px;display:flex;flex-direction:column;gap:14px;color:var(--s2)}
   .insp-pvw-ttl{font-size:16px;color:#eee}
   .insp-pvw-link{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--primary2);text-decoration:none;width:fit-content;word-break:break-all}
   .insp-pvw-link:hover{color:#fff}
@@ -1902,11 +1908,9 @@
     .insp-pvw-img{width:100%;max-width:100%;flex:0 0 auto}
     .insp-pvw-img img{max-width:100%;max-height:48vh;margin:0 auto}
     .insp-pvw-embed{width:100%;max-width:100%;height:min(68vh,620px)}
-    .insp-pvw-side{min-width:0;width:100%}
     /* Koppelen & verplaatsen: dropdowns onder elkaar i.p.v. naast elkaar */
     .insp-pvw-move{grid-template-columns:1fr}
     .insp-pvw-move > *{width:100%;min-width:0;max-width:100%;box-sizing:border-box}
-    .insp-pvw-x{top:calc(var(--tbh,52px) + 10px);right:14px;z-index:122}
   }
   @media(max-width:1000px){ .insp-grid{column-count:2} .insp-boards{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:24px 18px} .insp-inner{padding:calc(var(--tbh,52px) + 16px) 16px 80px} }
   .dov-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0 0 22px}
@@ -2002,7 +2006,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v205</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v206</span>
       <button id="dayBtn" class="dag-ic" onclick="openDayOverview()" title="Dagoverzicht" aria-label="Dagoverzicht"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M3 12h2M19 12h2M5.6 18.4l1.4-1.4M17 7l1.4-1.4"/></svg></button>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:14px;font-weight:var(--fw-nadruk);cursor:pointer" title="AI-context bewerken">Jeroen</span>
@@ -2037,6 +2041,8 @@
       </div>
 
       <div id="view-filespreview" class="hidden"></div>
+      <div id="view-inspmid" class="hidden"><div id="inspMidWrap"></div></div>
+      <div id="view-inspright" class="hidden"><div id="inspRightWrap"></div></div>
 
       <div id="view-agenda" class="hidden"></div>
 
@@ -2980,7 +2986,10 @@ function setView(v){
     const t=document.getElementById('view-taken'),a=document.getElementById('view-agenda'),fp=document.getElementById('view-filespreview'),fm=document.getElementById('view-finmid'),frt=document.getElementById('view-finright');
     if(t)t.classList.toggle('hidden',!_planningView);
     if(a)a.classList.toggle('hidden',!_planningView);
-    if(fp)fp.classList.toggle('hidden',v!=='files');
+    if(fp)fp.classList.toggle('hidden',v!=='files'||_inspAan);
+    const im=document.getElementById('view-inspmid'),ir=document.getElementById('view-inspright');
+    if(im)im.classList.toggle('hidden',!(v==='files'&&_inspAan));
+    if(ir)ir.classList.toggle('hidden',!(v==='files'&&_inspAan));
     if(fm)fm.classList.toggle('hidden',v!=='financien');
     if(frt)frt.classList.toggle('hidden',v!=='financien');
     const cm=document.getElementById('view-conmid'),crt=document.getElementById('view-conright');
@@ -6244,7 +6253,8 @@ function fmSearch(v){ _fmQuery=v; _renderFmTree(); }
 let _inspGeladen=false;
 async function _inspTelling(){ if(_inspGeladen)return; _inspGeladen=true; try{ await _inspLoad(); _renderFmTree(); }catch(_){} }
 async function fmNewClient(){ const name=((await uiPrompt('Naam nieuwe map:'))||'').trim(); if(!name) return; const col=_nextClientColor(); const icon=(name[0]||'?').toUpperCase(); try{ await sb.from('projects').insert({client:name,project:'',color:col,icon,sort:0}); }catch(_){} _fmOpen.add(name); await refresh(); try{ const row=document.querySelector('#fmTree .fm-crow[data-client="'+((window.CSS&&CSS.escape)?CSS.escape(name):name)+'"]'); if(row)row.scrollIntoView({block:'start',behavior:'smooth'}); }catch(_){} }
-function fmToggle(k){ if(_fmOpen.has(k))_fmOpen.delete(k); else _fmOpen.add(k); _renderFmTree(); }
+function fmToggle(k){ if(_inspAan){ _inspAan=false; setView('files'); }
+  if(_fmOpen.has(k))_fmOpen.delete(k); else _fmOpen.add(k); _renderFmTree(); }
 function _penGlyph(){ return '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4l10.5 -10.5a2.1 2.1 0 0 0 -3 -3l-10.5 10.5v3"/><path d="M13.5 6.5l3 3"/></svg>'; }
 function _trashGlyph(){ return '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/></svg>'; }
 // Verwijderen vanuit de boom (map=categorie / project / klant). Veilig: niet-lege mappen re-homen of vragen.
@@ -6360,7 +6370,7 @@ function _renderFmTree(){
   const rootF=(state.folders||[]).filter(x=>(x.parent_kind||'root')==='root').map(_folderHTML).join('');
   // Inspiratie is beeldmateriaal zonder project. Dat is een map, geen pagina.
   const inspN=(_inspBoards&&_inspBoards.length)?_inspBoards.length:0;
-  const insp=q?'':('<div class="fm-client"><div class="fm-row fm-crow fm-insprow" onclick="openInspiration()" title="Inspiratieborden openen">'
+  const insp=q?'':('<div class="fm-client"><div class="fm-row fm-crow fm-insprow'+(_inspAan?' open':'')+'" onclick="openInspiration()" title="Inspiratieborden openen">'
     + '<span class="fm-badge fm-inspbadge">'+_tIc(_TABCHAN.asterisk,14,1.7)+'</span>'
     + '<span class="fm-name">Inspiratie</span>'
     + (inspN?'<span class="fm-cnt">'+inspN+'</span>':'')
@@ -6622,7 +6632,7 @@ async function fmSyncDropbox(){
   if(btn){ btn.disabled=false; btn.textContent='Sync naar Dropbox'; }
 }
 let _fmPrevId=null;
-function fmFileClick(id){ if(isDesk3()) fmPreview(id); else openFileViewer(id); }
+function fmFileClick(id){ if(_inspAan){ _inspAan=false; setView('files'); } if(isDesk3()) fmPreview(id); else openFileViewer(id); }
 function fmClosePreview(){ _fmPrevId=null; const pane=document.getElementById('view-filespreview'); if(pane)pane.innerHTML='<div class="fmp-empty">Kies een bestand</div>'; document.querySelectorAll('#fmTree .fm-file.sel').forEach(e=>e.classList.remove('sel')); }
 async function fmPreview(id){
   _fmPrevId=id;
@@ -7202,7 +7212,7 @@ async function _autoTriageNieuwe(){
 // Nieuw item komt vanzelf binnen (geen verversen); bestaande items zakken soepel met
 // trage ease naar beneden (FLIP) terwijl het nieuwe van bovenaf infadet (.liveIn).
 let _liveSeen=null, _liveBusy=false, _liveTimer=null;
-const LIVE_SELS=['#view-taken','#view-wachter','#view-agenda','#bronnenWrap','#inspBody'];
+const LIVE_SELS=['#view-taken','#view-wachter','#view-agenda','#pvMidWrap','#inspMidWrap'];
 function _liveCurIds(){
   let items=[]; try{ items=allItems().map(x=>x.it.id); }catch(_){}
   const srcs=((typeof state!=='undefined'&&state.sources)||[]).map(s=>s.id);
@@ -7231,7 +7241,7 @@ function _livePlay(caps){
 async function liveTick(){
   if(_liveBusy)return; _liveBusy=true;
   try{
-    const inspOpen=(()=>{const o=document.getElementById('inspOverlay');return !!(o&&o.classList.contains('open'));})();
+    const inspOpen=!!_inspAan;
     await sbLoad();
     if(inspOpen && typeof _inspLoad==='function'){ try{ await _inspLoad(); }catch(_){} }
     const cur=_liveCurIds();
@@ -7642,14 +7652,24 @@ function _ispRand(n){ const x=Math.sin(n*99.7)*1e4; return x-Math.floor(x); }
 function _ispLayerTr(seed,j){ const r=(_ispRand(seed+j*7)-0.5)*24, tx=(_ispRand(seed+j*13)-0.5)*12, ty=(_ispRand(seed+j*19)-0.5)*9; return 'rotate('+r.toFixed(1)+'deg) translate('+tx.toFixed(1)+'%,'+ty.toFixed(1)+'%)'; }
 let _inspPvwItem=null;
 async function _inspLoad(){ try{ const [bd,it]=await Promise.all([ sb.from('insp_boards').select('*').order('sort').order('created_at'), sb.from('insp_items').select('*').order('created_at',{ascending:false}) ]); _inspBoards=(bd&&bd.data)?bd.data:[]; _inspItems=(it&&it.data)?it.data:[]; }catch(_){ } }
-async function openInspiration(){ const n=document.getElementById('nav'); if(n)n.classList.remove('open'); _inspBoard=null; await _inspLoad(); renderInsp(); const ov=document.getElementById('inspOverlay'); if(!ov)return; ov.setAttribute('aria-hidden','false'); requestAnimationFrame(()=>ov.classList.add('open')); }
-function closeInspiration(){ const ov=document.getElementById('inspOverlay'); if(!ov)return; ov.classList.remove('open'); ov.setAttribute('aria-hidden','true'); }
+/* Inspiratie woonde in een eigen fullscreen-overlay. Nu is het een map in Bestanden:
+   kolom 2 toont de thema's (en daarna de beelden), kolom 3 de preview. Dezelfde plek,
+   dezelfde bediening als Contacten, Bronnen en het Postvak In. */
+var _inspAan=false, _inspSel=null;
+async function openInspiration(){
+  const n=document.getElementById('nav'); if(n)n.classList.remove('open');
+  _inspAan=true; _inspBoard=null; _inspSel=null;
+  if(view!=='files') setView('files'); else setView('files');
+  await _inspLoad(); renderInsp(); _renderFmTree();
+}
+function closeInspiration(){ _inspAan=false; _inspBoard=null; _inspSel=null; setView('files'); _renderFmTree(); }
 function renderInsp(){
-  const body=document.getElementById('inspBody'); if(!body)return;
+  const body=document.getElementById('inspMidWrap'); if(!body)return;
+  renderInspRight();
   if(_inspBoard){ return _renderInspGrid(body); }
   const head=`<div class="insp-head"><div class="insp-title">Inspiratie</div>`
     +`<button class="insp-btn" onclick="inspNewBoard()">${_ispIc.plus} thema</button>`
-    +`<button class="dov-close" onclick="closeInspiration()" aria-label="Wegschuiven">${_ispIc.close}</button></div>`;
+    +`<button class="dov-close" onclick="closeInspiration()" aria-label="Sluiten">${_ispIc.close}</button></div>`;
   let grid;
   if(!_inspBoards.length){ grid='<div class="insp-empty">Nog geen thema’s. Maak er een aan met “+ thema”.</div>'; }
   else{
@@ -7671,11 +7691,11 @@ function renderInsp(){
 function _renderInspGrid(body){
   const b=_inspBoards.find(x=>String(x.id)===String(_inspBoard)); if(!b){ _inspBoard=null; return renderInsp(); }
   const items=_inspItems.filter(x=>String(x.board_id)===String(_inspBoard));
-  const head=`<div class="insp-head insp-head--board"><button class="insp-back" onclick="inspBack()">${_ispIc.back} boards</button>`
+  const head=`<div class="insp-head insp-head--board"><button class="insp-back" onclick="inspBack()">${_ispIc.back} thema's</button>`
     +`<div class="insp-title" style="margin-left:6px;cursor:text" contenteditable="true" spellcheck="false" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}" onblur="inspRenameInline('${b.id}',this)" title="Klik om de themanaam te wijzigen">${escapeHtml(b.name)}</div>`
     +`<button class="insp-btn" onclick="inspAddImage()">${_ispIc.photo} beeld</button>`
     +`<button class="insp-btn" onclick="inspAddLink()">${_ispIc.link} link</button>`
-    +`<button class="dov-close" onclick="closeInspiration()" aria-label="Wegschuiven">${_ispIc.close}</button></div>`;
+    +`<button class="dov-close" onclick="closeInspiration()" aria-label="Sluiten">${_ispIc.close}</button></div>`;
   let grid;
   if(!items.length){ grid='<div class="insp-empty">Nog leeg. Voeg een beeld of link toe.</div>'; }
   else{
@@ -7691,8 +7711,8 @@ function _renderInspGrid(body){
   body.innerHTML=head+grid; _inspFillThumbs();
 }
 // Zelfde lazy-loader als de bronnenlijst; gaat via de gedeelde url-resolver.
-async function _inspFillThumbs(){ await _vulBeeldjes(document.getElementById('inspOverlay')||document); }
-function inspOpenBoard(id){ _inspBoard=id; const ov=document.getElementById('inspOverlay'); if(ov)ov.scrollTop=0; renderInsp(); }
+async function _inspFillThumbs(){ await _vulBeeldjes(document.getElementById('inspMidWrap')||document); }
+function inspOpenBoard(id){ _inspBoard=id; _inspSel=null; const c=document.getElementById('view-inspmid'); if(c)c.scrollTop=0; renderInsp(); }
 function inspBack(){ _inspBoard=null; renderInsp(); }
 async function inspNewBoard(){ const name=((await uiPrompt('Naam thema:'))||'').trim(); if(!name)return; try{ const r=await sb.from('insp_boards').insert({name,sort:_inspBoards.length}).select().single(); if(r&&r.data)_inspBoards.push(r.data); }catch(_){} renderInsp(); }
 async function inspDelBoard(id){ const b=_inspBoards.find(x=>String(x.id)===String(id)); const n=_inspItems.filter(x=>String(x.board_id)===String(id)).length; if(!(await uiConfirm('Thema'+(b?' “'+b.name+'”':'')+' verwijderen?'+(n?' ('+n+' beelden)':''))))return; _inspBoards=_inspBoards.filter(x=>String(x.id)!==String(id)); _inspItems=_inspItems.filter(x=>String(x.board_id)!==String(id)); try{ await sb.from('insp_items').delete().eq('board_id',id); await sb.from('insp_boards').delete().eq('id',id); }catch(_){} renderInsp(); }
@@ -7716,57 +7736,56 @@ async function inspAddLink(){ if(!_inspBoard)return; const url=((await uiPrompt(
 async function inspRenameBoard(id){ const b=_inspBoards.find(x=>String(x.id)===String(id)); if(!b)return; const nv=((await uiPrompt('Themanaam:', b.name||''))||'').trim(); if(!nv||nv===b.name)return; b.name=nv; try{ await sb.from('insp_boards').update({name:nv}).eq('id',id); }catch(_){} renderInsp(); }
 // Inline themanaam wijzigen (geen popup) — opslaan bij blur/Enter.
 async function inspRenameInline(id,el){ const nv=(el.textContent||'').replace(/\s+/g,' ').trim(); const b=_inspBoards.find(x=>String(x.id)===String(id)); if(!b)return; if(!nv){ el.textContent=b.name||''; return; } if(nv===b.name){ el.textContent=b.name; return; } b.name=nv; el.textContent=nv; try{ await sb.from('insp_boards').update({name:nv}).eq('id',id); }catch(_){} }
-function inspItemClick(id){ const it=_inspItems.find(x=>String(x.id)===String(id)); if(it)_inspPreview(it); }
+function inspItemClick(id){ _inspSel=id; renderInspRight();
+  document.querySelectorAll('#inspMidWrap .insp-tile').forEach(el=>el.classList.toggle('on', el.dataset.id==='it-'+id)); }
 const _ispX='<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
 const _ispTrash='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/></svg>';
-function _inspPreview(it){
+// Kolom 3: de preview van het gekozen beeld. Was een tweede overlay bovenop de eerste.
+function renderInspRight(){
+  const w=document.getElementById('inspRightWrap'); if(!w)return;
+  const it=_inspSel?_inspItems.find(x=>String(x.id)===String(_inspSel)):null;
+  if(!it){ w.innerHTML='<div class="fin-mid-hint">'+(_inspBoard?'Kies een beeld voor de preview.':'Kies een thema.')+'</div>'; return; }
   _inspPvwItem=it;
-  const ov=document.createElement('div'); ov.className='insp-pvw';
-  const linkHtml = it.url ? `<a class="insp-pvw-link" href="${escapeHtml(it.url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${_ispIc.link}<span>${escapeHtml((it.url||'').replace(/^https?:\/\//,'').slice(0,52))}</span></a>` : '';
-  ov.innerHTML=`<button class="insp-pvw-x" aria-label="Sluiten">${_ispX}</button>
-    <div class="insp-pvw-inner">
+  const linkHtml = it.url ? `<a class="insp-pvw-link" href="${escapeHtml(it.url)}" target="_blank" rel="noopener">${_ispIc.link}<span>${escapeHtml((it.url||'').replace(/^https?:\/\//,'').slice(0,52))}</span></a>` : '';
+  w.innerHTML=`<div class="insp-side">
       <div class="insp-pvw-img" id="ispvwmedia"></div>
-      <div class="insp-pvw-side">
-        ${it.title?`<div class="insp-pvw-ttl">${escapeHtml(it.title)}</div>`:''}
-        ${linkHtml}
-        <div class="insp-pvw-assign">
-          <div class="insp-pvw-lbl">Koppelen &amp; verplaatsen</div>
-          <div class="insp-pvw-move">
-            <select id="insp_client" onchange="inspOnClientChange()"></select>
-            <select id="insp_project" onchange="inspOnProjectChange('${it.id}')"></select>
-            <select id="insp_board" onchange="inspOnBoardChange('${it.id}')"></select>
-          </div>
+      ${it.title?`<div class="insp-pvw-ttl">${escapeHtml(it.title)}</div>`:''}
+      ${linkHtml}
+      <div class="insp-pvw-assign">
+        <div class="insp-pvw-lbl">Koppelen &amp; verplaatsen</div>
+        <div class="insp-pvw-move">
+          <select id="insp_client" onchange="inspOnClientChange()"></select>
+          <select id="insp_project" onchange="inspOnProjectChange('${it.id}')"></select>
+          <select id="insp_board" onchange="inspOnBoardChange('${it.id}')"></select>
         </div>
-        <button class="insp-btn" style="width:fit-content" onclick="inspDelItem('${it.id}');var o=this.closest('.insp-pvw');if(o)o.remove()">${_ispTrash} verwijderen</button>
       </div>
+      <button class="insp-btn" style="width:fit-content" onclick="inspDelItem('${it.id}');_inspSel=null;renderInsp()">${_ispTrash} verwijderen</button>
     </div>`;
-  document.body.appendChild(ov);
-  // Media: video → Instagram-embed (speelt in de app); carrousel → pijltjes; anders één afbeelding.
+
+  // Media: video → Instagram-embed; carrousel → pijltjes; anders één afbeelding.
   const _isVid = !!it.video || /\/(reel|tv)\//i.test(it.url||'');
   let _imgs=[], _idx=0;
   const _embedUrl=u=>{ try{ return (u||'').split('?')[0].replace(/\/+$/,'')+'/embed/'; }catch(_){ return ''; } };
-  const _resolve=async e=> (e&&e.sp) ? await _bestandUrl({storage_path:e.sp}) : e;   // via de gedeelde resolver
-  const _show=async i=>{ if(!_imgs.length)return; _idx=(i+_imgs.length)%_imgs.length; const u=await _resolve(_imgs[_idx]); const im=ov.querySelector('#ispvwimg'); if(im){ if(u)im.src=u; else im.style.display='none'; } const c=ov.querySelector('#ispvwcount'); if(c)c.textContent=String(_idx+1); };
-  ov._ispNav=d=>_show(_idx+d);
-  (async()=>{ const box=ov.querySelector('#ispvwmedia'); if(!box)return;
+  const _resolve=async e=> (e&&e.sp) ? await _bestandUrl({storage_path:e.sp}) : e;
+  const _show=async i=>{ if(!_imgs.length)return; _idx=(i+_imgs.length)%_imgs.length; const u=await _resolve(_imgs[_idx]);
+    const im=w.querySelector('#ispvwimg'); if(im){ if(u)im.src=u; else im.style.display='none'; }
+    const c=w.querySelector('#ispvwcount'); if(c)c.textContent=String(_idx+1); };
+  w._ispNav=d=>_show(_idx+d);
+  (async()=>{ const box=w.querySelector('#ispvwmedia'); if(!box)return;
     if(_isVid && it.url){ box.innerHTML='<iframe class="insp-pvw-embed" src="'+_embedUrl(it.url)+'" frameborder="0" scrolling="no" allowtransparency="true" allowfullscreen></iframe>'; return; }
     if(it.images&&it.images.length){ _imgs=it.images.slice(); }
     else if(it.storage_path){ _imgs=[{sp:it.storage_path}]; }
     else if(it.thumb){ _imgs=[it.thumb]; }
     const multi=_imgs.length>1;
-    box.innerHTML='<img id="ispvwimg" alt="">'+(multi?'<button class="insp-pvw-nav prev" onclick="event.stopPropagation();this.closest(\'.insp-pvw\')._ispNav(-1)">‹</button><button class="insp-pvw-nav next" onclick="event.stopPropagation();this.closest(\'.insp-pvw\')._ispNav(1)">›</button><div class="insp-pvw-count"><span id="ispvwcount">1</span>/'+_imgs.length+'</div>':'');
+    box.innerHTML='<img id="ispvwimg" alt="">'+(multi?'<button class="insp-pvw-nav prev" onclick="this.closest(\'.insp-side\').parentNode._ispNav(-1)">\u2039</button><button class="insp-pvw-nav next" onclick="this.closest(\'.insp-side\').parentNode._ispNav(1)">\u203a</button><div class="insp-pvw-count"><span id="ispvwcount">1</span>/'+_imgs.length+'</div>':'');
     _show(0);
   })();
   try{ const pp=it.project_id?projById(it.project_id):null; const cv=pp?pp.client:'__none__';
     _fillClientOpts(document.getElementById('insp_client'), cv);
     _fillProjectOpts(document.getElementById('insp_project'), cv, it.project_id||null);
-    _enhanceSelect('insp_client','client'); _enhanceSelect('insp_project','project'); _enhanceSelect('insp_board');
     _fillInspBoardOpts(document.getElementById('insp_board'), it.board_id);
+    _enhanceSelect('insp_client','client'); _enhanceSelect('insp_project','project'); _enhanceSelect('insp_board');
   }catch(_){}
-  requestAnimationFrame(()=>ov.classList.add('open'));
-  const close=()=>{ ov.classList.remove('open'); setTimeout(()=>ov.remove(),250); };
-  ov.querySelector('.insp-pvw-x').onclick=close;
-  ov.addEventListener('click',e=>{ if(e.target===ov) close(); });
 }
 function inspOnClientChange(){ const c=document.getElementById('insp_client').value; _fillProjectOpts(document.getElementById('insp_project'), c, null); _enhanceSelect('insp_project','project'); if(_inspPvwItem) inspOnProjectChange(_inspPvwItem.id); }
 async function inspOnProjectChange(id){ const sel=document.getElementById('insp_project'); const pid=sel?sel.value:''; const real=(pid&&pid!=='__none__'&&pid!=='__new__'&&pid!=='')?pid:null; const it=_inspItems.find(x=>String(x.id)===String(id)); if(it)it.project_id=real; try{ await sb.from('insp_items').update({project_id:real}).eq('id',id); }catch(_){} }
@@ -8865,11 +8884,6 @@ sb.auth.onAuthStateChange((_e,session)=>{ if(session) startApp(session); else sh
 <div id="dayOverlay" class="dayview-ov" aria-hidden="true">
   <div class="dov-inner">
     <div id="dayBody"></div>
-  </div>
-</div>
-<div id="inspOverlay" class="insp-ov" aria-hidden="true">
-  <div class="insp-inner">
-    <div id="inspBody"></div>
   </div>
 </div>
 <input type="file" id="inspFile" accept="image/*" multiple style="display:none" onchange="_inspUpload(event)" />
