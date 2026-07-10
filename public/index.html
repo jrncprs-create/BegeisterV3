@@ -2064,7 +2064,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v208</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v209</span>
       <button id="dayBtn" class="dag-ic" onclick="openDayOverview()" title="Dagoverzicht" aria-label="Dagoverzicht"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M3 12h2M19 12h2M5.6 18.4l1.4-1.4M17 7l1.4-1.4"/></svg></button>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:14px;font-weight:var(--fw-nadruk);cursor:pointer" title="AI-context bewerken">Jeroen</span>
@@ -6315,11 +6315,14 @@ function fmToggle(k){ if(_inspAan){ _inspAan=false; setView('files'); }
   if(_fmOpen.has(k))_fmOpen.delete(k); else _fmOpen.add(k); _renderFmTree(); }
 function _penGlyph(){ return '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4l10.5 -10.5a2.1 2.1 0 0 0 -3 -3l-10.5 10.5v3"/><path d="M13.5 6.5l3 3"/></svg>'; }
 function _trashGlyph(){ return '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/></svg>'; }
+// De boom noemt de afwezigheid van een map 'Niet gesorteerd'; de database noemt hem '' of NULL.
+function _catLeeg(cat){ const c=String(cat||'').trim(); return !c || c==='Niet gesorteerd'; }
 // Verwijderen vanuit de boom (map=categorie / project / klant). Veilig: niet-lege mappen re-homen of vragen.
 async function fmDelete(btn){
   const k=btn.dataset.kind;
   if(k==='cat'){ const client=btn.dataset.client,pid=btn.dataset.pid,cat=btn.dataset.cat;
-    const files=(state.files||[]).filter(f=>{ if((f.icon||'')!==cat)return false; if(f.owner_type==='client')return pid==='__alg__'&&String(f.owner_id)===String(client); const p=_fileProject(f); return !!p&&pid!=='__alg__'&&String(p.id)===String(pid); });
+    const leeg=_catLeeg(cat);
+    const files=(state.files||[]).filter(f=>{ if(leeg ? !!(f.icon||'').trim() : (f.icon||'')!==cat)return false; if(f.owner_type==='client')return pid==='__alg__'&&String(f.owner_id)===String(client); const p=_fileProject(f); return !!p&&pid!=='__alg__'&&String(p.id)===String(pid); });
     if(!(await uiConfirm("Map '"+cat+"' opheffen?"+(files.length?" De "+files.length+" bestand(en) gaan naar 'Niet gesorteerd'.":""))))return;
     for(const f of files){ await _fileUpdate(f,{icon:''}); }
     await refresh(); return; }
@@ -6352,10 +6355,11 @@ async function fmRename(btn){
   if(k==='cat'){ const client=btn.dataset.client, pid=btn.dataset.pid, cat=btn.dataset.cat;
     const cc=(pid==='__alg__')?_clientColor(client):((projById(pid)||{}).color||'');
     const nv=((await uiPrompt('Nieuwe mapnaam:', cat||'', cc?{accent:cc}:{}))||'').trim(); if(!nv||nv===cat)return;
-    // "Niet gesorteerd" is geen map maar de afwezigheid van een map. In `files` staat dat als
-    // een lege string, in `documents` als NULL. Wie op '' filtert, raakt de documenten niet —
+    // "Niet gesorteerd" is geen map maar de afwezigheid van een map. De boom toont die naam,
+    // dus btn.dataset.cat bevat 'Niet gesorteerd' — terwijl in `files` een lege string staat
+    // en in `documents` NULL. Wie op die letterlijke naam filtert, raakt geen enkele rij,
     // en dan sprong de mapnaam terug alsof er niets gebeurd was.
-    const leeg = !cat;
+    const leeg = _catLeeg(cat);
     try{
       let q=sb.from('files').update({icon:nv});
       q = leeg ? q.or('icon.is.null,icon.eq.') : q.eq('icon',cat);
