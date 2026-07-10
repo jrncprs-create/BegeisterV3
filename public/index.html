@@ -1974,7 +1974,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v199</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v200</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:14px;font-weight:var(--fw-nadruk);cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -7336,11 +7336,13 @@ function applyLayout(){
   const vCon=document.getElementById('view-contacten');
   const vArch=document.getElementById('view-archief');
   const vFiles=document.getElementById('view-files');
+  const vPv=document.getElementById('view-postvak');
   if(mob){ wview.appendChild(wb); }
   else { rail.appendChild(wb); }
-  // Bronnen/Klanten/Financiën/Contacten: desktop → eerste kolom (#rail), mobiel → terug in #main
-  if(d3){ if(vBron)rail.appendChild(vBron); if(vBeh)rail.appendChild(vBeh); if(vFin)rail.appendChild(vFin); if(vCon)rail.appendChild(vCon); if(vArch)rail.appendChild(vArch); if(vFiles)rail.appendChild(vFiles); }
-  else if(main){ if(vBron)main.appendChild(vBron); if(vBeh)main.appendChild(vBeh); if(vFin)main.appendChild(vFin); if(vCon)main.appendChild(vCon); if(vArch)main.appendChild(vArch); if(vFiles)main.appendChild(vFiles); }
+  // Bronnen/Klanten/Financiën/Contacten/Bestanden/Postvak In: desktop → eerste kolom (#rail),
+  // mobiel → terug in #main. Postvak In ontbrak hier; die stond op desktop dus in kolom 2.
+  const railViews=[vBron,vBeh,vFin,vCon,vArch,vFiles,vPv];
+  railViews.forEach(el=>{ if(el) (d3?rail:main||rail).appendChild(el); });
   if(!mob && (view==='home')) setView('taken');
   _ensureRailCloses();
   if(typeof _updateMobArrows==='function') _updateMobArrows();
