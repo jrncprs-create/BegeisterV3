@@ -91,7 +91,7 @@ async function projectPagina(db, p) {
   const [items, appts, files, cmts, appr] = await Promise.all([
     db.from("items").select("id,title,status,client_zichtbaar").eq("project_id", pid).eq("client_zichtbaar", true),
     db.from("appointments").select("id,title,date,start_time,client_zichtbaar").eq("project_id", pid).eq("client_zichtbaar", true).order("date"),
-    db.from("files").select("id,name,link,icon,visible_to_client,is_voorstel").eq("owner_type", "project").eq("owner_id", pid).eq("visible_to_client", true),
+    db.from("files").select("id,name,link,icon,visible_to_client,is_voorstel,voorstel_soort").eq("owner_type", "project").eq("owner_id", pid).eq("visible_to_client", true),
     db.from("comments").select("id,sectie,author,body,van_klant,created_at").eq("scope", "portal").eq("ref_id", pid).order("created_at"),
     db.from("approvals").select("approved_at,snapshot_sha").eq("project_id", pid).maybeSingle(),
   ]);
@@ -101,7 +101,9 @@ async function projectPagina(db, p) {
   pagina.afspraken = (appts.data || []).map((a) => ({ t: a.title, date: a.date, start: a.start_time }));
   // Bestanden met hun map, zodat de klantpagina dezelfde mappenstructuur toont.
   pagina.bestanden = (files.data || []).map((f) => ({ id: f.id, name: f.name, link: f.link, map: _mapVan(f) }));
-  pagina.voorstellen = (files.data || []).filter((f) => f.is_voorstel).map((f) => ({ id: f.id, name: f.name, link: f.link, map: _mapVan(f) }));
+  pagina.voorstellen = (files.data || []).filter((f) => f.is_voorstel).map((f) => ({ id: f.id, name: f.name, link: f.link, soort: (f.voorstel_soort || "idee"), map: _mapVan(f) }));
+  // De twee poorten: de klant geeft los akkoord op idee en op budget.
+  pagina.poorten = { idee: p.idee_akkoord_op || null, budget: p.budget_akkoord_op || null };
 
   pagina.opmerkingen = {};
   for (const c of cmts.data || []) { const s = c.sectie || "algemeen"; (pagina.opmerkingen[s] = pagina.opmerkingen[s] || []).push(c); }
@@ -112,7 +114,7 @@ async function projectPagina(db, p) {
 
 async function projectVanKlant(db, pid, clientId) {
   const { data: p } = await db.from("projects")
-    .select("id,project,client_id,phase,description,notes,projectprijs,btw,portal_secties,archived")
+    .select("id,project,client_id,phase,description,notes,projectprijs,btw,portal_secties,idee_akkoord_op,budget_akkoord_op,archived")
     .eq("id", pid).maybeSingle();
   if (!p || p.client_id !== clientId || p.archived) return null;
   return p;
@@ -133,7 +135,7 @@ export default async function handler(req, res) {
     if (action === "data") {
       // Alleen gepubliceerde projecten. Wat niet gepubliceerd is, bestaat niet voor de klant.
       const { data: projecten } = await db.from("projects")
-        .select("id,project,client_id,phase,description,notes,projectprijs,btw,portal_secties,portal_bg,created_at")
+        .select("id,project,client_id,phase,description,notes,projectprijs,btw,portal_secties,portal_bg,idee_akkoord_op,budget_akkoord_op,created_at")
         .eq("client_id", ik.client.id).eq("portal_gepubliceerd", true).neq("archived", true).order("created_at");
 
       const paginas = [];
@@ -150,7 +152,7 @@ export default async function handler(req, res) {
       const tekst = String(body || "").trim();
       if (!tekst) return fout(res, 400, "lege reactie");
       if (tekst.length > 4000) return fout(res, 400, "reactie te lang");
-      if (sectie && !SECTIES.includes(sectie) && sectie !== "algemeen") return fout(res, 400, "onbekende sectie");
+      if (sectie && !SECTIES.includes(sectie) && sectie !== "algemeen" && !/^voorstel:(idee|budget)$/.test(sectie)) return fout(res, 400, "onbekende sectie");
 
       const p = await projectVanKlant(db, project_id, ik.client.id);
       if (!p) return fout(res, 404, "niet gevonden");
@@ -174,39 +176,44 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true });
     }
 
+    // Akkoord op één spoor: idee of budget. Zodra beide sporen akkoord zijn, schuift het
+    // project naar productie. Geen fase meer, maar een status per poort.
     if (action === "akkoord") {
       const { project_id } = req.body || {};
+      const soort = (req.body && req.body.soort === "budget") ? "budget" : "idee";
       const p = await projectVanKlant(db, project_id, ik.client.id);
       if (!p) return fout(res, 404, "niet gevonden");
 
-      const { data: bestaat } = await db.from("approvals").select("id").eq("project_id", project_id).maybeSingle();
-      if (bestaat) return fout(res, 409, "hier is al akkoord op gegeven");
+      const kol = soort === "budget" ? "budget_akkoord_op" : "idee_akkoord_op";
+      if (p[kol]) return fout(res, 409, "hier is al akkoord op gegeven");
 
-      const snapshot = {
-        genomen_op: new Date().toISOString(),
-        klant: ik.client.name, project: p.project, fase: p.phase,
-        omschrijving: p.description || "",
-      };
-      const sha = createHash("sha256").update(JSON.stringify(snapshot)).digest("hex");
+      const nu = new Date().toISOString();
+      const patch = { [kol]: nu };
+      // Het andere spoor al akkoord? Dan zijn beide poorten groen → productie.
+      const ander = soort === "budget" ? p.idee_akkoord_op : p.budget_akkoord_op;
+      if (ander) patch.phase = "productie";
 
-      const { error } = await db.from("approvals").insert({
-        project_id, doc_id: null, user_id: ik.user.id, client_id: ik.client.id,
-        snapshot, snapshot_sha: sha,
-      });
-      if (error) {
-        if (String(error.code) === "23505") return fout(res, 409, "hier is al akkoord op gegeven");
-        throw error;
-      }
-      await db.from("projects").update({ phase: "akkoord" }).eq("id", project_id).eq("phase", "debrief");
+      const { error } = await db.from("projects").update(patch).eq("id", project_id);
+      if (error) throw error;
+
+      // Historie: een akkoord-rij met snapshot per spoor (voor de zekerheid, niet fataal).
+      try {
+        const snapshot = { genomen_op: nu, soort, klant: ik.client.name, project: p.project, fase: patch.phase || p.phase };
+        const sha = createHash("sha256").update(JSON.stringify(snapshot)).digest("hex");
+        await db.from("approvals").insert({
+          project_id, doc_id: null, user_id: ik.user.id, client_id: ik.client.id,
+          soort, snapshot, snapshot_sha: sha,
+        });
+      } catch (e) { console.error("portal akkoord historie", e && e.message); }
 
       try {
         await fetch(`http://127.0.0.1:${process.env.PORT || 8080}/api/notify`, {
           method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ title: `${ik.client.name} gaf akkoord`, body: p.project, url: "/" }),
+          body: JSON.stringify({ title: `${ik.client.name} gaf akkoord op ${soort}`, body: p.project + (patch.phase ? " · nu in productie" : ""), url: "/" }),
         });
       } catch (e) { console.error("portal akkoord melding", e && e.message); }
 
-      return res.status(200).json({ ok: true, sha });
+      return res.status(200).json({ ok: true, soort, productie: !!patch.phase });
     }
 
     return fout(res, 400, "onbekende actie");
