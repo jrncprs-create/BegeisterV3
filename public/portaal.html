@@ -59,8 +59,8 @@ button{font-family:inherit;font-weight:var(--fw);cursor:pointer}
 .sec{margin:26px 0}
 .sec-h{font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut2);
   font-weight:var(--fw-nadruk);margin:0 0 12px;display:flex;justify-content:space-between;align-items:center;gap:10px}
-.kaart{border:1px solid var(--line);border-radius:var(--r-lg);padding:18px 20px}
-.sec.uit{opacity:.4}
+.kaart{border:1px solid var(--randlijn,var(--line));background:var(--kaartbg,transparent);border-radius:var(--r-lg);padding:18px 20px}
+.sec.uit{opacity:.5}
 .sec.uit .kaart{border-style:dashed}
 
 /* zichtbaarheidsschakelaar (team) */
@@ -156,7 +156,29 @@ const EMBED = new URLSearchParams(location.search).get('embed') === '1';
 if(EMBED) document.documentElement.classList.add('embed');
 
 let TEAM = false, DATA = null, ACTIEF = 0, PROJECT_ID = null;
+// EDIT: team zet dit aan om de zichtbaarheidsschakelaars te tonen. Standaard uit, zodat
+// het portaal er voor het team precies zo uitziet als voor de klant.
+let EDIT = false;
 const OPEN_OPM = new Set();   // welke opmerking-draadjes openstaan
+
+// Het portaal staat in de kleur van de klant: achtergrond de klantkleur, tekst zwart.
+// Omgekeerd van de donkere teamapp. De tinten leiden we af van dezelfde kleur.
+function themaVanKlant(kleur){
+  const r=document.documentElement.style;
+  if(!kleur){ return; }
+  r.setProperty('--bg', kleur);
+  r.setProperty('--txt', '#141414');
+  r.setProperty('--s1', '#141414');
+  r.setProperty('--s2', 'rgba(0,0,0,.82)');
+  r.setProperty('--s4', '#000');
+  r.setProperty('--mut', 'rgba(0,0,0,.62)');
+  r.setProperty('--mut2', 'rgba(0,0,0,.46)');
+  r.setProperty('--line', 'rgba(0,0,0,.22)');
+  r.setProperty('--ccol', '#000');
+  r.setProperty('--kaartbg', 'rgba(0,0,0,.05)');
+  r.setProperty('--randlijn', 'rgba(0,0,0,.12)');
+  document.body.style.background = kleur;
+}
 
 const SEC_ORDER = ['omschrijving','voortgang','taken','afspraken','bestanden','projectprijs','notities'];
 const SEC_TITEL = { omschrijving:'Omschrijving', voortgang:'Voortgang', taken:'Taken',
@@ -206,7 +228,7 @@ function statusTekst(p){
 
 function render(){
   if(!DATA) return;
-  if(DATA.klant.kleur) document.documentElement.style.setProperty('--ccol', DATA.klant.kleur);
+  themaVanKlant(DATA.klant.kleur);
   const p=DATA.projecten[ACTIEF];
   if(!p){ document.getElementById('app').innerHTML='<div class="wrap">'+kopHtml(null)+'<div class="leeg">Er staat nog niets voor je klaar.</div></div>';
     if(!EMBED){ const u=document.getElementById('kopUit'); if(u)u.onclick=uitloggen; } return; }
@@ -214,7 +236,7 @@ function render(){
   const secs = SEC_ORDER.map(s=>secHtml(s,p)).filter(Boolean).join('');
   document.getElementById('app').innerHTML='<div class="wrap">'
     + kopHtml(p)
-    + (TEAM?teambalkHtml(p):'')
+    + (TEAM&&EDIT?teambalkHtml(p):'')
     + secs
     + akkoordHtml(p)
     + '</div>';
@@ -234,16 +256,17 @@ function teambalkHtml(p){
     +'<span style="flex:1">Zet per onderdeel aan wat '+esc(DATA.klant.naam)+' mag zien.</span></div>';
 }
 
-// Een sectie: bij de klant alleen als hij aan staat; bij het team altijd, met schakelaar.
+// Een sectie. Zonder bewerkmodus (dus zoals de klant het ziet): alleen zichtbare secties,
+// geen schakelaar. In bewerkmodus: alle secties, met een schakelaar per stuk.
 function secHtml(sectie, p){
   const aan = !!p.secties[sectie];
-  if(!TEAM && !aan) return '';
+  if(!EDIT && !aan) return '';
   const inhoud = secInhoud(sectie, p);
-  if(!TEAM && !inhoud) return '';   // aan maar niets te tonen: bij de klant overslaan
+  if(!EDIT && !inhoud) return '';   // aan maar niets te tonen: bij de klant overslaan
   const kop = '<div class="sec-h"><span>'+SEC_TITEL[sectie]+'</span>'
-    + (TEAM ? '<button class="zicht'+(aan?' aan':'')+'" data-tog="'+sectie+'"><b>'+(aan?'zichtbaar':'verborgen')+'</b><span class="tog"></span></button>' : '')
+    + (EDIT ? '<button class="zicht'+(aan?' aan':'')+'" data-tog="'+sectie+'"><b>'+(aan?'zichtbaar':'verborgen')+'</b><span class="tog"></span></button>' : '')
     + '</div>';
-  return '<div class="sec'+(TEAM&&!aan?' uit':'')+'"><div class="kaart">'
+  return '<div class="sec'+(EDIT&&!aan?' uit':'')+'"><div class="kaart">'
     + kop
     + (inhoud||'<div class="leegsec">Nog niets ingevuld.</div>')
     + opmHtml(sectie, p)
@@ -361,8 +384,12 @@ async function start(){
     document.getElementById('app').innerHTML='<div class="wrap"><div class="leeg">Er staat nog geen portaal voor je klaar.<br><span style="font-size:13px">Neem contact op met Begeister als dit niet klopt.</span></div></div>'; }
 }
 
-// De teamapp kan van project wisselen zonder de iframe te herladen.
-window.addEventListener('message', e=>{ if(e.data&&e.data.begeisterPortaal&&e.data.pid){ PROJECT_ID=e.data.pid; if(TEAM) teamLaad(PROJECT_ID); } });
+// De teamapp stuurt via postMessage: van project wisselen, en de bewerkmodus aan/uit.
+window.addEventListener('message', e=>{
+  const d=e.data; if(!d||!d.begeisterPortaal) return;
+  if(typeof d.edit==='boolean'){ EDIT=d.edit; render(); return; }
+  if(d.pid){ PROJECT_ID=d.pid; if(TEAM) teamLaad(PROJECT_ID); }
+});
 sb.auth.onAuthStateChange(ev=>{ if(ev==='SIGNED_OUT') toonLogin(); });
 start();
 </script>
