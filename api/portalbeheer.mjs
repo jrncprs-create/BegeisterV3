@@ -48,6 +48,8 @@ async function dossier(db, p) {
     fase_index: Math.max(0, FASES.indexOf(p.phase)),
     fases: FASES.map((k) => ({ k, l: FASE_LABEL[k] })),
     secties,
+    gepubliceerd: !!p.portal_gepubliceerd,
+    bg: p.portal_bg || null,
     omschrijving: p.description || "",
     notities: p.notes || "",
     taken: (taken.data || []).map((it) => ({ t: it.title, done: it.status === "done" })),
@@ -82,10 +84,24 @@ export default async function handler(req, res) {
       });
     }
 
+    if (action === "publiceren") {
+      const { project_id, aan } = req.body || {};
+      const { error } = await db.from("projects").update({ portal_gepubliceerd: !!aan }).eq("id", project_id);
+      if (error) throw error;
+      return res.status(200).json({ ok: true, gepubliceerd: !!aan });
+    }
+
+    if (action === "achtergrond") {
+      const { project_id, bg } = req.body || {};
+      const { error } = await db.from("projects").update({ portal_bg: bg || null }).eq("id", project_id);
+      if (error) throw error;
+      return res.status(200).json({ ok: true });
+    }
+
     if (action === "project") {
       const { project_id } = req.body || {};
       const { data: p } = await db.from("projects")
-        .select("id,project,client_id,phase,description,notes,projectprijs,btw,portal_secties").eq("id", project_id).maybeSingle();
+        .select("id,project,client_id,phase,description,notes,projectprijs,btw,portal_secties,portal_gepubliceerd,portal_bg").eq("id", project_id).maybeSingle();
       if (!p) return fout(res, 404, "niet gevonden");
       const { data: klant } = await db.from("clients").select("id,name,color").eq("id", p.client_id).maybeSingle();
       return res.status(200).json({ klant: klant || { name: "—", color: "#8a8a8a" }, pagina: await dossier(db, p) });

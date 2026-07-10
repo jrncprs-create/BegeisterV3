@@ -28,6 +28,22 @@ const FASE_LABEL = {
 
 const SECTIES = ["omschrijving", "voortgang", "taken", "afspraken", "bestanden", "projectprijs", "notities"];
 
+// Dezelfde mappen als op het projectbord, zodat de klant hetzelfde ziet als wij.
+const FIN_MAPPEN = ["Offertes", "Inkoop", "Facturen"];
+function _soortMap(naam) {
+  const n = String(naam || "").toLowerCase();
+  if (/\.(jpe?g|png|gif|webp|heic|heif|bmp|tiff?|svg)$/.test(n)) return "Afbeeldingen";
+  if (/\.pdf$/.test(n)) return "PDF's";
+  if (/\.(docx?|xlsx?|xlsm|pptx?|csv|tsv|txt|md|rtf|pages|numbers|key)$/.test(n)) return "Documenten";
+  if (/\.(m4a|mp3|wav|aac|mp4|mov|avi|mkv|webm)$/.test(n)) return "Audio & video";
+  return "Overig";
+}
+function _mapVan(f) {
+  const cat = String((f && f.icon) || "").trim();
+  const hit = FIN_MAPPEN.find((m) => m.toLowerCase() === cat.toLowerCase());
+  return hit || _soortMap(f && f.name);
+}
+
 function fout(res, code, tekst) { return res.status(code).json({ error: tekst }); }
 
 async function wieBelt(db, req) {
@@ -52,7 +68,9 @@ function zichtbaar(p) {
   return uit;
 }
 
-// Eén projectpagina, opgebouwd uit precies de secties die aan staan.
+// Eén projectpagina — hetzelfde dossier dat het team in de overlay ziet, maar alleen de
+// aangevinkte items, read-only. Omschrijving/voortgang via portal_secties; taken, afspraken
+// en bestanden per item (client_zichtbaar / visible_to_client).
 async function projectPagina(db, p) {
   const zicht = zichtbaar(p);
   const pid = p.id;
@@ -64,54 +82,30 @@ async function projectPagina(db, p) {
     fase_index: Math.max(0, FASES.indexOf(p.phase)),
     fases: FASES.map((k) => ({ k, l: FASE_LABEL[k] })),
     secties: zicht,
+    omschrijving: zicht.omschrijving ? (p.description || "") : "",
+    toon_omschrijving: !!zicht.omschrijving,
+    toon_voortgang: !!zicht.voortgang,
   };
 
-  // Voortgang staat in de fasebalk hierboven; geen aparte query nodig.
+  const [items, appts, files, cmts, appr] = await Promise.all([
+    db.from("items").select("id,title,status,client_zichtbaar").eq("project_id", pid).eq("client_zichtbaar", true),
+    db.from("appointments").select("id,title,date,start_time,client_zichtbaar").eq("project_id", pid).eq("client_zichtbaar", true).order("date"),
+    db.from("files").select("id,name,link,icon,visible_to_client,is_voorstel").eq("owner_type", "project").eq("owner_id", pid).eq("visible_to_client", true),
+    db.from("comments").select("id,sectie,author,body,van_klant,created_at").eq("scope", "portal").eq("ref_id", pid).order("created_at"),
+    db.from("approvals").select("approved_at,snapshot_sha").eq("project_id", pid).maybeSingle(),
+  ]);
 
-  if (zicht.omschrijving) pagina.omschrijving = p.description || "";
-  if (zicht.notities)     pagina.notities = p.notes || "";
+  pagina.taken   = (items.data || []).filter((i) => i.status !== "wait").map((i) => ({ t: i.title, done: i.status === "done" }));
+  pagina.wacht   = (items.data || []).filter((i) => i.status === "wait").map((i) => ({ t: i.title }));
+  pagina.afspraken = (appts.data || []).map((a) => ({ t: a.title, date: a.date, start: a.start_time }));
+  // Bestanden met hun map, zodat de klantpagina dezelfde mappenstructuur toont.
+  pagina.bestanden = (files.data || []).map((f) => ({ id: f.id, name: f.name, link: f.link, map: _mapVan(f) }));
+  pagina.voorstellen = (files.data || []).filter((f) => f.is_voorstel).map((f) => ({ id: f.id, name: f.name, link: f.link, map: _mapVan(f) }));
 
-  if (zicht.taken) {
-    const { data } = await db.from("items")
-      .select("id,title,status").eq("project_id", pid).neq("status", "wait");
-    pagina.taken = (data || []).map((it) => ({ t: it.title, done: it.status === "done" }));
-  }
-
-  if (zicht.afspraken) {
-    const { data } = await db.from("appointments")
-      .select("id,title,date,start_time").eq("project_id", pid).order("date");
-    pagina.afspraken = (data || []).map((a) => ({ t: a.title, date: a.date, start: a.start_time }));
-  }
-
-  if (zicht.bestanden) {
-    const { data } = await db.from("files")
-      .select("id,name,link,created_at")
-      .eq("owner_type", "project").eq("owner_id", pid).eq("visible_to_client", true);
-    pagina.bestanden = data || [];
-  }
-
-  // Projectprijs: de klant ziet alleen de prijs (incl. btw), nooit inkoop of marge.
-  if (zicht.projectprijs && p.projectprijs != null && p.projectprijs !== "") {
-    const btw = (p.btw != null && p.btw !== "") ? Number(p.btw) : 21;
-    const ex = Number(p.projectprijs);
-    pagina.prijs = { excl: ex, btw, incl: ex * (1 + btw / 100) };
-  }
-
-  // Opmerkingen per sectie — het inklapbare draadje.
-  const { data: cmts } = await db.from("comments")
-    .select("id,sectie,author,body,van_klant,created_at")
-    .eq("scope", "portal").eq("ref_id", pid).order("created_at");
   pagina.opmerkingen = {};
-  for (const c of cmts || []) {
-    const s = c.sectie || "algemeen";
-    (pagina.opmerkingen[s] = pagina.opmerkingen[s] || []).push(c);
-  }
+  for (const c of cmts.data || []) { const s = c.sectie || "algemeen"; (pagina.opmerkingen[s] = pagina.opmerkingen[s] || []).push(c); }
 
-  // Akkoord: één per project. Zichtbaar zolang de klant nog niet akkoord is.
-  const { data: appr } = await db.from("approvals")
-    .select("approved_at,snapshot_sha").eq("project_id", pid).maybeSingle();
-  pagina.akkoord = appr || null;
-
+  pagina.akkoord = appr.data || null;
   return pagina;
 }
 
@@ -136,12 +130,13 @@ export default async function handler(req, res) {
 
   try {
     if (action === "data") {
+      // Alleen gepubliceerde projecten. Wat niet gepubliceerd is, bestaat niet voor de klant.
       const { data: projecten } = await db.from("projects")
-        .select("id,project,client_id,phase,description,notes,projectprijs,btw,portal_secties,created_at")
-        .eq("client_id", ik.client.id).neq("archived", true).order("created_at");
+        .select("id,project,client_id,phase,description,notes,projectprijs,btw,portal_secties,portal_bg,created_at")
+        .eq("client_id", ik.client.id).eq("portal_gepubliceerd", true).neq("archived", true).order("created_at");
 
       const paginas = [];
-      for (const p of projecten || []) if (p.project) paginas.push(await projectPagina(db, p));
+      for (const p of projecten || []) if (p.project) { const pg = await projectPagina(db, p); pg.bg = p.portal_bg || null; paginas.push(pg); }
 
       return res.status(200).json({
         klant: { naam: ik.client.name, kleur: ik.client.color },
