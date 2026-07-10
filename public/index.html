@@ -822,6 +822,11 @@
     #view-finmid::-webkit-scrollbar,#view-finright::-webkit-scrollbar,#view-conmid::-webkit-scrollbar,#view-conright::-webkit-scrollbar,#view-bronmid::-webkit-scrollbar,#view-bronright::-webkit-scrollbar{display:none}
     #view-beheerboard{grid-column:1 / -1;height:calc(100dvh - var(--tbh,52px));overflow-y:auto;scrollbar-width:none}
     #view-beheerboard::-webkit-scrollbar{display:none}
+    /* Postvak In heeft geen linkerkolom nodig: de hele breedte is de lijst. */
+    .main.workspace #view-postvak{grid-column:1 / -1;height:calc(100dvh - var(--tbh,52px));overflow-y:auto;scrollbar-width:none}
+    .main.workspace #view-postvak::-webkit-scrollbar{display:none}
+    body.pv-vol .rail{display:none}
+    body.pv-vol #chatDock{display:none}
     .pb-board-inline .pb-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 36px;align-items:start}
     .pb-board-inline .pb-colL,.pb-board-inline .pb-colR{min-width:0}
   }
@@ -929,28 +934,45 @@
   /* Bijlagen bij een bron: één grote stage + een strip eronder als er meer zijn.
      De generieke .fmp-stage rekent met calc(100% - 130px); in deze kolom is er geen
      vaste hoogte om vanaf te rekenen, vandaar een eigen maat. */
-  /* Postvak In — zelfde ritme en typografie als de andere lijsten in de app. */
-  #postvakWrap{padding:0 22px 40px;max-width:920px}
-  .pv-top{display:flex;align-items:center;gap:14px;padding:0 0 16px}
+  /* Postvak In — één brede werkbank. Stond eerst in de smalle middenkolom met de
+     acties onder elkaar; dat las als een formulier per item in plaats van een lijst.
+     Nu: volle breedte, één regel per bron, keuze en acties rechts. */
+  #postvakWrap{padding:0 26px 40px}
+  .pv-top{display:flex;align-items:center;gap:14px;padding:4px 0 16px}
   .pv-top-tel{font-size:13px;color:var(--mut2)}
-  .pv-bulk{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:0 0 16px;border-bottom:1px solid var(--lin);margin-bottom:2px}
+  .pv-bulk{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:0 0 14px;border-bottom:1px solid var(--lin);margin-bottom:2px}
   .pv-bulk-lbl{font-size:12px;color:var(--mut2);margin-right:2px}
   .pv-bulk .btn{font-size:12px;padding:5px 11px}
   .pv-rest{font-size:11.5px;color:var(--mut2)}
-  .pv-row{border-top:1px solid var(--lin);padding:16px 0;display:flex;gap:12px;align-items:flex-start}
-  .pv-ic{width:20px;flex:none;text-align:center;color:var(--mut2);font-size:13px;line-height:20px}
-  .pv-body{flex:1;min-width:0}
-  .pv-kop{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
-  .pv-titel{font-size:13.5px;font-weight:600}
-  .pv-dat{font-size:11.5px;color:var(--mut2)}
-  .pv-chip{font-size:11px;border:1px solid var(--lin);border-radius:3px;padding:1px 6px}
-  .pv-reden{font-size:11.5px;color:var(--mut2)}
-  .pv-tekst{font-size:12.5px;color:var(--mut2);margin:5px 0 10px;line-height:1.45}
-  .pv-voorstel{font-size:12.5px;color:var(--mut2);margin:0 0 10px}
+  .pv-row{border-top:1px solid var(--lin);padding:11px 0;display:grid;
+    grid-template-columns:20px minmax(0,1fr) minmax(180px,260px) auto;gap:0 16px;align-items:center}
+  .pv-row:hover{background:rgba(255,255,255,.02)}
+  .pv-ic{color:var(--mut2);font-size:13px;text-align:center}
+  .pv-body{min-width:0}
+  .pv-kop{display:flex;gap:9px;align-items:baseline;min-width:0}
+  .pv-titel{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:42%}
+  .pv-dat{font-size:11.5px;color:var(--mut2);flex:none}
+  .pv-chip{font-size:11px;border:1px solid var(--lin);border-radius:3px;padding:1px 6px;flex:none}
+  .pv-chip.dubbel{color:#e0a45f;border-color:rgba(224,164,95,.45)}
+  .pv-reden{font-size:11.5px;color:var(--mut2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+  .pv-tekst{font-size:12.5px;color:var(--mut2);margin:3px 0 0;line-height:1.4;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pv-voorstel{font-size:12px;color:var(--mut2);margin:4px 0 0}
   .pv-voorstel b{color:var(--txt);font-weight:600}
-  .pv-acties{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-  .pv-acties select{max-width:280px}
+  .pv-proj{width:100%;font-size:12.5px}
+  .pv-acties{display:flex;gap:6px;align-items:center;justify-self:end}
+  .pv-acties .btn{font-size:11.5px;padding:5px 10px;white-space:nowrap}
+  .pv-del{background:transparent;border:none;color:var(--mut2);cursor:pointer;padding:4px;border-radius:6px;
+    display:inline-flex;line-height:0;opacity:0;transition:opacity .15s,color .15s}
+  .pv-row:hover .pv-del{opacity:.6}
+  .pv-del:hover{opacity:1;color:#e0726f}
+  .pv-del.zeker{opacity:1;color:#e0726f;font-size:11.5px;line-height:1;padding:4px 7px;border:1px solid rgba(224,114,111,.5)}
   .pv-leeg{padding:48px 0;text-align:center;color:var(--mut2);font-size:13.5px}
+  @media(max-width:1200px){
+    .pv-row{grid-template-columns:20px minmax(0,1fr);row-gap:9px}
+    .pv-proj,.pv-acties{grid-column:2}
+    .pv-acties{justify-self:start}
+  }
   /* Waar ligt de bal — het bolletje op de lijn. Wachten we op iemand anders,
      dan krijgt het een zachte halo. Verder blijft het een dicht bolletje. */
   .pb-fase-wacht .pb-fasestap.nu .pb-fasedot::after{content:"";position:absolute;left:50%;top:50%;
@@ -1886,7 +1908,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v191</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v193</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:13.5px;font-weight:600;cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -2027,6 +2049,9 @@
       #finMidWrap .finB-openrow.open b{color:#e6e6e8}
       #finMidWrap .finB-openrow.paid b{color:var(--ccol)}
       #finMidWrap .finB-openrow.todo b{color:#c9c9cf}
+      /* Openstaand/Voldaan is nu ook de knop: één klik i.p.v. vier statuspillen. */
+      #finMidWrap .finB-openrow.open,#finMidWrap .finB-openrow.paid{cursor:pointer}
+      #finMidWrap .finB-openrow.open:hover,#finMidWrap .finB-openrow.paid:hover{opacity:1}
       #finMidWrap .finB-openhint{font-size:12px;color:var(--mut2)}
       #finMidWrap .finA-cf{display:flex;gap:12px}
       #finMidWrap .finA-cfcard{flex:1;background:#141417;border:1px solid var(--line);border-radius:14px;padding:16px 18px}
@@ -2849,6 +2874,8 @@ function setView(v){
   document.getElementById('view-postvak').classList.toggle('hidden', v!=='postvak');
   // eerste kolom (#wachterBlock) verbergen wanneer er een rail-view getoond wordt
   const wb=document.getElementById('wachterBlock'); if(wb) wb.classList.toggle('hidden', d3 && railView);
+  // Postvak In vult de hele werkbank; de lege linkerkolom hoort er niet te staan.
+  document.body.classList.toggle('pv-vol', d3 && v==='postvak');
   if(typeof _ensureRailCloses==='function') _ensureRailCloses();
   document.getElementById('viewTitle').textContent={home:'',taken:'Taken',agenda:'Agenda',afspraken:'Afspraken',wachter:'In afwachting',bronnen:'Bronnen',beheer:'Klanten & projecten',financien:'Financiën',contacten:'Contacten',archief:'Archief',files:'Bestanden',postvak:'Postvak In'}[v];
   // desktop-werkblad: Taken (midden) + Agenda (rechts) tegelijk zichtbaar — op desktop ALTIJD aan
@@ -3057,10 +3084,18 @@ function renderPostvak(){
     if(knoppen||rest) h+='<div class="pv-bulk"><span class="pv-bulk-lbl">Alles in één keer:</span>'+knoppen+rest+'</div>';
   }
 
+  // Twee appjes met dezelfde link zijn geen twee ideeën. Markeer ze, zodat je ziet
+  // waarom hetzelfde item er twee keer lijkt te staan.
+  const linkTel={};
+  inbox.forEach(s=>{ const l=_bronLink(s); if(l) linkTel[l]=(linkTel[l]||0)+1; });
+
   inbox.forEach(s=>{
     const sug=_pvSug[s.id]||null;
     const k=sug?_PV_KIND[sug.kind]:null;
     const dt=s.received_at?new Date(s.received_at).toLocaleDateString('nl-NL',{day:'2-digit',month:'short'}):'';
+    const lnk=_bronLink(s);
+    const dubbel=(lnk&&linkTel[lnk]>1)
+      ? '<span class="pv-chip dubbel" title="Deze link staat '+linkTel[lnk]+'× in het postvak">'+linkTel[lnk]+'× dezelfde link</span>' : '';
     h+='<div class="pv-row" data-sid="'+s.id+'">'
      +   '<div class="pv-ic">'+(_PV_ICON[s.channel]||'•')+'</div>'
      +   '<div class="pv-body">'
@@ -3068,21 +3103,36 @@ function renderPostvak(){
      +       '<span class="pv-titel">'+escapeHtml(s.subject||s.sender||s.channel||'Bron')+'</span>'
      +       '<span class="pv-dat">'+escapeHtml(dt)+'</span>'
      +       (k?'<span class="pv-chip" style="color:'+k.kleur+'">'+k.lbl+'</span>':'')
+     +       dubbel
      +       (sug&&sug.reden?'<span class="pv-reden">'+escapeHtml(sug.reden)+'</span>':'')
      +     '</div>'
      +     '<div class="pv-tekst">'+escapeHtml(_pvSnippet(s))+'</div>'
      +     _pvVoorstelRegel(s, sug)
-     +     '<div class="pv-acties">'
-     +       '<select class="pv-proj">'+_pvProjOptions(sug?sug.project_id:'')+'</select>'
-     +       '<button class="btn" onclick="pvAssign(\''+s.id+'\')">Naar project</button>'
-     +       '<button class="btn ghost" onclick="pvTriage(\''+s.id+'\',\'inspiratie\')">Inspiratie</button>'
-     +       '<button class="btn ghost" onclick="pvTriage(\''+s.id+'\',\'prive\')">Privé</button>'
-     +       '<button class="btn ghost" onclick="pvTriage(\''+s.id+'\',\'ruis\')" title="Uit het postvak, blijft bij Bronnen staan">Ruis</button>'
-     +     '</div>'
+     +   '</div>'
+     +   '<select class="pv-proj">'+_pvProjOptions(sug?sug.project_id:'')+'</select>'
+     +   '<div class="pv-acties">'
+     +     '<button class="btn" onclick="pvAssign(\''+s.id+'\')">Naar project</button>'
+     +     '<button class="btn ghost" onclick="pvTriage(\''+s.id+'\',\'inspiratie\')">Inspiratie</button>'
+     +     '<button class="btn ghost" onclick="pvTriage(\''+s.id+'\',\'prive\')">Privé</button>'
+     +     '<button class="btn ghost" onclick="pvTriage(\''+s.id+'\',\'ruis\')" title="Uit het postvak, blijft bij Bronnen staan">Ruis</button>'
+     +     '<button class="pv-del" onclick="pvVerwijder(\''+s.id+'\',this)" title="Bron definitief verwijderen">'
+     +       '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/></svg>'
+     +     '</button>'
      +   '</div>'
      + '</div>';
   });
   wrap.innerHTML=h;
+}
+// Definitief weg. Twee klikken: het prullenbakje wordt "Zeker?" en vervalt na 4 seconden.
+var _pvDelWacht={};
+async function pvVerwijder(sid, btn){
+  if(!_pvDelWacht[sid]){
+    _pvDelWacht[sid]=setTimeout(()=>{ delete _pvDelWacht[sid]; try{ renderPostvak(); }catch(_){} },4000);
+    btn.classList.add('zeker'); btn.innerHTML='Zeker?'; return;
+  }
+  clearTimeout(_pvDelWacht[sid]); delete _pvDelWacht[sid];
+  try{ await sb.from('sources').delete().eq('id',sid); }catch(e){ console.warn('verwijderen',e); }
+  await refresh();
 }
 
 // Eén AI-call over het hele postvak. Vult de dropdowns voor, kiest niets definitief.
@@ -3966,6 +4016,23 @@ async function pbAiOms(btn){
     if(typeof loadUsage==='function')loadUsage();
   }catch(e){ if(btn)btn.disabled=false; zet('Lukte niet: '+String(e&&e.message||e)); }
 }
+/* De factuurstatus was een tweede knoppenrij die hetzelfde zei als de fasebalk:
+   akkoord = geoffreerd, gefactureerd = gefactureerd. Eén waarheid is genoeg — de fase.
+   Alleen "betaald" staat los, want dat gebeurt ná de laatste fase. */
+function _statusUitFase(fase, huidig){
+  if(huidig==='betaald') return 'betaald';
+  const i=_DOS_PHASES.findIndex(x=>x.k===(fase||'briefing'));
+  if(i>=_DOS_PHASES.findIndex(x=>x.k==='gefactureerd')) return 'gefactureerd';
+  if(i>=_DOS_PHASES.findIndex(x=>x.k==='akkoord')) return 'geoffreerd';
+  return 'concept';
+}
+// Eén schakelaar: staat er een factuur open, dan kun je hem op voldaan zetten (en terug).
+async function pbToggleBetaald(){
+  const p=projById(_pbPid); if(!p)return;
+  const nu=(p.invoice_status==='betaald');
+  await pbSetInvoiceStatus(nu ? 'gefactureerd' : 'betaald');
+  try{ renderFinancien(); }catch(_){}
+}
 // Voortgang van het project. Klik dezelfde fase nogmaals om een stap terug te gaan.
 async function pbSetPhase(k){
   const p=projById(_pbPid); if(!p)return;
@@ -3973,7 +4040,11 @@ async function pbSetPhase(k){
   const i=_DOS_PHASES.findIndex(x=>x.k===k);
   const nieuw=(huidig===k && i>0) ? _DOS_PHASES[i-1].k : k;
   p.phase=nieuw;
-  try{ await sb.from('projects').update({phase:nieuw}).eq('id',_pbPid); }catch(_){}
+  const st=_statusUitFase(nieuw, p.invoice_status);
+  const patch={phase:nieuw};
+  if(st!==p.invoice_status){ p.invoice_status=st; patch.invoice_status=st;
+    if(st==='gefactureerd' && !p.invoice_date){ p.invoice_date=new Date().toISOString().slice(0,10); patch.invoice_date=p.invoice_date; } }
+  try{ await sb.from('projects').update(patch).eq('id',_pbPid); }catch(_){}
   _renderProjBoard();
   // De Financiën-pagina toont dezelfde balk maar rendert via een eigen functie.
   const fmw=document.getElementById('finMidWrap');
@@ -4129,15 +4200,13 @@ async function renderFinancien(){
     // Marge-gezondheid (geen groen): verlies=rood, dun=amber, gezond=klantkleur
     const hp=_margeHealth(om,marge);
     const healthChip=hp?`<span class="finB-health ${hp.cls}">${hp.pct!=null?hp.pct+'% · ':''}${hp.label}</span>`:'';
-    // Factuur/betaalstatus
-    const st=(p&&p.invoice_status)||'concept';
-    const _STG=[['concept','Concept'],['geoffreerd','Geoffreerd'],['gefactureerd','Gefactureerd'],['betaald','Betaald']];
-    const pills=_STG.map(([k,lbl])=>`<button class="finB-pill${st===k?' on':''}" onclick="pbSetInvoiceStatus('${k}')">${lbl}</button>`).join('');
+    // Factuur/betaalstatus volgt de fasebalk; alleen 'betaald' is een eigen klik.
+    const st=_statusUitFase(p&&p.phase, p&&p.invoice_status);
     const _dt=(p&&p.invoice_date)?_finShortDate(p.invoice_date):'';
-    let openLbl='', openVal='', openCls='';
+    let openLbl='', openVal='', openCls='', openKlik='';
     if(om!=null){
-      if(st==='betaald'){ openLbl='Voldaan'; openVal='✓'; openCls='paid'; }
-      else if(st==='gefactureerd'){ openLbl='Openstaand'+(_dt?' · sinds '+_dt:''); openVal=_E+fmtEur(omIncl); openCls='open'; }
+      if(st==='betaald'){ openLbl='Voldaan'; openVal='✓'; openCls='paid'; openKlik=' onclick="pbToggleBetaald()" title="Terugzetten naar openstaand"'; }
+      else if(st==='gefactureerd'){ openLbl='Openstaand'+(_dt?' · sinds '+_dt:''); openVal=_E+fmtEur(omIncl); openCls='open'; openKlik=' onclick="pbToggleBetaald()" title="Markeer als voldaan"'; }
       else { openLbl='Nog te factureren'; openVal=_E+fmtEur(omIncl); openCls='todo'; }
     }
     // Dezelfde fasebalk als op de Klanten-pagina — dit is hetzelfde project, dus dezelfde voortgang.
@@ -4162,8 +4231,7 @@ async function renderFinancien(){
         <div class="pb-finline marge ${marge!=null&&marge<0?'neg':''}"><span>Winst</span><b>${marge!=null?'€'+fmtEur(marge):'—'}</b></div>
       </div></div></div>`;
     const finFact = _intern ? '' : `<div class="pb-sec"><div class="pb-h">Offerte &amp; Factuur</div>
-        <div class="finB-pills">${pills}</div>
-        ${om!=null?`<div class="pb-finline finB-openrow ${openCls}"><span>${openLbl}</span><b>${openVal}</b></div>`:'<div class="finB-openhint">Vul een projectprijs in om facturatie te volgen.</div>'}
+        ${om!=null?`<div class="pb-finline finB-openrow ${openCls}"${openKlik}><span>${openLbl}</span><b>${openVal}</b></div>`:'<div class="finB-openhint">Vul een projectprijs in om facturatie te volgen.</div>'}
         <div class="finB-docs">${_intakeDocsFor(_pbPid).map(_intakeDocRow).join('')}${_financieleDocs(_pbPid).map(_fileRow).join('')||'<div class="pb-empty">Nog geen offertes, bonnen of facturen. Sleep ze de app in.</div>'}</div>
       </div>`;
     if(fmw) fmw.innerHTML=`<div class="pb-inline pb-board-inline finB-flat" style="--scol:${col};--ccol:${col}">
