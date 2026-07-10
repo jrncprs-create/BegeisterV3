@@ -140,6 +140,10 @@ tfoot tr:last-child td{font-weight:var(--fw-nadruk);color:var(--s4)}
   color:var(--txt);font-family:inherit;font-size:14px;padding:11px 13px;margin-bottom:10px}
 .login .knop{width:100%;margin-top:6px;padding:11px}
 .login-fout{color:var(--late);font-size:13px;min-height:20px;margin-top:12px}
+/* Chrome vult velden in met een knalwitte achtergrond. Overschrijven kan alleen zo. */
+input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus{
+  -webkit-text-fill-color:var(--txt);caret-color:var(--txt);
+  -webkit-box-shadow:0 0 0 40px var(--bg) inset;transition:background-color 9999s}
 
 .leeg{color:var(--mut2);text-align:center;padding:60px 0}
 #toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(12px);opacity:0;
@@ -191,13 +195,19 @@ function toast(tekst, soort){
 }
 
 // Kleine markdown: alinea's, koppen, vet. Meer heeft een debrief niet nodig.
+// Per regel kijken, niet per blok — anders plakt een kop aan de alinea eronder.
 function mini(md){
-  const regels = String(md||'').split(/\n{2,}/).map(blok => {
-    const t = blok.trim(); if(!t) return '';
-    if(/^##\s+/.test(t)) return '<h2>' + vet(esc(t.replace(/^##\s+/,''))) + '</h2>';
-    return '<p>' + vet(esc(t)).replace(/\n/g,'<br>') + '</p>';
+  const uit = [];
+  let alinea = [];
+  const spoel = () => { if(alinea.length){ uit.push('<p>'+alinea.join('<br>')+'</p>'); alinea = []; } };
+  String(md||'').split('\n').forEach(regel => {
+    const t = regel.trim();
+    if(!t){ spoel(); return; }
+    if(/^##\s+/.test(t)){ spoel(); uit.push('<h2>'+vet(esc(t.replace(/^##\s+/,'')))+'</h2>'); return; }
+    alinea.push(vet(esc(t)));
   });
-  return regels.join('');
+  spoel();
+  return uit.join('');
 }
 function vet(s){ return s.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>'); }
 
@@ -251,6 +261,8 @@ function statusTekst(p){
 
 function render(){
   if(!DATA) return;
+  // De klantkleur staat permanent aan — dat is het verschil met de teamapp.
+  if(DATA.klant.kleur) document.documentElement.style.setProperty('--ccol', DATA.klant.kleur);
   const p = DATA.projecten[ACTIEF];
   if(!p){
     document.getElementById('app').innerHTML =
@@ -287,7 +299,7 @@ function kopHtml(p){
     ? '<div class="kop-geld"><div>totaal<b>'+eur(p.geld.totaal)+'</b></div></div>' : '';
   return '<div class="kop">'
     + '<div class="merk">'+MERK+'</div>'
-    + '<div class="kop-naam"><b style="color:'+esc(kleur)+'">'+esc(DATA.klant.naam)+'</b>'
+    + '<div class="kop-naam"><b>'+esc(DATA.klant.naam)+'</b>'
     + (p ? ' <span>· '+esc(p.naam)+'</span>' : '') + '</div>'
     + geld
     + (p ? '<div class="kop-status">'+esc(statusTekst(p))+'</div>' : '')
