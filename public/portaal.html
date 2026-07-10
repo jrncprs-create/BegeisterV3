@@ -75,6 +75,26 @@ body.heeftbg .kop{background:transparent;backdrop-filter:blur(3px)}
 .akkbtn{background:#fff;color:var(--rood);border:none;border-radius:var(--r-pil);font-family:inherit;font-weight:var(--fw-nadruk);font-size:14px;padding:11px 26px;cursor:pointer}
 .akkbtn[disabled]{opacity:.5;cursor:default}
 .akkoord.vast .groot{font-size:18px;color:#fff}
+/* voorstellen per spoor */
+.vstgroep{margin-top:18px;padding-top:14px;border-top:1px solid rgba(255,255,255,.2)}
+.vstgroep:first-of-type{border-top:none;margin-top:4px;padding-top:0}
+.vstkop{font-size:15px;font-weight:var(--fw-nadruk);color:#fff}
+.vstsub{font-size:12px;color:rgba(255,255,255,.6);margin:2px 0 8px}
+.vstopen{background:transparent;border:none;color:#fff;font-family:inherit;font-size:14px;text-align:left;padding:0;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.poort{margin-top:12px}
+.poort.groen{display:flex;align-items:center;gap:9px;font-size:14px;color:#9ff0bd;font-weight:var(--fw-nadruk)}
+.poort .pdot{width:11px;height:11px;border-radius:50%;background:#5bd08a;flex:0 0 auto}
+.poortnoot{font-size:11px;color:rgba(255,255,255,.55);margin-top:8px}
+/* voorstel-viewer */
+#vstViewer{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .2s;display:flex;flex-direction:column}
+#vstViewer.on{opacity:1;pointer-events:auto}
+#vstViewer .vv-bar{display:flex;align-items:center;gap:14px;padding:12px 18px;background:#2f1010;color:#fff}
+#vstViewer .vv-naam{font-weight:var(--fw-nadruk);font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#vstViewer .vv-ext{color:rgba(255,255,255,.8);font-size:13px;text-decoration:none}
+#vstViewer .vv-ext:hover{color:#fff;text-decoration:underline}
+#vstViewer .vv-x{background:transparent;border:none;color:#fff;font-size:20px;cursor:pointer;line-height:1}
+#vstViewer .vv-body{flex:1;background:#fff}
+#vstViewer .vv-frame{width:100%;height:100%;border:none;display:block}
 
 /* opmerkingen */
 .opm{margin-top:14px;border-top:1px solid rgba(255,255,255,.14);padding-top:10px}
@@ -194,11 +214,24 @@ function render(){
   if((p.bestanden||[]).length) L+='<div class="sec"><div class="h">Bestanden</div>'+mappenHtml(p.bestanden)+'</div>';
   if(!L) L='<div class="midden">Nog niets om te tonen.</div>';
 
-  // rechterkolom: voorstellen + akkoord
+  // rechterkolom: voorstellen per spoor (idee / budget), elk met eigen opmerkingen en akkoord.
   let R='<div class="h">Voorstellen</div>';
-  R+=(p.voorstellen||[]).length ? p.voorstellen.map(f=>'<div class="vst"><a href="'+esc(f.link||'#')+'" target="_blank" rel="noopener">'+esc(f.name)+'</a></div>').join('') : '<div class="leeg">Nog geen voorstellen.</div>';
-  if(p.akkoord) R+='<div class="akkoord vast"><div class="groot">Akkoord op '+esc(datum(p.akkoord.approved_at))+'</div><div class="akknoot" style="margin-top:8px">Dit is de opdrachtbevestiging.</div></div>';
-  else R+='<div class="akkoord"><div class="akknoot">Hiermee bevestig je de opdracht.</div><button class="akkbtn" data-akkoord="1">Akkoord geven</button></div>'+opmHtml('voorstellen',p);
+  const vs=p.voorstellen||[];
+  if(!vs.length){ R+='<div class="leeg">Nog geen voorstellen.</div>'; }
+  else {
+    [['idee','Idee','Het ontwerp — wat we gaan maken.'],['budget','Budget','De kosten — wat het gaat kosten.']].forEach(([soort,titel,uitleg])=>{
+      const lijst=vs.filter(f=>(f.soort||'idee')===soort);
+      if(!lijst.length) return;
+      const dt=(p.poorten||{})[soort];
+      R+='<div class="vstgroep"><div class="vstkop">'+titel+'</div><div class="vstsub">'+uitleg+'</div>';
+      R+=lijst.map(f=>'<div class="vst"><button class="vstopen" data-vopen="'+esc(f.id)+'" data-vlink="'+esc(f.link||'')+'" data-vnaam="'+esc(f.name)+'">'+esc(f.name)+'</button></div>').join('');
+      if(dt) R+='<div class="poort groen"><span class="pdot"></span>Akkoord op '+esc(datum(dt))+'</div>';
+      else R+='<div class="poort"><button class="akkbtn" data-gate="'+soort+'">Akkoord op '+titel.toLowerCase()+'</button><div class="poortnoot">Klopt er iets niet? Zet hieronder een opmerking; dan maken we een nieuwe ronde.</div></div>';
+      R+=opmHtml('voorstel:'+soort,p);
+      R+='</div>';
+    });
+    if(p.poorten&&p.poorten.idee&&p.poorten.budget) R='<div class="h">Voorstellen</div><div class="akkoord vast"><div class="groot">Idee én budget akkoord</div><div class="akknoot" style="margin-top:8px">Dit is de opdrachtbevestiging — we zijn in productie.</div></div>'+R.slice('<div class="h">Voorstellen</div>'.length);
+  }
 
   document.getElementById('app').innerHTML='<div class="wrap">'+kopHtml(p)+'<div class="grid"><div class="colL">'+L+'</div><div class="colR">'+R+'</div></div></div>';
   bind(p);
@@ -225,8 +258,26 @@ function bind(p){
   document.querySelectorAll('[data-opmtoggle]').forEach(b=>b.onclick=()=>{ const s=b.dataset.opmtoggle; OPEN_OPM.has(s)?OPEN_OPM.delete(s):OPEN_OPM.add(s); const el=b.closest('.opm'); if(el)el.classList.toggle('open'); });
   document.querySelectorAll('[data-opm]').forEach(b=>b.onclick=async()=>{ const s=b.dataset.opm; const ta=document.getElementById('ot_'+s); const t=(ta.value||'').trim(); if(!t)return; b.disabled=true;
     try{ await api('reactie',{project_id:p.id,sectie:s,body:t}); ta.value=''; OPEN_OPM.add(s); toast('Geplaatst.'); await laad(); }catch(e){ toast(e.message); b.disabled=false; } });
-  document.querySelectorAll('[data-akkoord]').forEach(b=>b.onclick=async()=>{ if(!confirm('Akkoord geven? Hiermee bevestig je de opdracht.'))return; b.disabled=true; b.textContent='Momentje…';
-    try{ await api('akkoord',{project_id:p.id}); toast('Akkoord vastgelegd.'); await laad(); }catch(e){ toast(e.message); b.disabled=false; b.textContent='Akkoord geven'; } });
+  document.querySelectorAll('[data-gate]').forEach(b=>b.onclick=async()=>{ const soort=b.dataset.gate;
+    if(!confirm('Akkoord geven op '+(soort==='budget'?'het budget':'het idee')+'? We gaan hiermee verder.'))return; b.disabled=true; b.textContent='Momentje…';
+    try{ await api('akkoord',{project_id:p.id,soort}); toast('Akkoord vastgelegd.'); await laad(); }catch(e){ toast(e.message); b.disabled=false; b.textContent='Akkoord geven'; } });
+  document.querySelectorAll('[data-vopen]').forEach(b=>b.onclick=()=>toonVoorstel(b.dataset.vlink,b.dataset.vnaam));
+}
+
+// Een voorstel-document (meestal een HTML-deck) schermvullend tonen, in een afgeschermde iframe.
+function toonVoorstel(link,naam){
+  if(!link){ toast('Dit voorstel heeft geen bestand.'); return; }
+  let ov=document.getElementById('vstViewer');
+  if(!ov){ ov=document.createElement('div'); ov.id='vstViewer';
+    ov.innerHTML='<div class="vv-bar"><span class="vv-naam"></span><span style="flex:1"></span><a class="vv-ext" target="_blank" rel="noopener">nieuw tabblad ↗</a><button class="vv-x" title="Sluiten">✕</button></div><div class="vv-body"><iframe class="vv-frame" sandbox="allow-scripts allow-popups"></iframe></div>';
+    document.body.appendChild(ov);
+    ov.querySelector('.vv-x').onclick=()=>ov.classList.remove('on');
+    document.addEventListener('keydown',e=>{ if(e.key==='Escape'){const o=document.getElementById('vstViewer'); if(o)o.classList.remove('on');} });
+  }
+  ov.querySelector('.vv-naam').textContent=naam||'Voorstel';
+  ov.querySelector('.vv-ext').href=link;
+  ov.querySelector('.vv-frame').src=link;
+  ov.classList.add('on');
 }
 
 async function laad(){ const j=await api('data'); DATA=j; if(ACTIEF>=DATA.projecten.length)ACTIEF=0; render(); }
