@@ -18,12 +18,11 @@
 import { createHash } from "node:crypto";
 import { svc } from "../lib/usage.mjs";
 
-const FASES = ["briefing", "debrief", "akkoord", "uitvoering", "oplevering", "gefactureerd"];
-
-// De klant hoort de laatste fase niet als "gefactureerd" te zien; voor hem is dat "Betaald".
+// Grove fases. Akkoord is geen fase meer maar een status op een voorstel.
+const FASES = ["briefing", "voorstel", "productie", "oplevering", "betaald"];
 const FASE_LABEL = {
-  briefing: "Briefing", debrief: "Debrief", akkoord: "Akkoord",
-  uitvoering: "Uitvoering", oplevering: "Oplevering", gefactureerd: "Betaald",
+  briefing: "Briefing", voorstel: "Voorstel", productie: "Productie",
+  oplevering: "Oplevering", betaald: "Betaald",
 };
 
 const SECTIES = ["omschrijving", "voortgang", "taken", "afspraken", "bestanden", "projectprijs", "notities"];

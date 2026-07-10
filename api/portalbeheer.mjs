@@ -3,10 +3,10 @@
 // tabellen, de server toetst elke aanroep aan `team_users`. Een klant krijgt hier 403.
 import { svc } from "../lib/usage.mjs";
 
-const FASES = ["briefing", "debrief", "akkoord", "uitvoering", "oplevering", "gefactureerd"];
+const FASES = ["briefing", "voorstel", "productie", "oplevering", "betaald"];
 const FASE_LABEL = {
-  briefing: "Briefing", debrief: "Debrief", akkoord: "Akkoord",
-  uitvoering: "Uitvoering", oplevering: "Oplevering", gefactureerd: "Betaald",
+  briefing: "Briefing", voorstel: "Voorstel", productie: "Productie",
+  oplevering: "Oplevering", betaald: "Betaald",
 };
 const SECTIES = ["omschrijving", "voortgang", "taken", "afspraken", "bestanden", "projectprijs", "notities"];
 
