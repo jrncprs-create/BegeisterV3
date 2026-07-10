@@ -912,20 +912,21 @@
      identiek, Bestanden was smaller, had een kleiner badge en een ▸ ervoor.
      Eén ritme: rij 48 px hoog (padding 11/14, gap 12), badge 26 px, naam 14 px.
      Geen driehoekje: je klapt open door op de rij te klikken, net als daar. */
-  #contactenWrap .con-crow,#bronnenWrap .con-crow,#filesWrap .fm-crow,#postvakWrap .con-crow{
-    display:flex;align-items:center;gap:12px;padding:11px 14px;border-bottom:none;
+  /* De rij loopt tot de kolomrand (negatieve marge) maar houdt dezelfde 16 px binnenmarge
+     als kolom 2 en 3. Voorheen: 16 (kolom) + 14 (rij) = 30 px links, tegen 16 px hiernaast. */
+  #contactenWrap .con-crow,#filesWrap .fm-crow,#postvakWrap .con-crow{
+    display:flex;align-items:center;gap:12px;padding:11px 16px;margin:0 -16px;border-bottom:none;
     border-radius:0;cursor:pointer;font-size:14px;color:var(--txt)}
   #contactenWrap .con-crow:hover,#contactenWrap .con-crow.on,
-  #bronnenWrap .con-crow:hover,#bronnenWrap .con-crow.on,
   #postvakWrap .con-crow:hover,#postvakWrap .con-crow.on,
   #filesWrap .fm-crow:hover,#filesWrap .fm-crow.open{background:rgba(255,255,255,.04)}
-  #contactenWrap .con-cdot,#bronnenWrap .con-cdot,#postvakWrap .con-cdot,#filesWrap .fm-crow .fm-badge{
+  #contactenWrap .con-cdot,#postvakWrap .con-cdot,#filesWrap .fm-crow .fm-badge{
     width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;
     font-size:12px;font-weight:var(--fw-nadruk);color:#000;flex:0 0 auto}
-  #contactenWrap .con-cmain,#bronnenWrap .con-cmain,#postvakWrap .con-cmain,#filesWrap .fm-crow .fm-name{flex:1;min-width:0}
-  #contactenWrap .con-cnm,#bronnenWrap .con-cnm,#postvakWrap .con-cnm,#filesWrap .fm-crow .fm-name{
+  #contactenWrap .con-cmain,#postvakWrap .con-cmain,#filesWrap .fm-crow .fm-name{flex:1;min-width:0}
+  #contactenWrap .con-cnm,#postvakWrap .con-cnm,#filesWrap .fm-crow .fm-name{
     font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  #contactenWrap .con-ccnt,#bronnenWrap .con-ccnt,#postvakWrap .con-ccnt,#filesWrap .fm-crow .fm-cnt{
+  #contactenWrap .con-ccnt,#postvakWrap .con-ccnt,#filesWrap .fm-crow .fm-cnt{
     font-size:12px;color:var(--mut2);flex:0 0 auto}
   /* Het driehoekje stond alleen bij Bestanden. Weg — de rij zelf is de knop. */
   #filesWrap .fm-crow>.fm-tw{display:none}
@@ -937,10 +938,10 @@
      ("in deze klant"). Dat is nu één veld dat de hele pagina filtert. */
   #contactenWrap .fm-top,#bronnenWrap .fm-top{margin:0 0 6px}
   #contactenWrap .fm-search,#bronnenWrap .fm-search{flex:1;margin:0}
-  .con-midhdr{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line)}
+  .con-midhdr{display:flex;align-items:center;gap:10px;padding:12px 16px;margin:0 -16px;border-bottom:1px solid var(--line)}
   .con-midttl{flex:1;min-width:0;font-size:14px;color:var(--txt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .con-midhdr input{flex:1;background:transparent;border:0;color:var(--txt);font-size:14px;outline:none}
-  #conMidWrap .con-li{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line);cursor:pointer}
+  #conMidWrap .con-li{display:flex;align-items:center;gap:10px;padding:12px 16px;margin:0 -16px;border-bottom:1px solid var(--line);cursor:pointer}
   #conMidWrap .con-li:hover,#conMidWrap .con-li.on{background:rgba(255,255,255,.04)}
   #conMidWrap .con-li .cmain{flex:1;min-width:0}
   #conMidWrap .con-li .cname{font-size:14px}
@@ -2001,7 +2002,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v204</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v205</span>
       <button id="dayBtn" class="dag-ic" onclick="openDayOverview()" title="Dagoverzicht" aria-label="Dagoverzicht"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M3 12h2M19 12h2M5.6 18.4l1.4-1.4M17 7l1.4-1.4"/></svg></button>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:14px;font-weight:var(--fw-nadruk);cursor:pointer" title="AI-context bewerken">Jeroen</span>
