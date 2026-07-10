@@ -5,8 +5,9 @@ const KEY = (process.env.ANTHROPIC_API_KEY || "").trim();
 const anthropic = KEY ? new Anthropic({ apiKey: KEY }) : null;
 const MODEL = "claude-haiku-4-5-20251001";
 
-const PROJ = ["Concept","Lichtontwerp","Decor","Tekeningen","Plattegronden","Draaiboek","Planning","Leveranciers","Techniek","Offertes","Inkoop","Facturen","Media"];
-const CLIENT = ["Contracten","Huisstijl","Logo's","Facturen","Overig"];
+// Zes vaste mappen per project — dezelfde overal (Bestanden, portaal, Dropbox).
+const PROJ = ["Briefing","Concept & ontwerp","Techniek","Beeld","Financieel","Oplevering"];
+const CLIENT = ["Contracten","Huisstijl","Logo's","Financieel","Overig"];
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "method not allowed" });
@@ -28,9 +29,14 @@ export default async function handler(req, res) {
 TAAK 1 — CATEGORIE: kies voor ELK bestand precies één mapnaam uit de toegestane lijst voor zijn scope. Verzin GEEN nieuwe namen.
 PROJECT-mappen: ${PROJ.join(", ")}.
 KLANT-mappen: ${CLIENT.join(", ")}.
-Baseer je op de bestandsnaam (extensie + woorden in de naam). Voorbeelden: een .ai/.psd/.indd of "logo"/"huisstijl" → Huisstijl of Logo's (klant) of Decor/Tekeningen (project); "offerte"/"quote"/"prijsopgave" → Offertes; "factuur"/"invoice" → Facturen; "bon"/"kassabon"/"bestelbevestiging"/"inkoop"/"receipt"/"order" → Inkoop; "contract" → Contracten; "draaiboek"/"runsheet" → Draaiboek; "planning"/"schema" → Planning; "plattegrond"/"floorplan" → Plattegronden; "patch"/"rigging"/"stroom" → Techniek; beeldbestanden (jpg/png/mp4/mov) zonder duidelijke functie → Media.
-Offertes, Inkoop en Facturen zijn de drie financiële mappen: een uitgaande prijsopgave is een Offerte, een binnenkomende bon of bestelbevestiging is Inkoop, een verstuurde of ontvangen rekening is een Factuur.
-Bij twijfel: project → "Concept", klant → "Overig".
+Baseer je op de bestandsnaam (extensie + woorden in de naam). De zes projectmappen:
+- Briefing: projectbrief, aanvraag, intake, wat de klant aanlevert ("projectbrief"/"briefing"/"aanvraag"/"intake").
+- Concept & ontwerp: concept, moodboard, lichtontwerp, decor, ontwerpvoorstel ("concept"/"ontwerp"/"moodboard"/"licht"/"decor"; ook .ai/.psd/.indd designbestanden).
+- Techniek: tekeningen, plattegronden, draaiboek, planning, leveranciers, techniek ("tekening"/"plattegrond"/"floorplan"/"draaiboek"/"runsheet"/"planning"/"patch"/"rigging"/"stroom").
+- Beeld: foto's, referenties, video, inspiratie zonder duidelijke functie (jpg/png/heic/mp4/mov).
+- Financieel: alles met geld — offerte/prijsopgave, factuur/rekening, bon/inkoop/bestelbevestiging, budget/calculatie ("offerte"/"factuur"/"invoice"/"bon"/"inkoop"/"budget"/"calculatie").
+- Oplevering: eindfoto's, nazorg, aftermovie ("oplevering"/"nazorg"/"aftermovie"/"eindresultaat").
+Bij twijfel: project → "Concept & ontwerp", klant → "Overig".
 
 TAAK 2 — JUISTE KLANT: elk bestand staat nu bij een klant/project ("nu="). Bepaal of de bestandsnaam ONMISKENBAAR bij een ANDERE bekende klant/project hoort uit onderstaande lijst. Alleen dan stel je een verplaatsing voor. Kies UITSLUITEND uit de lijst — verzin nooit een klant. Twijfel je ook maar iets, of staat het bestand al goed? Laat 'move' weg. Voorbeeld: een bestand met "Begeisterung"/"Begeister" in de naam hoort bij klant "Begeister" (de eigen pitch/huisstijl van het bedrijf), niet bij een externe klant.
 BEKENDE KLANTEN/PROJECTEN:
@@ -51,7 +57,7 @@ Laat "move" weg (of zet op null) als het bestand al goed staat of je twijfelt.`;
       const entry = raw[f.id] || {};
       const allowed = (f.scope === "client") ? CLIENT : PROJ;
       let c = (typeof entry === "string") ? entry : entry.cat;
-      if (!allowed.includes(c)) c = (f.scope === "client") ? "Overig" : "Concept";
+      if (!allowed.includes(c)) c = (f.scope === "client") ? "Overig" : "Concept & ontwerp";
       out[f.id] = c;
       // Verplaatsing alleen accepteren als de klant (en eventueel project_id) écht in de catalogus staat.
       const mv = entry && typeof entry === "object" ? entry.move : null;
