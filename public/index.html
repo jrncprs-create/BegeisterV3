@@ -154,7 +154,11 @@
      hij binnen afgeronde hoeken past. */
   :focus{outline:none}
   :focus-visible{outline:none;box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--mut2);border-radius:inherit}
-  input:focus-visible,textarea:focus-visible{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--mut2)}
+  /* Een tekstveld krijgt geen ring — die tekende een tweede kader binnen het zoekvak.
+     Een veld krijgt een lijntje onderin, en zijn omhulsel licht op. */
+  input:focus-visible,textarea:focus-visible{box-shadow:0 1px 0 0 var(--mut)}
+  .fm-search:focus-within,.acwrap:focus-within{border-color:var(--mut2)}
+  .fm-search input:focus-visible{box-shadow:none}
 
   /* ---- UITGESCHAKELD --------------------------------------------------------
      Stond nergens in CSS; drie plekken zetten `style.opacity='.6'` vanuit JS. */
@@ -879,9 +883,12 @@
     #view-finmid::-webkit-scrollbar,#view-finright::-webkit-scrollbar,#view-conmid::-webkit-scrollbar,#view-conright::-webkit-scrollbar,#view-bronmid::-webkit-scrollbar,#view-bronright::-webkit-scrollbar{display:none}
     #view-beheerboard{grid-column:1 / -1;height:calc(100dvh - var(--tbh,52px));overflow-y:auto;scrollbar-width:none}
     #view-beheerboard::-webkit-scrollbar{display:none}
-    /* Postvak In: drie kolommen, net als Bronnen en Contacten. */
+    /* Postvak In: drie kolommen, net als Contacten. */
     #view-pvmid,#view-pvright{height:calc(100dvh - var(--tbh,52px));overflow-y:auto;scrollbar-width:none}
     #view-pvmid::-webkit-scrollbar,#view-pvright::-webkit-scrollbar{display:none}
+    /* Eén binnenmarge voor alle drie de kolommen. Kolom 1 had 16 px, kolom 2 en 3 nul:
+       de inhoud plakte tegen de kolomrand. */
+    #view-pvmid,#view-pvright,#view-conmid,#view-conright{padding-left:16px;padding-right:16px}
     .pb-board-inline .pb-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 36px;align-items:start}
     .pb-board-inline .pb-colL,.pb-board-inline .pb-colR{min-width:0}
   }
@@ -1011,7 +1018,7 @@
      acties onder elkaar; dat las als een formulier per item in plaats van een lijst.
      Nu: volle breedte, één regel per bron, keuze en acties rechts. */
   #postvakWrap{padding:0}
-  .pv-tabs{display:flex;gap:0;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:4}
+  .pv-tabs{display:flex;gap:0;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:4;margin:0 -16px;padding:0 16px}
   .pv-tab{flex:1;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--mut2);
     font:inherit;font-size:13px;padding:13px 10px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;
     transition:color .15s,border-color .15s}
@@ -1022,7 +1029,9 @@
   .pv-bulk-lbl{font-size:12px;color:var(--mut2);margin-right:2px}
   .pv-bulk .btn{font-size:12px;padding:5px 11px}
   .pv-rest{font-size:12px;color:var(--mut2)}
-  .pv-row{border-bottom:1px solid var(--line);padding:12px 14px;cursor:pointer}
+  /* De rij loopt door tot de kolomrand (negatieve marge), de tekst houdt de 16 px
+     binnenmarge van de kolom. Zo staat alles op één lijn en heeft de hover ademruimte. */
+  .pv-row{border-bottom:1px solid var(--line);padding:12px 16px;margin:0 -16px;cursor:pointer}
   .pv-row:hover{background:rgba(255,255,255,.02)}
   .pv-row.on{background:rgba(255,255,255,.05)}
   .pv-kop{display:flex;gap:9px;align-items:center;min-width:0}
@@ -1116,6 +1125,12 @@
   .pb-fasestap:hover .pb-faselbl{color:var(--txt)}
   /* Omgezet Word-document: leesbaar vel papier in plaats van 'geen voorvertoning'. */
   .dox-wrap{width:100%;height:100%;overflow:auto;display:block;background:#fff;border-radius:6px}
+  .snel-wrap{display:flex;align-items:center;justify-content:center;width:100%;min-height:120px;padding:20px}
+  .snel-link{display:inline-flex;align-items:center;gap:9px;border:1px solid var(--line);border-radius:9px;
+    padding:11px 15px;color:var(--txt);text-decoration:none;font-size:13px;transition:color .15s,border-color .15s}
+  .snel-link:hover{color:#fff;border-color:var(--mut2)}
+  .snel-url{max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .snel-uit{opacity:.55;flex:none}
   .dox{max-width:760px;margin:0 auto;padding:44px 46px;color:#1a1a1a;background:#fff;
     font:15px/1.65 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
   .dox h1,.dox h2,.dox h3{color:#111;margin:1.3em 0 .5em;line-height:1.25}
@@ -1986,7 +2001,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v203</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v204</span>
       <button id="dayBtn" class="dag-ic" onclick="openDayOverview()" title="Dagoverzicht" aria-label="Dagoverzicht"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M3 12h2M19 12h2M5.6 18.4l1.4-1.4M17 7l1.4-1.4"/></svg></button>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:14px;font-weight:var(--fw-nadruk);cursor:pointer" title="AI-context bewerken">Jeroen</span>
@@ -5049,7 +5064,8 @@ const _BEELD_EXT=/\.(png|jpe?g|gif|webp|heic|heif|bmp|tiff?|svg|avif)$/i;
 function _isAttImg(name){ return _BEELD_EXT.test(name||''); }
 function _isAttPdf(name){ return /\.pdf$/i.test(name||''); }
 function _isAttDocx(name){ return /\.docx$/i.test(name||''); }
-function _bestandSoort(name){ return _isAttImg(name)?'beeld':(_isAttPdf(name)?'pdf':(_isAttDocx(name)?'docx':'anders')); }
+function _isAttLink(name){ return /\.(webloc|url)$/i.test(name||''); }
+function _bestandSoort(name){ return _isAttImg(name)?'beeld':(_isAttPdf(name)?'pdf':(_isAttDocx(name)?'docx':(_isAttLink(name)?'snel':'anders'))); }
 
 // PDF's zonder de zwevende zoombalk van de browser en passend op de breedte.
 function _attSrc(url,name){ return _isAttPdf(name) ? (url+'#toolbar=0&navpanes=0&view=FitH') : url; }
@@ -5084,7 +5100,32 @@ function _bestandPreviewHTML(url, naam, k){
   if(soort==='pdf')   return '<iframe class="'+k.frame+'" src="'+escapeHtml(_attSrc(url,naam))+'" title="'+escapeHtml(naam||'PDF')+'"></iframe>';
   // Word kan de browser niet tonen. De server zet het om; _vulDocx() vult dit vak.
   if(soort==='docx')  return '<div class="dox-wrap" data-docx="'+escapeHtml(url)+'" data-naam="'+escapeHtml(naam||'')+'"><div class="'+k.none+'">Word-document openen…</div></div>';
+  // Een .webloc of .url is geen document maar één link. Toon die link, klikbaar.
+  if(soort==='snel')  return '<div class="snel-wrap" data-snel="'+escapeHtml(url)+'" data-naam="'+escapeHtml(naam||'')+'"><div class="'+k.none+'">Snelkoppeling openen…</div></div>';
   return '<div class="'+k.none+'">'+(typeof _fileGlyph==='function'?_fileGlyph(naam):'')+'<p>Geen voorvertoning voor dit bestandstype.</p></div>';
+}
+// Leest de link uit een snelkoppeling en maakt er een knop van. Zonder dit zag je een leeg
+// kader: de browser kan een .webloc niet tonen, en er valt ook niets te tonen — er zit
+// precies één ding in, en dat is een adres.
+async function _vulSnelkoppeling(scope){
+  const root=scope||document;
+  for(const el of root.querySelectorAll('.snel-wrap[data-snel]:not([data-done])')){
+    el.setAttribute('data-done','1');
+    const bron=el.getAttribute('data-snel'), naam=el.getAttribute('data-naam')||'';
+    try{
+      const r=await fetch('/api/snelkoppeling',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:bron,name:naam})});
+      const d=await r.json();
+      if(d&&d.url){
+        const kort=String(d.url).replace(/^https?:\/\//,'').slice(0,60);
+        el.innerHTML='<a class="snel-link" href="'+escapeHtml(d.url)+'" target="_blank" rel="noopener">'
+          + '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 15l6-6"/><path d="M11 6l1-1a3.5 3.5 0 015 5l-1 1"/><path d="M13 18l-1 1a3.5 3.5 0 01-5-5l1-1"/></svg>'
+          + '<span class="snel-url">'+escapeHtml(kort)+'</span>'
+          + '<svg class="snel-uit" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11 7h-5a1 1 0 0 0 -1 1v10a1 1 0 0 0 1 1h10a1 1 0 0 0 1 -1v-5"/><path d="M10 14l10 -10"/><path d="M15 4h5v5"/></svg></a>';
+      } else {
+        el.innerHTML='<div class="fmp-none">'+escapeHtml((d&&d.error)||'geen link gevonden')+'</div>';
+      }
+    }catch(_){ el.innerHTML='<div class="fmp-none">kon de snelkoppeling niet lezen</div>'; }
+  }
 }
 // Haalt de omgezette HTML op en zet 'm in het vak. Werkt overal waar previewHTML wordt gebruikt.
 async function _vulDocx(scope){
@@ -5117,6 +5158,7 @@ async function _bronLoadAttachment(a, stageId){
   const stage=document.getElementById(stageId||'bronStage'); if(!stage)return;
   stage.innerHTML=_bestandPreviewHTML(await _bestandUrl(a), a.filename||'');
   _vulDocx(stage);
+  _vulSnelkoppeling(stage);
 }
 
 /* ---- Meerdere bijlagen in één bron: stapel met een strip eronder ---- */
@@ -5151,6 +5193,7 @@ function _bronPaintAtt(){
   const a=_bronAtts[_bronAttIdx]||{}, url=_bronAttUrls[_bronAttIdx]||'';
   stage.innerHTML=_bestandPreviewHTML(url, a.filename||'bijlage');
   _vulDocx(stage);
+  _vulSnelkoppeling(stage);
   const strip=document.getElementById('bronStrip'); if(!strip)return;
   strip.innerHTML=_fotoStapelHTML(_bronAtts.map((x,i)=>({naam:x.filename||'', url:_bronAttUrls[i]||''})), _bronAttIdx);
   try{ const act=strip.querySelector('.bs-thumb.on'); if(act&&act.scrollIntoView) act.scrollIntoView({block:'nearest',inline:'nearest'}); }catch(_){}
@@ -5235,6 +5278,7 @@ function _previewOverlay(name, url){
     +'<div class="pvw-stage">'+_bestandPreviewHTML(url, name, {img:'pvw-img', frame:'pvw-frame', none:'fmp-none'})+'</div>';
   document.body.appendChild(ov); requestAnimationFrame(()=>ov.classList.add('open'));
   _vulDocx(ov);
+  _vulSnelkoppeling(ov);
   const close=()=>{ov.classList.remove('open');setTimeout(()=>ov.remove(),300);};
   ov.querySelector('.pvw-x').onclick=close;
   ov.querySelector('.pvw-stage').addEventListener('click',e=>{ if(e.target.classList.contains('pvw-stage')) close(); });
@@ -5857,6 +5901,7 @@ async function fvRender(){
   const url=await _bestandUrl(f);
   st.innerHTML=_bestandPreviewHTML(url, f.name||'', {img:'fv-img', frame:'fv-frame', none:'fv-none'});
   _vulDocx(st);
+  _vulSnelkoppeling(st);
   const multi=_fvList.length>1; const pv=document.querySelector('.fv-prev'),nx=document.querySelector('.fv-next'); if(pv)pv.style.display=multi?'':'none'; if(nx)nx.style.display=multi?'':'none';
 }
 if(!window._fvKeyInit){window._fvKeyInit=true; document.addEventListener('keydown',e=>{ const v=document.getElementById('fileViewer'); if(!v||!v.classList.contains('open'))return; if(e.key==='Escape')closeFileViewer(); else if(e.key==='ArrowLeft')fvNav(-1); else if(e.key==='ArrowRight')fvNav(1); });}
@@ -6591,6 +6636,7 @@ async function fmPreview(id){
   const dbKnop = f.link?'<button class="fv-btn" onclick="window.open(\''+escapeHtml(f.link)+'\',\'_blank\',\'noopener\')">Open in Dropbox</button>':'';
   pane.innerHTML='<div class="fmp-head"><span class="fmp-ic">'+_fileGlyph(f.name)+'</span><span class="fmp-name">'+escapeHtml(f.name||'bestand')+'</span><button class="fmp-x" onclick="fmClosePreview()" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><div class="fmp-stage">'+body+'</div><div class="fmp-foot"><button class="fv-btn fmp-aibtn" onclick="openAiInsight(\'file\',\''+id+'\')">✦ Laat AI lezen</button>'+dlKnop+dbKnop+'</div><div id="fmAiResults" class="bron-airesults"></div>';
   _vulDocx(pane);
+  _vulSnelkoppeling(pane);
 }
 function renderArchief(){
   const wrap=document.getElementById('archiefWrap'); if(!wrap)return;
@@ -7971,15 +8017,24 @@ async function _saveDropToWait(items, summary, srcMeta, fileObj, listUrl){
       contact: it.contact||null, due: it.due||null, status:'wait' };
     try{ const ins=await sb.from('items').insert(rec).select('id').single(); if(ins&&ins.data&&!firstId)firstId=ins.data.id; }catch(_){}
   }
-  if(fileObj && firstId){ try{ const b64=await fileToB64(fileObj); const aiName=_intakeName(fileObj); const up=await fetch('/api/dropbox/list',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'upload',name:aiName,b64,target:'In afwachting',owner_type:'task',owner_id:firstId,cat:_dropCat||'Concept'})}).then(r=>r.json());
-    if(up&&up.file&&up.file.link&&srcId){
+  // Het bestand werd alleen bewaard als er óók een taak uit kwam (`firstId`). Leverde de AI
+  // geen actiepunten op — een screenshot, een verslag, een pitch — dan verdween het bestand
+  // en hield je een bron met alleen een bestandsnaam over. Vandaar geen preview.
+  // Nu bewaren we het bestand zodra er een bron is. De eigenaar is de taak, anders het
+  // project, anders niets: het hangt hoe dan ook aan de bron.
+  if(fileObj && srcId){ try{ const b64=await fileToB64(fileObj); const aiName=_intakeName(fileObj);
+    const eig = firstId ? {owner_type:'task', owner_id:firstId}
+              : (pid ? {owner_type:'project', owner_id:pid} : {});
+    const up=await fetch('/api/dropbox/list',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(Object.assign({action:'upload',name:aiName,b64,target:'In afwachting',cat:_dropCat||'Concept'},eig))}).then(r=>r.json());
+    if(up&&up.file&&up.file.link){
       // De trigger attachments_to_documents maakt de documents-rij zelf aan (geldt voor
       // álle intake-routes). Wij vullen achteraf alleen aan wat de database niet kan weten.
       try{ await sb.from('attachments').insert({source_id:srcId, filename:aiName, storage_path:'dropbox:'+up.file.link, mime:fileObj.type||''}); }catch(_){}
       try{ await sb.from('documents').update({category:_dropCat||'Concept', link:up.file.link,
         dropbox_path:up.file.link, size:fileObj.size||null, summary:(summary||'').slice(0,2000)||null})
         .eq('source_id',srcId).eq('filename',aiName); }catch(_){}
-    } }catch(_){}}
+    } }catch(e){ console.warn('bestand bewaren mislukte', e); }}
   try{ notifyPartner((who||'Iemand')+' zette '+list.length+' punt(en) in afwachting uit een bestand.'); }catch(_){}
   try{ await refresh(); }catch(_){}
 }
