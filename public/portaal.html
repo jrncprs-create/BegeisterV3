@@ -58,6 +58,18 @@ button{font-family:inherit;font-weight:var(--fw);cursor:pointer}
 .teambalk{display:flex;align-items:center;gap:10px;margin:16px 0 0;padding:9px 13px;border-radius:var(--r-md);
   border:1px solid color-mix(in srgb,var(--warn) 34%,transparent);color:var(--warn);font-size:12px}
 .teambalk .tb-chip{border:1px solid currentColor;border-radius:var(--r-sm);padding:0 6px;font-size:11px}
+.teambalk .knop{font-size:12px;padding:5px 11px;color:var(--warn);border-color:color-mix(in srgb,var(--warn) 34%,transparent)}
+.teambalk .knop:hover:not([disabled]){color:#fff;border-color:var(--warn)}
+.teambalk select{background:var(--bg);color:var(--warn);border:1px solid color-mix(in srgb,var(--warn) 34%,transparent);
+  border-radius:var(--r-md);font-family:inherit;font-size:12px;padding:5px 8px;max-width:280px}
+
+/* Bewerkvelden dragen dezelfde typografie als het resultaat: je typt in het eindbeeld. */
+.bew-titel,.bew-intro,.bew-body{width:100%;background:transparent;border:1px dashed #333;border-radius:var(--r-md);
+  color:var(--txt);font-family:inherit;font-weight:var(--fw);padding:10px 12px;margin-bottom:12px}
+.bew-titel{font-size:30px;line-height:1.15;color:var(--s4)}
+.bew-intro{font-size:14px;color:var(--mut);min-height:64px;resize:vertical}
+.bew-body{font-size:14px;min-height:190px;resize:vertical;line-height:1.6}
+.bew-titel:focus,.bew-intro:focus,.bew-body:focus{border-style:solid;border-color:var(--line)}
 
 /* ---- secties ---- */
 .sec{margin:34px 0}
@@ -184,6 +196,11 @@ const MERK = '<svg viewBox="0 0 147.39 172.8" fill="none" stroke="currentColor" 
 let DATA = null, ACTIEF = 0;
 const UITGEKLAPT = new Set();   // documenten die akkoord zijn maar die de klant weer opent
 
+// Teammodus: Jeroen en Marlon zien exact de klantpagina, maar kunnen erin schrijven.
+// Geen aparte preview — een preview die naast het echte scherm leeft, gaat er altijd
+// een keer van afwijken.
+let TEAM = false, TEAMDATA = null, PROJECT_ID = null, VUIL = false;
+
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function eur(n){ return '€' + Number(n||0).toLocaleString('nl-NL',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function datum(s){ if(!s) return ''; return new Date(s).toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'}); }
@@ -211,19 +228,21 @@ function mini(md){
 }
 function vet(s){ return s.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>'); }
 
-async function api(action, extra){
+async function post(pad, action, extra){
   const s = await sb.auth.getSession();
   const token = s.data.session && s.data.session.access_token;
   if(!token) { toonLogin(); throw new Error('niet ingelogd'); }
-  const r = await fetch('/api/portal', {
+  const r = await fetch(pad, {
     method:'POST',
     headers:{ 'Content-Type':'application/json', Authorization:'Bearer ' + token },
     body: JSON.stringify(Object.assign({ action }, extra||{})),
   });
   const j = await r.json().catch(()=>({error:'onleesbaar antwoord'}));
-  if(!r.ok) throw new Error(j.error || 'er ging iets mis');
+  if(!r.ok){ const e = new Error(j.error || 'er ging iets mis'); e.status = r.status; throw e; }
   return j;
 }
+const api    = (action, extra) => post('/api/portal', action, extra);
+const beheer = (action, extra) => post('/api/portalbeheer', action, extra);
 
 /* ============================ login ============================ */
 function toonLogin(fout){
@@ -272,14 +291,16 @@ function render(){
   }
 
   document.getElementById('app').innerHTML = '<div class="wrap">' + kopHtml(p) + fasesHtml(p)
-    + p.docs.slice().sort(volgorde).map(d => docHtml(d, p)).join('')
-    + ontbrekendHtml(p)
+    + (TEAM ? teambalkHtml(p) : '')
+    + p.docs.slice().sort(volgorde).map(d => (TEAM ? docBewerkHtml(d) : docHtml(d, p))).join('')
+    + (TEAM ? '' : ontbrekendHtml(p))
     + aanleveringenHtml(p)
     + offerteHtml(p)
     + onderkantHtml(p)
     + '</div>';
 
   bind(p);
+  if(TEAM) bindTeam(p);
 }
 
 // Het document van de huidige fase staat open, de rest klapt dicht.
@@ -442,6 +463,135 @@ function onderkantHtml(p){
     + '</div>';
 }
 
+/* ============================ teammodus ============================ */
+const STATUSTEKST = { concept:'Concept — de klant ziet dit nog niet.', gedeeld:'Gedeeld — de klant kan dit lezen.', akkoord:'Akkoord — vastgelegd.' };
+
+function teambalkHtml(p){
+  const d = p.docs.find(x => x.kind === 'debrief');
+  const st = d ? d.status : 'concept';
+  const knop = st === 'concept'
+    ? '<button class="knop" data-pub="gedeeld">Publiceren</button>'
+    : st === 'gedeeld'
+      ? '<button class="knop" data-pub="concept">Terugtrekken</button>'
+      : '<button class="knop" data-pub="concept">Heropenen</button>';
+  const kiezer = TEAMDATA.projecten.length > 1
+    ? '<select id="tbProj">' + TEAMDATA.projecten.map(x =>
+        '<option value="'+x.id+'"'+(x.id===PROJECT_ID?' selected':'')+'>'+esc(x.klantnaam)+' · '+esc(x.project)+'</option>').join('') + '</select>'
+    : '';
+  return '<div class="teambalk geen-print"><span class="tb-chip">team</span>'
+    + '<span style="flex:1">'+esc(STATUSTEKST[st])+'</span>'
+    + kiezer
+    + '<button class="knop" id="tbSave"'+(VUIL?'':' disabled')+'>Opslaan</button>'
+    + knop + '</div>';
+}
+
+function docBewerkHtml(d){
+  if(d.status === 'akkoord') return docHtml(d, null);   // vast is vast
+  const dl = (d.deliverables||[]).map(x => x.label + (x.toelichting ? ' | ' + x.toelichting : '')).join('\n');
+  return '<div class="sec"><div class="sec-h"><span>Debrief</span>'
+    + '<span class="dicht-noot">Dit is precies wat de klant ziet.</span></div>'
+    + '<div class="kaart">'
+    + '<input class="bew-titel" id="bwTitle" value="'+esc(d.title)+'" placeholder="Titel van de debrief">'
+    + '<textarea id="bwIntro" class="bew-intro" placeholder="We spraken elkaar op …">'+esc(d.intro)+'</textarea>'
+    + '<textarea id="bwBody" class="bew-body" placeholder="Zo hebben wij het begrepen…&#10;&#10;## Een kop begint met twee hekjes&#10;En daaronder de tekst.">'+esc(d.body)+'</textarea>'
+    + '<div class="sec-h" style="margin-top:26px">Wat wij leveren</div>'
+    + '<textarea id="bwDelv" class="bew-body" placeholder="Eén per regel. Toelichting achter een streepje:&#10;Lichtontwerp | tekening en sfeerbeelden">'+esc(dl)+'</textarea>'
+    + '<div class="dicht-noot" style="margin-top:8px">Eén per regel. Alles achter een <b>|</b> wordt de toelichting.</div>'
+    + '</div></div>';
+}
+
+function bindTeam(p){
+  const vuil = () => { VUIL = true; const b = document.getElementById('tbSave'); if(b) b.disabled = false; };
+  ['bwTitle','bwIntro','bwBody','bwDelv'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.oninput = vuil;
+  });
+
+  const kiez = document.getElementById('tbProj');
+  if(kiez) kiez.onchange = async () => {
+    if(VUIL && !confirm('Er zijn niet-opgeslagen wijzigingen. Toch wisselen?')) { kiez.value = PROJECT_ID; return; }
+    VUIL = false; PROJECT_ID = kiez.value;
+    history.replaceState(null, '', '/portaal?p=' + PROJECT_ID);
+    await teamLaad();
+  };
+
+  const save = document.getElementById('tbSave');
+  if(save) save.onclick = async () => {
+    save.disabled = true; save.textContent = 'Momentje…';
+    try { await teamOpslaan(); VUIL = false; toast('Opgeslagen.'); await teamLaad(); }
+    catch(e){ toast(e.message, 'fout'); save.disabled = false; save.textContent = 'Opslaan'; }
+  };
+
+  document.querySelectorAll('[data-pub]').forEach(b => b.onclick = async () => {
+    const d = p.docs.find(x => x.kind === 'debrief'); if(!d) return;
+    const naar = b.dataset.pub;
+    if(d.status === 'akkoord' && !confirm('Heropenen laat het akkoord vervallen. Zeker weten?')) return;
+    b.disabled = true;
+    try {
+      if(VUIL) await teamOpslaan();
+      await beheer('status', { doc_id:d.id, naar });
+      VUIL = false;
+      toast(naar === 'gedeeld' ? 'De klant kan het nu lezen.' : 'Teruggetrokken.');
+      await teamLaad();
+    } catch(e){ toast(e.message, 'fout'); b.disabled = false; }
+  });
+}
+
+async function teamOpslaan(){
+  const d = TEAMDATA.doc;
+  const regels = (document.getElementById('bwDelv').value || '').split('\n')
+    .map(r => r.trim()).filter(Boolean)
+    .map(r => { const i = r.indexOf('|');
+      return i < 0 ? { label:r } : { label:r.slice(0,i).trim(), toelichting:r.slice(i+1).trim() }; });
+  await beheer('opslaan', {
+    doc_id: d.id,
+    title: document.getElementById('bwTitle').value,
+    intro: document.getElementById('bwIntro').value,
+    body:  document.getElementById('bwBody').value,
+    deliverables: regels,
+  });
+}
+
+// Bouwt dezelfde structuur als /api/portal teruggeeft, zodat render() niets hoeft te weten
+// van de teammodus behalve waar de invoervelden staan.
+async function teamLaad(){
+  const lijst = await beheer('projecten');
+  const klantVan = id => lijst.klanten.find(k => k.id === id) || { name:'—', color:'#8a8a8a' };
+  const projecten = lijst.projecten.map(p => Object.assign({}, p, { klantnaam: klantVan(p.client_id).name }))
+    .sort((a,b) => (a.klantnaam+a.project).localeCompare(b.klantnaam+b.project));
+  if(!projecten.length){ document.getElementById('app').innerHTML = '<div class="wrap"><div class="leeg">Geen projecten.</div></div>'; return; }
+
+  if(!PROJECT_ID || !projecten.some(p => p.id === PROJECT_ID)) PROJECT_ID = projecten[0].id;
+  const proj = projecten.find(p => p.id === PROJECT_ID);
+  const klant = klantVan(proj.client_id);
+
+  const j = await beheer('doc', { project_id: PROJECT_ID });
+  TEAMDATA = { doc:j.doc, projecten, klanten:lijst.klanten };
+
+  const FASES = ['briefing','debrief','akkoord','uitvoering','oplevering','gefactureerd'];
+  const LBL = { briefing:'Briefing', debrief:'Debrief', akkoord:'Akkoord', uitvoering:'Uitvoering', oplevering:'Oplevering', gefactureerd:'Afgerond' };
+
+  DATA = {
+    klant: { naam: klant.name, kleur: klant.color },
+    projecten: [{
+      id: proj.id, naam: proj.project, fase: proj.phase,
+      fase_index: Math.max(0, FASES.indexOf(proj.phase)),
+      fases: FASES.map(k => ({ k, l: LBL[k] })),
+      docs: [Object.assign({}, j.doc, {
+        deliverables: j.deliverables, reacties: [], akkoord: j.akkoord,
+      })],
+      aanleveringen: (j.aanleveringen || []).map(a => ({
+        id:a.id, label:a.label, toelichting:a.toelichting, soort:a.soort, blokkeert:a.blokkeert,
+        status:a.status, waarde: (a.soort==='bedrag'||a.soort==='aantal') ? a.waarde_getal : a.waarde_tekst,
+      })),
+      bestanden: [],
+      offerte: null,
+      geld: null,
+    }],
+  };
+  ACTIEF = 0;
+  render();
+}
+
 /* ============================ acties ============================ */
 function bind(p){
   document.getElementById('kopUit').onclick = uitloggen;
@@ -487,7 +637,14 @@ async function laad(){
 async function start(){
   const s = await sb.auth.getSession();
   if(!s.data.session) return toonLogin();
-  try { await laad(); }
+
+  PROJECT_ID = new URLSearchParams(location.search).get('p');
+
+  // Hoort deze gebruiker bij het team? De server beslist dat, niet de browser.
+  try { await beheer('projecten'); TEAM = true; }
+  catch(e){ if(e.status !== 403) console.warn('teamcheck', e.message); }
+
+  try { TEAM ? await teamLaad() : await laad(); }
   catch(e){
     if(/niet ingelogd/.test(e.message)) return toonLogin();
     document.getElementById('app').innerHTML =
@@ -495,6 +652,8 @@ async function start(){
       + '<span style="font-size:13px">Neem contact op met Begeister als dit niet klopt.</span></div></div>';
   }
 }
+
+window.addEventListener('beforeunload', e => { if(VUIL){ e.preventDefault(); e.returnValue = ''; } });
 
 sb.auth.onAuthStateChange((e) => { if(e === 'SIGNED_OUT') toonLogin(); });
 start();
