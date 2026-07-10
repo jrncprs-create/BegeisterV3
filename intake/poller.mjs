@@ -148,13 +148,21 @@ export async function run() {
             });
             // Klein genoeg? Dan meteen naar Dropbox. Grote bestanden pakt de uurlijkse
             // wachtrij op — anders staat de intake tientallen seconden stil per foto.
+            // Lukt het, dan zetten we het document op gesynct; anders zou de wachtrij het
+            // straks nóg een keer uploaden.
             if (magDirect(att.size)) {
               try {
-                await fetch(`http://127.0.0.1:${process.env.PORT || 8080}/api/dropbox/list`, {
+                const r = await fetch(`http://127.0.0.1:${process.env.PORT || 8080}/api/dropbox/list`, {
                   method: "POST", headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({ action: "upload", name: att.filename,
                     b64: att.content.toString("base64"), target: "Postvak In", owner_type: "client" }),
-                });
+                }).then(x => x.json());
+                const link = r && r.file ? r.file.link : null;
+                if (link) {
+                  await db.from("documents")
+                    .update({ dropbox_path: link, dropbox_gesynct_op: new Date() })
+                    .eq("storage_path", path);
+                }
               } catch (_) { /* mislukt? de uurlijkse ronde pakt 'm alsnog op */ }
             }
 
