@@ -68,6 +68,9 @@
   .usage-chip{font-size:12px;color:var(--mut2,#888);font-weight:var(--fw-nadruk);cursor:pointer;padding:3px 8px;border:1px solid var(--line,#333);border-radius:999px;white-space:nowrap;opacity:.85}
   .usage-chip:hover{opacity:1;color:var(--txt)}
   .usage-chip:empty{display:none}
+  .dag-ic{background:transparent;border:none;padding:4px;color:var(--mut2);cursor:pointer;display:flex;
+    line-height:0;border-radius:6px;transition:color .15s}
+  .dag-ic:hover{color:#fff}
   .ver-chip{font-size:10px;color:var(--mut2);opacity:.5;font-weight:var(--fw-nadruk);letter-spacing:.3px;padding:2px 6px;border:1px solid var(--line);border-radius:999px;white-space:nowrap}
   /* iOS zoomt in op invoervelden < 16px; 16px voorkomt dat (zonder pinch-zoom te blokkeren) */
   @media(max-width:600px){ input,textarea,select{font-size:16px!important} }
@@ -919,6 +922,9 @@
     font-size:12px;color:var(--mut2);flex:0 0 auto}
   /* Het driehoekje stond alleen bij Bestanden. Weg — de rij zelf is de knop. */
   #filesWrap .fm-crow>.fm-tw{display:none}
+  /* Inspiratie: dezelfde rij, maar geen klantkleur en geen badge-letter. */
+  #filesWrap .fm-inspbadge{background:transparent!important;border:1px solid var(--line);color:var(--mut)!important;line-height:0;filter:none!important}
+  #filesWrap .fm-insprow .fm-name{color:var(--txt)!important;filter:none!important}
   /* Zoekveld bovenaan kolom 1 — zelfde vorm op Bestanden, Contacten en Bronnen.
      Contacten en Bronnen hadden hun zoekveld in kolom 2, met een andere reikwijdte
      ("in deze klant"). Dat is nu één veld dat de hele pagina filtert. */
@@ -1005,6 +1011,13 @@
      acties onder elkaar; dat las als een formulier per item in plaats van een lijst.
      Nu: volle breedte, één regel per bron, keuze en acties rechts. */
   #postvakWrap{padding:0}
+  .pv-tabs{display:flex;gap:0;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:4}
+  .pv-tab{flex:1;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--mut2);
+    font:inherit;font-size:13px;padding:13px 10px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;
+    transition:color .15s,border-color .15s}
+  .pv-tab:hover{color:var(--txt)}
+  .pv-tab.on{color:var(--txt);border-bottom-color:var(--mut)}
+  .pv-arcdot{width:22px;height:22px;font-size:11px;flex:0 0 auto;color:#000;display:flex;align-items:center;justify-content:center;border-radius:6px}
   .pv-bulk{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
   .pv-bulk-lbl{font-size:12px;color:var(--mut2);margin-right:2px}
   .pv-bulk .btn{font-size:12px;padding:5px 11px}
@@ -1566,15 +1579,13 @@
     /* mobiel menu: Planning (paraplu: In afwachting · Taken · Agenda) · Klanten · Financiën · Bestanden · Contacten · Bronnen | Dagoverzicht · Inspiratie · Meldingen. Losse kolom-knoppen weg — Planning + swipe vervangt ze. */
     #nav button[data-v="home"],#nav button[data-v="wachter"],#nav button[data-v="taken"],#nav button[data-v="agenda"],#nav button[data-v="afspraken"]{display:none}
     #nav button[data-v="planning"]{order:0}
-    #nav button[data-v="beheer"]{order:1}
-    #nav button[data-v="financien"]{order:2}
-    #nav button[data-v="files"]{order:3}
-    #nav button[data-v="contacten"]{order:4}
-    #nav button[data-v="bronnen"]{order:5}
-    #nav #dayBtn{order:6}
-    #nav #inspBtn{order:7}
-    #nav #pushBtn{order:8}
-    #nav button[data-v="archief"]{order:9}
+    #nav button[data-v="postvak"]{order:1}
+    #nav button[data-v="beheer"]{order:2}
+    #nav button[data-v="financien"]{order:3}
+    #nav button[data-v="files"]{order:4}
+    #nav button[data-v="contacten"]{order:5}
+    #nav #pushBtn{order:6}
+    #nav button[data-v="archief"]{order:7}
     /* mobiel: preview compact (thumbnail) i.p.v. fullscreen-bleed; close-knop vast rechtsboven */
     .fv-bar{position:relative;flex-wrap:wrap;gap:8px;row-gap:8px;padding:11px 52px 11px 14px}
     .fv-name{flex:1 1 auto}
@@ -1646,11 +1657,12 @@
     /* In-afwachting blok: geen extra top-padding zodat de colbar gelijk staat met Taken/Agenda */
     .rail #wachterBlock{padding-top:0}
     /* titels komen nu uit .colbar (zie boven), niet meer uit ::before */
-    /* Bronnen & Klanten: één kolom breed i.p.v. volle breedte */
-    #view-bronnen,#view-beheer,#view-contacten{max-width:34vw}
-    /* Bronnen / Klanten / Contacten wonen in de eerste kolom (#rail) met eigen scroll */
-    .rail #view-bronnen,.rail #view-beheer,.rail #view-contacten,.rail #view-files,.rail #view-archief,.rail #view-financien{display:block;max-width:none;position:relative;padding:0 16px 60px}
-    .rail #view-bronnen.hidden,.rail #view-beheer.hidden,.rail #view-contacten.hidden{display:none!important}
+    /* Klanten & Contacten: één kolom breed i.p.v. volle breedte */
+    #view-beheer,#view-contacten{max-width:34vw}
+    /* Alle rail-pagina's wonen in de eerste kolom (#rail) met eigen scroll. Postvak In
+       ontbrak hier: die kreeg geen padding en geen sluitkruis. */
+    .rail #view-beheer,.rail #view-contacten,.rail #view-files,.rail #view-archief,.rail #view-financien,.rail #view-postvak{display:block;max-width:none;position:relative;padding:0 16px 60px}
+    .rail #view-beheer.hidden,.rail #view-contacten.hidden,.rail #view-postvak.hidden{display:none!important}
     /* sluitkruis rechtsboven in een rail-kolom */
     .rail .rail-close{position:absolute;top:18px;right:12px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;background:transparent;border:none;color:rgba(255,255,255,.6);cursor:pointer;padding:0;z-index:5;transition:color .15s}
     .rail .rail-close:hover{color:#fff}
@@ -1969,15 +1981,13 @@
       <button data-v="financien" onclick="setView('financien')">Financiën</button>
       <button data-v="files" onclick="setView('files')">Bestanden</button>
       <button data-v="contacten" onclick="setView('contacten')">Contacten</button>
-      <button data-v="bronnen" onclick="setView('bronnen')">Bronnen <span class="badge" id="nb-bron"></span></button>
-      <button id="dayBtn" onclick="openDayOverview()" title="Dagoverzicht">Dagoverzicht</button>
-      <button id="inspBtn" onclick="openInspiration()" title="Inspiratie">Inspiratie</button>
       <button id="pushBtn" onclick="enablePush()" title="Meldingen aanzetten">Meldingen</button>
       <button id="clipBtn" class="nav-picto" onclick="pasteAsSource()" aria-label="Plakken — plak het klembord op het dashboard" title="Plakken — plak het klembord op het dashboard"><svg viewBox="0 0 24 24" width="16" height="16" style="vertical-align:-3px" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M8 5H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/></svg><span class="nav-picto-lbl">Plakken</span></button>
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v201</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v203</span>
+      <button id="dayBtn" class="dag-ic" onclick="openDayOverview()" title="Dagoverzicht" aria-label="Dagoverzicht"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M3 12h2M19 12h2M5.6 18.4l1.4-1.4M17 7l1.4-1.4"/></svg></button>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:14px;font-weight:var(--fw-nadruk);cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -2019,16 +2029,12 @@
       <div id="view-railhint" class="hidden"><div class="fin-mid-hint" id="railHintTxt">Kies links een item om de details te zien.</div></div>
       <div id="view-conmid" class="hidden"><div id="conMidWrap"></div></div>
       <div id="view-conright" class="hidden"><div id="conRightWrap"></div></div>
-      <div id="view-bronmid" class="hidden"><div id="bronMidWrap"></div></div>
-      <div id="view-bronright" class="hidden"><div id="bronRightWrap"></div></div>
       <div id="view-pvmid" class="hidden"><div id="pvMidWrap"></div></div>
       <div id="view-pvright" class="hidden"><div id="pvRightWrap"></div></div>
       <div id="view-beheerboard" class="hidden"><div id="beheerBoardWrap"></div></div>
 
       <div id="view-afspraken" class="hidden"></div>
 
-      <div id="view-bronnen" class="hidden">
-        <div id="bronnenWrap"></div>
       </div>
 
       <div id="view-beheer" class="hidden">
@@ -2913,9 +2919,11 @@ function chipTip(x){const di=dueInfo(x.it.due);return (escapeHtml(x.it.t)+' — 
 // welke views horen op desktop in de eerste kolom (#rail)
 // Views die de eerste kolom overnemen. 'postvak' hoorde hier ook bij: zonder dat bleef
 // de kolom "In afwachting" ernaast staan, wat nergens op sloeg.
-const RAILVIEWS=['bronnen','beheer','financien','contacten','archief','files','postvak'];
+const RAILVIEWS=['beheer','financien','contacten','archief','files','postvak'];
 function openPlanning(){ const n=document.getElementById('nav'); if(n)n.classList.remove('open'); setView(isDesk3()?'taken':'wachter'); }
 function setView(v){
+  // Bronnen is geen pagina meer: het is het Archief-tabblad van het Postvak In.
+  if(v==='bronnen'){ _pvTab='archief'; v='postvak'; }
   // Sluit zwevende overlays zodat ze niet in een kolom blijven hangen bij menu-wissel
   try{ const po=document.getElementById('projOverlay'); if(po&&po.classList.contains('open')) closeProjectBoard(); }catch(_){}
   try{ const ao=document.getElementById('apptOverlay'); if(ao&&ao.classList.contains('open')) closeApptModal(); }catch(_){}
@@ -2936,7 +2944,6 @@ function setView(v){
   document.getElementById('view-agenda').classList.toggle('hidden', d3 ? false : v!=='agenda');
   document.getElementById('view-afspraken').classList.toggle('hidden',v!=='afspraken');
   document.getElementById('view-wachter').classList.toggle('hidden', d3 ? true : v!=='wachter');
-  document.getElementById('view-bronnen').classList.toggle('hidden', d3 ? (v!=='bronnen') : v!=='bronnen');
   document.getElementById('view-beheer').classList.toggle('hidden', d3 ? (v!=='beheer') : v!=='beheer');
   document.getElementById('view-financien').classList.toggle('hidden', v!=='financien');
   document.getElementById('view-contacten').classList.toggle('hidden', d3 ? (v!=='contacten') : v!=='contacten');
@@ -2947,7 +2954,7 @@ function setView(v){
   const wb=document.getElementById('wachterBlock'); if(wb) wb.classList.toggle('hidden', d3 && railView);
 
   if(typeof _ensureRailCloses==='function') _ensureRailCloses();
-  document.getElementById('viewTitle').textContent={home:'',taken:'Taken',agenda:'Agenda',afspraken:'Afspraken',wachter:'In afwachting',bronnen:'Bronnen',beheer:'Klanten & projecten',financien:'Financiën',contacten:'Contacten',archief:'Archief',files:'Bestanden',postvak:'Postvak In'}[v];
+  document.getElementById('viewTitle').textContent={home:'',taken:'Taken',agenda:'Agenda',afspraken:'Afspraken',wachter:'In afwachting',beheer:'Klanten & projecten',financien:'Financiën',contacten:'Contacten',archief:'Archief',files:'Bestanden',postvak:'Postvak In'}[v];
   // desktop-werkblad: Taken (midden) + Agenda (rechts) tegelijk zichtbaar — op desktop ALTIJD aan
   const ws = d3;
   const main=document.querySelector('.main'); if(main) main.classList.toggle('workspace',ws);
@@ -2963,9 +2970,6 @@ function setView(v){
     const cm=document.getElementById('view-conmid'),crt=document.getElementById('view-conright');
     if(cm)cm.classList.toggle('hidden',v!=='contacten');
     if(crt)crt.classList.toggle('hidden',v!=='contacten');
-    const bm=document.getElementById('view-bronmid'),brt=document.getElementById('view-bronright');
-    if(bm)bm.classList.toggle('hidden',v!=='bronnen');
-    if(brt)brt.classList.toggle('hidden',v!=='bronnen');
     const pm=document.getElementById('view-pvmid'),prt=document.getElementById('view-pvright');
     if(pm)pm.classList.toggle('hidden',v!=='postvak');
     if(prt)prt.classList.toggle('hidden',v!=='postvak');
@@ -2973,7 +2977,7 @@ function setView(v){
     const beheerBoardOn=(v==='beheer' && _pbTarget==='beheer' && !!_pbPid);
     const bb=document.getElementById('view-beheerboard'); if(bb)bb.classList.toggle('hidden',!beheerBoardOn);
     const rh=document.getElementById('view-railhint'); if(rh)rh.classList.toggle('hidden', !(_railHintViews.includes(v) && !beheerBoardOn));
-    const rht=document.getElementById('railHintTxt'); if(rht)rht.textContent=(v==='beheer')?'Kies links een project om het werkblad te openen.':(v==='bronnen')?'Kies links een bron om de preview te zien.':'Kies links een item om de details te zien.';
+    const rht=document.getElementById('railHintTxt'); if(rht)rht.textContent=(v==='beheer')?'Kies links een project om het werkblad te openen.':'Kies links een item om de details te zien.';
   } else {
     ['view-finmid','view-finright','view-railhint','view-conmid','view-conright','view-bronmid','view-bronright','view-beheerboard'].forEach(id=>{const e=document.getElementById(id);if(e)e.classList.add('hidden');});
   }
@@ -3069,7 +3073,7 @@ function render(){
   if(view==='taken'||ws||_mobPlan)renderTaken();
   if(view==='agenda'||ws||_mobPlan)renderAgenda();
   if(view==='afspraken')renderAfspraken();
-  if(view==='bronnen'||ws)renderBronnen();
+  if(view==='postvak')renderPostvak();
   if(view==='beheer'||ws)renderProjecten();
   if(view==='financien')renderFinancien();
   if(view==='contacten'||ws)renderContacten();
@@ -3082,7 +3086,7 @@ function render(){
 }
 function renderBadges(){
   document.getElementById('nb-taken').textContent=allItems().filter(x=>x.it.status!=='done').length;
-  document.getElementById('nb-bron').textContent=state.sources.length;
+  // (de Bronnen-badge is vervallen; het aantal staat op het Archief-tabblad)
   const ab=document.getElementById('nb-afspraken');
   if(ab){const ti=iso(TODAY);ab.textContent=(state.appointments||[]).filter(a=>a.date>=ti).length;}
   const pb=document.getElementById('nb-postvak');
@@ -3141,7 +3145,22 @@ function _pvVoorstelRegel(s, sug){
    Het stond eerst als één brede lijst met de acties per item onder elkaar; dat las
    als een formulier per bron in plaats van als een postvak.
    ============================================================================ */
-var _pvKanaal=null, _pvSel=null;
+var _pvKanaal=null, _pvSel=null, _pvTab='wacht', _pvZoek='';
+// Wacht = nog niet weggezet. Archief = alles wat het postvak verlaten heeft. Dat was
+// een eigen pagina ("Bronnen"); het is geen bestemming maar de andere helft van dit postvak.
+function _pvArchief(){
+  const inboxIds=new Set((state.inbox||[]).map(x=>String(x.id)));
+  return _bronClean().filter(s=>!inboxIds.has(String(s.id))).sort((a,b)=>d(b.date)-d(a.date));
+}
+function _pvLijst(){ return _pvTab==='archief' ? _pvArchief() : (state.inbox||[]); }
+function _pvZoekMatch(s,q){ return !q || (_srcTitle(s)+' '+(s.subject||'')+' '+(s.body||s.text||'')+' '+(s.summary||'')+' '+(s.full||'')).toLowerCase().includes(q); }
+function _pvGefilterd(){
+  const q=(_pvZoek||'').toLowerCase().trim();
+  return _pvLijst().filter(s=>_pvZoekMatch(s,q));
+}
+function pvTab(t){ _pvTab=t; _pvSel=null; renderPostvak(); }
+function _pvZoeken(q){ _pvZoek=q; renderPostvak();
+  const si=document.getElementById('pv_search'); if(si){ si.focus(); try{si.setSelectionRange(si.value.length,si.value.length);}catch(_){} } }
 const _PV_KANAAL=[
   {k:'email',    l:'Mail'},
   {k:'whatsapp', l:'WhatsApp'},
@@ -3156,9 +3175,11 @@ function selectPvBron(id){ _pvSel=id; renderPvRight();
 // Kolom 1 — de kanalen, met tellers en de knoppen die over álles gaan.
 function renderPostvak(){
   const wrap=document.getElementById('postvakWrap'); if(!wrap)return;
-  const inbox=state.inbox||[];
+  if(!isDesk3()){ return _pvTreeMobile(wrap); }
+  const inbox=_pvGefilterd();
+  const kop=_kolomZoek('pv_search', _pvZoek, _pvTab==='archief'?'Zoek in het archief\u2026':'Zoek in het postvak\u2026', '_pvZoeken');
   if(!inbox.length){
-    wrap.innerHTML='<div class="pv-leeg">Postvak In is leeg. Alles wat binnenkwam heeft een plek.</div>';
+    wrap.innerHTML=kop+'<div class="pv-leeg">'+(_pvZoek?'Niets gevonden.':(_pvTab==='archief'?'Het archief is leeg.':'Postvak In is leeg. Alles wat binnenkwam heeft een plek.'))+'</div>';
     renderPvMid(); renderPvRight(); return;
   }
   const tel={}; inbox.forEach(s=>{ const k=_pvKanaalVan(s); tel[k]=(tel[k]||0)+1; });
@@ -3180,7 +3201,9 @@ function renderPostvak(){
   if(tel.overig) rows+=rij('overig','Overig',tel.overig);
 
   const nSug=Object.keys(_pvSug).length;
-  let foot='<div class="pv-foot">'
+  let foot='';
+  if(_pvTab==='wacht'){
+  foot='<div class="pv-foot">'
     + '<button class="btn ghost" id="pvAiBtn" onclick="pvSuggestAll()"'+(_pvBusy?' disabled':'')+'>'
     + (_pvBusy?'Bezig\u2026':(nSug?'\u2726 Opnieuw voorstellen':'\u2726 Laat de AI voorstellen doen'))+'</button>';
   if(nSug){
@@ -3192,24 +3215,45 @@ function renderPostvak(){
     if(b.werkZonderProject.length) foot+='<span class="pv-rest">'+b.werkZonderProject.length+' \u00d7 werk zonder project \u2014 met de hand</span>';
   }
   foot+='</div>';
+  }
 
-  wrap.innerHTML=rows+foot;
+  wrap.innerHTML=kop+rows+foot;
   renderPvMid(); renderPvRight();
 }
 
 // Kolom 2 — de items zelf.
+function _pvTabbalk(){
+  const wachtN=(state.inbox||[]).length, archN=_pvArchief().length;
+  const t=(k,l,n)=>'<button class="pv-tab'+(_pvTab===k?' on':'')+'" onclick="pvTab(\''+k+'\')">'+l+' <span class="con-ccnt">'+n+'</span></button>';
+  return '<div class="pv-tabs">'+t('wacht','Wacht',wachtN)+t('archief','Archief',archN)+'</div>';
+}
 function renderPvMid(){
   const w=document.getElementById('pvMidWrap'); if(!w)return;
-  const inbox=(state.inbox||[]).filter(s=>!_pvKanaal||_pvKanaalVan(s)===_pvKanaal);
-  if(!inbox.length){ w.innerHTML='<div class="fin-mid-hint">Niets in dit kanaal.</div>'; return; }
+  const inbox=_pvGefilterd().filter(s=>!_pvKanaal||_pvKanaalVan(s)===_pvKanaal);
+  if(!inbox.length){ w.innerHTML=_pvTabbalk()+'<div class="fin-mid-hint">Niets in dit kanaal.</div>'; return; }
+  if(_pvTab==='archief'){
+    const rijen=inbox.map(s=>{
+      const cl=_bronClientOf(s), col=cl?(_clientColor(cl)||'#888'):'#555';
+      const on=(String(_pvSel)===String(s.id))?' on':'';
+      const dt=s.date?_finShortDate(s.date):'';
+      const nAtt=(s.attachFull&&s.attachFull.length)||0;
+      return '<div class="pv-row pv-arch'+on+'" data-sid="'+s.id+'" onclick="selectPvBron(\''+s.id+'\')">'
+        + '<div class="pv-kop">'
+        +   '<span class="con-cdot pv-arcdot" style="background:'+col+'">'+escapeHtml(cl?cl.trim()[0].toUpperCase():'\u00b7')+'</span>'
+        +   '<span class="pv-titel">'+escapeHtml(_srcTitle(s))+'</span>'
+        +   '<span class="pv-dat">'+escapeHtml(dt)+'</span>'
+        +   _wisknopHTML("event.stopPropagation();pvVerwijder('"+s.id+"',this)", !!_pvDelWacht[s.id])
+        + '</div>'
+        + (cl||nAtt?'<div class="pv-reden">'+escapeHtml(cl||'Geen klant')+(nAtt?' \u00b7 '+nAtt+' bijlage'+(nAtt>1?'n':''):'')+'</div>':'')
+        + '</div>';
+    }).join('');
+    w.innerHTML=_pvTabbalk()+rijen;
+    return;
+  }
 
   // Twee appjes met dezelfde link zijn geen twee idee\u00ebn. Markeer ze.
   const linkTel={};
   (state.inbox||[]).forEach(s=>{ const l=_bronLink(s); if(l) linkTel[l]=(linkTel[l]||0)+1; });
-
-  const kop='<div class="con-midhdr"><span class="con-midttl">'
-    + escapeHtml(_pvKanaal?((_PV_KANAAL.find(x=>x.k===_pvKanaal)||{}).l||'Overig'):'Alles')
-    + '</span><span class="con-ccnt">'+inbox.length+'</span></div>';
 
   let h='';
   inbox.forEach(s=>{
@@ -3242,7 +3286,7 @@ function renderPvMid(){
      +   '</div>'
      + '</div>';
   });
-  w.innerHTML=kop+h;
+  w.innerHTML=_pvTabbalk()+h;
   _uniformeSelects(w);
 }
 
@@ -4810,7 +4854,7 @@ function _srcConvHTML(cl){
 }
 async function srcDeleteMany(ids){ const arr=String(ids).split(',').filter(Boolean); if(!arr.length)return; if(!(await uiConfirm('Dit hele gesprek ('+arr.length+' berichten) verwijderen?')))return; try{ await sb.from('sources').delete().in('id',arr); }catch(_){} await refresh(); }
 // Bubbel naar 'mijn kant' (rechts, in kleur) of terug naar links wisselen — wordt onthouden.
-async function waFlip(id){ const s=state.sources.find(x=>x.id===id); if(!s)return; s.waSide=(s.waSide==='me')?'them':'me'; try{ await sb.from('sources').update({wa_side:s.waSide}).eq('id',id); }catch(_){} renderBronnen(); }
+async function waFlip(id){ const s=state.sources.find(x=>x.id===id); if(!s)return; s.waSide=(s.waSide==='me')?'them':'me'; try{ await sb.from('sources').update({wa_side:s.waSide}).eq('id',id); }catch(_){} renderPvRight(); }
 function _srcRowHTML(s){
   const scol=PROJCOL[s.proj]||'';            // alleen een klantkleur als de bron écht aan een klant hangt
   const col=scol||'var(--primary2)';          // voor autolink in de body
@@ -4845,45 +4889,8 @@ function _srcRowHTML(s){
   </div>`;
 }
 // ---- Bronnen: Klanten-indeling (kolom 1 klanten · kolom 2 bronnen · kolom 3 preview) ----
-let _bronClient=null,_bronSrc=null,_bronSearch='';
 function _bronClientOf(s){ const p=s&&s.proj?projById(s.proj):null; return (p&&(p.client||'').trim())||''; }
 function _bronClean(){ const seen=new Set(); return (state.sources||[]).filter(s=>{ if(_isImageSource(s))return false; const k=_srcDedupeKey(s); if(seen.has(k))return false; seen.add(k); return true; }); }
-function _bronSourcesFor(cl){ return _bronClean().filter(s=>{ const sc=_bronClientOf(s); return cl==='__none__'?!sc:sc===cl; }).sort((a,b)=>d(b.date)-d(a.date)); }
-function selectBronClient(cl){ _bronClient=cl; _bronSrc=null; renderBronnen(); }   // zoekterm blijft staan: hij geldt voor de hele pagina
-function selectBronSrc(id){ _bronSrc=id; renderBronRight(); document.querySelectorAll('#bronMidWrap .con-li').forEach(el=>el.classList.toggle('on',el.dataset.id===id)); }
-function _bronFilter(q){ _bronSearch=q; renderBronnen();
-  const si=document.getElementById('bron_search'); if(si){ si.focus(); try{si.setSelectionRange(si.value.length,si.value.length);}catch(_){} } }
-// Waar zoeken we in? Titel, tekst, samenvatting en de volledige inhoud van de bron.
-function _bronMatch(s,q){ return !q || (_srcTitle(s)+' '+(s.text||'')+' '+(s.summary||'')+' '+(s.full||'')).toLowerCase().includes(q); }
-function renderBronnen(){
-  const wrap=document.getElementById('bronnenWrap'); if(!wrap)return;
-  if(!isDesk3()){ return _bronTreeMobile(wrap); }
-  const q=(_bronSearch||'').toLowerCase().trim();
-  const clean=_bronClean().filter(s=>_bronMatch(s,q));
-  const cnt={}; clean.forEach(s=>{ const cl=_bronClientOf(s); if(cl)cnt[cl]=(cnt[cl]||0)+1; });
-  const noneN=clean.filter(s=>!_bronClientOf(s)).length;
-  const clients=uniqueClients().filter(Boolean).filter(cl=>cnt[cl]).sort((a,b)=>a.localeCompare(b));
-  let rows=clients.map(cl=>{ const col=_clientColor(cl)||'#888'; const ic=escapeHtml(((String(cl).trim()[0])||'?').toUpperCase()); const on=(_bronClient===cl)?' on':'';
-    return `<div class="con-crow${on}" onclick="selectBronClient('${_qs(cl)}')"><span class="con-cdot" style="background:${col}">${ic}</span><div class="con-cmain"><div class="con-cnm" style="color:${col}">${escapeHtml(cl)}</div></div><span class="con-ccnt">${cnt[cl]}</span></div>`;
-  }).join('');
-  if(noneN){ const on=(_bronClient==='__none__')?' on':''; rows+=`<div class="con-crow${on}" onclick="selectBronClient('__none__')"><span class="con-cdot" style="background:#555">·</span><div class="con-cmain"><div class="con-cnm">Overig</div></div><span class="con-ccnt">${noneN}</span></div>`; }
-  const leeg = q ? '<div class="hint">Geen bron gevonden voor "'+escapeHtml(_bronSearch)+'".</div>'
-                 : '<div class="hint">Nog geen bronnen. Ze verschijnen hier uit binnengekomen berichten of via Plakken.</div>';
-  wrap.innerHTML=_kolomZoek('bron_search', _bronSearch, 'Zoek bronnen…', '_bronFilter')+(rows||leeg);
-  renderBronMid(); renderBronRight();
-}
-function renderBronMid(){
-  const w=document.getElementById('bronMidWrap'); if(!w)return;
-  if(!_bronClient){ w.innerHTML='<div class="fin-mid-hint">Kies links een klant om de bronnen te zien.</div>'; return; }
-  let list=_bronSourcesFor(_bronClient);
-  const q=(_bronSearch||'').toLowerCase().trim();
-  if(q) list=list.filter(s=>(_srcTitle(s)+' '+(s.text||'')+' '+(s.summary||'')+' '+(s.full||'')).toLowerCase().includes(q));
-  const rows=list.map(s=>{ const on=(_bronSrc===s.id)?' on':''; const dt=s.date?_finShortDate(s.date):''; const nAtt=(s.attachFull&&s.attachFull.length)?s.attachFull.length:0;
-    return `<div class="con-li${on}" data-id="${s.id}" onclick="selectBronSrc('${s.id}')"><div class="cmain"><div class="cname">${escapeHtml(_srcTitle(s))}</div><div class="crole">${escapeHtml(dt)}${nAtt?' · '+nAtt+' bijlage'+(nAtt>1?'n':''):''}</div></div><button class="bron-del" onclick="event.stopPropagation();srcDelete('${s.id}')" title="Bron verwijderen" aria-label="Bron verwijderen">${_tIc('<path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M7 7l1 13h8l1-13"/>',16,1.6)}</button></div>`;
-  }).join('');
-  w.innerHTML=`<div class="con-midhdr"><span class="con-midttl">${escapeHtml(_bronClient==='__none__'?'Overig':_bronClient)}</span></div>`+(rows||'<div class="hint">Geen bronnen bij deze klant.</div>');
-}
-function renderBronRight(){ _bronPreview('bronRightWrap', _bronSrc, 'Kies een bron voor de preview.'); }
 // Eén bronpreview. Bronnen en Postvak In tonen hetzelfde ding; ze verschillen alleen in
 // welke bron je hebt aangeklikt.
 function _bronPreview(wrapId, sid, leegTekst){
@@ -5150,11 +5157,12 @@ function _bronPaintAtt(){
 }
 function bronAttGa(i){ if(i<0||i>=_bronAtts.length)return; _bronAttIdx=i; _bronPaintAtt(); }
 function bronAttStap(d){ if(!_bronAtts.length)return; _bronAttIdx=(_bronAttIdx+d+_bronAtts.length)%_bronAtts.length; _bronPaintAtt(); }
-// ---- Mobiele mappenstructuur Bronnen (klant → uitklappen → bron → preview). Alleen <1001px. ----
-let _bronTreeCli=new Set();
-function toggleBronTree(key){ if(_bronTreeCli.has(key))_bronTreeCli.delete(key); else _bronTreeCli.add(key); renderBronnen(); }
-function toggleBronItem(id){ _bronSrc=(_bronSrc===id)?null:id; renderBronnen();
-  if(_bronSrc===id){ const s=(state.sources||[]).find(x=>x.id===id); const atts=(s&&s.attachFull&&s.attachFull.length)?s.attachFull:[]; if(atts.length&&atts[0].storage_path) _bronLoadAttachment(atts[0],'btstage_'+id); }
+// ---- Mobiele mappenstructuur Postvak In (kanaal → uitklappen → bericht → preview). Alleen <1001px.
+//      Dit was de mobiele Bronnen-pagina; die bestaat niet meer als aparte plek. ----
+let _pvTreeKan=new Set();
+function pvToggleKanaal(k){ if(_pvTreeKan.has(k))_pvTreeKan.delete(k); else _pvTreeKan.add(k); renderPostvak(); }
+function pvToggleItem(id){ _pvSel=(String(_pvSel)===String(id))?null:id; renderPostvak();
+  if(String(_pvSel)===String(id)){ const s=(state.sources||[]).find(x=>String(x.id)===String(id)); const atts=(s&&s.attachFull&&s.attachFull.length)?s.attachFull:[]; if(atts.length&&atts[0].storage_path) _bronLoadAttachment(atts[0],'btstage_'+id); }
 }
 function _bronPreviewHTML(s){
   const col=(s.proj&&PROJCOL[s.proj])||'var(--primary2)';
@@ -5167,27 +5175,26 @@ function _bronPreviewHTML(s){
   const body=autolink(escapeHtml(raw),col);
   return `<div class="bron-prevtext" style="white-space:pre-wrap;line-height:1.6;font-size:14px;color:var(--mut)">${body||'<span class="fmp-none">Geen inhoud.</span>'}</div>`;
 }
-function _bronTreeItem(s){
-  const open=(_bronSrc===s.id); const dt=s.date?_finShortDate(s.date):''; const nAtt=(s.attachFull&&s.attachFull.length)?s.attachFull.length:0;
-  let h=`<div class="mtree-item${open?' open':''}" onclick="toggleBronItem('${s.id}')"><div class="cmain"><div class="cname">${escapeHtml(_srcTitle(s))}</div><div class="crole">${escapeHtml(dt)}${nAtt?' · '+nAtt+' bijlage'+(nAtt>1?'n':''):''}</div></div><button class="bron-del" onclick="event.stopPropagation();srcDelete('${s.id}')" title="Bron verwijderen" aria-label="Bron verwijderen">${_tIc('<path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M7 7l1 13h8l1-13"/>',16,1.6)}</button></div>`;
+function _pvTreeItem(s){
+  const open=(String(_pvSel)===String(s.id)); const dt=s.date?_finShortDate(s.date):''; const nAtt=(s.attachFull&&s.attachFull.length)?s.attachFull.length:0;
+  let h=`<div class="mtree-item${open?' open':''}" onclick="pvToggleItem('${s.id}')"><div class="cmain"><div class="cname">${escapeHtml(_srcTitle(s))}</div><div class="crole">${escapeHtml(dt)}${nAtt?' · '+nAtt+' bijlage'+(nAtt>1?'n':''):''}</div></div><button class="bron-del" onclick="event.stopPropagation();srcDelete('${s.id}')" title="Bron verwijderen" aria-label="Bron verwijderen">${_tIc('<path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M7 7l1 13h8l1-13"/>',16,1.6)}</button></div>`;
   if(open) h+=`<div class="mtree-detail">${_bronPreviewHTML(s)}</div>`;
   return h;
 }
-function _bronTreeMobile(wrap){
-  const clean=_bronClean();
-  const cnt={}; clean.forEach(s=>{ const cl=_bronClientOf(s); if(cl)cnt[cl]=(cnt[cl]||0)+1; });
-  const noneN=clean.filter(s=>!_bronClientOf(s)).length;
-  const clients=uniqueClients().filter(Boolean).filter(cl=>cnt[cl]).sort((a,b)=>a.localeCompare(b));
-  let h='';
-  const cliRow=(cl,col,ic,n,key)=>{
-    const open=_bronTreeCli.has(key);
-    let s=`<div class="mtree-cli${open?' open':''}" onclick="toggleBronTree('${_qs(key)}')"><span class="con-cdot" style="background:${col}">${ic}</span><div class="con-cmain"><div class="con-cnm" style="color:${col}">${escapeHtml(cl)}</div></div><span class="con-ccnt">${n}</span><span class="mtree-chev">${_chevIc}</span></div>`;
-    if(open){ const list=_bronSourcesFor(key); s+='<div class="mtree-kids">'+(list.map(_bronTreeItem).join('')||'<div class="hint">Geen bronnen.</div>')+'</div>'; }
-    return s;
+function _pvTreeMobile(wrap){
+  const lijst=_pvGefilterd();
+  const per={}; lijst.forEach(s=>{ const k=_pvKanaalVan(s); (per[k]=per[k]||[]).push(s); });
+  let h=_kolomZoek('pv_search', _pvZoek, _pvTab==='archief'?'Zoek in het archief…':'Zoek in het postvak…', '_pvZoeken')+_pvTabbalk();
+  const kanRow=(k,l)=>{
+    const list=per[k]||[]; if(!list.length) return '';
+    const open=_pvTreeKan.has(k);
+    let x=`<div class="mtree-cli${open?' open':''}" onclick="pvToggleKanaal('${k}')"><span class="con-cdot pv-kdot">${_PV_ICON[k]||'·'}</span><div class="con-cmain"><div class="con-cnm">${escapeHtml(l)}</div></div><span class="con-ccnt">${list.length}</span><span class="mtree-chev">${_chevIc}</span></div>`;
+    if(open) x+='<div class="mtree-kids">'+list.map(_pvTreeItem).join('')+'</div>';
+    return x;
   };
-  clients.forEach(cl=>{ const col=_clientColor(cl)||'#888'; const ic=escapeHtml(((String(cl).trim()[0])||'?').toUpperCase()); h+=cliRow(cl,col,ic,cnt[cl],cl); });
-  if(noneN) h+=cliRow('Overig','#555','·',noneN,'__none__');
-  wrap.innerHTML=h||'<div class="hint">Nog geen bronnen. Ze verschijnen hier uit binnengekomen berichten of via Plakken.</div>';
+  _PV_KANAAL.forEach(x=>{ h+=kanRow(x.k,x.l); });
+  h+=kanRow('overig','Overig');
+  wrap.innerHTML=h+(lijst.length?'':'<div class="hint">Niets gevonden.</div>');
 }
 // Thumbnails van afbeeldings-bijlagen laden. Gaat via de gedeelde url-resolver.
 async function _fillSrcThumbs(){
@@ -5265,7 +5272,12 @@ function toggleSrc(id){
   if(willOpen && card) setTimeout(()=>{ try{card.scrollIntoView({behavior:'smooth',block:'start'});}catch(_){card.scrollIntoView();} },70);
 }
 function toggleFull(id){const f=document.getElementById('full_'+id);const b=document.getElementById('fbtn_'+id);f.classList.toggle('open');b.textContent=f.classList.contains('open')?'Verberg origineel ▴':'Toon volledig origineel ▾';}
-function gotoSource(sid){ const s=(state.sources||[]).find(x=>x.id===sid); const cl=s?(_bronClientOf(s)||'__none__'):null; _bronClient=cl; _bronSrc=sid; setView('bronnen'); setTimeout(()=>{ try{ renderBronnen(); const el=document.querySelector('#bronMidWrap .con-li[data-id="'+sid+'"]'); if(el)el.scrollIntoView({behavior:'smooth',block:'center'}); }catch(_){} },60); }
+function gotoSource(sid){
+  const inInbox=(state.inbox||[]).some(x=>String(x.id)===String(sid));
+  _pvTab=inInbox?'wacht':'archief'; _pvKanaal=null; _pvZoek=''; _pvSel=sid;
+  setView('postvak');
+  setTimeout(()=>{ try{ renderPostvak(); const el=document.querySelector('#pvMidWrap .pv-row[data-sid="'+sid+'"]'); if(el)el.scrollIntoView({behavior:'smooth',block:'center'}); }catch(_){} },60);
+}
 if(!window._srcTintInit){window._srcTintInit=true;document.addEventListener('click',e=>{const t=document.querySelector('.srow.tinted');if(t&&!t.contains(e.target))t.classList.remove('tinted');});}
 
 // ---------- contacten ----------
@@ -5568,8 +5580,10 @@ function _finMapVan(f){
   return null;
 }
 
-var _pbMapDicht=new Set();
-function pbToggleMap(soort){ if(_pbMapDicht.has(soort))_pbMapDicht.delete(soort); else _pbMapDicht.add(soort); _renderProjBoard(); }
+// Mappen op het projectbord beginnen dicht. Ze stonden allemaal open, ook na een refresh:
+// de set hield alleen bij wat je hád dichtgeklapt. Nu andersom — hij houdt bij wat open staat.
+var _pbMapOpen=new Set();
+function pbToggleMap(soort){ if(_pbMapOpen.has(soort))_pbMapOpen.delete(soort); else _pbMapOpen.add(soort); _renderProjBoard(); }
 
 function _pbMapKop(naam, aantal, dicht, extraKlasse){
   return '<button class="pb-maph'+(dicht?' dicht':'')+(extraKlasse?' '+extraKlasse:'')+'" onclick="pbToggleMap(\''+naam.replace(/'/g,"\\'")+'\')">'
@@ -5593,12 +5607,12 @@ function _bestandenPerSoort(lijst, kleur, toonFinancien){
     const inFin={}; _FIN_MAPPEN.forEach(m=>inFin[m]=[]);
     lijst.forEach(f=>{ const m=_finMapVan(f); if(m) inFin[m].push(f); });
     const totaal=_FIN_MAPPEN.reduce((n,m)=>n+inFin[m].length,0);
-    const dichtFin=_pbMapDicht.has('Financien');
+    const dichtFin=!_pbMapOpen.has('Financien');
     h+='<div class="pb-map pb-map-fin" style="--mcol:'+kleur+'">'
       + _pbMapKop('Financien', totaal, dichtFin, 'pb-maph-top')
       + '<div class="pb-mapkids">'
       + (dichtFin?'':_FIN_MAPPEN.map(m=>{
-          const dicht=_pbMapDicht.has('Financien/'+m);
+          const dicht=!_pbMapOpen.has('Financien/'+m);
           const kids=dicht?'':(inFin[m].length?inFin[m].map(_fileRow).join(''):'<div class="pb-mapleeg">Nog niets.</div>');
           return '<div class="pb-map pb-map-sub" style="--mcol:'+kleur+'">'
             + _pbMapKop('Financien/'+m, inFin[m].length, dicht).replace('>Financien/'+m+'<', '>'+m+'<')
@@ -5613,7 +5627,7 @@ function _bestandenPerSoort(lijst, kleur, toonFinancien){
   const per={};
   rest.forEach(f=>{ const s=_bestandSoortMap(f.name); (per[s]=per[s]||[]).push(f); });
   h+=_SOORT_VOLGORDE.filter(s=>per[s]).map(soort=>{
-    const dicht=_pbMapDicht.has(soort);
+    const dicht=!_pbMapOpen.has(soort);
     return '<div class="pb-map" style="--mcol:'+kleur+'">'
       + _pbMapKop(soort, per[soort].length, dicht)
       + '<div class="pb-mapkids">'+(dicht?'':per[soort].map(_fileRow).join(''))+'</div></div>';
@@ -6168,6 +6182,7 @@ function renderFiles(){
   if(!wrap.querySelector('.fm-search')){
     wrap.innerHTML='<div class="fm-top"><div class="fm-search"><span class="fm-sic">'+_searchGlyph()+'</span><input id="fmSearch" placeholder="Zoek bestanden…" autocomplete="off" oninput="fmSearch(this.value)"></div><button class="fm-newfolder" onclick="fmNewFolder()" title="Nieuwe map"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5a2 2 0 0 1 2 -2h4l2 2h5a2 2 0 0 1 2 2v3"/><path d="M3 7v11a2 2 0 0 0 2 2h7"/><path d="M16 19h6M19 16v6"/></svg></button></div><div id="fmTree"></div><div class="fm-foot"><button class="fm-sort" id="fmSortBtn" onclick="fmSortAI()">Sorteer met AI</button><button class="fm-sort" id="fmRenameBtn" onclick="fmRenameAI()" title="Hernoem op inhoud: Klant-Project-onderwerp-datum-vN">Hernoem met AI</button><button class="fm-sort" id="fmSyncBtn" onclick="fmSyncDropbox()" title="Dropbox-mappen gelijktrekken met deze indeling">Sync naar Dropbox</button></div><div class="fm-drop-overlay"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"/><path d="M7 9l5 -5l5 5"/><path d="M12 4v12"/></svg><div class="fm-do-txt">Sleep bestanden op een map om te uploaden</div></div>';
     const si=document.getElementById('fmSearch'); if(si)si.value=_fmQuery;
+    _inspTelling();
   }
   if(!wrap._dropWired){ wrap._dropWired=true;
     wrap.addEventListener('dragover',e=>{ if(_hasFiles(e)){ e.preventDefault(); _fmShowDropOverlay(); } });
@@ -6178,6 +6193,10 @@ function renderFiles(){
   const pane=document.getElementById('view-filespreview'); if(pane&&isDesk3()&&!pane.innerHTML.trim()) pane.innerHTML='<div class="fmp-empty">Kies een bestand</div>';
 }
 function fmSearch(v){ _fmQuery=v; _renderFmTree(); }
+// De teller op de Inspiratie-map heeft de borden nodig; die worden anders pas
+// geladen als je de overlay opent.
+let _inspGeladen=false;
+async function _inspTelling(){ if(_inspGeladen)return; _inspGeladen=true; try{ await _inspLoad(); _renderFmTree(); }catch(_){} }
 async function fmNewClient(){ const name=((await uiPrompt('Naam nieuwe map:'))||'').trim(); if(!name) return; const col=_nextClientColor(); const icon=(name[0]||'?').toUpperCase(); try{ await sb.from('projects').insert({client:name,project:'',color:col,icon,sort:0}); }catch(_){} _fmOpen.add(name); await refresh(); try{ const row=document.querySelector('#fmTree .fm-crow[data-client="'+((window.CSS&&CSS.escape)?CSS.escape(name):name)+'"]'); if(row)row.scrollIntoView({block:'start',behavior:'smooth'}); }catch(_){} }
 function fmToggle(k){ if(_fmOpen.has(k))_fmOpen.delete(k); else _fmOpen.add(k); _renderFmTree(); }
 function _penGlyph(){ return '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4l10.5 -10.5a2.1 2.1 0 0 0 -3 -3l-10.5 10.5v3"/><path d="M13.5 6.5l3 3"/></svg>'; }
@@ -6293,7 +6312,14 @@ function _renderFmTree(){
     html+=`<div class="fm-client"><div class="fm-row fm-crow${open?' open':''}" data-drop="1" data-client="${escapeHtml(c)}" data-pid="__alg__" data-cat="" ondragover="fmDragOver(event)" ondragleave="fmDragLeave(event)" ondrop="fmDrop(event)" onclick="fmToggle('${_fk(c)}')"><span class="fm-tw">▸</span><span class="fm-badge" style="background:${g.col}">${escapeHtml((String(c).trim()[0]||'?').toUpperCase())}</span><span class="fm-name" style="color:${g.col}">${escapeHtml(c)}</span><button class="fm-edit" style="margin-left:auto" data-kind="client" data-client="${escapeHtml(c)}" onclick="event.stopPropagation();fmRename(this)" title="Naam wijzigen">${_penGlyph()}</button></div><div class="fm-kids"${open?'':' style="display:none"'}>${projHtml.join('')}</div></div>`;
   });
   const rootF=(state.folders||[]).filter(x=>(x.parent_kind||'root')==='root').map(_folderHTML).join('');
-  t.innerHTML=(rootF+html)||'<div class="hint">Nog geen bestanden — of nog niet gesorteerd. Klik “Sorteer met AI”.</div>';
+  // Inspiratie is beeldmateriaal zonder project. Dat is een map, geen pagina.
+  const inspN=(_inspBoards&&_inspBoards.length)?_inspBoards.length:0;
+  const insp=q?'':('<div class="fm-client"><div class="fm-row fm-crow fm-insprow" onclick="openInspiration()" title="Inspiratieborden openen">'
+    + '<span class="fm-badge fm-inspbadge">'+_tIc(_TABCHAN.asterisk,14,1.7)+'</span>'
+    + '<span class="fm-name">Inspiratie</span>'
+    + (inspN?'<span class="fm-cnt">'+inspN+'</span>':'')
+    + '</div></div>');
+  t.innerHTML=(insp+rootF+html)||'<div class="hint">Nog geen bestanden — of nog niet gesorteerd. Klik “Sorteer met AI”.</div>';
 }
 let _fmDragId=null, _fmDragFolder=null, _fmDragLoose=null;
 function fmDragStart(e,id){ _fmDragId=id; _fmDragFolder=null; try{e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',id);}catch(_){}}
@@ -7333,7 +7359,6 @@ function applyLayout(){
   if(wchat){ wchat.appendChild(ct); wchat.appendChild(cd); }   // chat woont in de beginscherm-overlay
   const d3=isDesk3();
   const main=document.querySelector('.main');
-  const vBron=document.getElementById('view-bronnen');
   const vBeh=document.getElementById('view-beheer');
   const vFin=document.getElementById('view-financien');
   const vCon=document.getElementById('view-contacten');
@@ -7344,7 +7369,7 @@ function applyLayout(){
   else { rail.appendChild(wb); }
   // Bronnen/Klanten/Financiën/Contacten/Bestanden/Postvak In: desktop → eerste kolom (#rail),
   // mobiel → terug in #main. Postvak In ontbrak hier; die stond op desktop dus in kolom 2.
-  const railViews=[vBron,vBeh,vFin,vCon,vArch,vFiles,vPv];
+  const railViews=[vBeh,vFin,vCon,vArch,vFiles,vPv];
   railViews.forEach(el=>{ if(el) (d3?rail:main||rail).appendChild(el); });
   if(!mob && (view==='home')) setView('taken');
   _ensureRailCloses();
@@ -7358,14 +7383,14 @@ function _railCloseReset(){
     if(view==='financien'){ _pbPid=null; _pbTarget=null; _finInk=null; try{closeProjectBoard();}catch(_){} renderFinancien(); }
     else if(view==='beheer'){ _pbPid=null; _pbTarget=null; try{closeProjectBoard();}catch(_){} renderProjecten(); }
     else if(view==='contacten'){ _conClient=null; _conContact=null; renderContacten(); }
-    else if(view==='bronnen'){ _bronClient=null; _bronSrc=null; renderBronnen(); }
+    else if(view==='postvak'){ _pvKanaal=null; _pvSel=null; _pvZoek=''; renderPostvak(); }
     else setView('taken');
   }catch(_){ try{setView('taken');}catch(__){} }
 }
 function _ensureRailCloses(){
   const _xIc='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
   const _plusIc='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>';
-  const spec=[['view-bronnen','Bronnen'],['view-beheer','Klanten & projecten'],['view-financien','Financiën'],['view-contacten','Contacten'],['view-archief','Archief'],['view-files','Bestanden']];
+  const spec=[['view-postvak','Postvak In'],['view-beheer','Klanten & projecten'],['view-financien','Financiën'],['view-contacten','Contacten'],['view-archief','Archief'],['view-files','Bestanden']];
   const d3=isDesk3();
   spec.forEach(([vid,label])=>{
     const v=document.getElementById(vid); if(!v)return;
@@ -7537,10 +7562,12 @@ function renderDayOverview(){
   const D=_dayData(); const esc=escapeHtml;
   const who=(document.getElementById('who')&&document.getElementById('who').textContent.trim())||'';
   const dateTxt=TODAY.toLocaleDateString('nl-NL',{weekday:'long',day:'numeric',month:'long'});
-  const rowItem=({it,p})=>`<div class="dov-row"><span class="dov-dot" style="background:${_projColor(p)}"></span><span class="tt">${esc(it.t||'')}</span>${it.owner?`<span class="meta">${esc(it.owner)}</span>`:''}${_dovPill(it.status)?`<span class="dov-pill">${_dovPill(it.status)}</span>`:''}</div>`;
+  // Elke regel was een <div>: je zag je dag maar kon er niets mee. Nu opent een klik
+  // de taak zelf, net als overal in de app.
+  const rowItem=({it,p})=>`<button class="dov-row" onclick="dovOpenItem('${it.id}')"><span class="dov-dot" style="background:${_projColor(p)}"></span><span class="tt">${esc(it.t||'')}</span>${it.owner?`<span class="meta">${esc(it.owner)}</span>`:''}${_dovPill(it.status)?`<span class="dov-pill">${_dovPill(it.status)}</span>`:''}</button>`;
   const todayHtml=D.today.length?D.today.slice(0,8).map(rowItem).join(''):'<div class="dov-empty">Niets met deadline vandaag.</div>';
-  const netHtml=D.net.length?D.net.slice(0,6).map((it)=>`<div class="dov-row"><span class="dov-dot" style="background:#686868"></span><span class="tt">${esc(it.t||'')}</span>${it.owner?`<span class="meta">${esc(it.owner)}</span>`:''}</div>`).join(''):'<div class="dov-empty">Geen nieuwe binnenkomers.</div>';
-  const waitHtml=D.waiting.length?D.waiting.slice(0,8).map(({it,p})=>`<div class="dov-row"><span class="dov-dot" style="background:${_projColor(p)}"></span><span class="tt">${esc(it.t||'')}</span>${it.contact?`<span class="meta">↳ ${esc(it.contact)}</span>`:(it.owner?`<span class="meta">${esc(it.owner)}</span>`:'')}</div>`).join(''):'<div class="dov-empty">Niemand om op te wachten.</div>';
+  const netHtml=D.net.length?D.net.slice(0,6).map((it)=>`<button class="dov-row" onclick="dovOpenItem('${it.id}')"><span class="dov-dot" style="background:#686868"></span><span class="tt">${esc(it.t||'')}</span>${it.owner?`<span class="meta">${esc(it.owner)}</span>`:''}</button>`).join(''):'<div class="dov-empty">Geen nieuwe binnenkomers.</div>';
+  const waitHtml=D.waiting.length?D.waiting.slice(0,8).map(({it,p})=>`<button class="dov-row" onclick="dovOpenItem('${it.id}')"><span class="dov-dot" style="background:${_projColor(p)}"></span><span class="tt">${esc(it.t||'')}</span>${it.contact?`<span class="meta">↳ ${esc(it.contact)}</span>`:(it.owner?`<span class="meta">${esc(it.owner)}</span>`:'')}</button>`).join(''):'<div class="dov-empty">Niemand om op te wachten.</div>';
   const clients=Object.keys(D.perClient).sort((a,b)=>D.perClient[b]-D.perClient[a]);
   const clientHtml=clients.length?clients.slice(0,6).map(c=>`<button class="dov-row" onclick="dovOpenClient('${esc(c).replace(/'/g,"\\'")}')"><span class="dov-dot" style="background:${_clientColor(c)}"></span><span class="tt">${esc(c)}</span><span class="meta">${D.perClient[c]} open</span></button>`).join(''):'<div class="dov-empty">Geen open punten.</div>';
   body.innerHTML=`<div class="dov-head"><div class="dov-greet">Goedemorgen${who?', '+esc(who):''}</div><div class="dov-right"><span class="dov-date">${esc(dateTxt)}</span><button class="dov-close" onclick="closeDayOverview()" aria-label="Sluiten" title="Wegschuiven"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button></div></div>`+
@@ -7710,6 +7737,8 @@ async function inspOnBoardChange(id){
   if(!bid||String(it.board_id)===String(bid))return; it.board_id=bid; try{ await sb.from('insp_items').update({board_id:bid}).eq('id',id); }catch(_){} renderInsp();
 }
 async function inspDelItem(id){ _inspItems=_inspItems.filter(x=>String(x.id)!==String(id)); try{ await sb.from('insp_items').delete().eq('id',id); }catch(_){} renderInsp(); }
+// Een regel in het dagoverzicht opent de taak. Het overzicht sluit; je bent waar je moest zijn.
+function dovOpenItem(id){ closeDayOverview(); setTimeout(()=>{ try{ openModal(id); }catch(_){} }, 220); }
 function dovOpenClient(c){ closeDayOverview(); try{ const p=(state.projects||[]).find(x=>x.client===c&&x.id!=='__inbox__'); setView('taken'); if(p){ activeTab=p.id; render(); } }catch(_){} }
 function maybeShowDayOverview(){ try{ const k='dayview_'+iso(TODAY); if(localStorage.getItem(k))return; localStorage.setItem(k,'1'); }catch(_){} openDayOverview(); }
 // Autofill/AutoFill-suggesties overal uitzetten
@@ -8387,7 +8416,7 @@ async function chatSend(){
   loadUsage();
 }
 function doChatAction(a){
-  const map={taken:'taken',agenda:'agenda',afspraken:'afspraken',afspraak:'afspraken',wachter:'wachter',bronnen:'bronnen',klanten:'beheer'};
+  const map={taken:'taken',agenda:'agenda',afspraken:'afspraken',afspraak:'afspraken',wachter:'wachter',bronnen:'bronnen',klanten:'beheer',postvak:'postvak'};
   const v=map[String(a.view||'').toLowerCase()]; if(!v) return;
   if(a.client){
     const p=state.projects.find(x=>x.id!=='__inbox__'&&x.client&&x.client.toLowerCase()===String(a.client).toLowerCase());
