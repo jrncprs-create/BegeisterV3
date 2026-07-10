@@ -920,7 +920,13 @@
     font-size:12px;color:var(--mut2);flex:0 0 auto}
   /* Het driehoekje stond alleen bij Bestanden. Weg — de rij zelf is de knop. */
   #filesWrap .fm-crow>.fm-tw{display:none}
+  /* Zoekveld bovenaan kolom 1 — zelfde vorm op Bestanden, Contacten en Bronnen.
+     Contacten en Bronnen hadden hun zoekveld in kolom 2, met een andere reikwijdte
+     ("in deze klant"). Dat is nu één veld dat de hele pagina filtert. */
+  #contactenWrap .fm-top,#bronnenWrap .fm-top{margin:0 0 6px}
+  #contactenWrap .fm-search,#bronnenWrap .fm-search{flex:1;margin:0}
   .con-midhdr{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line)}
+  .con-midttl{flex:1;min-width:0;font-size:14px;color:var(--txt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .con-midhdr input{flex:1;background:transparent;border:0;color:var(--txt);font-size:14px;outline:none}
   #conMidWrap .con-li{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line);cursor:pointer}
   #conMidWrap .con-li:hover,#conMidWrap .con-li.on{background:rgba(255,255,255,.04)}
@@ -1964,7 +1970,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v196</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v197</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:14px;font-weight:var(--fw-nadruk);cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
@@ -4769,13 +4775,17 @@ let _bronClient=null,_bronSrc=null,_bronSearch='';
 function _bronClientOf(s){ const p=s&&s.proj?projById(s.proj):null; return (p&&(p.client||'').trim())||''; }
 function _bronClean(){ const seen=new Set(); return (state.sources||[]).filter(s=>{ if(_isImageSource(s))return false; const k=_srcDedupeKey(s); if(seen.has(k))return false; seen.add(k); return true; }); }
 function _bronSourcesFor(cl){ return _bronClean().filter(s=>{ const sc=_bronClientOf(s); return cl==='__none__'?!sc:sc===cl; }).sort((a,b)=>d(b.date)-d(a.date)); }
-function selectBronClient(cl){ _bronClient=cl; _bronSrc=null; _bronSearch=''; renderBronnen(); }
+function selectBronClient(cl){ _bronClient=cl; _bronSrc=null; renderBronnen(); }   // zoekterm blijft staan: hij geldt voor de hele pagina
 function selectBronSrc(id){ _bronSrc=id; renderBronRight(); document.querySelectorAll('#bronMidWrap .con-li').forEach(el=>el.classList.toggle('on',el.dataset.id===id)); }
-function _bronFilter(q){ _bronSearch=q; renderBronMid(); const si=document.getElementById('bron_search'); if(si){ si.focus(); try{si.setSelectionRange(si.value.length,si.value.length);}catch(_){} } }
+function _bronFilter(q){ _bronSearch=q; renderBronnen();
+  const si=document.getElementById('bron_search'); if(si){ si.focus(); try{si.setSelectionRange(si.value.length,si.value.length);}catch(_){} } }
+// Waar zoeken we in? Titel, tekst, samenvatting en de volledige inhoud van de bron.
+function _bronMatch(s,q){ return !q || (_srcTitle(s)+' '+(s.text||'')+' '+(s.summary||'')+' '+(s.full||'')).toLowerCase().includes(q); }
 function renderBronnen(){
   const wrap=document.getElementById('bronnenWrap'); if(!wrap)return;
   if(!isDesk3()){ return _bronTreeMobile(wrap); }
-  const clean=_bronClean();
+  const q=(_bronSearch||'').toLowerCase().trim();
+  const clean=_bronClean().filter(s=>_bronMatch(s,q));
   const cnt={}; clean.forEach(s=>{ const cl=_bronClientOf(s); if(cl)cnt[cl]=(cnt[cl]||0)+1; });
   const noneN=clean.filter(s=>!_bronClientOf(s)).length;
   const clients=uniqueClients().filter(Boolean).filter(cl=>cnt[cl]).sort((a,b)=>a.localeCompare(b));
@@ -4783,7 +4793,9 @@ function renderBronnen(){
     return `<div class="con-crow${on}" onclick="selectBronClient('${_qs(cl)}')"><span class="con-cdot" style="background:${col}">${ic}</span><div class="con-cmain"><div class="con-cnm" style="color:${col}">${escapeHtml(cl)}</div></div><span class="con-ccnt">${cnt[cl]}</span></div>`;
   }).join('');
   if(noneN){ const on=(_bronClient==='__none__')?' on':''; rows+=`<div class="con-crow${on}" onclick="selectBronClient('__none__')"><span class="con-cdot" style="background:#555">·</span><div class="con-cmain"><div class="con-cnm">Overig</div></div><span class="con-ccnt">${noneN}</span></div>`; }
-  wrap.innerHTML=(rows||'<div class="hint">Nog geen bronnen. Ze verschijnen hier uit binnengekomen berichten of via Plakken.</div>');
+  const leeg = q ? '<div class="hint">Geen bron gevonden voor "'+escapeHtml(_bronSearch)+'".</div>'
+                 : '<div class="hint">Nog geen bronnen. Ze verschijnen hier uit binnengekomen berichten of via Plakken.</div>';
+  wrap.innerHTML=_kolomZoek('bron_search', _bronSearch, 'Zoek bronnen…', '_bronFilter')+(rows||leeg);
   renderBronMid(); renderBronRight();
 }
 function renderBronMid(){
@@ -4795,7 +4807,7 @@ function renderBronMid(){
   const rows=list.map(s=>{ const on=(_bronSrc===s.id)?' on':''; const dt=s.date?_finShortDate(s.date):''; const nAtt=(s.attachFull&&s.attachFull.length)?s.attachFull.length:0;
     return `<div class="con-li${on}" data-id="${s.id}" onclick="selectBronSrc('${s.id}')"><div class="cmain"><div class="cname">${escapeHtml(_srcTitle(s))}</div><div class="crole">${escapeHtml(dt)}${nAtt?' · '+nAtt+' bijlage'+(nAtt>1?'n':''):''}</div></div><button class="bron-del" onclick="event.stopPropagation();srcDelete('${s.id}')" title="Bron verwijderen" aria-label="Bron verwijderen">${_tIc('<path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M7 7l1 13h8l1-13"/>',16,1.6)}</button></div>`;
   }).join('');
-  w.innerHTML=`<div class="con-midhdr"><input id="bron_search" placeholder="Zoek in deze klant…" autocomplete="off" value="${escapeHtml(_bronSearch||'')}" oninput="_bronFilter(this.value)"></div>`+(rows||'<div class="hint">Geen bronnen bij deze klant.</div>');
+  w.innerHTML=`<div class="con-midhdr"><span class="con-midttl">${escapeHtml(_bronClient==='__none__'?'Overig':_bronClient)}</span></div>`+(rows||'<div class="hint">Geen bronnen bij deze klant.</div>');
 }
 function renderBronRight(){
   const w=document.getElementById('bronRightWrap'); if(!w)return;
@@ -5196,9 +5208,17 @@ function _conAvatarSVG(c,size){ size=size||84;
   return `<svg viewBox="0 0 ${size} ${size}" width="100%" height="100%"><defs><clipPath id="clav${cid}"><circle cx="${size/2}" cy="${size/2}" r="${size/2}"/></clipPath></defs><g clip-path="url(#clav${cid})"><rect width="${size}" height="${size}" fill="${bg}"/>${shapes}</g><text x="50%" y="50%" text-anchor="middle" dominant-baseline="central" font-size="${(size*0.34).toFixed(1)}" font-weight="600" fill="#fff">${initial}</text></svg>`;
 }
 let _conClient=null,_conContact=null,_conSearch='';
-function selectConClient(cl){ _conClient=cl; _conContact=null; _conSearch=''; renderContacten(); }
+function selectConClient(cl){ _conClient=cl; _conContact=null; renderContacten(); }   // zoekterm blijft staan: hij geldt voor de hele pagina
 function selectConContact(id){ _conContact=id; renderConRight(); document.querySelectorAll('#conMidWrap .con-li').forEach(el=>el.classList.toggle('on',el.dataset.id===id)); }
-function _conFilter(q){ _conSearch=q; renderConMid(); const si=document.getElementById('con_search'); if(si){ si.focus(); try{si.setSelectionRange(si.value.length,si.value.length);}catch(_){} } }
+function _conFilter(q){ _conSearch=q; renderContacten();
+  const si=document.getElementById('con_search'); if(si){ si.focus(); try{si.setSelectionRange(si.value.length,si.value.length);}catch(_){} } }
+// Waar zoeken we in? Naam, e-mail, telefoon, functie. Verder niets — dit is de contactenlijst.
+function _conMatch(c,q){ return !q || ((c.name||'')+' '+(c.email||'')+' '+(c.phone||'')+' '+(c.role||'')).toLowerCase().includes(q); }
+// Eén kop voor kolom 1, gelijk aan die van Bestanden.
+function _kolomZoek(id, waarde, tekst, fn){
+  return '<div class="fm-top"><div class="fm-search"><span class="fm-sic">'+_searchGlyph()+'</span>'
+    + '<input id="'+id+'" placeholder="'+escapeHtml(tekst)+'" autocomplete="off" value="'+escapeHtml(waarde||'')+'" oninput="'+fn+'(this.value)"></div></div>';
+}
 // Slim per klant groeperen: koppelt elk contact aan een bekende klant via bedrijfsnaam,
 // naam-match of e-maildomein (met domein-overerving), zonder de DB te wijzigen.
 const _CON_FREEMAIL=new Set(['gmail.com','googlemail.com','hotmail.com','hotmail.nl','outlook.com','outlook.nl','live.nl','live.com','icloud.com','me.com','yahoo.com','yahoo.nl','ziggo.nl','kpnmail.nl','planet.nl','home.nl','xs4all.nl','telfort.nl','gmx.net','gmx.com','proton.me','protonmail.com','casema.nl','hetnet.nl','chello.nl','online.nl']);
@@ -5227,18 +5247,23 @@ function _contactClientOf(c){ return (c&&_contactClientMap()[c.id])||''; }
 function renderContacten(){
   const wrap=document.getElementById('contactenWrap'); if(!wrap)return;
   if(!isDesk3()){ return _conTreeMobile(wrap); }
-  const contacts=(state.contacts||[]);
+  const q=(_conSearch||'').toLowerCase().trim();
+  const contacts=(state.contacts||[]).filter(c=>_conMatch(c,q));
   const CM=_contactClientMap();
   const cnt={}; contacts.forEach(c=>{ const k=CM[c.id]; if(k)cnt[k]=(cnt[k]||0)+1; });
   const noneN=contacts.filter(c=>!CM[c.id]).length;
-  const clients=uniqueClients().filter(Boolean);
+  // Zoeken? Dan alleen klanten die iets opleveren.
+  const clients=uniqueClients().filter(Boolean).filter(cl=>!q||cnt[cl]);
   let rows=clients.map(cl=>{ const col=_clientColor(cl)||'#888'; const ic=escapeHtml(((String(cl).trim()[0])||'?').toUpperCase()); const n=cnt[cl]||0; const on=(_conClient===cl)?' on':'';
     return `<div class="con-crow${on}" onclick="selectConClient('${_qs(cl)}')"><span class="con-cdot" style="background:${col}">${ic}</span><div class="con-cmain"><div class="con-cnm" style="color:${col}">${escapeHtml(cl)}</div></div><span class="con-ccnt">${n}</span></div>`;
   }).join('');
   if(noneN){ const on=(_conClient==='__none__')?' on':''; rows+=`<div class="con-crow${on}" onclick="selectConClient('__none__')"><span class="con-cdot" style="background:#555">·</span><div class="con-cmain"><div class="con-cnm">Overig</div></div><span class="con-ccnt">${noneN}</span></div>`; }
   const dup=_countDupContacts();
-  wrap.innerHTML=(dup>0?`<button class="cdup" onclick="mergeDupContacts()">${dup} mogelijk dubbel — samenvoegen</button>`:'')
-    +(rows||'<div class="hint">Nog geen contacten. Ze verschijnen hier automatisch uit binnengekomen berichten, of voeg ze toe met +.</div>');
+  const leeg = q ? '<div class="hint">Geen contact gevonden voor "'+escapeHtml(_conSearch)+'".</div>'
+                 : '<div class="hint">Nog geen contacten. Ze verschijnen hier automatisch uit binnengekomen berichten, of voeg ze toe met +.</div>';
+  wrap.innerHTML=_kolomZoek('con_search', _conSearch, 'Zoek contacten…', '_conFilter')
+    +(dup>0&&!q?`<button class="cdup" onclick="mergeDupContacts()">${dup} mogelijk dubbel — samenvoegen</button>`:'')
+    +(rows||leeg);
   renderConMid(); renderConRight();
 }
 function _conQuick(c){
@@ -5257,7 +5282,7 @@ function renderConMid(){
   const rows=list.map(c=>{ const on=(_conContact===c.id)?' on':'';
     return `<div class="con-li${on}" data-id="${c.id}" onclick="selectConContact('${c.id}')"><div class="cmain"><div class="cname">${escapeHtml(c.name||'(naamloos)')}</div>${c.role?`<div class="crole">${escapeHtml(c.role)}</div>`:''}</div><div class="cquick">${_conQuick(c)}</div></div>`;
   }).join('');
-  w.innerHTML=`<div class="con-midhdr"><input id="con_search" placeholder="Zoek in deze klant…" autocomplete="off" value="${escapeHtml(_conSearch||'')}" oninput="_conFilter(this.value)"><button class="chdr-add" onclick="openContactModal(null)" title="Nieuw contact">+</button></div>`+(rows||'<div class="hint">Geen contacten bij deze klant.</div>');
+  w.innerHTML=`<div class="con-midhdr"><span class="con-midttl">${escapeHtml(_conClient==='__none__'?'Overig':_conClient)}</span><button class="chdr-add" onclick="openContactModal(null)" title="Nieuw contact">+</button></div>`+(rows||'<div class="hint">Geen contacten bij deze klant.</div>');
 }
 // Kolom 3: contactdetail + gekleurde initialen
 function renderConRight(){
@@ -5320,7 +5345,6 @@ function _conTreeMobile(wrap){
 }
 async function conSaveDesc(id,val){ const c=(state.contacts||[]).find(x=>x.id===id); if(c)c.description=val; try{ await sb.from('contacts').update({description:(val||'').trim()||null}).eq('id',id); }catch(e){ console.warn('desc',e); } }
 async function conAiAvatar(id){ const c=(state.contacts||[]).find(x=>x.id===id); if(!c)return; const seed=Math.floor(Math.random()*1000000); c.avatar_seed=seed; renderConRight(); try{ await sb.from('contacts').update({avatar_seed:seed}).eq('id',id); }catch(e){ console.warn('avatar',e); } }
-function _filterContacts(q){ _conSearch=q; renderConMid(); }
 function _fillContactClient(sel,selected){
   const cur=selected||''; const cs=uniqueClients();
   sel.innerHTML='<option value="">— Geen klant —</option>'+cs.map(c=>`<option value="${escapeHtml(c)}"${c===cur?' selected':''}>${escapeHtml(c)}</option>`).join('')+((cur&&!cs.includes(cur))?`<option value="${escapeHtml(cur)}" selected>${escapeHtml(cur)}</option>`:'');
