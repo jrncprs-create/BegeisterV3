@@ -75,9 +75,12 @@ app.get(["/portaal", "/portaal/*"], (req, res) => {
   res.sendFile(path.join(__dirname, "public", "portaal.html"));
 });
 
-// Alles wat geen /api is en geen bestaand bestand → de app (index.html)
+// Alles wat geen /api is en geen bestaand bestand → de app.
+// Op portal.begeister.nl is dat het klantportaal; elders de teamapp.
 app.get("*", (req, res, next) => {
   if (req.path.startsWith("/api/")) return res.status(404).json({ error: "not found" });
+  const host = String(req.headers.host || "").toLowerCase();
+  if (host.startsWith("portal.")) return res.sendFile(path.join(__dirname, "public", "portaal.html"));
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
