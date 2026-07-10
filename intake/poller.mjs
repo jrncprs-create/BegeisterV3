@@ -191,15 +191,20 @@ export async function run() {
         // verbruik loggen (faalt stil)
         if (usage) await logUsage(db, { source: "intake", ...usage });
         if (items.length) {
-          await db.from("items").insert(items.map(it => ({
-            project_id: it.project_id || null,
+          // Eén kaart per bericht: 2+ actiepunten worden afvinkbare subpunten (checklist) onder
+          // één taak. Zo blijft het Postvak In overzichtelijk i.p.v. een muur van losse kaartjes.
+          const grouped = items.length >= 2;
+          const rec = {
+            project_id: (items.find(it => it.project_id) || {}).project_id || items[0].project_id || null,
             source_id: source.id,
-            title: it.title,
-            owner: it.owner || null,
-            contact: it.contact || null,
-            due: it.due || null,
-            status: ["todo", "doing", "wait", "done"].includes(it.status) ? it.status : "todo",
-          })));
+            title: grouped ? String(summary || mail.subject || "Nieuwe taken").slice(0, 140) : items[0].title,
+            owner: grouped ? null : (items[0].owner || null),
+            contact: grouped ? null : (items[0].contact || null),
+            due: grouped ? null : (items[0].due || null),
+            status: grouped ? "todo" : (["todo", "doing", "wait", "done"].includes(items[0].status) ? items[0].status : "todo"),
+            checklist: grouped ? items.map(it => ({ t: it.title, done: false })) : [],
+          };
+          await db.from("items").insert(rec);
         }
 
         // 3b) gevonden contacten opslaan (dedupe op e-mail; anders op naam)
