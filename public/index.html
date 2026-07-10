@@ -686,6 +686,9 @@
   #klantportaalOverlay .kpo-flbl{font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;color:rgba(255,255,255,.55)}
   #klantportaalOverlay .kpo-fasestap.done .kpo-flbl{color:#fff}
   #klantportaalOverlay .kpo-map{margin-bottom:1px}
+  #klantportaalOverlay .kpo-maprow{display:flex;align-items:center;gap:8px}
+  #klantportaalOverlay .kpo-maprow .kpo-maph{flex:1;min-width:0}
+  #klantportaalOverlay .kz-map{flex:0 0 auto}
   #klantportaalOverlay .kpo-maph{display:flex;align-items:center;gap:10px;width:100%;background:transparent;border:none;border-top:1px solid rgba(255,255,255,.14);color:#fff;font-family:inherit;font-size:14px;font-weight:var(--fw);padding:10px 0;cursor:pointer;text-align:left}
   #klantportaalOverlay .kpo-sec .kpo-map:first-child .kpo-maph,#klantportaalOverlay .kpo-colR .kpo-map:first-child .kpo-maph{border-top:none}
   #klantportaalOverlay .kpo-chev{display:inline-flex;color:rgba(255,255,255,.55);transition:transform .18s;flex:none}
@@ -2174,7 +2177,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v230</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v232</span>
       <button id="dayBtn" class="dag-ic" onclick="openDayOverview()" title="Dagoverzicht" aria-label="Dagoverzicht"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M3 12h2M19 12h2M5.6 18.4l1.4-1.4M17 7l1.4-1.4"/></svg></button>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:14px;font-weight:var(--fw-nadruk);cursor:pointer" title="AI-context bewerken">Jeroen</span>
@@ -4144,7 +4147,7 @@ function toggleKlantportaal(client, pid){
   pid=pid||_portaalProjVoor(client);
   if(_portaalClient===client && _portaalPid===pid){ closeKlantportaal(); return; }
   if(!pid){ toonToast('Deze klant heeft nog geen project.','fout'); return; }
-  _portaalClient=client; _portaalPid=pid;
+  _portaalClient=client; _portaalPid=pid; _portaalDirty=false;
   let ov=document.getElementById('klantportaalOverlay');
   if(!ov){
     ov=document.createElement('div'); ov.id='klantportaalOverlay';
@@ -4167,8 +4170,9 @@ async function portaalToggleItem(soort, id){
     else if(soort==='appt'){ const a=(state.appointments||[]).find(x=>String(x.id)===String(id)); if(a){ a.kz=!a.kz; await sb.from('appointments').update({client_zichtbaar:a.kz}).eq('id',id); } }
     else if(soort==='file'){ const f=_fileById(id); if(f){ const nv=!f.visible_to_client; f.visible_to_client=nv; await _fileUpdate(f,{visible_to_client:nv}); } }
     else if(soort==='sec'){ const p=projById(_portaalPid); if(p){ const z=Object.assign({},p.portal_secties||{}); z[id]=!z[id]; p.portal_secties=z; await sb.from('projects').update({portal_secties:z}).eq('id',_portaalPid); } }
-    else if(soort==='voorstel'){ const f=_fileById(id); if(f){ const nv=!f.is_voorstel; f.is_voorstel=nv; await sb.from('files').update({is_voorstel:nv}).eq('id',id); } }
+    else if(soort==='voorstel'){ const f=_fileById(id); if(f){ const nv=!f.is_voorstel; f.is_voorstel=nv; await _fileUpdate(f,{is_voorstel:nv}); } }
   }catch(e){ toonToast('Opslaan mislukte: '+(e.message||e),'fout'); }
+  _portaalMark();
   _renderPortaalBoard();
 }
 // Een voorstel-document is een idee (wat we maken) of een budget (wat het kost). De klant
@@ -4176,8 +4180,9 @@ async function portaalToggleItem(soort, id){
 async function portaalVoorstelSoort(id, soort){
   const f=_fileById(id); if(!f)return;
   f.voorstel_soort=soort;
-  try{ await sb.from('files').update({voorstel_soort:soort}).eq('id',id); }
+  try{ await _fileUpdate(f,{voorstel_soort:soort}); }
   catch(e){ toonToast('Opslaan mislukte: '+(e.message||e),'fout'); }
+  _portaalMark();
   _renderPortaalBoard();
 }
 function findItemById(id){ for(const p of (state.projects||[])){ const it=(p.items||[]).find(x=>String(x.id)===String(id)); if(it)return {p,it}; } return null; }
@@ -4249,6 +4254,7 @@ async function portaalPubliceer(){
   const p=projById(_portaalPid); if(!p)return;
   const nv=!p.portal_gepubliceerd;
   p.portal_gepubliceerd=nv;
+  _portaalDirty=false;
   _renderPortaalBoard();
   try{ await sb.from('projects').update({portal_gepubliceerd:nv}).eq('id',_portaalPid);
     toonToast(nv?'Gepubliceerd — de klant ziet dit nu.':'Teruggetrokken — de klant ziet het niet meer.');
@@ -4258,6 +4264,9 @@ async function portaalPubliceer(){
 // Bestanden in het portaal krijgen dezelfde mappen als op het projectbord (Financiën-mappen
 // + soort), inklapbaar en standaard dicht — anders is het een muur van foto's.
 let _kpoMapOpen=new Set();
+// Zodra het team iets wijzigt na publiceren, springt de knop terug naar "Publiceren".
+let _portaalDirty=false;
+function _portaalMark(){ _portaalDirty=true; const pub=document.getElementById('kpoPub'); const p=projById(_portaalPid); if(pub&&p&&p.portal_gepubliceerd){ pub.textContent='Wijzigingen publiceren'; pub.classList.remove('aan'); } }
 // Zes vaste mappen, overal hetzelfde. Onderliggende categorie blijft bestaan (Financiën leest
 // die nog); dit is alleen de groepering.
 const _VASTE_MAPPEN=['Briefing','Concept & ontwerp','Techniek','Beeld','Financieel','Oplevering'];
@@ -4282,6 +4291,16 @@ function _portaalMapGroepen(files){
   return _TREE_MAPPEN.filter(n=>groepen[n]&&groepen[n].length).map(n=>({naam:n,files:groepen[n]}));
 }
 function portaalMapToggle(naam){ _kpoMapOpen.has(naam)?_kpoMapOpen.delete(naam):_kpoMapOpen.add(naam); _renderPortaalBoard(); }
+// Hele map in één klik aan/uit voor de klant (of als voorstel markeren).
+async function portaalToggleMap(soort, naam){
+  const key=soort==='voorstel'?'is_voorstel':'visible_to_client';
+  const files=_filesFor('project',_portaalPid).filter(f=>_zesMap(f.icon||f.map,f.name)===naam);
+  if(!files.length)return;
+  const nv=!files.every(f=>!!f[key]);          // niet alles aan → alles aan; anders alles uit
+  for(const f of files){ f[key]=nv; try{ await _fileUpdate(f,{[key]:nv}); }catch(_){} }
+  _portaalMark();
+  _renderPortaalBoard();
+}
 // Het dossier zoals het in de klantportaal-overlay verschijnt: dezelfde items, met per stuk
 // een klant-icoontje. Rechts de voorstel-documenten met de akkoord-status.
 function _renderPortaalBoard(){
@@ -4289,7 +4308,7 @@ function _renderPortaalBoard(){
   const p=projById(_portaalPid); if(!p)return;
   const esc=escapeHtml;
   const tt=document.querySelector('#klantportaalOverlay .kpo-titel'); if(tt)tt.textContent=(p.client||'')+(p.project?' · '+p.project:'');
-  const pub=document.getElementById('kpoPub'); if(pub){ const g=!!p.portal_gepubliceerd; pub.textContent=g?'Gepubliceerd ✓':'Publiceren'; pub.classList.toggle('aan',g); }
+  const pub=document.getElementById('kpoPub'); if(pub){ const g=!!p.portal_gepubliceerd; const schoon=g&&!_portaalDirty; pub.textContent=schoon?'Gepubliceerd ✓':(g?'Wijzigingen publiceren':'Publiceren'); pub.classList.toggle('aan',schoon); }
   _portaalPasAchtergrondToe(p);
   const bgi=document.getElementById('kpoBgInput'); if(bgi){ const kl=_portaalKleur(p); if(/^#([0-9a-f]{6})$/i.test(kl))bgi.value=kl; }
   const z=p.portal_secties||{};
@@ -4313,7 +4332,10 @@ function _renderPortaalBoard(){
       const open=_kpoMapOpen.has(g.naam);
       const binnen=open?g.files.map(f=>{ const aan=soort==='voorstel'?!!f.is_voorstel:!!f.visible_to_client;
         return `<div class="kpo-rij kpo-frij${aan?'':' uit'}">${ic(soort,f.id,aan)}<span class="kpo-tx">${esc(f.name)}</span></div>`; }).join(''):'';
-      return `<div class="kpo-map"><button class="kpo-maph" onclick="portaalMapToggle('${String(g.naam).replace(/'/g,"\\'")}')"><span class="kpo-chev${open?' open':''}">${chev}</span><span class="kpo-mapnaam">${esc(g.naam)}</span><span class="kpo-mapcnt">${g.files.length}</span></button>${binnen}</div>`;
+      const nm=String(g.naam).replace(/'/g,"\\'");
+      const kAan=g.files.length&&g.files.every(f=>soort==='voorstel'?!!f.is_voorstel:!!f.visible_to_client);
+      const mapIc=`<button class="kz kz-map${kAan?' aan':''}" onclick="event.stopPropagation();portaalToggleMap('${soort}','${nm}')" title="${kAan?'Hele map verbergen voor de klant':'Hele map tonen aan de klant'}">${_KLANT_IC}</button>`;
+      return `<div class="kpo-map"><div class="kpo-maprow"><button class="kpo-maph" onclick="portaalMapToggle('${nm}')"><span class="kpo-chev${open?' open':''}">${chev}</span><span class="kpo-mapnaam">${esc(g.naam)}</span><span class="kpo-mapcnt">${g.files.length}</span></button>${mapIc}</div>${binnen}</div>`;
     }).join('');
   };
 
@@ -6588,7 +6610,7 @@ function _searchGlyph(){return '<svg viewBox="0 0 24 24" width="16" height="16" 
    Deze twee helpers vertalen een wijziging naar de juiste tabel en kolomnamen,
    zodat de rest van de pagina zich er niets van hoeft aan te trekken. */
 function _fileById(fid){ return (state.files||[]).find(x=>String(x.id)===String(fid))||null; }
-const _DOC_KOLOM={ name:'filename', icon:'category', owner_id:'project_id', summary:'summary' };
+const _DOC_KOLOM={ name:'filename', icon:'category', owner_id:'project_id', summary:'summary', visible_to_client:'visible_to_client', is_voorstel:'is_voorstel', voorstel_soort:'voorstel_soort' };
 async function _fileUpdate(fOrId, patch){
   const f=(typeof fOrId==='string')?_fileById(fOrId):fOrId;
   if(!f) return false;
