@@ -28,21 +28,23 @@ const FASE_LABEL = {
 
 const SECTIES = ["omschrijving", "voortgang", "taken", "afspraken", "bestanden", "projectprijs", "notities"];
 
-// Dezelfde mappen als op het projectbord, zodat de klant hetzelfde ziet als wij.
-const FIN_MAPPEN = ["Offertes", "Inkoop", "Facturen"];
-function _soortMap(naam) {
+// Zes vaste mappen, overal hetzelfde. De onderliggende AI-categorie (Concept, Media, …) en
+// de financiën-categorieën (Offertes/Inkoop/Facturen) blijven bestaan — dit is puur de
+// groepering waaronder ze getoond worden.
+const VASTE_MAPPEN = ["Briefing", "Concept & ontwerp", "Techniek", "Beeld", "Financieel", "Oplevering"];
+function _zesMap(cat, naam) {
+  const c = String(cat || "").trim().toLowerCase();
   const n = String(naam || "").toLowerCase();
-  if (/\.(jpe?g|png|gif|webp|heic|heif|bmp|tiff?|svg)$/.test(n)) return "Afbeeldingen";
-  if (/\.pdf$/.test(n)) return "PDF's";
-  if (/\.(docx?|xlsx?|xlsm|pptx?|csv|tsv|txt|md|rtf|pages|numbers|key)$/.test(n)) return "Documenten";
-  if (/\.(m4a|mp3|wav|aac|mp4|mov|avi|mkv|webm)$/.test(n)) return "Audio & video";
-  return "Overig";
+  const w = (re) => new RegExp("(^|[^a-z])(" + re + ")([^a-z]|$)").test(n);
+  if (["offertes", "inkoop", "facturen"].includes(c) || w("offerte|offertes|factuur|facturen|invoice|inkoop|bon|budget|calculatie|prijsopgave")) return "Financieel";
+  if (w("projectbrief|briefing|aanvraag|debrief|intake")) return "Briefing";
+  if (w("oplevering|nazorg|eindresultaat|aftermovie")) return "Oplevering";
+  if (["media"].includes(c) || /\.(jpe?g|png|gif|webp|heic|heif|bmp|tiff?|svg|mp4|mov|avi|mkv|webm)$/.test(n)) return "Beeld";
+  if (["concept", "lichtontwerp", "decor"].includes(c)) return "Concept & ontwerp";
+  if (["tekeningen", "plattegronden", "draaiboek", "planning", "leveranciers", "techniek"].includes(c)) return "Techniek";
+  return "Concept & ontwerp";
 }
-function _mapVan(f) {
-  const cat = String((f && f.icon) || "").trim();
-  const hit = FIN_MAPPEN.find((m) => m.toLowerCase() === cat.toLowerCase());
-  return hit || _soortMap(f && f.name);
-}
+function _mapVan(f) { return _zesMap(f && f.icon, f && f.name); }
 
 function fout(res, code, tekst) { return res.status(code).json({ error: tekst }); }
 
