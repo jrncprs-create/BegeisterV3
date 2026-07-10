@@ -20,7 +20,7 @@ button{font-family:inherit;font-weight:var(--fw);cursor:pointer}
 
 /* achtergrondafbeelding met donkere waas voor leesbaarheid */
 #bg{position:fixed;inset:0;z-index:-2;background-size:cover;background-position:center;display:none}
-#bgtint{position:fixed;inset:0;z-index:-1;background:rgba(90,31,31,.72);display:none}
+#bgtint{position:fixed;inset:0;z-index:-1;background:linear-gradient(rgba(0,0,0,.5),rgba(0,0,0,.62));display:none}
 body.heeftbg #bg,body.heeftbg #bgtint{display:block}
 
 .wrap{max-width:1200px;margin:0 auto;padding:0 26px 70px}
@@ -181,10 +181,20 @@ function statusTekst(p){ if(p.akkoord)return 'akkoord op '+kort(p.akkoord.approv
   if(p.fase==='debrief')return 'wacht op jouw akkoord';
   return (p.fases[p.fase_index]||{}).l ? p.fases[p.fase_index].l.toLowerCase() : ''; }
 
+// Een felle klantkleur verdonkeren tot een leesbare achtergrond.
+function _donker(hex,f){ const c=String(hex||'').replace('#',''); if(c.length<6)return '#5a1f1f'; f=(f==null)?.34:f;
+  const h=n=>('0'+Math.max(0,Math.min(255,Math.round(n))).toString(16)).slice(-2);
+  return '#'+h(parseInt(c.slice(0,2),16)*f)+h(parseInt(c.slice(2,4),16)*f)+h(parseInt(c.slice(4,6),16)*f); }
 function achtergrond(p){
   const b=document.body;
-  if(p&&p.bg){ document.getElementById('bg').style.backgroundImage='url("'+p.bg+'")'; b.classList.add('heeftbg'); }
-  else b.classList.remove('heeftbg');
+  // Basiskleur: gekozen portal_bg, anders de verdonkerde klantkleur (niet meer standaard rood).
+  const klantkleur=(DATA&&DATA.klant&&DATA.klant.kleur)||'#8a2f2f';
+  const basis=(p&&p.bg)||_donker(klantkleur,.34);
+  document.documentElement.style.setProperty('--rood', basis);
+  // Optionele vaste achtergrondafbeelding over de hele pagina.
+  const bg=document.getElementById('bg');
+  if(p&&p.bg_image){ if(bg)bg.style.backgroundImage='url("'+String(p.bg_image).replace(/"/g,'&quot;')+'")'; b.classList.add('heeftbg'); }
+  else { if(bg)bg.style.backgroundImage=''; b.classList.remove('heeftbg'); }
 }
 
 function mappenHtml(files){
