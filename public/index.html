@@ -902,19 +902,20 @@
      identiek, Bestanden was smaller, had een kleiner badge en een ▸ ervoor.
      Eén ritme: rij 48 px hoog (padding 11/14, gap 12), badge 26 px, naam 14 px.
      Geen driehoekje: je klapt open door op de rij te klikken, net als daar. */
-  #contactenWrap .con-crow,#bronnenWrap .con-crow,#filesWrap .fm-crow{
+  #contactenWrap .con-crow,#bronnenWrap .con-crow,#filesWrap .fm-crow,#postvakWrap .con-crow{
     display:flex;align-items:center;gap:12px;padding:11px 14px;border-bottom:none;
     border-radius:0;cursor:pointer;font-size:14px;color:var(--txt)}
   #contactenWrap .con-crow:hover,#contactenWrap .con-crow.on,
   #bronnenWrap .con-crow:hover,#bronnenWrap .con-crow.on,
+  #postvakWrap .con-crow:hover,#postvakWrap .con-crow.on,
   #filesWrap .fm-crow:hover,#filesWrap .fm-crow.open{background:rgba(255,255,255,.04)}
-  #contactenWrap .con-cdot,#bronnenWrap .con-cdot,#filesWrap .fm-crow .fm-badge{
+  #contactenWrap .con-cdot,#bronnenWrap .con-cdot,#postvakWrap .con-cdot,#filesWrap .fm-crow .fm-badge{
     width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;
     font-size:12px;font-weight:var(--fw-nadruk);color:#000;flex:0 0 auto}
-  #contactenWrap .con-cmain,#bronnenWrap .con-cmain,#filesWrap .fm-crow .fm-name{flex:1;min-width:0}
-  #contactenWrap .con-cnm,#bronnenWrap .con-cnm,#filesWrap .fm-crow .fm-name{
+  #contactenWrap .con-cmain,#bronnenWrap .con-cmain,#postvakWrap .con-cmain,#filesWrap .fm-crow .fm-name{flex:1;min-width:0}
+  #contactenWrap .con-cnm,#bronnenWrap .con-cnm,#postvakWrap .con-cnm,#filesWrap .fm-crow .fm-name{
     font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  #contactenWrap .con-ccnt,#bronnenWrap .con-ccnt,#filesWrap .fm-crow .fm-cnt{
+  #contactenWrap .con-ccnt,#bronnenWrap .con-ccnt,#postvakWrap .con-ccnt,#filesWrap .fm-crow .fm-cnt{
     font-size:12px;color:var(--mut2);flex:0 0 auto}
   /* Het driehoekje stond alleen bij Bestanden. Weg — de rij zelf is de knop. */
   #filesWrap .fm-crow>.fm-tw{display:none}
@@ -1028,7 +1029,9 @@
   .pv-acties .btn{font-size:12px;padding:5px 10px;white-space:nowrap}
   .pv-acties .cdd-btn{padding:8px 11px;font-size:13px}
   /* Kanaal-icoon in kolom 1: geen klantkleur, dus geen gevulde badge. */
-  .pv-kdot{background:transparent!important;color:var(--mut)!important;border:1px solid var(--line)}
+  .pv-kdot{background:transparent!important;color:var(--mut)!important;border:1px solid var(--line);
+    line-height:0}
+  .pv-kdot svg{width:15px;height:15px}
   .pv-foot{padding:16px 14px 8px;border-top:1px solid var(--line);margin-top:10px;display:flex;flex-direction:column;gap:10px}
   .pv-foot .btn{width:100%}
   /* ---- WISKNOP --------------------------------------------------------------
@@ -1974,7 +1977,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v200</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v201</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:14px;font-weight:var(--fw-nadruk);cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
