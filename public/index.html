@@ -653,6 +653,15 @@
   #klantportaalOverlay .kpo-fasestap.done .kpo-fdot{background:#fff}
   #klantportaalOverlay .kpo-flbl{font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;color:rgba(255,255,255,.55)}
   #klantportaalOverlay .kpo-fasestap.done .kpo-flbl{color:#fff}
+  #klantportaalOverlay .kpo-map{margin-bottom:1px}
+  #klantportaalOverlay .kpo-maph{display:flex;align-items:center;gap:10px;width:100%;background:transparent;border:none;border-top:1px solid rgba(255,255,255,.14);color:#fff;font-family:inherit;font-size:14px;font-weight:var(--fw);padding:10px 0;cursor:pointer;text-align:left}
+  #klantportaalOverlay .kpo-sec .kpo-map:first-child .kpo-maph,#klantportaalOverlay .kpo-colR .kpo-map:first-child .kpo-maph{border-top:none}
+  #klantportaalOverlay .kpo-chev{display:inline-flex;color:rgba(255,255,255,.55);transition:transform .18s;flex:none}
+  #klantportaalOverlay .kpo-chev.open{transform:rotate(90deg)}
+  #klantportaalOverlay .kpo-mapnaam{flex:1;min-width:0}
+  #klantportaalOverlay .kpo-mapcnt{font-size:12px;color:rgba(255,255,255,.5);flex:none}
+  #klantportaalOverlay .kpo-frij{padding-left:6px}
+  #klantportaalOverlay .kpo-frij .kpo-tx{font-size:13px}
   #klantportaalOverlay .kpo-colR{background:rgba(0,0,0,.16);border-radius:12px;padding:18px 20px;align-self:start}
   #klantportaalOverlay .kpo-doc{display:flex;align-items:center;gap:11px;padding:10px 0;border-top:1px solid rgba(255,255,255,.14)}
   #klantportaalOverlay .kpo-doc:first-of-type{border-top:none}
@@ -2108,10 +2117,11 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v215</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v216</span>
       <button id="dayBtn" class="dag-ic" onclick="openDayOverview()" title="Dagoverzicht" aria-label="Dagoverzicht"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M3 12h2M19 12h2M5.6 18.4l1.4-1.4M17 7l1.4-1.4"/></svg></button>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:14px;font-weight:var(--fw-nadruk);cursor:pointer" title="AI-context bewerken">Jeroen</span>
+      <button id="logoutBtn" class="dag-ic" onclick="uitloggenApp()" title="Uitloggen" aria-label="Uitloggen"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-2"/><path d="M9 12h11M17 9l3 3-3 3"/></svg></button>
     </div>
     <div id="usagePop" class="usage-pop" hidden></div>
     <div class="logo" id="logoSlot" onclick="goHome()" style="cursor:pointer" title="Beginscherm">
@@ -4101,6 +4111,17 @@ async function portaalToggleItem(soort, id){
   _renderPortaalBoard();
 }
 function findItemById(id){ for(const p of (state.projects||[])){ const it=(p.items||[]).find(x=>String(x.id)===String(id)); if(it)return {p,it}; } return null; }
+// Bestanden in het portaal krijgen dezelfde mappen als op het projectbord (Financiën-mappen
+// + soort), inklapbaar en standaard dicht — anders is het een muur van foto's.
+let _kpoMapOpen=new Set();
+function _portaalMapGroepen(files){
+  const groepen={}, order=[];
+  (files||[]).forEach(f=>{ const naam=_finMapVan(f)||_bestandSoortMap(f.name); if(!groepen[naam]){groepen[naam]=[];order.push(naam);} groepen[naam].push(f); });
+  const vast=[..._FIN_MAPPEN,..._SOORT_VOLGORDE];
+  order.sort((a,b)=>{ const ia=vast.indexOf(a),ib=vast.indexOf(b); return (ia<0?99:ia)-(ib<0?99:ib); });
+  return order.map(n=>({naam:n,files:groepen[n]}));
+}
+function portaalMapToggle(naam){ _kpoMapOpen.has(naam)?_kpoMapOpen.delete(naam):_kpoMapOpen.add(naam); _renderPortaalBoard(); }
 // Het dossier zoals het in de klantportaal-overlay verschijnt: dezelfde items, met per stuk
 // een klant-icoontje. Rechts de voorstel-documenten met de akkoord-status.
 function _renderPortaalBoard(){
@@ -4120,6 +4141,18 @@ function _renderPortaalBoard(){
   const voorstellen=files.filter(f=>f.is_voorstel);
 
   const rij=(soort,id,tekst,aan,meta)=>`<div class="kpo-rij${aan?'':' uit'}">${ic(soort,id,aan)}<span class="kpo-tx">${esc(tekst||'')}</span>${meta?`<span class="kpo-meta">${esc(meta)}</span>`:''}</div>`;
+  // Bestanden in mappen, inklapbaar. `soort` bepaalt welk icoontje: 'file' = zichtbaar voor
+  // klant, 'voorstel' = markeer als voorstel.
+  const chev='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6l-6 6"/></svg>';
+  const mappen=(lijst,soort)=>{
+    if(!lijst.length) return '<div class="kpo-leeg">Nog geen bestanden.</div>';
+    return _portaalMapGroepen(lijst).map(g=>{
+      const open=_kpoMapOpen.has(g.naam);
+      const binnen=open?g.files.map(f=>{ const aan=soort==='voorstel'?!!f.is_voorstel:!!f.visible_to_client;
+        return `<div class="kpo-rij kpo-frij${aan?'':' uit'}">${ic(soort,f.id,aan)}<span class="kpo-tx">${esc(f.name)}</span></div>`; }).join(''):'';
+      return `<div class="kpo-map"><button class="kpo-maph" onclick="portaalMapToggle('${String(g.naam).replace(/'/g,"\\'")}')"><span class="kpo-chev${open?' open':''}">${chev}</span><span class="kpo-mapnaam">${esc(g.naam)}</span><span class="kpo-mapcnt">${g.files.length}</span></button>${binnen}</div>`;
+    }).join('');
+  };
 
   // Kolom links: het dossier.
   let L='';
@@ -4130,15 +4163,11 @@ function _renderPortaalBoard(){
   L+=`<div class="kpo-sec"><div class="kpo-h"><span>In afwachting</span></div>${wacht.length?wacht.map(it=>rij('wait',it.id,it.t,it.kz)).join(''):'<div class="kpo-leeg">Niets.</div>'}</div>`;
   L+=`<div class="kpo-sec"><div class="kpo-h"><span>Taken</span></div>${taken.length?taken.map(it=>rij('task',it.id,it.t,it.kz)).join(''):'<div class="kpo-leeg">Geen taken.</div>'}</div>`;
   L+=`<div class="kpo-sec"><div class="kpo-h"><span>Afspraken</span></div>${appts.length?appts.map(a=>rij('appt',a.id,a.t||'Afspraak',a.kz,a.date?d3date(a.date):'')).join(''):'<div class="kpo-leeg">Nog geen afspraken.</div>'}</div>`;
-  L+=`<div class="kpo-sec"><div class="kpo-h"><span>Bestanden</span></div>${files.length?files.map(f=>rij('file',f.id,f.name,!!f.visible_to_client)).join(''):'<div class="kpo-leeg">Nog geen bestanden.</div>'}</div>`;
+  L+=`<div class="kpo-sec"><div class="kpo-h"><span>Bestanden</span></div>${mappen(files,'file')}</div>`;
 
-  // Kolom rechts: voorstel-documenten + akkoord. Elk bestand kan als 'voorstel' worden gemarkeerd.
-  let R=`<div class="kpo-h"><span>Voorstellen</span></div>`;
-  if(!files.length){ R+='<div class="kpo-leeg">Nog geen documenten in Bestanden.</div>'; }
-  else{
-    R+=files.map(f=>`<div class="kpo-doc${f.is_voorstel?' aan':''}"><button class="kz${f.is_voorstel?' aan':''}" onclick="portaalToggleItem('voorstel','${f.id}')" title="${f.is_voorstel?'Dit is een voorstel voor de klant':'Markeer als voorstel'}">${_KLANT_IC}</button><span class="kpo-tx">${esc(f.name)}</span></div>`).join('');
-  }
-  R+=`<div class="kpo-akkoord"><div class="kpo-akknoot">${voorstellen.length?'De klant kan hieronder akkoord geven op de gemarkeerde voorstellen.':'Markeer eerst een document als voorstel.'}</div><button class="kpo-akkbtn" ${voorstellen.length?'':'disabled'}>Akkoord vragen</button></div>`;
+  // Kolom rechts: dezelfde mappen, waarin je documenten als voorstel markeert. Daaronder akkoord.
+  let R=`<div class="kpo-h"><span>Voorstellen</span></div>${mappen(files,'voorstel')}`;
+  R+=`<div class="kpo-akkoord"><div class="kpo-akknoot">${voorstellen.length?(voorstellen.length+' document'+(voorstellen.length===1?'':'en')+' gemarkeerd als voorstel.'):'Open een map en markeer een document als voorstel.'}</div><button class="kpo-akkbtn" ${voorstellen.length?'':'disabled'}>Akkoord vragen</button></div>`;
 
   body.innerHTML=`<div class="kpo-grid"><div class="kpo-colL">${L}</div><div class="kpo-colR">${R}</div></div>`;
 }
@@ -9306,10 +9335,13 @@ async function sbLogin(){
   const {error}=await sb.auth.signInWithPassword({email,password});
   msg.textContent = error ? 'Onjuist mailadres of wachtwoord.' : '';
 }
+async function uitloggenApp(){ try{ await sb.auth.signOut(); }catch(_){}; location.reload(); }
 let _booted=false;
 async function startApp(session){
-  hideLogin();
   const email=(session&&session.user&&session.user.email)||'';
+  // Een klant hoort niet in de teamapp maar in het portaal. Alleen Jeroen en Marlon zijn team.
+  if(!/jeroen|marlon/i.test(email)){ location.replace('/portaal'); return; }
+  hideLogin();
   who = /jeroen/i.test(email)?'Jeroen':(/marlon/i.test(email)?'Marlon':'Jeroen');
   const el=document.getElementById('who'); if(el){el.textContent=who;} const av=document.getElementById('userAv'); if(av)av.textContent=who[0];
   await refresh();
