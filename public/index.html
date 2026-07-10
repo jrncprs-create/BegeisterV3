@@ -7893,6 +7893,32 @@ async function _dovVulWeer(){
 
 function openDayOverview(){ renderDayOverview(); const ov=document.getElementById('dayOverlay'); if(!ov)return; ov.setAttribute('aria-hidden','false'); requestAnimationFrame(()=>ov.classList.add('open')); }
 function closeDayOverview(){ const ov=document.getElementById('dayOverlay'); if(!ov)return; ov.classList.remove('open'); ov.setAttribute('aria-hidden','true'); }
+let _inspBoards=[], _inspItems=[], _inspBoard=null;
+const _ispIc={
+  close:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>',
+  plus:'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  back:'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>',
+  photo:'<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>',
+  link:'<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 1 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 1 0 7 7l1-1"/></svg>',
+  ig:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17" cy="6.8" r="1"/></svg>'
+};
+function _ispAttr(it){ if(it.type==='link'&&it.thumb) return 'src="'+escapeHtml(it.thumb)+'"'; if(it.storage_path) return 'data-sp="'+escapeHtml(it.storage_path)+'"'; if(it.thumb) return 'src="'+escapeHtml(it.thumb)+'"'; return ''; }
+function _ispSeed(s){ let h=0; s=String(s); for(let i=0;i<s.length;i++){h=(h*31+s.charCodeAt(i))>>>0;} return h; }
+function _ispRand(n){ const x=Math.sin(n*99.7)*1e4; return x-Math.floor(x); }
+function _ispLayerTr(seed,j){ const r=(_ispRand(seed+j*7)-0.5)*24, tx=(_ispRand(seed+j*13)-0.5)*12, ty=(_ispRand(seed+j*19)-0.5)*9; return 'rotate('+r.toFixed(1)+'deg) translate('+tx.toFixed(1)+'%,'+ty.toFixed(1)+'%)'; }
+let _inspPvwItem=null;
+async function _inspLoad(){ try{ const [bd,it]=await Promise.all([ sb.from('insp_boards').select('*').order('sort').order('created_at'), sb.from('insp_items').select('*').order('created_at',{ascending:false}) ]); _inspBoards=(bd&&bd.data)?bd.data:[]; _inspItems=(it&&it.data)?it.data:[]; }catch(_){ } }
+/* Inspiratie woonde in een eigen fullscreen-overlay. Nu is het een map in Bestanden:
+   kolom 2 toont de thema's (en daarna de beelden), kolom 3 de preview. Dezelfde plek en
+   dezelfde bediening als Contacten en het Postvak In. */
+var _inspAan=false, _inspSel=null;
+async function openInspiration(){
+  const n=document.getElementById('nav'); if(n)n.classList.remove('open');
+  _inspAan=true; _inspBoard=null; _inspSel=null;
+  setView('files');
+  await _inspLoad(); renderInsp(); _renderFmTree();
+}
+function closeInspiration(){ _inspAan=false; _inspBoard=null; _inspSel=null; setView('files'); _renderFmTree(); }
 function renderInsp(){
   const body=document.getElementById('inspMidWrap'); if(!body)return;
   renderInspRight();
