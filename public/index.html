@@ -898,13 +898,28 @@
   #finRightWrap .finr-line.marge{border-top:1px solid var(--line);margin-top:6px;padding-top:10px}
   #finRightWrap .finr-line.marge b{color:#d7dadd}
   #finRightWrap .finr-line.marge.neg b{color:#e0726f}
-  /* Contacten 3-koloms */
-  #contactenWrap .con-crow{display:flex;align-items:center;gap:12px;padding:11px 14px;border-bottom:none;cursor:pointer}
-  #contactenWrap .con-crow:hover,#contactenWrap .con-crow.on{background:rgba(255,255,255,.04)}
-  #contactenWrap .con-cdot{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:var(--fw-nadruk);color:#000;flex:0 0 auto}
-  #contactenWrap .con-cmain{flex:1;min-width:0}
-  #contactenWrap .con-cnm{font-size:14px}
-  #contactenWrap .con-ccnt{font-size:12px;color:var(--mut2);flex:0 0 auto}
+  /* ---- EERSTE KOLOM: klantenlijst -------------------------------------------
+     Contacten, Bronnen en Bestanden tonen dezelfde lijst — klanten om open te
+     klappen. Ze hadden drie eigen regelsets: Contacten en Bronnen waren letterlijk
+     identiek, Bestanden was smaller, had een kleiner badge en een ▸ ervoor.
+     Eén ritme: rij 48 px hoog (padding 11/14, gap 12), badge 26 px, naam 14 px.
+     Geen driehoekje: je klapt open door op de rij te klikken, net als daar. */
+  #contactenWrap .con-crow,#bronnenWrap .con-crow,#filesWrap .fm-crow{
+    display:flex;align-items:center;gap:12px;padding:11px 14px;border-bottom:none;
+    border-radius:0;cursor:pointer;font-size:14px;color:var(--txt)}
+  #contactenWrap .con-crow:hover,#contactenWrap .con-crow.on,
+  #bronnenWrap .con-crow:hover,#bronnenWrap .con-crow.on,
+  #filesWrap .fm-crow:hover,#filesWrap .fm-crow.open{background:rgba(255,255,255,.04)}
+  #contactenWrap .con-cdot,#bronnenWrap .con-cdot,#filesWrap .fm-crow .fm-badge{
+    width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;
+    font-size:12px;font-weight:var(--fw-nadruk);color:#000;flex:0 0 auto}
+  #contactenWrap .con-cmain,#bronnenWrap .con-cmain,#filesWrap .fm-crow .fm-name{flex:1;min-width:0}
+  #contactenWrap .con-cnm,#bronnenWrap .con-cnm,#filesWrap .fm-crow .fm-name{
+    font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #contactenWrap .con-ccnt,#bronnenWrap .con-ccnt,#filesWrap .fm-crow .fm-cnt{
+    font-size:12px;color:var(--mut2);flex:0 0 auto}
+  /* Het driehoekje stond alleen bij Bestanden. Weg — de rij zelf is de knop. */
+  #filesWrap .fm-crow>.fm-tw{display:none}
   .con-midhdr{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line)}
   .con-midhdr input{flex:1;background:transparent;border:0;color:var(--txt);font-size:14px;outline:none}
   #conMidWrap .con-li{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line);cursor:pointer}
@@ -969,13 +984,7 @@
   .con-linked .cl-empty{font-size:13px;color:var(--mut2)}
   .con-edit{margin-top:22px;background:transparent;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:9px 18px;font-size:13px;cursor:pointer}
   .con-edit:hover{background:rgba(255,255,255,.05)}
-  /* Bronnen 3-koloms — hergebruikt de Contacten-stijl */
-  #bronnenWrap .con-crow{display:flex;align-items:center;gap:12px;padding:11px 14px;border-bottom:none;cursor:pointer}
-  #bronnenWrap .con-crow:hover,#bronnenWrap .con-crow.on{background:rgba(255,255,255,.04)}
-  #bronnenWrap .con-cdot{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:var(--fw-nadruk);color:#000;flex:0 0 auto}
-  #bronnenWrap .con-cmain{flex:1;min-width:0}
-  #bronnenWrap .con-cnm{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  #bronnenWrap .con-ccnt{font-size:12px;color:var(--mut2);flex:0 0 auto}
+  /* Bronnen deelt de klantenlijst-stijl hierboven met Contacten en Bestanden. */
   #bronMidWrap .con-li{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line);cursor:pointer}
   #bronMidWrap .con-li:hover,#bronMidWrap .con-li.on{background:rgba(255,255,255,.04)}
   #bronMidWrap .con-li .cmain{flex:1;min-width:0}
@@ -1737,6 +1746,7 @@
   #list .task:hover .picon,#wachterList .task:hover .picon{ color:#000 !important }
   /* Bestanden-tree: klant-icoon (gekleurd + letter) en naam altijd in klantkleur */
   .fm-badge{ filter:none !important; width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#000;font-weight:var(--fw-nadruk);font-size:11px }
+  #filesWrap .fm-crow .fm-badge{ width:26px;height:26px;font-size:12px }   /* klantrij: zelfde maat als Contacten/Bronnen */
   /* Klanten-beheer: project-bolletje in klantkleur */
   .kgroup .kli .kdot{ filter:none !important; background:#5a5a5a !important }
   .kgroup:hover .kli .kdot,.kgroup.kactive .kli .kdot{ background:var(--ccol) !important }
@@ -1954,7 +1964,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v195</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v196</span>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:14px;font-weight:var(--fw-nadruk);cursor:pointer" title="AI-context bewerken">Jeroen</span>
     </div>
