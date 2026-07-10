@@ -161,23 +161,30 @@ let TEAM = false, DATA = null, ACTIEF = 0, PROJECT_ID = null;
 let EDIT = false;
 const OPEN_OPM = new Set();   // welke opmerking-draadjes openstaan
 
-// Het portaal staat in de kleur van de klant: achtergrond de klantkleur, tekst zwart.
-// Omgekeerd van de donkere teamapp. De tinten leiden we af van dezelfde kleur.
+// Het portaal staat in de kleur van de klant: een donkere versie van die kleur als
+// achtergrond, en alle tekst, lijnen en iconen wit. Omgekeerd van de donkere teamapp.
+function _donker(hex, f){
+  let h=String(hex||'').replace('#',''); if(h.length===3) h=h.split('').map(c=>c+c).join('');
+  const n=parseInt(h,16); if(isNaN(n)) return '#3a1414';
+  const r=Math.round(((n>>16)&255)*f), g=Math.round(((n>>8)&255)*f), b=Math.round((n&255)*f);
+  return 'rgb('+r+','+g+','+b+')';
+}
 function themaVanKlant(kleur){
   const r=document.documentElement.style;
   if(!kleur){ return; }
-  r.setProperty('--bg', kleur);
-  r.setProperty('--txt', '#141414');
-  r.setProperty('--s1', '#141414');
-  r.setProperty('--s2', 'rgba(0,0,0,.82)');
-  r.setProperty('--s4', '#000');
-  r.setProperty('--mut', 'rgba(0,0,0,.62)');
-  r.setProperty('--mut2', 'rgba(0,0,0,.46)');
-  r.setProperty('--line', 'rgba(0,0,0,.22)');
-  r.setProperty('--ccol', '#000');
-  r.setProperty('--kaartbg', 'rgba(0,0,0,.05)');
-  r.setProperty('--randlijn', 'rgba(0,0,0,.12)');
-  document.body.style.background = kleur;
+  const bg=_donker(kleur, .40);
+  r.setProperty('--bg', bg);
+  r.setProperty('--txt', '#ffffff');
+  r.setProperty('--s1', '#ffffff');
+  r.setProperty('--s2', '#ffffff');
+  r.setProperty('--s4', '#ffffff');
+  r.setProperty('--mut', 'rgba(255,255,255,.74)');
+  r.setProperty('--mut2', 'rgba(255,255,255,.52)');
+  r.setProperty('--line', 'rgba(255,255,255,.26)');
+  r.setProperty('--ccol', '#ffffff');
+  r.setProperty('--kaartbg', 'rgba(255,255,255,.06)');
+  r.setProperty('--randlijn', 'rgba(255,255,255,.16)');
+  document.body.style.background = bg;
 }
 
 const SEC_ORDER = ['omschrijving','voortgang','taken','afspraken','bestanden','projectprijs','notities'];
