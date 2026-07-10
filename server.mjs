@@ -61,12 +61,18 @@ await mount("/api/fileproxy", "./api/fileproxy.mjs");
 await mount("/api/notify", "./api/notify.mjs");
 await mount("/api/push", "./api/push.mjs");
 await mount("/api/backfill-contacts", "./api/backfill-contacts.mjs");
+await mount("/api/portal", "./api/portal.mjs");
 await mount("/api/dropbox/connect", "./api/dropbox/connect.mjs");
 await mount("/api/dropbox/callback", "./api/dropbox/callback.mjs");
 await mount("/api/dropbox/list", "./api/dropbox/list.mjs");
 
 // Statische app
 app.use(express.static(path.join(__dirname, "public"), { extensions: ["html"] }));
+
+// Het klantportaal is een eigen pagina, geen route in de teamapp.
+app.get(["/portaal", "/portaal/*"], (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "portaal.html"));
+});
 
 // Alles wat geen /api is en geen bestaand bestand → de app (index.html)
 app.get("*", (req, res, next) => {
