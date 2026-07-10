@@ -395,6 +395,11 @@
   .t-due.warn,.t-due.risk{color:var(--mut) !important} .t-due.late{color:var(--late);font-weight:var(--fw-nadruk)}
   .t-title{font-size:14px;line-height:1.4;margin-top:8px;cursor:pointer;color:var(--txt)}
   .t-title:hover{color:var(--primary2)}
+  .t-ck{margin-top:10px;display:flex;flex-direction:column;gap:2px}
+  .t-ckrow{display:flex;align-items:flex-start;gap:8px;padding:3px 0;cursor:pointer}
+  .t-ckrow input[type=checkbox]{width:15px;height:15px;margin-top:1px;flex:0 0 auto;accent-color:var(--primary2,#6ea8fe);cursor:pointer}
+  .t-cktx{font-size:13px;line-height:1.35;color:var(--mut2,var(--mut))}
+  .t-cktx.done{text-decoration:line-through;opacity:.6}
   .t-pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px;align-items:center}
   .pill{font-size:12px;padding:4px 11px;border-radius:999px;border:1px solid var(--line);white-space:nowrap;color:var(--mut)}
   .pill.who{color:var(--txt)}
@@ -1467,6 +1472,16 @@
   /* onderste velden (contact/klant/project) zitten in een <div> en misten daardoor de 18px tussenruimte */
   .modal>.m-fld{margin-top:18px}
   .modal>#m_files:not(:empty){margin-top:18px}
+  .modal>#m_checklist:not(:empty){margin-top:18px}
+  .m-checklist .m-ckhead{font-size:12px;letter-spacing:.4px;text-transform:uppercase;color:var(--mut);margin-bottom:8px}
+  .m-ckrow{display:flex;align-items:center;gap:10px;padding:6px 0;cursor:pointer}
+  .m-ckrow input[type=checkbox]{width:17px;height:17px;flex:0 0 auto;accent-color:var(--s1,#6ea8fe);cursor:pointer}
+  .m-cktx{flex:1;min-width:0;font-size:14px;color:var(--txt)}
+  .m-cktx.done{text-decoration:line-through;color:var(--mut)}
+  .m-ckdel{background:transparent;border:none;color:var(--mut);font-size:18px;line-height:1;cursor:pointer;padding:0 4px;opacity:0;transition:opacity .15s}
+  .m-ckrow:hover .m-ckdel{opacity:1}
+  .m-ckadd input{width:100%;box-sizing:border-box;background:transparent;border:none;border-top:1px solid var(--lijn,rgba(255,255,255,.1));color:var(--txt);font-family:inherit;font-size:14px;padding:9px 0 2px;margin-top:4px;outline:none}
+  .m-ckadd input::placeholder{color:var(--mut)}
   /* custom contact-autocomplete — vervangt de niet-styleerbare native datalist */
   .acwrap{position:relative}
   .acmenu{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:40;background:#1b1b1d;border:1px solid var(--line);border-radius:12px;max-height:224px;overflow-y:auto;box-shadow:0 18px 40px rgba(0,0,0,.5);display:none;padding:5px}
@@ -2159,7 +2174,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v229</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v230</span>
       <button id="dayBtn" class="dag-ic" onclick="openDayOverview()" title="Dagoverzicht" aria-label="Dagoverzicht"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M3 12h2M19 12h2M5.6 18.4l1.4-1.4M17 7l1.4-1.4"/></svg></button>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:14px;font-weight:var(--fw-nadruk);cursor:pointer" title="AI-context bewerken">Jeroen</span>
@@ -2709,6 +2724,7 @@
     <div class="m-fld acwrap"><input id="m_contact" placeholder="Contact zoeken of toevoegen…" autocomplete="off"><div class="acmenu" id="m_contactmenu"></div></div>
     <div class="m-fld"><select id="m_client" onchange="onClientChange()"></select></div>
     <div class="m-fld"><select id="m_project" onchange="onProjectChange()"></select></div>
+    <div id="m_checklist"></div>
     <div id="m_files"></div>
     <div id="m_comments"></div>
     <div class="foot">
@@ -3742,6 +3758,7 @@ function taskCard(p,it,idx,mode,fresh){
     </div>
     ${it.due?`<div class="t-due ${di.cls}">${escapeHtml(di.txt)}</div>`:''}
     <div class="t-title" onclick="${oc}">${autolink(escapeHtml(it.t),col)}</div>
+    ${(it.checklist&&it.checklist.length)?`<div class="t-ck">${it.checklist.map((c,i)=>`<label class="t-ckrow"><input type="checkbox" ${c.done?'checked':''} onclick="event.stopPropagation();checklistToggle('${it.id}',${i})"><span class="t-cktx${c.done?' done':''}">${escapeHtml(c.t||'')}</span></label>`).join('')}</div>`:''}
     <div class="t-pills">
       <span class="pill who">${escapeHtml(it.owner||'—')}</span>${it.contact?`<span class="pill contact">↳ ${escapeHtml(it.contact)}</span>`:''}${stPill}${srcPill}
       <span class="pill edit" onclick="${oc}">pas aan</span>
@@ -7353,6 +7370,7 @@ function openModal(id, src, defStatus, presetPid){
   ov.classList.toggle('incol',incol);
   ov.classList.toggle('incol-left', incol && src==='wachter');   // In-afwachting-item: bewerk in de linkerkolom
   if(incol){const tb=document.querySelector('.topbar');ov.style.top=(tb?Math.round(tb.getBoundingClientRect().height):0)+'px';} else ov.style.top='';
+  const mck=document.getElementById('m_checklist');if(mck)mck.innerHTML=(isNew||!r)?'':_checklistHTML(r.it);
   const mf=document.getElementById('m_files');if(mf)mf.innerHTML=_filesHTML('task', editingId);
   const mc=document.getElementById('m_comments');if(mc)mc.innerHTML=isNew?'':(typeof _cmtBtnHTML==='function'?_cmtBtnHTML('task',editingId):'');
   ov.classList.add('open');}
@@ -7380,6 +7398,19 @@ async function saveModal(){const r=findItem(editingId);if(!r)return;
   closeModal();render();}
 async function deleteItem(){const r=findItem(editingId);if(!r)return;if(!(await uiConfirm('Dit actiepunt verwijderen?')))return;r.p.items=r.p.items.filter(i=>i.id!==r.it.id);try{await sb.from('items').delete().eq('id',r.it.id);}catch(_){}closeModal();render();}
 document.getElementById('overlay').addEventListener('click',e=>{if(e.target.id==='overlay')closeModal();});
+
+// Checklist (subpunten) op een taak — één kaart per bron met afvinkbare actiepunten.
+function _checklistHTML(it){
+  const cl=Array.isArray(it.checklist)?it.checklist:[];
+  const rows=cl.map((c,i)=>`<label class="m-ckrow"><input type="checkbox" ${c.done?'checked':''} onchange="checklistToggle('${it.id}',${i})"><span class="m-cktx${c.done?' done':''}">${escapeHtml(c.t||'')}</span><button type="button" class="m-ckdel" onclick="checklistDel('${it.id}',${i})" title="Verwijderen">×</button></label>`).join('');
+  const done=cl.filter(c=>c.done).length;
+  return `<div class="m-checklist"><div class="m-ckhead">Actiepunten${cl.length?` · ${done}/${cl.length}`:''}</div>${rows}<div class="m-ckadd"><input id="m_ckin" placeholder="+ actiepunt toevoegen…" autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();checklistAdd('${it.id}');}"></div></div>`;
+}
+async function _checklistSave(it){ try{ await sb.from('items').update({checklist:it.checklist||[]}).eq('id',it.id); }catch(e){ toonToast('Opslaan mislukte: '+(e.message||e),'fout'); } }
+function _checklistRerender(it){ const m=document.getElementById('m_checklist'); if(m)m.innerHTML=_checklistHTML(it); try{render();}catch(_){} }
+function checklistToggle(id,i){ const r=findItem(id); if(!r||!r.it.checklist||!r.it.checklist[i])return; r.it.checklist[i].done=!r.it.checklist[i].done; _checklistRerender(r.it); _checklistSave(r.it); }
+function checklistDel(id,i){ const r=findItem(id); if(!r||!Array.isArray(r.it.checklist))return; r.it.checklist.splice(i,1); _checklistRerender(r.it); _checklistSave(r.it); }
+function checklistAdd(id){ const inp=document.getElementById('m_ckin'); const t=inp?(inp.value||'').trim():''; if(!t)return; const r=findItem(id); if(!r)return; r.it.checklist=(Array.isArray(r.it.checklist)?r.it.checklist:[]).concat([{t,done:false}]); _checklistRerender(r.it); const ni=document.getElementById('m_ckin'); if(ni)ni.focus(); _checklistSave(r.it); }
 
 // ===== Opmerkingen + @mention (per taak & per project) =====
 const CMT_PEOPLE=['Jeroen','Marlon'];
@@ -7522,7 +7553,7 @@ const sb = supabase.createClient(SB_URL, SB_KEY);
 save = function(){};
 
 // ── data laden uit Supabase ──
-function _mapItem(i){return {id:i.id,t:i.title,owner:i.owner||'',contact:i.contact||'',due:i.due,status:i.status,src:i.source_id,kz:!!i.client_zichtbaar,created:i.created_at?new Date(i.created_at).getTime():0,archived:i.archived_at?new Date(i.archived_at).getTime():0};}
+function _mapItem(i){return {id:i.id,t:i.title,owner:i.owner||'',contact:i.contact||'',due:i.due,status:i.status,src:i.source_id,kz:!!i.client_zichtbaar,checklist:Array.isArray(i.checklist)?i.checklist:[],created:i.created_at?new Date(i.created_at).getTime():0,archived:i.archived_at?new Date(i.archived_at).getTime():0};}
 function _mapAppt(a){return {id:a.id,projectId:a.project_id||null,t:a.title,owner:a.owner||'',contact:a.contact||'',kind:a.kind||'fysiek',location:a.location||'',date:a.date,endDate:a.end_date||null,start:(a.start_time||'').slice(0,5),end:(a.end_time||'').slice(0,5),note:a.note||'',kz:!!a.client_zichtbaar,created:a.created_at?new Date(a.created_at).getTime():0};}
 function _mapSource(s,atts){
   const kind = s.channel==='whatsapp'?'chat':(s.channel==='email'?'email':'paste');
@@ -8697,15 +8728,20 @@ async function _saveDropToWait(items, summary, srcMeta, fileObj, listUrl){
     try{ _finInk=null; await refresh(); }catch(_){}
     return;
   }
-  const list=(items&&items.length)?items:[{title:(summary||'Nieuw bestand'),owner:'',contact:'',due:null,status:'wait',project_id:null}];
+  // Eén kaart per bron: bij 2+ actiepunten worden het afvinkbare subpunten (checklist) onder
+  // één taak. Bij precies één punt is dat gewoon de taaktitel. Zo geen muur van losse kaartjes.
+  const punten=(items&&items.length)?items:[];
+  let titel, checklist=[];
+  if(punten.length>=2){ titel=((summary||'').trim().slice(0,140))||'Nieuwe taken'; checklist=punten.map(it=>({t:((it.title||'').trim())||'Actiepunt',done:false})); }
+  else if(punten.length===1){ titel=((punten[0].title||'').trim())||(summary||'Bestand'); }
+  else { titel=(summary||'Nieuw bestand'); }
+  const _p0=punten[0]||{};
+  const rec={ project_id: _p0.project_id||pid||null, source_id: srcId||null, title: titel,
+    owner:(punten.length===1&&(_p0.owner==='Jeroen'||_p0.owner==='Marlon'))?_p0.owner:null,
+    contact:(punten.length===1?_p0.contact:null)||null, due:(punten.length===1?_p0.due:null)||null,
+    status:'wait', checklist };
   let firstId=null;
-  for(const it of list){
-    const rec={ project_id: it.project_id||pid||null, source_id: srcId||null,
-      title:((it.title||'').trim())||(summary||'Bestand'),
-      owner:(it.owner==='Jeroen'||it.owner==='Marlon')?it.owner:null,
-      contact: it.contact||null, due: it.due||null, status:'wait' };
-    try{ const ins=await sb.from('items').insert(rec).select('id').single(); if(ins&&ins.data&&!firstId)firstId=ins.data.id; }catch(_){}
-  }
+  try{ const ins=await sb.from('items').insert(rec).select('id').single(); if(ins&&ins.data)firstId=ins.data.id; }catch(_){}
   // Het bestand werd alleen bewaard als er óók een taak uit kwam (`firstId`). Leverde de AI
   // geen actiepunten op — een screenshot, een verslag, een pitch — dan verdween het bestand
   // en hield je een bron met alleen een bestandsnaam over. Vandaar geen preview.
