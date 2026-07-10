@@ -224,7 +224,8 @@ function toonLogin(fout){
   document.getElementById('lgKnop').onclick=doe;
   document.getElementById('lgWw').onkeydown=e=>{ if(e.key==='Enter')doe(); };
 }
-async function uitloggen(){ await sb.auth.signOut(); toonLogin(); }
+// Uitloggen brengt je terug naar de Begeister-teamapp (met een schone, niet-rode pagina).
+async function uitloggen(){ try{ await sb.auth.signOut(); }catch(_){}; location.href='/'; }
 
 /* ---------------- render ---------------- */
 function statusTekst(p){
@@ -384,6 +385,9 @@ async function teamLaad(pid){
 async function start(){
   const s=await sb.auth.getSession();
   if(!s.data.session) return toonLogin();
+  // Team hoort niet op de losse portaalpagina (die is voor klanten). Stuur ze naar de teamapp.
+  const email=(s.data.session.user&&s.data.session.user.email)||'';
+  if(!EMBED && /jeroen|marlon/i.test(email)){ location.replace('/'); return; }
   PROJECT_ID=new URLSearchParams(location.search).get('p');
   try{ await beheer('projecten'); TEAM=true; }catch(e){ if(e.status!==403) console.warn('teamcheck',e.message); }
   try{ TEAM ? await teamLaad(PROJECT_ID) : await laad(); }
