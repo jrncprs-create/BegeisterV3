@@ -105,7 +105,8 @@ body.heeftbg .kop{background:transparent;backdrop-filter:blur(3px)}
 .opm.open .opm-body{max-height:1400px}
 .opm-rij{padding:9px 0;border-top:1px solid rgba(255,255,255,.12)} .opm-rij:first-child{border-top:none;margin-top:8px}
 .opm-wie{font-size:11px;color:rgba(255,255,255,.55);margin-bottom:2px} .opm-wie b{color:#fff}
-.opm textarea{width:100%;background:rgba(0,0,0,.14);border:1px solid rgba(255,255,255,.25);border-radius:var(--r-md);color:#fff;font-family:inherit;font-size:13px;padding:9px 11px;margin-top:10px;resize:vertical;min-height:56px}
+.opm textarea{width:100%;background:rgba(0,0,0,.14);border:1px solid rgba(255,255,255,.25);border-radius:var(--r-md);color:#fff;font-family:inherit;font-size:13px;padding:9px 11px;margin-top:10px;resize:vertical;min-height:56px;outline:none;box-shadow:none}
+.opm textarea:focus{border-color:rgba(255,255,255,.5);outline:none;box-shadow:none}
 .opm textarea::placeholder{color:rgba(255,255,255,.5)}
 .knop{background:transparent;border:1px solid rgba(255,255,255,.3);border-radius:var(--r-md);color:#fff;font-size:13px;padding:7px 13px;margin-top:8px}
 .knop:hover{border-color:#fff}
@@ -264,6 +265,9 @@ function bind(p){
   document.querySelectorAll('[data-vopen]').forEach(b=>b.onclick=()=>toonVoorstel(b.dataset.vlink,b.dataset.vnaam));
 }
 
+// Dropbox-link → server-proxy zodat het bestand INLINE rendert (Dropbox toont anders z'n eigen pagina).
+function _vraw(link){ let u=String(link||'').replace('://www.dropbox.com/','://dl.dropboxusercontent.com/').replace('://dropbox.com/','://dl.dropboxusercontent.com/'); u=u.replace(/([?&])dl=\d&?/,'$1').replace(/[?&]$/,''); return u; }
+function _vsrc(link){ return /dropbox/i.test(link||'') ? '/api/fileproxy?u='+encodeURIComponent(_vraw(link)) : (link||''); }
 // Een voorstel-document (meestal een HTML-deck) schermvullend tonen, in een afgeschermde iframe.
 function toonVoorstel(link,naam){
   if(!link){ toast('Dit voorstel heeft geen bestand.'); return; }
@@ -276,7 +280,7 @@ function toonVoorstel(link,naam){
   }
   ov.querySelector('.vv-naam').textContent=naam||'Voorstel';
   ov.querySelector('.vv-ext').href=link;
-  ov.querySelector('.vv-frame').src=link;
+  ov.querySelector('.vv-frame').src=_vsrc(link);
   ov.classList.add('on');
 }
 

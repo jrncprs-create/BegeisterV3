@@ -2143,7 +2143,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v223</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v224</span>
       <button id="dayBtn" class="dag-ic" onclick="openDayOverview()" title="Dagoverzicht" aria-label="Dagoverzicht"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M3 12h2M19 12h2M5.6 18.4l1.4-1.4M17 7l1.4-1.4"/></svg></button>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:14px;font-weight:var(--fw-nadruk);cursor:pointer" title="AI-context bewerken">Jeroen</span>
@@ -4170,6 +4170,7 @@ const _TREE_MAPPEN=_VASTE_MAPPEN.concat(['Portaal']);
 function _zesMap(cat, naam){
   const c=String(cat||'').trim().toLowerCase(); const n=String(naam||'').toLowerCase();
   const w=(re)=>new RegExp('(^|[^a-z])('+re+')([^a-z]|$)').test(n);
+  if(c==='portaal') return 'Portaal';
   if(['offertes','inkoop','facturen'].includes(c)||w('offerte|offertes|factuur|facturen|invoice|inkoop|bon|budget|calculatie|prijsopgave')) return 'Financieel';
   if(w('projectbrief|briefing|aanvraag|debrief|intake')) return 'Briefing';
   if(w('oplevering|nazorg|eindresultaat|aftermovie')) return 'Oplevering';
@@ -4181,7 +4182,7 @@ function _zesMap(cat, naam){
 function _portaalMapGroepen(files){
   const groepen={};
   (files||[]).forEach(f=>{ const naam=_zesMap(f.icon||f.map, f.name); (groepen[naam]=groepen[naam]||[]).push(f); });
-  return _VASTE_MAPPEN.filter(n=>groepen[n]&&groepen[n].length).map(n=>({naam:n,files:groepen[n]}));
+  return _TREE_MAPPEN.filter(n=>groepen[n]&&groepen[n].length).map(n=>({naam:n,files:groepen[n]}));
 }
 function portaalMapToggle(naam){ _kpoMapOpen.has(naam)?_kpoMapOpen.delete(naam):_kpoMapOpen.add(naam); _renderPortaalBoard(); }
 // Het dossier zoals het in de klantportaal-overlay verschijnt: dezelfde items, met per stuk
@@ -4345,7 +4346,7 @@ function _renderProjBoard(){
   const secNotes=`<div class="pb-sec"><div class="pb-h">Notities</div><textarea class="pb-notes" placeholder="Vrije notities voor dit project…" onblur="pbSaveNotes(this.value)">${esc(p.notes||'')}</textarea></div>`;
   // "Opmerkingen" is vervallen: Notities doet hetzelfde en stond er al.
   const secOms=_omsSectie(p);
-  const secFiles=`<div class="pb-sec"><div class="pb-h">Bestanden <button class="pb-hadd" onclick="dropboxPick('project','${_pbPid}')" title="Bestand koppelen">+</button></div>${_bestandenPerSoort(_filesFor('project',_pbPid), col, !_geenPrive(p.client))}</div>`;
+  const secFiles=`<div class="pb-sec"><div class="pb-h">Bestanden <button class="pb-hadd" onclick="dropboxPick('project','${_pbPid}')" title="Bestand koppelen">+</button></div>${_bestandenPerSoort(_filesFor('project',_pbPid), col, !_geenTraject(p.client))}</div>`;
   // Bestellijst — dezelfde inkoop-items als 'Inkopen' in Financiën, met masterlink naar de hele verlanglijst
   const _inkSrcCnt={}; inkopen.forEach(x=>{ if(x.source_id)_inkSrcCnt[x.source_id]=(_inkSrcCnt[x.source_id]||0)+1; });
   const _listSid=Object.keys(_inkSrcCnt).find(sid=>_inkSrcCnt[sid]>=2);
@@ -5946,43 +5947,24 @@ function _pbMapKop(naam, aantal, dicht, extraKlasse){
 function _financieleDocs(pid){
   return (_filesFor('project',pid)||[]).filter(f=>!!_finMapVan(f));
 }
-function _bestandenPerSoort(lijst, kleur, toonFinancien){
+// Projectbord-Bestanden: dezelfde vaste mappen als de Bestanden-boom. Bij een klantproject
+// staan de zeven mappen er altijd (ook leeg); niet-passende categorieën blijven als extra map.
+function _bestandenPerSoort(lijst, kleur, vaste){
   lijst=lijst||[];
+  const groepen={}; if(vaste) _TREE_MAPPEN.forEach(m=>groepen[m]=[]);
+  lijst.forEach(f=>{ const m=_zesMap(f.icon||f.map, f.name); (groepen[m]=groepen[m]||[]).push(f); });
+  const namen=_TREE_MAPPEN.concat(Object.keys(groepen).filter(n=>!_TREE_MAPPEN.includes(n)));
   let h='';
-
-  // 1. Financiën — altijd zichtbaar bij een project, ook zonder bestanden.
-  if(toonFinancien){
-    const inFin={}; _FIN_MAPPEN.forEach(m=>inFin[m]=[]);
-    lijst.forEach(f=>{ const m=_finMapVan(f); if(m) inFin[m].push(f); });
-    const totaal=_FIN_MAPPEN.reduce((n,m)=>n+inFin[m].length,0);
-    const dichtFin=!_pbMapOpen.has('Financien');
-    h+='<div class="pb-map pb-map-fin" style="--mcol:'+kleur+'">'
-      + _pbMapKop('Financien', totaal, dichtFin, 'pb-maph-top')
-      + '<div class="pb-mapkids">'
-      + (dichtFin?'':_FIN_MAPPEN.map(m=>{
-          const dicht=!_pbMapOpen.has('Financien/'+m);
-          const kids=dicht?'':(inFin[m].length?inFin[m].map(_fileRow).join(''):'<div class="pb-mapleeg">Nog niets.</div>');
-          return '<div class="pb-map pb-map-sub" style="--mcol:'+kleur+'">'
-            + _pbMapKop('Financien/'+m, inFin[m].length, dicht).replace('>Financien/'+m+'<', '>'+m+'<')
-            + '<div class="pb-mapkids">'+kids+'</div></div>';
-        }).join(''))
-      + '</div></div>';
-  }
-
-  // 2. De rest, gegroepeerd op soort. Financiële bestanden vallen hier uit — nooit dubbel.
-  const rest = toonFinancien ? lijst.filter(f=>!_finMapVan(f)) : lijst;
-  if(!rest.length && !toonFinancien) return '<div class="pb-empty">Nog geen bestanden.</div>';
-  const per={};
-  rest.forEach(f=>{ const s=_bestandSoortMap(f.name); (per[s]=per[s]||[]).push(f); });
-  h+=_SOORT_VOLGORDE.filter(s=>per[s]).map(soort=>{
-    const dicht=!_pbMapOpen.has(soort);
-    return '<div class="pb-map" style="--mcol:'+kleur+'">'
-      + _pbMapKop(soort, per[soort].length, dicht)
-      + '<div class="pb-mapkids">'+(dicht?'':per[soort].map(_fileRow).join(''))+'</div></div>';
-  }).join('');
-
-  if(!lijst.length && !toonFinancien) return '<div class="pb-empty">Nog geen bestanden.</div>';
-  return h;
+  namen.forEach(m=>{
+    const files=groepen[m]; if(!files) return;
+    const isVast=_TREE_MAPPEN.includes(m);
+    if(!files.length && !(vaste && isVast)) return;   // lege niet-vaste map overslaan
+    const dicht=!_pbMapOpen.has(m);
+    h+='<div class="pb-map" style="--mcol:'+kleur+'">'
+      + _pbMapKop(m, files.length, dicht)
+      + '<div class="pb-mapkids">'+(dicht?'':(files.length?files.map(_fileRow).join(''):'<div class="pb-mapleeg">Nog niets.</div>'))+'</div></div>';
+  });
+  return h||'<div class="pb-empty">Nog geen bestanden.</div>';
 }
 function _filesHTML(type,id){
   if(!id) return '<div class="kfiles-hint">Sla eerst op om bestanden te koppelen.</div>';
