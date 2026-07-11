@@ -935,6 +935,14 @@
   .pb-board-inline .pb-trow,.pb-board-inline .pb-wait,.pb-board-inline .pb-donerow{cursor:default}
   .pb-board-inline .pb-tx{flex:1 1 auto;min-width:0}
   .pb-edit{background:transparent;border:none;color:var(--scol);opacity:0;cursor:pointer;padding:2px;margin-left:8px;flex:0 0 auto;display:inline-flex;line-height:0;transition:opacity .15s}
+  /* Zichtbaarheidspoppetje naast het potloodje. Altijd zichtbaar: dof = verborgen, vol = zichtbaar voor de klant. */
+  .pb-kz{background:transparent;border:none;color:var(--scol);opacity:.28;cursor:pointer;padding:2px;margin-left:6px;flex:0 0 auto;display:inline-flex;line-height:0;transition:opacity .15s}
+  .pb-kz.aan{opacity:.95}
+  .pb-board-inline .pb-row:hover .pb-kz{opacity:.55}
+  .pb-board-inline .pb-row:hover .pb-kz.aan{opacity:1}
+  .pb-kz:hover{opacity:1 !important}
+  .pb-h .pb-kz{opacity:.28}
+  .pb-h .pb-kz.aan{opacity:.95}
   .pb-board-inline .pb-row:hover .pb-edit{opacity:.75}
   .pb-edit:hover{opacity:1 !important}
   .pb-board-inline .pb-colL .pb-sec:first-child,.pb-board-inline .pb-colR .pb-sec:first-child{border-top:none}
@@ -4175,6 +4183,16 @@ async function portaalToggleItem(soort, id){
   _portaalMark();
   _renderPortaalBoard();
 }
+// Zelfde zichtbaarheidsschakelaar als in de (oude) overlay, maar nu inline in het projectbord:
+// zet één item aan/uit voor de klant en bewaar dat. Daarna hertekenen we het bord.
+async function pbToggleClientItem(soort, id){
+  try{
+    if(soort==='task'||soort==='wait'){ const r=findItemById(id); if(r){ r.it.kz=!r.it.kz; await sb.from('items').update({client_zichtbaar:r.it.kz}).eq('id',id); } }
+    else if(soort==='appt'){ const a=(state.appointments||[]).find(x=>String(x.id)===String(id)); if(a){ a.kz=!a.kz; await sb.from('appointments').update({client_zichtbaar:a.kz}).eq('id',id); } }
+    else if(soort==='sec'){ const p=projById(_pbPid); if(p){ const z=Object.assign({},p.portal_secties||{}); z[id]=!z[id]; p.portal_secties=z; await sb.from('projects').update({portal_secties:z}).eq('id',_pbPid); } }
+  }catch(e){ toonToast('Opslaan mislukte: '+(e.message||e),'fout'); }
+  try{ _renderProjBoard(); }catch(_){}
+}
 // Een voorstel-document is een idee (wat we maken) of een budget (wat het kost). De klant
 // geeft er los akkoord op; beide poorten groen → productie. Hier kiest het team de soort.
 async function portaalVoorstelSoort(id, soort){
@@ -4420,12 +4438,14 @@ function _renderProjBoard(){
   const appts=(state.appointments||[]).filter(a=>String(a.projectId)===String(_pbPid)).sort((a,b)=>String(a.date||'').localeCompare(String(b.date||'')));
   const initial=(p.icon||(p.client||'?').trim()[0]||'?').toUpperCase();
   const _pbChk=(checked)=>`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="5.5"/>${checked?'<path d="M8 12.4l2.7 2.7L16.5 9"/>':''}</svg>`;
-  const taskRow=(it)=>`<div class="pb-row pb-trow" data-tid="${it.id}"><button class="pb-chk" onclick="pbArchiveTask('${it.id}')" title="Afvinken">${_pbChk(false)}</button><span class="pb-tx">${esc(it.t||'')}</span><button class="pb-edit" onclick="openModal('${it.id}')" title="Bewerken">${_penIc}</button></div>`;
-  const waitRow=(it)=>`<div class="pb-row pb-wait" data-tid="${it.id}"><button class="pb-chk" onclick="pbArchiveTask('${it.id}')" title="Afvinken">${_pbChk(false)}</button><span class="pb-tx">${esc(it.t||'')}</span><button class="pb-edit" onclick="openModal('${it.id}','wachter')" title="Bewerken">${_penIc}</button></div>`;
+  // Poppetje = zichtbaarheid voor de klant, naast het potloodje. Aan = de klant ziet dit.
+  const _pbKz=(soort,id,aan)=>`<button class="pb-kz${aan?' aan':''}" onclick="event.stopPropagation();pbToggleClientItem('${soort}','${id}')" title="${aan?'Zichtbaar voor de klant — klik om te verbergen':'Verborgen voor de klant — klik om te tonen'}">${_KLANT_IC}</button>`;
+  const taskRow=(it)=>`<div class="pb-row pb-trow" data-tid="${it.id}"><button class="pb-chk" onclick="pbArchiveTask('${it.id}')" title="Afvinken">${_pbChk(false)}</button><span class="pb-tx">${esc(it.t||'')}</span>${_pbKz('task',it.id,it.kz)}<button class="pb-edit" onclick="openModal('${it.id}')" title="Bewerken">${_penIc}</button></div>`;
+  const waitRow=(it)=>`<div class="pb-row pb-wait" data-tid="${it.id}"><button class="pb-chk" onclick="pbArchiveTask('${it.id}')" title="Afvinken">${_pbChk(false)}</button><span class="pb-tx">${esc(it.t||'')}</span>${_pbKz('wait',it.id,it.kz)}<button class="pb-edit" onclick="openModal('${it.id}','wachter')" title="Bewerken">${_penIc}</button></div>`;
   const waitT=(p.items||[]).filter(i=>i.status==='wait');
   const takenT=(p.items||[]).filter(i=>i.status!=='done'&&i.status!=='wait');
   const doneT=(p.items||[]).filter(i=>i.status==='done');
-  const doneRow=(it)=>`<div class="pb-row pb-donerow"><button class="pb-chk" onclick="pbUncheckTask('${it.id}')" title="Terugzetten">${_pbChk(true)}</button><span class="pb-tx done">${esc(it.t||'')}</span><button class="pb-edit" onclick="openModal('${it.id}')" title="Bewerken">${_penIc}</button></div>`;
+  const doneRow=(it)=>`<div class="pb-row pb-donerow"><button class="pb-chk" onclick="pbUncheckTask('${it.id}')" title="Terugzetten">${_pbChk(true)}</button><span class="pb-tx done">${esc(it.t||'')}</span>${_pbKz('task',it.id,it.kz)}<button class="pb-edit" onclick="openModal('${it.id}')" title="Bewerken">${_penIc}</button></div>`;
   const cbRow=(x)=>`<label class="pb-row"><input type="checkbox" ${x.done?'checked':''} onchange="pbToggle('${x.id}',this.checked)"><span class="pb-tx${x.done?' done':''}">${esc(x.text)}</span><button class="pb-del" onclick="event.preventDefault();pbDel('${x.id}')" title="Verwijderen">×</button></label>`;
   const _lnkIc='<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 15l6-6"/><path d="M11 6l1-1a3.5 3.5 0 015 5l-1 1"/><path d="M13 18l-1 1a3.5 3.5 0 01-5-5l1-1"/></svg>';
   const _stCol={'te bestellen':['rgba(186,117,23,.16)','#d8a64a'],'besteld':['rgba(24,95,165,.2)','#7db0e6']};
@@ -4439,7 +4459,7 @@ function _renderProjBoard(){
       : `<div class="pb-pcell"><div class="pb-ptot"><span class="pb-eur">€</span><input class="pb-price" type="text" inputmode="decimal" value="${unitVal}" placeholder="—" onclick="event.stopPropagation()" onchange="pbSetPrice('${x.id}',this.value)" title="Prijs"></div></div>`;
     return `<div class="pb-row pb-ink" data-tid="${x.id}"${x.image?` data-img="${escapeHtml(x.image)}"`:''}><button class="pb-chk" onclick="pbInkOrdered('${x.id}')" title="${x.status==='besteld'?'Terugzetten naar te bestellen':'Markeer als besteld'}">${_pbChk(x.status==='besteld')}</button>${nameCell}${priceCell}<button class="pb-move" onclick="event.preventDefault();event.stopPropagation();pbMoveOpen('one','${x.id}')" title="Verplaats naar ander project/klant">${_tIc('<path d="M17 3l4 4l-4 4"/><path d="M21 7h-13"/><path d="M7 21l-4 -4l4 -4"/><path d="M3 17h13"/>',15,1.4)}</button><button class="pb-del" onclick="event.preventDefault();pbDel('${x.id}')" title="Verwijderen">×</button></div>`; };
   const doneInkRow=(x)=>`<div class="pb-row pb-donerow"><button class="pb-chk" onclick="pbInkCheck('${x.id}',false)" title="Terugzetten">${_pbChk(true)}</button><span class="pb-tx done">${esc(x.text||'')}</span></div>`;
-  const apptRow=(a)=>{ const d=a.date?d3date(a.date):''; return `<div class="pb-row pb-appt"><span class="pb-tx">${esc(a.t||'Afspraak')}</span><span class="pb-when">${esc(d)}${a.start?' · '+esc(String(a.start).slice(0,5)):''}</span><button class="pb-edit" onclick="openApptModal('${a.id}')" title="Bewerken">${_penIc}</button></div>`; };
+  const apptRow=(a)=>{ const d=a.date?d3date(a.date):''; return `<div class="pb-row pb-appt"><span class="pb-tx">${esc(a.t||'Afspraak')}</span><span class="pb-when">${esc(d)}${a.start?' · '+esc(String(a.start).slice(0,5)):''}</span>${_pbKz('appt',a.id,a.kz)}<button class="pb-edit" onclick="openApptModal('${a.id}')" title="Bewerken">${_penIc}</button></div>`; };
   // Voortgang: waar staan we in het klanttraject. Interne projecten (Begeister) en privé
   // hebben geen briefing, akkoord of factuur — daar is een fasebalk zinloos.
   const _fase=p.phase||'briefing';
@@ -4449,7 +4469,7 @@ function _renderProjBoard(){
                   : _bal.staat==='ons' ? ('Wij zijn aan zet: '+_bal.wie+' · '+_bal.aantal+' open') : 'Niets openstaand';
   const _vlag=_pbBalVlag(_bal, p.client);
   const _vul=(( _fIdx+0.5)/_DOS_PHASES.length*100).toFixed(2)+'%';
-  const secFase=_geenTraject(p.client) ? '' : (`<div class="pb-sec"><div class="pb-h">Voortgang</div><div class="pb-fase pb-fase-${_bal.staat}" style="--fcol:${col};--vul:${_vul}">`
+  const secFase=_geenTraject(p.client) ? '' : (`<div class="pb-sec"><div class="pb-h"><span>Voortgang</span>${_pbKz('sec','voortgang',!!(p.portal_secties||{}).voortgang)}</div><div class="pb-fase pb-fase-${_bal.staat}" style="--fcol:${col};--vul:${_vul}">`
     + _DOS_PHASES.map((f,i)=>`<button class="pb-fasestap${i<=_fIdx?' done':''}${i===_fIdx?' nu':''}" style="--fcol:${col}" onclick="pbSetPhase('${f.k}')" title="${i===_fIdx?esc(_balTitel):f.l}">${i===_fIdx?_vlag:''}<span class="pb-fasedot"></span><span class="pb-faselbl">${f.l}</span></button>`).join('')
     + `</div></div>`);
   const secWait=`<div class="pb-sec"><div class="pb-h">In afwachting <button class="pb-hadd" onclick="openModal(null,'wachter','wait','${_pbPid}')" title="Toevoegen">+</button></div>${waitT.length?waitT.map(waitRow).join(''):'<div class="pb-empty">Niets in afwachting.</div>'}</div>`;
@@ -4618,7 +4638,8 @@ function _omsSectie(p){
   const open=_omsOpen(p), oms=(p.description||'').trim();
   const chev='<svg class="pb-omschev'+(open?' open':'')+'" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6l6 -6"/></svg>';
   const knop='<button class="pb-ai" onclick="event.stopPropagation();pbAiOms(this)" title="Haal een korte omschrijving uit een projectdocument">'+_tIc(_TABCHAN.asterisk,15,1.7)+'</button>';
-  const kop='<div class="pb-h pb-omsh" onclick="pbToggleOms()"><span>Omschrijving</span><span class="pb-hbtns">'+knop+chev+'</span></div>';
+  const kzOms='<button class="pb-kz'+(((p.portal_secties||{}).omschrijving)?' aan':'')+'" onclick="event.stopPropagation();pbToggleClientItem(\'sec\',\'omschrijving\')" title="Zichtbaar voor de klant (aan/uit)">'+_KLANT_IC+'</button>';
+  const kop='<div class="pb-h pb-omsh" onclick="pbToggleOms()"><span>Omschrijving</span><span class="pb-hbtns">'+kzOms+knop+chev+'</span></div>';
   if(!open) return '<div class="pb-sec pb-omssec">'+kop+'</div>';
   const ta='<textarea class="pb-notes pb-oms" rows="1" placeholder="Waar gaat dit project over? Eén alinea." oninput="_omsGroei(this)" onblur="pbSaveOms(this.value)">'+escapeHtml(oms)+'</textarea>';
   // De hoogte kun je pas meten als het veld in de pagina staat.
