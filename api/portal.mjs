@@ -91,10 +91,12 @@ async function projectPagina(db, p) {
   const [items, appts, files, docs, cmts, appr] = await Promise.all([
     db.from("items").select("id,title,status,client_zichtbaar").eq("project_id", pid).eq("client_zichtbaar", true),
     db.from("appointments").select("id,title,date,start_time,client_zichtbaar").eq("project_id", pid).eq("client_zichtbaar", true).order("date"),
-    db.from("files").select("id,name,link,icon,visible_to_client,is_voorstel,voorstel_soort").eq("owner_type", "project").eq("owner_id", pid).eq("visible_to_client", true),
-    // De meeste bestanden (mailbijlagen) staan in `documents`, niet in `files`. Zonder deze
-    // query zag de klant die 12 bestanden nooit — vandaar dat het portaal leeg leek.
-    db.from("documents").select("id,filename,link,category,visible_to_client,is_voorstel,voorstel_soort,origin").eq("project_id", pid).neq("origin", "file").eq("visible_to_client", true),
+    // Géén visible_to_client-filter meer op tabelniveau: de klant ziet als bestanden
+    // uitsluitend wat in de map "Portaal" ligt (icon/category 'portaal'). Voorstellen komen
+    // er los bovenop (is_voorstel + visible_to_client), ongeacht de map. Daarom halen we
+    // alles op en filteren we hieronder in JS.
+    db.from("files").select("id,name,link,icon,visible_to_client,is_voorstel,voorstel_soort").eq("owner_type", "project").eq("owner_id", pid),
+    db.from("documents").select("id,filename,link,category,visible_to_client,is_voorstel,voorstel_soort,origin").eq("project_id", pid).neq("origin", "file"),
     db.from("comments").select("id,sectie,author,body,van_klant,created_at").eq("scope", "portal").eq("ref_id", pid).order("created_at"),
     db.from("approvals").select("approved_at,snapshot_sha").eq("project_id", pid).maybeSingle(),
   ]);
@@ -104,10 +106,13 @@ async function projectPagina(db, p) {
   pagina.afspraken = (appts.data || []).map((a) => ({ t: a.title, date: a.date, start: a.start_time }));
   // Bestanden uit BEIDE bronnen samenvoegen (files + documents), zodat de klant dezelfde
   // bestanden ziet als in de Bestanden-map van de app.
-  const _alle = (files.data || []).map((f) => ({ id: f.id, name: f.name, link: f.link, icon: f.icon, is_voorstel: f.is_voorstel, voorstel_soort: f.voorstel_soort }))
-    .concat((docs.data || []).map((d) => ({ id: "doc:" + d.id, name: d.filename, link: d.link, icon: d.category, is_voorstel: d.is_voorstel, voorstel_soort: d.voorstel_soort })));
-  pagina.bestanden = _alle.map((f) => ({ id: f.id, name: f.name, link: f.link, map: _mapVan(f) }));
-  pagina.voorstellen = _alle.filter((f) => f.is_voorstel).map((f) => ({ id: f.id, name: f.name, link: f.link, soort: (f.voorstel_soort || "idee"), map: _mapVan(f) }));
+  const _alle = (files.data || []).map((f) => ({ id: f.id, name: f.name, link: f.link, icon: f.icon, is_voorstel: f.is_voorstel, voorstel_soort: f.voorstel_soort, zichtbaar: !!f.visible_to_client }))
+    .concat((docs.data || []).map((d) => ({ id: "doc:" + d.id, name: d.filename, link: d.link, icon: d.category, is_voorstel: d.is_voorstel, voorstel_soort: d.voorstel_soort, zichtbaar: !!d.visible_to_client })));
+  // Bestanden = uitsluitend de map "Portaal". Het team deelt door een bestand daarin te zetten;
+  // de map ís de zichtbaarheidsknop. Platte lijst, geen mappenboom.
+  pagina.bestanden = _alle.filter((f) => _mapVan(f) === "Portaal").map((f) => ({ id: f.id, name: f.name, link: f.link }));
+  // Voorstellen blijven los werken: gemarkeerd als voorstel én door het team zichtbaar gezet.
+  pagina.voorstellen = _alle.filter((f) => f.is_voorstel && f.zichtbaar).map((f) => ({ id: f.id, name: f.name, link: f.link, soort: (f.voorstel_soort || "idee") }));
   // De twee poorten: de klant geeft los akkoord op idee en op budget.
   pagina.poorten = { idee: p.idee_akkoord_op || null, budget: p.budget_akkoord_op || null };
 
