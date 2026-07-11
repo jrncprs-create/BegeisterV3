@@ -50,18 +50,17 @@ button{font-family:inherit;font-weight:var(--fw);cursor:pointer}
 .tx{flex:1;min-width:0;color:var(--scol);font-size:14px}
 .meta{font-size:13px;color:color-mix(in srgb,var(--scol) 62%,transparent);flex:none;margin-left:10px}
 
-/* fasebalk — exact als .pb-fase in de app */
-.fases{position:relative;display:flex;align-items:flex-start;padding:34px 0 6px;margin-top:2px}
-.fases::before{content:"";position:absolute;left:0;right:0;top:34px;height:2px;border-radius:999px;background:rgba(255,255,255,.11)}
-.fases::after{content:"";position:absolute;left:0;top:34px;height:2px;border-radius:999px;width:var(--vul,0%);background:var(--scol);transition:width .25s ease}
+/* fasebalk — exact als .pb-fase in de app (zelfde padding/lijnpositie/dot/pil) */
+.fases{position:relative;display:flex;align-items:flex-start;padding:30px 0 28px}
+.fases::before{content:"";position:absolute;left:0;right:0;top:30px;height:2px;border-radius:999px;background:rgba(255,255,255,.11)}
+.fases::after{content:"";position:absolute;left:0;top:30px;height:2px;border-radius:999px;width:var(--vul,0%);background:var(--scol);transition:width .25s ease}
 .fstap{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;position:relative}
-.fdot{width:2px;height:2px;flex:none}
-.fstap.nu .fdot::before{content:"";position:absolute;left:50%;top:0;transform:translate(-50%,-50%);width:11px;height:11px;border-radius:50%;background:var(--scol)}
-.flbl{margin-top:16px;font-size:11px;letter-spacing:.02em;text-align:center;line-height:1.2;text-transform:uppercase;color:color-mix(in srgb,var(--scol) 42%,transparent)}
-.fstap.done .flbl{color:color-mix(in srgb,var(--scol) 62%,transparent)}
+.fdot{width:2px;height:2px;flex:none;position:relative}
+.fstap.nu .fdot::before{content:"";position:absolute;left:50%;top:50%;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;background:var(--scol);box-shadow:0 0 0 2px var(--bg)}
+.flbl{margin-top:14px;font-size:11px;letter-spacing:.01em;text-align:center;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;color:#8a8a8a}
 .fstap.nu .flbl{color:var(--scol);font-weight:var(--fw-nadruk)}
-.fpil{position:absolute;top:-4px;left:50%;transform:translateX(-50%);background:var(--scol);color:var(--bg);font-size:12px;font-weight:var(--fw-nadruk);padding:3px 11px;border-radius:var(--r-pil);white-space:nowrap;line-height:1.3}
-.fpil::after{content:"";position:absolute;left:50%;bottom:-4px;transform:translateX(-50%);border-left:4px solid transparent;border-right:4px solid transparent;border-top:5px solid var(--scol)}
+.fpil{position:absolute;left:50%;bottom:calc(100% + 9px);transform:translateX(-50%);white-space:nowrap;font-size:10px;font-weight:var(--fw-nadruk);letter-spacing:.02em;line-height:1;padding:4px 8px;border-radius:6px;color:var(--bg);background:var(--scol);z-index:3}
+.fpil::after{content:"";position:absolute;left:50%;top:100%;transform:translateX(-50%);border:4px solid transparent;border-top-color:var(--scol)}
 
 /* bestanden — platte lijst (alleen de map Portaal) */
 .frij{padding:8px 0;font-size:14px;border-top:1px solid color-mix(in srgb,var(--scol) 18%,transparent);display:flex;align-items:center;gap:9px}
@@ -183,11 +182,23 @@ async function uitloggen(){try{await sb.auth.signOut();}catch(_){}; location.hre
 function statusTekst(p){ if(p.akkoord)return 'akkoord op '+kort(p.akkoord.approved_at);
   return (p.fases[p.fase_index]||{}).l ? p.fases[p.fase_index].l.toLowerCase() : ''; }
 
-// De klantkleur wordt het accent (--scol). Felle kleuren blijven leesbaar op near-black.
-function accent(){
+// Thema per project: het team kiest op het projectbord een achtergrond (kleur of afbeelding)
+// en de letterkleur (klantkleur/wit/zwart). Standaard blijft near-black + klantkleur.
+function themaToe(p){
+  const root=document.documentElement;
   const kl=(DATA&&DATA.klant&&DATA.klant.kleur)||'';
-  if(/^#([0-9a-f]{6})$/i.test(kl)) document.documentElement.style.setProperty('--scol', kl);
-  else document.documentElement.style.setProperty('--scol', '#e0897c');
+  const klant=/^#([0-9a-f]{6})$/i.test(kl)?kl:'#e0897c';
+  const img=p&&p.bg_image;
+  root.style.setProperty('--bg', '#0d0d0d');
+  if(img){
+    // Achtergrondafbeelding → automatisch zwarte overlay + witte tekst.
+    root.style.setProperty('--scol', '#f4efe9');
+    document.body.style.background='linear-gradient(rgba(0,0,0,.62),rgba(0,0,0,.68)), url("'+String(img).replace(/"/g,'&quot;')+'") center/cover no-repeat fixed, #0d0d0d';
+  } else {
+    // Standaard → zwarte achtergrond + klantkleur-letters.
+    root.style.setProperty('--scol', klant);
+    document.body.style.background='';
+  }
 }
 
 function bestandenHtml(files){
@@ -197,8 +208,8 @@ function bestandenHtml(files){
 
 function render(){
   if(!DATA)return;
-  accent();
   const p=DATA.projecten[ACTIEF];
+  themaToe(p);
   if(!p){ document.getElementById('app').innerHTML='<div class="wrap">'+kopHtml(null)+'<div class="midden">Er staat nog niets voor je klaar.<br>We laten het weten zodra dat verandert.</div></div>';
     const u=document.getElementById('kopUit'); if(u)u.onclick=uitloggen; return; }
 
