@@ -8,130 +8,129 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500&display=swap" rel="stylesheet">
 <style>
-/* Neutraal-donkere start (geen rode flits); de echte klantkleur/-achtergrond komt bij het laden. */
-:root{ --rood:#141414; --fw:300; --fw-nadruk:500; --r-md:9px; --r-lg:12px; --r-pil:999px; }
+/* Klantkant in exact dezelfde vormgeving als het projectbord van de app (pic1):
+   near-black canvas, alles getint in de klantkleur (--scol), uppercase sectiekoppen,
+   fasebalk met naam-pil. Geen maroon-achtergrond of achtergrondfoto meer. */
+:root{
+  --bg:#0d0d0d; --scol:#e0897c;
+  --fw:300; --fw-nadruk:500;
+  --r-sm:6px; --r-md:9px; --r-lg:12px; --r-pil:999px;
+}
 *{box-sizing:border-box}
-html,body{margin:0;padding:0;background:var(--rood);color:#fff;
+html,body{margin:0;padding:0;background:var(--bg);color:var(--scol);
   font-family:'Outfit',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   font-weight:var(--fw);font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100dvh}
 b,strong{font-weight:var(--fw-nadruk)}
 a{color:inherit}
 button{font-family:inherit;font-weight:var(--fw);cursor:pointer}
-:focus-visible{outline:none;box-shadow:0 0 0 2px var(--rood),0 0 0 4px rgba(255,255,255,.5)}
-
-/* achtergrondafbeelding met donkere waas voor leesbaarheid */
-#bg{position:fixed;inset:0;z-index:-2;background-size:cover;background-position:center;display:none}
-#bgtint{position:fixed;inset:0;z-index:-1;background:linear-gradient(rgba(0,0,0,.5),rgba(0,0,0,.62));display:none}
-body.heeftbg #bg,body.heeftbg #bgtint{display:block}
+:focus-visible{outline:none;box-shadow:0 0 0 2px var(--bg),0 0 0 4px color-mix(in srgb,var(--scol) 60%,transparent)}
 
 .wrap{max-width:1200px;margin:0 auto;padding:0 26px 70px}
-.kop{position:sticky;top:0;z-index:5;background:var(--rood);display:flex;align-items:center;gap:12px;padding:18px 0 14px;border-bottom:1px solid rgba(255,255,255,.2)}
-body.heeftbg .kop{background:transparent;backdrop-filter:blur(3px)}
-.merk{width:22px;height:26px;flex:none;color:#fff}
-.kop-naam{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.kop-naam b{color:#fff} .kop-naam span{color:rgba(255,255,255,.6)}
-.kop-status{font-size:12px;border:1px solid rgba(255,255,255,.35);border-radius:var(--r-pil);padding:3px 11px;flex:none}
-.kop-uit{font-size:12px;color:rgba(255,255,255,.6);background:none;border:none;padding:6px 2px}
-.kop-uit:hover{color:#fff}
+.kop{position:sticky;top:0;z-index:5;background:var(--bg);display:flex;align-items:center;gap:12px;padding:18px 0 14px;border-bottom:1px solid color-mix(in srgb,var(--scol) 34%,transparent)}
+.merk{width:22px;height:26px;flex:none;color:var(--scol)}
+.kop-naam{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:17px}
+.kop-naam b{color:var(--scol);font-weight:var(--fw-nadruk)} .kop-naam span{color:color-mix(in srgb,var(--scol) 70%,transparent)}
+.kop-status{font-size:12px;border:1px solid color-mix(in srgb,var(--scol) 45%,transparent);border-radius:var(--r-pil);padding:3px 11px;flex:none;color:var(--scol)}
+.kop-uit{font-size:12px;color:color-mix(in srgb,var(--scol) 65%,transparent);background:none;border:none;padding:6px 2px}
+.kop-uit:hover{color:var(--scol)}
 
-.grid{display:grid;grid-template-columns:1.3fr 1fr;gap:26px;margin-top:26px}
-@media(max-width:820px){.grid{grid-template-columns:1fr}}
-.sec{margin-bottom:24px}
-.h{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,.65);font-weight:var(--fw-nadruk);margin:0 0 10px}
-.tekst{color:#fff;line-height:1.6;max-width:60ch;white-space:pre-wrap}
-.leeg{color:rgba(255,255,255,.5);font-size:13px}
-.rij{display:flex;align-items:baseline;gap:11px;padding:9px 0;border-top:1px solid rgba(255,255,255,.14)}
+.grid{display:grid;grid-template-columns:1.3fr 1fr;gap:40px;margin-top:20px}
+@media(max-width:820px){.grid{grid-template-columns:1fr;gap:8px}}
+
+/* secties — spiegelt .pb-sec / .pb-h uit de app */
+.sec{border-top:1px solid color-mix(in srgb,var(--scol) 30%,transparent);padding:14px 0 6px;margin-bottom:14px}
+.sec:first-child{border-top:none;padding-top:2px}
+.h{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--scol);opacity:.92;font-weight:var(--fw-nadruk);margin:0 0 9px}
+.tekst{color:var(--scol);line-height:1.6;max-width:60ch;white-space:pre-wrap}
+.leeg{color:color-mix(in srgb,var(--scol) 62%,transparent);font-size:13px}
+.rij{display:flex;align-items:flex-start;gap:11px;padding:7px 0;border-top:1px solid color-mix(in srgb,var(--scol) 20%,transparent)}
 .rij:first-of-type{border-top:none}
-.rij .dot{width:6px;height:6px;border-radius:50%;background:#fff;flex:none;position:relative;top:6px}
-.rij.klaar .tx{color:rgba(255,255,255,.45);text-decoration:line-through}
-.tx{flex:1;min-width:0}
-.meta{font-size:12px;color:rgba(255,255,255,.55);flex:none}
+.rij .dot{width:6px;height:6px;border-radius:50%;background:var(--scol);flex:none;position:relative;top:8px;opacity:.85}
+.rij.klaar .tx{opacity:.45;text-decoration:line-through}
+.tx{flex:1;min-width:0;color:var(--scol);font-size:14px}
+.meta{font-size:13px;color:color-mix(in srgb,var(--scol) 62%,transparent);flex:none;margin-left:10px}
 
-/* fases */
-.fases{display:flex;gap:6px}
-.fasestap{flex:1;display:flex;flex-direction:column;gap:6px}
-.fdot{height:3px;border-radius:var(--r-pil);background:rgba(255,255,255,.25)}
-.fasestap.done .fdot{background:#fff}
-.flbl{font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;color:rgba(255,255,255,.55)}
-.fasestap.done .flbl{color:#fff}
+/* fasebalk — exact als .pb-fase in de app */
+.fases{position:relative;display:flex;align-items:flex-start;padding:34px 0 6px;margin-top:2px}
+.fases::before{content:"";position:absolute;left:0;right:0;top:34px;height:2px;border-radius:999px;background:rgba(255,255,255,.11)}
+.fases::after{content:"";position:absolute;left:0;top:34px;height:2px;border-radius:999px;width:var(--vul,0%);background:var(--scol);transition:width .25s ease}
+.fstap{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;position:relative}
+.fdot{width:2px;height:2px;flex:none}
+.fstap.nu .fdot::before{content:"";position:absolute;left:50%;top:0;transform:translate(-50%,-50%);width:11px;height:11px;border-radius:50%;background:var(--scol)}
+.flbl{margin-top:16px;font-size:11px;letter-spacing:.02em;text-align:center;line-height:1.2;text-transform:uppercase;color:color-mix(in srgb,var(--scol) 42%,transparent)}
+.fstap.done .flbl{color:color-mix(in srgb,var(--scol) 62%,transparent)}
+.fstap.nu .flbl{color:var(--scol);font-weight:var(--fw-nadruk)}
+.fpil{position:absolute;top:-4px;left:50%;transform:translateX(-50%);background:var(--scol);color:var(--bg);font-size:12px;font-weight:var(--fw-nadruk);padding:3px 11px;border-radius:var(--r-pil);white-space:nowrap;line-height:1.3}
+.fpil::after{content:"";position:absolute;left:50%;bottom:-4px;transform:translateX(-50%);border-left:4px solid transparent;border-right:4px solid transparent;border-top:5px solid var(--scol)}
 
-/* mappen */
-.map{margin-bottom:1px}
-.maph{display:flex;align-items:center;gap:10px;width:100%;background:transparent;border:none;border-top:1px solid rgba(255,255,255,.14);color:#fff;font-family:inherit;font-size:14px;padding:10px 0;cursor:pointer;text-align:left}
-.map:first-child .maph{border-top:none}
-.chev{display:inline-flex;color:rgba(255,255,255,.55);transition:transform .18s;flex:none}
-.chev.open{transform:rotate(90deg)}
-.mapnaam{flex:1;min-width:0} .mapcnt{font-size:12px;color:rgba(255,255,255,.5);flex:none}
-.frij{padding:8px 0 8px 6px;font-size:13px;border-top:1px solid rgba(255,255,255,.1)}
-.frij a{text-decoration:none;color:#fff}
-.frij a:hover{text-decoration:underline}
-.flink{background:transparent;border:none;color:#fff;font-family:inherit;font-size:13px;text-align:left;padding:0;cursor:pointer}
+/* bestanden — platte lijst (alleen de map Portaal) */
+.frij{padding:8px 0;font-size:14px;border-top:1px solid color-mix(in srgb,var(--scol) 18%,transparent);display:flex;align-items:center;gap:9px}
+.frij:first-of-type{border-top:none}
+.fico{flex:none;color:color-mix(in srgb,var(--scol) 70%,transparent);display:inline-flex}
+.flink{background:transparent;border:none;color:var(--scol);font-family:inherit;font-size:14px;text-align:left;padding:0;cursor:pointer;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .flink:hover{text-decoration:underline}
 
-/* rechterkolom */
-.colR{background:rgba(0,0,0,.16);border-radius:var(--r-lg);padding:18px 20px;align-self:start}
-.vst{padding:10px 0;border-top:1px solid rgba(255,255,255,.14)}
+/* rechterkolom: voorstellen + akkoord */
+.vst{padding:9px 0;border-top:1px solid color-mix(in srgb,var(--scol) 20%,transparent)}
 .vst:first-of-type{border-top:none}
-.vst a{color:#fff;text-decoration:none} .vst a:hover{text-decoration:underline}
-.akkoord{margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,.2);text-align:center}
-.akknoot{font-size:12px;color:rgba(255,255,255,.6);margin:0 0 12px}
-.akkbtn{background:#fff;color:var(--rood);border:none;border-radius:var(--r-pil);font-family:inherit;font-weight:var(--fw-nadruk);font-size:14px;padding:11px 26px;cursor:pointer}
-.akkbtn[disabled]{opacity:.5;cursor:default}
-.akkoord.vast .groot{font-size:18px;color:#fff}
-/* voorstellen per spoor */
-.vstgroep{margin-top:18px;padding-top:14px;border-top:1px solid rgba(255,255,255,.2)}
-.vstgroep:first-of-type{border-top:none;margin-top:4px;padding-top:0}
-.vstkop{font-size:15px;font-weight:var(--fw-nadruk);color:#fff}
-.vstsub{font-size:12px;color:rgba(255,255,255,.6);margin:2px 0 8px}
-.vstopen{background:transparent;border:none;color:#fff;font-family:inherit;font-size:14px;text-align:left;padding:0;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.vstgroep{margin-top:18px;padding-top:14px;border-top:1px solid color-mix(in srgb,var(--scol) 30%,transparent)}
+.vstgroep:first-of-type{border-top:none;margin-top:2px;padding-top:0}
+.vstkop{font-size:15px;font-weight:var(--fw-nadruk);color:var(--scol)}
+.vstsub{font-size:12px;color:color-mix(in srgb,var(--scol) 62%,transparent);margin:2px 0 8px}
+.vstopen{background:transparent;border:none;color:var(--scol);font-family:inherit;font-size:14px;text-align:left;padding:0;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 .poort{margin-top:12px}
 .poort.groen{display:flex;align-items:center;gap:9px;font-size:14px;color:#9ff0bd;font-weight:var(--fw-nadruk)}
 .poort .pdot{width:11px;height:11px;border-radius:50%;background:#5bd08a;flex:0 0 auto}
-.poortnoot{font-size:11px;color:rgba(255,255,255,.55);margin-top:8px}
-/* voorstel-viewer */
-#vstViewer{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .2s;display:flex;flex-direction:column}
+.poortnoot{font-size:11px;color:color-mix(in srgb,var(--scol) 55%,transparent);margin-top:8px}
+.akkoord{margin-top:20px;padding-top:16px;border-top:1px solid color-mix(in srgb,var(--scol) 34%,transparent);text-align:center}
+.akknoot{font-size:12px;color:color-mix(in srgb,var(--scol) 62%,transparent);margin:0 0 12px}
+.akkbtn{background:var(--scol);color:var(--bg);border:none;border-radius:var(--r-pil);font-family:inherit;font-weight:var(--fw-nadruk);font-size:14px;padding:11px 26px;cursor:pointer}
+.akkbtn[disabled]{opacity:.5;cursor:default}
+.akkoord.vast .groot{font-size:18px;color:var(--scol)}
+
+/* voorstel-viewer (fullscreen deck in afgeschermde iframe) */
+#vstViewer{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.7);opacity:0;pointer-events:none;transition:opacity .2s;display:flex;flex-direction:column}
 #vstViewer.on{opacity:1;pointer-events:auto}
-#vstViewer .vv-bar{display:flex;align-items:center;gap:14px;padding:12px 18px;background:#2f1010;color:#fff}
+#vstViewer .vv-bar{display:flex;align-items:center;gap:14px;padding:12px 18px;background:#161616;color:var(--scol)}
 #vstViewer .vv-naam{font-weight:var(--fw-nadruk);font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#vstViewer .vv-ext{color:rgba(255,255,255,.8);font-size:13px;text-decoration:none}
-#vstViewer .vv-ext:hover{color:#fff;text-decoration:underline}
-#vstViewer .vv-x{background:transparent;border:none;color:#fff;font-size:20px;cursor:pointer;line-height:1}
+#vstViewer .vv-ext{color:color-mix(in srgb,var(--scol) 80%,transparent);font-size:13px;text-decoration:none}
+#vstViewer .vv-ext:hover{color:var(--scol);text-decoration:underline}
+#vstViewer .vv-x{background:transparent;border:none;color:var(--scol);font-size:20px;cursor:pointer;line-height:1}
 #vstViewer .vv-body{flex:1;background:#fff}
 #vstViewer .vv-frame{width:100%;height:100%;border:none;display:block}
 
 /* opmerkingen */
-.opm{margin-top:14px;border-top:1px solid rgba(255,255,255,.14);padding-top:10px}
-.opm-knop{background:none;border:none;color:rgba(255,255,255,.65);font-size:12px;padding:2px 0;display:flex;align-items:center;gap:7px}
-.opm-knop:hover{color:#fff}
+.opm{margin-top:14px;border-top:1px solid color-mix(in srgb,var(--scol) 20%,transparent);padding-top:10px}
+.opm-knop{background:none;border:none;color:color-mix(in srgb,var(--scol) 65%,transparent);font-size:12px;padding:2px 0;display:flex;align-items:center;gap:7px}
+.opm-knop:hover{color:var(--scol)}
 .opm-knop .chev{transition:transform .18s} .opm.open .opm-knop .chev{transform:rotate(90deg)}
 .opm-body{max-height:0;overflow:hidden;transition:max-height .28s cubic-bezier(.16,1,.3,1)}
 .opm.open .opm-body{max-height:1400px}
-.opm-rij{padding:9px 0;border-top:1px solid rgba(255,255,255,.12)} .opm-rij:first-child{border-top:none;margin-top:8px}
-.opm-wie{font-size:11px;color:rgba(255,255,255,.55);margin-bottom:2px} .opm-wie b{color:#fff}
-.opm textarea{width:100%;box-sizing:border-box;background:rgba(0,0,0,.14);border:1px solid rgba(255,255,255,.25);border-radius:var(--r-md);color:#fff;font-family:inherit;font-size:13px;line-height:1.5;padding:9px 11px;margin-top:10px;resize:none;overflow:hidden;min-height:44px;outline:none;box-shadow:none}
-.opm textarea:focus{border-color:rgba(255,255,255,.5);outline:none;box-shadow:none}
-.opm textarea::placeholder{color:rgba(255,255,255,.5)}
-.knop{background:transparent;border:1px solid rgba(255,255,255,.3);border-radius:var(--r-md);color:#fff;font-size:13px;padding:7px 13px;margin-top:8px}
-.knop:hover{border-color:#fff}
+.opm-rij{padding:9px 0;border-top:1px solid color-mix(in srgb,var(--scol) 18%,transparent)} .opm-rij:first-child{border-top:none;margin-top:8px}
+.opm-wie{font-size:11px;color:color-mix(in srgb,var(--scol) 55%,transparent);margin-bottom:2px} .opm-wie b{color:var(--scol)}
+.opm textarea{width:100%;box-sizing:border-box;background:rgba(255,255,255,.03);border:1px solid color-mix(in srgb,var(--scol) 30%,transparent);border-radius:var(--r-md);color:var(--scol);font-family:inherit;font-size:13px;line-height:1.5;padding:9px 11px;margin-top:10px;resize:none;overflow:hidden;min-height:44px;outline:none}
+.opm textarea:focus{border-color:color-mix(in srgb,var(--scol) 55%,transparent)}
+.opm textarea::placeholder{color:color-mix(in srgb,var(--scol) 45%,transparent)}
+.knop{background:transparent;border:1px solid color-mix(in srgb,var(--scol) 34%,transparent);border-radius:var(--r-md);color:var(--scol);font-size:13px;padding:7px 13px;margin-top:8px}
+.knop:hover{border-color:var(--scol)}
 
 /* login */
 .login{max-width:340px;margin:16vh auto;text-align:center}
 .login .merk{width:34px;height:40px;margin:0 auto 26px}
-.login input{width:100%;background:rgba(0,0,0,.14);border:1px solid rgba(255,255,255,.28);border-radius:var(--r-md);color:#fff;font-family:inherit;font-size:14px;padding:11px 13px;margin-bottom:10px}
-.login input::placeholder{color:rgba(255,255,255,.55)}
+.login input{width:100%;background:rgba(255,255,255,.03);border:1px solid color-mix(in srgb,var(--scol) 30%,transparent);border-radius:var(--r-md);color:var(--scol);font-family:inherit;font-size:14px;padding:11px 13px;margin-bottom:10px}
+.login input::placeholder{color:color-mix(in srgb,var(--scol) 45%,transparent)}
 .login .akkbtn{width:100%;margin-top:6px}
-.login-fout{color:#ffd7d2;font-size:13px;min-height:20px;margin-top:12px}
-input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus{-webkit-text-fill-color:#fff;caret-color:#fff;-webkit-box-shadow:0 0 0 40px var(--rood) inset;transition:background-color 9999s}
-.midden{text-align:center;color:rgba(255,255,255,.65);padding:70px 20px}
+.login-fout{color:#ffb4ab;font-size:13px;min-height:20px;margin-top:12px}
+input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus{-webkit-text-fill-color:var(--scol);caret-color:var(--scol);-webkit-box-shadow:0 0 0 40px var(--bg) inset;transition:background-color 9999s}
+.midden{text-align:center;color:color-mix(in srgb,var(--scol) 65%,transparent);padding:70px 20px}
 
-#toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(12px);opacity:0;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.3);border-radius:var(--r-md);padding:10px 16px;font-size:13px;transition:opacity .2s,transform .2s;pointer-events:none;z-index:20}
+#toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(12px);opacity:0;background:#1a1a1a;border:1px solid color-mix(in srgb,var(--scol) 30%,transparent);border-radius:var(--r-md);color:var(--scol);padding:10px 16px;font-size:13px;transition:opacity .2s,transform .2s;pointer-events:none;z-index:20}
 #toast.aan{opacity:1;transform:translateX(-50%)}
 
-@media print{ #bgtint,#bg{display:none!important} .kop,.opm textarea,.knop,.akkbtn,#toast{display:none!important} }
+@media print{ .kop,.opm textarea,.knop,.akkbtn,#toast{display:none!important} }
 </style>
 </head>
 <body>
-<div id="bg"></div><div id="bgtint"></div>
 <div id="app"></div>
 <div id="toast"></div>
 
@@ -143,10 +142,11 @@ const sb=supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefr
 
 const MERK='<svg viewBox="0 0 147.39 172.8" fill="none" stroke="currentColor" stroke-width="4" width="100%" height="100%"><path d="M73.7 4v164.8"/><path d="M6 40l135.4 92.8"/><path d="M141.4 40L6 132.8"/></svg>';
 const CHEV='<svg class="chev" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6l-6 6"/></svg>';
+const FICO='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/></svg>';
 
 const EMBED=new URLSearchParams(location.search).get('embed')==='1';
 let DATA=null, ACTIEF=0;
-const OPEN_OPM=new Set(), OPEN_MAP=new Set();
+const OPEN_OPM=new Set();
 
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function datum(s){if(!s)return '';return new Date(s).toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'});}
@@ -179,74 +179,64 @@ function toonLogin(fout){
 }
 async function uitloggen(){try{await sb.auth.signOut();}catch(_){}; location.href='/';}
 
-/* render — hetzelfde dossier als de teamoverlay, read-only */
+/* render — hetzelfde dossier als het projectbord van de app (pic1), read-only */
 function statusTekst(p){ if(p.akkoord)return 'akkoord op '+kort(p.akkoord.approved_at);
-  if(p.fase==='debrief')return 'wacht op jouw akkoord';
   return (p.fases[p.fase_index]||{}).l ? p.fases[p.fase_index].l.toLowerCase() : ''; }
 
-// Een felle klantkleur verdonkeren tot een leesbare achtergrond.
-function _donker(hex,f){ const c=String(hex||'').replace('#',''); if(c.length<6)return '#5a1f1f'; f=(f==null)?.34:f;
-  const h=n=>('0'+Math.max(0,Math.min(255,Math.round(n))).toString(16)).slice(-2);
-  return '#'+h(parseInt(c.slice(0,2),16)*f)+h(parseInt(c.slice(2,4),16)*f)+h(parseInt(c.slice(4,6),16)*f); }
-function achtergrond(p){
-  const b=document.body;
-  // Basiskleur: gekozen portal_bg, anders de verdonkerde klantkleur (niet meer standaard rood).
-  const klantkleur=(DATA&&DATA.klant&&DATA.klant.kleur)||'#8a2f2f';
-  const basis=(p&&p.bg)||_donker(klantkleur,.34);
-  document.documentElement.style.setProperty('--rood', basis);
-  // Optionele vaste achtergrondafbeelding over de hele pagina.
-  const bg=document.getElementById('bg');
-  if(p&&p.bg_image){ if(bg)bg.style.backgroundImage='url("'+String(p.bg_image).replace(/"/g,'&quot;')+'")'; b.classList.add('heeftbg'); }
-  else { if(bg)bg.style.backgroundImage=''; b.classList.remove('heeftbg'); }
+// De klantkleur wordt het accent (--scol). Felle kleuren blijven leesbaar op near-black.
+function accent(){
+  const kl=(DATA&&DATA.klant&&DATA.klant.kleur)||'';
+  if(/^#([0-9a-f]{6})$/i.test(kl)) document.documentElement.style.setProperty('--scol', kl);
+  else document.documentElement.style.setProperty('--scol', '#e0897c');
 }
 
-function mappenHtml(files){
+function bestandenHtml(files){
   if(!files||!files.length) return '<div class="leeg">Nog niets gedeeld.</div>';
-  const groepen={},order=[];
-  files.forEach(f=>{ const n=f.map||'Overig'; if(!groepen[n]){groepen[n]=[];order.push(n);} groepen[n].push(f); });
-  return order.map(n=>{ const open=OPEN_MAP.has(n);
-    const binnen=open?groepen[n].map(f=>'<div class="frij"><button class="flink" onclick="toonVoorstel(\''+esc(String(f.link||'')).replace(/'/g,"\\'")+'\',\''+esc(String(f.name||'')).replace(/'/g,"\\'")+'\')">'+esc(f.name)+'</button></div>').join(''):'';
-    return '<div class="map"><button class="maph" onclick="mapToggle(\''+esc(n).replace(/'/g,"\\'")+'\')"><span class="chev'+(open?' open':'')+'">'+CHEV+'</span><span class="mapnaam">'+esc(n)+'</span><span class="mapcnt">'+groepen[n].length+'</span></button>'+binnen+'</div>';
-  }).join('');
+  return files.map(f=>'<div class="frij"><span class="fico">'+FICO+'</span><button class="flink" title="'+esc(f.name)+'" onclick="toonVoorstel(\''+esc(String(f.link||'')).replace(/'/g,"\\'")+'\',\''+esc(String(f.name||'')).replace(/'/g,"\\'")+'\')">'+esc(f.name)+'</button></div>').join('');
 }
-function mapToggle(n){ OPEN_MAP.has(n)?OPEN_MAP.delete(n):OPEN_MAP.add(n); render(); }
 
 function render(){
   if(!DATA)return;
+  accent();
   const p=DATA.projecten[ACTIEF];
-  achtergrond(p);
   if(!p){ document.getElementById('app').innerHTML='<div class="wrap">'+kopHtml(null)+'<div class="midden">Er staat nog niets voor je klaar.<br>We laten het weten zodra dat verandert.</div></div>';
     const u=document.getElementById('kopUit'); if(u)u.onclick=uitloggen; return; }
 
   let L='';
   if(p.toon_omschrijving && (p.omschrijving||'').trim()) L+='<div class="sec"><div class="h">Omschrijving</div><div class="tekst">'+mini(p.omschrijving)+'</div>'+opmHtml('omschrijving',p)+'</div>';
-  if(p.toon_voortgang){ const bars=p.fases.map((f,i)=>'<div class="fasestap'+(i<=p.fase_index?' done':'')+'"><span class="fdot"></span><span class="flbl">'+esc(f.l)+'</span></div>').join('');
-    L+='<div class="sec"><div class="h">Voortgang</div><div class="fases">'+bars+'</div></div>'; }
+  if(p.toon_voortgang){
+    const vul=(((p.fase_index+0.5)/Math.max(1,p.fases.length))*100).toFixed(2)+'%';
+    const naam=(DATA.klant&&DATA.klant.naam)||'';
+    const stappen=p.fases.map((f,i)=>'<div class="fstap'+(i<=p.fase_index?' done':'')+(i===p.fase_index?' nu':'')+'">'+(i===p.fase_index?'<span class="fpil">'+esc(naam)+'</span>':'')+'<span class="fdot"></span><span class="flbl">'+esc(f.l)+'</span></div>').join('');
+    L+='<div class="sec"><div class="h">Voortgang</div><div class="fases" style="--vul:'+vul+'">'+stappen+'</div></div>'; }
   if((p.wacht||[]).length) L+='<div class="sec"><div class="h">In afwachting</div>'+p.wacht.map(it=>'<div class="rij"><span class="dot"></span><span class="tx">'+esc(it.t||'')+'</span></div>').join('')+'</div>';
   if((p.taken||[]).length) L+='<div class="sec"><div class="h">Taken</div>'+p.taken.map(it=>'<div class="rij'+(it.done?' klaar':'')+'"><span class="dot"></span><span class="tx">'+esc(it.t||'')+'</span></div>').join('')+'</div>';
-  if((p.afspraken||[]).length) L+='<div class="sec"><div class="h">Afspraken</div>'+p.afspraken.map(a=>'<div class="rij"><span class="tx">'+esc(a.t||'Afspraak')+'</span><span class="meta">'+esc(kort(a.date))+(a.start?' · '+esc(String(a.start).slice(0,5)):'')+'</span></div>').join('')+'</div>';
-  if((p.bestanden||[]).length) L+='<div class="sec"><div class="h">Bestanden</div>'+mappenHtml(p.bestanden)+'</div>';
-  if(!L) L='<div class="midden">Nog niets om te tonen.</div>';
 
-  // rechterkolom: voorstellen per spoor (idee / budget), elk met eigen opmerkingen en akkoord.
-  let R='<div class="h">Voorstellen</div>';
+  let R='';
+  if((p.afspraken||[]).length) R+='<div class="sec"><div class="h">Afspraken</div>'+p.afspraken.map(a=>'<div class="rij"><span class="tx">'+esc(a.t||'Afspraak')+'</span><span class="meta">'+esc(kort(a.date))+(a.start?' · '+esc(String(a.start).slice(0,5)):'')+'</span></div>').join('')+'</div>';
+  if((p.bestanden||[]).length) R+='<div class="sec"><div class="h">Bestanden</div>'+bestandenHtml(p.bestanden)+'</div>';
+
+  // Voorstellen per spoor (idee / budget), elk met eigen opmerkingen en akkoord.
   const vs=p.voorstellen||[];
-  if(!vs.length){ R+='<div class="leeg">Nog geen voorstellen.</div>'; }
-  else {
+  if(vs.length){
+    let V='<div class="sec"><div class="h">Voorstellen</div>';
+    if(p.poorten&&p.poorten.idee&&p.poorten.budget) V+='<div class="akkoord vast"><div class="groot">Idee én budget akkoord</div><div class="akknoot" style="margin-top:8px">Dit is de opdrachtbevestiging — we zijn in productie.</div></div>';
     [['idee','Idee','Het ontwerp — wat we gaan maken.'],['budget','Budget','De kosten — wat het gaat kosten.']].forEach(([soort,titel,uitleg])=>{
       const lijst=vs.filter(f=>(f.soort||'idee')===soort);
       if(!lijst.length) return;
       const dt=(p.poorten||{})[soort];
-      R+='<div class="vstgroep"><div class="vstkop">'+titel+'</div><div class="vstsub">'+uitleg+'</div>';
-      R+=lijst.map(f=>'<div class="vst"><button class="vstopen" data-vopen="'+esc(f.id)+'" data-vlink="'+esc(f.link||'')+'" data-vnaam="'+esc(f.name)+'">'+esc(f.name)+'</button></div>').join('');
-      if(dt) R+='<div class="poort groen"><span class="pdot"></span>Akkoord op '+esc(datum(dt))+'</div>';
-      else R+='<div class="poort"><button class="akkbtn" data-gate="'+soort+'">Akkoord op '+titel.toLowerCase()+'</button><div class="poortnoot">Klopt er iets niet? Zet hieronder een opmerking; dan maken we een nieuwe ronde.</div></div>';
-      R+=opmHtml('voorstel:'+soort,p);
-      R+='</div>';
+      V+='<div class="vstgroep"><div class="vstkop">'+titel+'</div><div class="vstsub">'+uitleg+'</div>';
+      V+=lijst.map(f=>'<div class="vst"><button class="vstopen" data-vopen="'+esc(f.id)+'" data-vlink="'+esc(f.link||'')+'" data-vnaam="'+esc(f.name)+'">'+esc(f.name)+'</button></div>').join('');
+      if(dt) V+='<div class="poort groen"><span class="pdot"></span>Akkoord op '+esc(datum(dt))+'</div>';
+      else V+='<div class="poort"><button class="akkbtn" data-gate="'+soort+'">Akkoord op '+titel.toLowerCase()+'</button><div class="poortnoot">Klopt er iets niet? Zet hieronder een opmerking; dan maken we een nieuwe ronde.</div></div>';
+      V+=opmHtml('voorstel:'+soort,p);
+      V+='</div>';
     });
-    if(p.poorten&&p.poorten.idee&&p.poorten.budget) R='<div class="h">Voorstellen</div><div class="akkoord vast"><div class="groot">Idee én budget akkoord</div><div class="akknoot" style="margin-top:8px">Dit is de opdrachtbevestiging — we zijn in productie.</div></div>'+R.slice('<div class="h">Voorstellen</div>'.length);
+    V+='</div>';
+    R+=V;
   }
 
+  if(!L) L='<div class="midden">Nog niets om te tonen.</div>';
   document.getElementById('app').innerHTML='<div class="wrap">'+kopHtml(p)+'<div class="grid"><div class="colL">'+L+'</div><div class="colR">'+R+'</div></div></div>';
   bind(p);
 }
@@ -281,9 +271,9 @@ function bind(p){
 // Dropbox-link → server-proxy zodat het bestand INLINE rendert (Dropbox toont anders z'n eigen pagina).
 function _vraw(link){ let u=String(link||'').replace('://www.dropbox.com/','://dl.dropboxusercontent.com/').replace('://dropbox.com/','://dl.dropboxusercontent.com/'); u=u.replace(/([?&])dl=\d&?/,'$1').replace(/[?&]$/,''); return u; }
 function _vsrc(link){ return /dropbox/i.test(link||'') ? '/api/fileproxy?u='+encodeURIComponent(_vraw(link)) : (link||''); }
-// Een voorstel-document (meestal een HTML-deck) schermvullend tonen, in een afgeschermde iframe.
+// Een document (deck of bestand) schermvullend tonen, in een afgeschermde iframe.
 function toonVoorstel(link,naam){
-  if(!link){ toast('Dit voorstel heeft geen bestand.'); return; }
+  if(!link){ toast('Dit bestand heeft geen link.'); return; }
   let ov=document.getElementById('vstViewer');
   if(!ov){ ov=document.createElement('div'); ov.id='vstViewer';
     ov.innerHTML='<div class="vv-bar"><span class="vv-naam"></span><span style="flex:1"></span><a class="vv-ext" target="_blank" rel="noopener">nieuw tabblad ↗</a><button class="vv-x" title="Sluiten">✕</button></div><div class="vv-body"><iframe class="vv-frame" sandbox="allow-scripts allow-popups"></iframe></div>';
@@ -291,7 +281,7 @@ function toonVoorstel(link,naam){
     ov.querySelector('.vv-x').onclick=()=>ov.classList.remove('on');
     document.addEventListener('keydown',e=>{ if(e.key==='Escape'){const o=document.getElementById('vstViewer'); if(o)o.classList.remove('on');} });
   }
-  ov.querySelector('.vv-naam').textContent=naam||'Voorstel';
+  ov.querySelector('.vv-naam').textContent=naam||'Bestand';
   ov.querySelector('.vv-ext').href=link;
   ov.querySelector('.vv-frame').src=_vsrc(link);
   ov.classList.add('on');
