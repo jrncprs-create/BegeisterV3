@@ -153,7 +153,7 @@ export default async function handler(req, res) {
         .eq("client_id", ik.client.id).neq("archived", true).order("created_at");
 
       const paginas = [];
-      for (const p of projecten || []) if (p.project) { const pg = await projectPagina(db, p); pg.bg = p.portal_bg || null; pg.bg_image = p.portal_bg_image || null; paginas.push(pg); }
+      for (const p of projecten || []) if (p.project) { const pg = await projectPagina(db, p); pg.bg_image = p.portal_bg_image || null; paginas.push(pg); }
 
       return res.status(200).json({
         klant: { naam: ik.client.name, kleur: ik.client.color },
