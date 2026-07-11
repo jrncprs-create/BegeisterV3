@@ -35,6 +35,7 @@ function _zesMap(cat, naam) {
   const c = String(cat || "").trim().toLowerCase();
   const n = String(naam || "").toLowerCase();
   const w = (re) => new RegExp("(^|[^a-z])(" + re + ")([^a-z]|$)").test(n);
+  if (c === "portaal") return "Portaal";
   if (["offertes", "inkoop", "facturen"].includes(c) || w("offerte|offertes|factuur|facturen|invoice|inkoop|bon|budget|calculatie|prijsopgave")) return "Financieel";
   if (w("projectbrief|briefing|aanvraag|debrief|intake")) return "Briefing";
   if (w("oplevering|nazorg|eindresultaat|aftermovie")) return "Oplevering";
