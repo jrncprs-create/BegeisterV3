@@ -144,10 +144,12 @@ export default async function handler(req, res) {
 
   try {
     if (action === "data") {
-      // Alleen gepubliceerde projecten. Wat niet gepubliceerd is, bestaat niet voor de klant.
+      // Geen publiceer-drempel meer: de poppetjes (per item) en de map Portaal (bestanden)
+      // zijn de enige zichtbaarheidsschakelaars. De klant ziet zijn eigen, niet-gearchiveerde
+      // projecten, en daarbinnen precies wat het team zichtbaar heeft gezet.
       const { data: projecten } = await db.from("projects")
         .select("id,project,client_id,phase,description,notes,projectprijs,btw,portal_secties,portal_bg,portal_bg_image,idee_akkoord_op,budget_akkoord_op,created_at")
-        .eq("client_id", ik.client.id).eq("portal_gepubliceerd", true).neq("archived", true).order("created_at");
+        .eq("client_id", ik.client.id).neq("archived", true).order("created_at");
 
       const paginas = [];
       for (const p of projecten || []) if (p.project) { const pg = await projectPagina(db, p); pg.bg = p.portal_bg || null; pg.bg_image = p.portal_bg_image || null; paginas.push(pg); }
