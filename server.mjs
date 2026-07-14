@@ -63,6 +63,7 @@ await mount("/api/push", "./api/push.mjs");
 await mount("/api/backfill-contacts", "./api/backfill-contacts.mjs");
 await mount("/api/portal", "./api/portal.mjs");
 await mount("/api/portalbeheer", "./api/portalbeheer.mjs");
+await mount("/api/deploy", "./api/deploy.mjs");
 await mount("/api/dropbox/connect", "./api/dropbox/connect.mjs");
 await mount("/api/dropbox/callback", "./api/dropbox/callback.mjs");
 await mount("/api/dropbox/list", "./api/dropbox/list.mjs");
