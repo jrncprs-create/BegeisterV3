@@ -6,6 +6,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { extractItems } from "../intake/extract.mjs";
 import { logUsage } from "../lib/usage.mjs";
 import { createMessage } from "../lib/airetry.mjs";
+import { transcribeAudio, hasTranscription } from "../lib/transcribe.mjs";
 
 const KEY = (process.env.ANTHROPIC_API_KEY || "").trim();
 const anthropic = KEY ? new Anthropic({ apiKey: KEY }) : null;
@@ -78,6 +79,32 @@ export default async function handler(req, res) {
         { type: "text", text: `Toegevoegde PDF${name ? " (" + name + ")" : ""}. Vat samen en stel actiepunten voor.` },
       ];
       return res.status(200).json(await aiFromBlocks(blocks, opts, "drop-pdf"));
+    }
+
+    // 2b) U9 — Spraakmemo (.m4a/.mp3/.wav/…): eerst transcriberen (Groq Whisper, dezelfde
+    //     helper als de in-app dictafoon), daarna door de normale extractie. De transcriptie
+    //     gaat mee terug zodat de app hem als samenvatting/brontekst kan bewaren.
+    if (m.startsWith("audio/") || /\.(m4a|mp3|wav|ogg|oga|opus|aac|flac|amr)$/i.test(name)) {
+      if (!data) return res.status(400).json({ error: "geen audiodata" });
+      if (!hasTranscription()) {
+        return res.status(200).json({ reply: "Ik kan spraakmemo's nog niet omzetten naar tekst (geen transcriptie-sleutel op de server). Het bestand kan wél gewoon worden opgeslagen.", items: [], type: "spraakmemo", subject: name, category: "Briefing" });
+      }
+      let transcript = "";
+      try {
+        transcript = await transcribeAudio(Buffer.from(data, "base64"), mime || "audio/mp4", name || "spraakmemo.m4a");
+      } catch (e) {
+        console.error("readdrop-audio:", e.message);
+        return res.status(200).json({ reply: "De transcriptie lukte niet (" + String(e.message || e).slice(0, 120) + "). Het bestand kan wél gewoon worden opgeslagen.", items: [], type: "spraakmemo", subject: name, category: "Briefing" });
+      }
+      if (!transcript) return res.status(200).json({ reply: "Ik hoorde geen verstaanbare tekst in dit spraakbericht.", items: [], transcript: "", type: "spraakmemo", subject: name });
+      const ex = await extractItems({ text: transcript, sender: who || "Spraakmemo", subject: name, today, catalog, context });
+      if (ex.usage) { try { await logUsage(null, { source: "drop-audio", ...ex.usage }); } catch (_) {} }
+      return res.status(200).json({
+        reply: (ex.summary || "Spraakmemo gelezen.") , transcript,
+        items: ex.items || [], client: ex.client || "", project: ex.project || "",
+        type: ex.type || "spraakmemo", from: ex.from || (who || ""),
+        category: ex.category || "Briefing", subject: ex.subject || name,
+      });
     }
 
     // 3) Word (.docx) → tekst eruit halen met mammoth, dan extractItems
