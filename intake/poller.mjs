@@ -185,7 +185,7 @@ export async function run() {
         }
 
         // 3) Claude haalt actiepunten (en contacten) eruit
-        const { items, summary, contacts, usage, client: exClient = "", project: exProject = "" } = await extractItems({
+        const { items, summary, contacts, usage, client: exClient = "", project: exProject = "", reply: exReply = "" } = await extractItems({
           text: body, sender, subject: mail.subject || "", today, catalog, context,
         });
         // verbruik loggen (faalt stil)
@@ -224,7 +224,8 @@ export async function run() {
           await saveContacts(db, contacts, source.id, msgProject);
         } catch (e) { console.error("contact-fout:", e.message); }
 
-        await db.from("sources").update({ processed: true, summary: summary || null }).eq("id", source.id);
+        // U8: het AI-concept-antwoord meteen klaarzetten bij de bron (alleen e-mail).
+        await db.from("sources").update({ processed: true, summary: summary || null, suggest_reply: exReply || null }).eq("id", source.id);
 
         // 1 melding per binnengekomen bericht — korte AI-samenvatting
         try {
