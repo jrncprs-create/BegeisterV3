@@ -64,6 +64,7 @@ Regels:
 - type = kort documenttype in 1-2 woorden (bv. "mail", "appje", "offerte", "factuur", "pitchdeck", "draaiboek"), anders "". from = afzender/auteur als die herkenbaar is, anders "".
 - subject = kort, concreet onderwerp in 2-3 woorden (zo bondig mogelijk), ZONDER klantnaam en ZONDER datum, MÉT het documenttype erin verwerkt als dat logisch is (bv. "licht offerte", "concept", "draaiboek opbouw"). Geen interne codenamen of projectcodes. Kleine letters, gewone spaties, geen leestekens.
 - category = best passende map uit deze VASTE lijst: Briefing, Concept & ontwerp, Techniek, Beeld, Financieel, Oplevering. Bij twijfel: "Concept & ontwerp". Richtlijn: Briefing = aanvraag/projectbrief/intake/debrief; Concept & ontwerp = concept/moodboard/lichtontwerp/decor/ontwerp; Techniek = tekeningen/plattegronden/draaiboek/planning/leveranciers/patch/rigging; Beeld = foto's/video/referenties/inspiratie; Financieel = offerte/factuur/bon/inkoop/budget/calculatie/prijsopgave; Oplevering = eindfoto's/nazorg/aftermovie/eindresultaat.
+- reply = een kort CONCEPT-ANTWOORD op het bericht (alleen bij een e-mail die om een reactie vraagt, anders ""). Nederlands, vriendelijk en professioneel, 3-6 zinnen. Begin met "Beste <voornaam>," of "Hoi <voornaam>," (voornaam uit de afzender; anders "Beste,"). Beantwoord wat er gevraagd wordt; weet je iets niet (prijs, datum, beschikbaarheid), zeg dan dat je erop terugkomt — verzin NIETS. Sluit af met "Groet," en daarna niets (de ondertekenaar vult de app zelf in).
 - BESTELLIJST/WINKELWAGEN/VERLANGLIJST: gaat de gelinkte pagina over een winkelwagen, verlanglijst of productlijst van een webshop (Amazon, Bol, Coolblue, enz.), maak dan van ELK product één item. Zet de prijs in de titel tussen haakjes, bv. "H03VV-F snoer zwart 25m (€21,05)". Geef bij zo'n item "url" = de DIRECTE productlink (de <…>-URL die in de opgehaalde pagina direct bij dat product staat). Kun je de productlink niet vinden, dan url = null. Bij gewone actiepunten (geen product) is url altijd null.
 - Geef ALLEEN geldige JSON terug, geen uitleg eromheen.`;
 
@@ -99,6 +100,7 @@ Geef JSON in exact dit formaat:
   "from": "",
   "category": "",
   "subject": "",
+  "reply": "",
   "items": [
     { "title": "...", "owner": "Jeroen|Marlon|", "contact": "", "due": null, "status": "todo", "project_id": null, "url": null }
   ],
@@ -137,6 +139,7 @@ Geef JSON in exact dit formaat:
       from: (parsed.from || "").toString().trim(),
       category: (parsed.category || "").toString().trim(),
       subject: (parsed.subject || "").toString().trim(),
+      reply: (parsed.reply || "").toString().trim(),
       usage,
     };
   } catch (e) {
