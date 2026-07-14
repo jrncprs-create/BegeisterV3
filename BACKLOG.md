@@ -1,6 +1,6 @@
 # Begeister Workflow — Uitvoerbacklog
 
-_Aangemaakt 14 juli 2026 · hoort bij HANDOFF.md · live versie **v236**_
+_Aangemaakt 14 juli 2026 · hoort bij HANDOFF.md · live versie **v237**_
 
 Elk item hieronder is een **uitvoeritem**: zeg in een chat "doe U3" en Claude voert het uit
 (bouwen → valideren → versiechip ophogen → deployen → verifiëren). Volgorde = aanbevolen volgorde.
@@ -29,21 +29,23 @@ Status bijhouden: `[ ]` open · `[~]` bezig · `[x]` klaar (+ versienummer).
   Guard in index.html: een file-rij mag alleen owner_type='project' krijgen met een geldige
   project-UUID; anders automatisch 'client'. Voorkomt dat U0c ooit opnieuw nodig is.
 
-## Fase 1 — Overzicht & dashboard
+## Fase 1 — Overzicht & dashboard ✅ AFGEROND 15 juli 2026 (v237)
 
 - [x] **U1 — "Vandaag"-dagoverzicht compleet** (M) — v235. Ontdekking: er bestónd al een
   dagoverzicht (zonnetje-knop rechtsboven + automatisch 1x/dag na het welkomstscherm) met
   afspraken, deadlines, wacht-op, waar-ligt-de-bal en weer. Toegevoegd: kaart "Nieuw sinds
   gisteren" (mail/WhatsApp/drops laatste 24u, klik -> Postvak). Kaart verbergt zichzelf als leeg.
-- [ ] **U2 — Wachten-op-bewaking** (M)
-  Taken met status "wait" krijgen "wacht op wie + sinds wanneer". Na X dagen verschijnt het item
-  op het Vandaag-scherm met een voorstel-opvolgactie. Kolom `wait_op`/`wait_sinds` op `items`.
-- [ ] **U3 — Pijplijn-kanban over alle projecten** (M)
-  Eén bord met projecten als kaarten per fase (briefing → voorstel → productie → oplevering →
-  betaald), met projectprijs op de kaart. Slepen = fase wijzigen.
-- [ ] **U4 — "Heeft aandacht nodig"-signalen** (M)
-  Automatische detectie: project zonder activiteit >X dagen, offerte zonder reactie >7 dagen,
-  taak over deadline. Toont als signaalrij op het Vandaag-scherm. (Bouwt op U1.)
+- [x] **U2 — Wachten-op-bewaking** (M) — v237. Kolom `items.wait_sinds` + DB-trigger die hem op
+  élk pad bijhoudt (status → wait zet de klok, weg van wait wist hem); "op wie" = het bestaande
+  contact-veld. Wacht-pil toont het aantal dagen (7+ kleurt rood); dagoverzicht-kaart "Wacht op"
+  sorteert op langst wachtend; 7+ dagen verschijnt als signaal bij U4.
+- [x] **U3 — Pijplijn-kanban over alle projecten** (M) — v237. Nav-knop "Pijplijn": overlay-bord
+  met vijf fasekolommen, projectkaarten met klantkleur + projectprijs, kolomtotalen. Slepen =
+  fase wijzigen (factuurstatus beweegt mee, zelfde logica als de fasebalk); klik opent dossier.
+- [x] **U4 — "Heeft aandacht nodig"-signalen** (M) — v237. Kaart op het dagoverzicht met vier
+  detecties: taak over deadline (rood), 7+ dagen wachten op iemand (U2), voorstel 7+ dagen
+  zonder reactie (klik = herinneringsmail, U10) en project 14+ dagen stil. Vervangt de losse
+  "Langst stil"-kaart.
 
 ## Fase 2 — Taken & todo ✅ AFGEROND 14 juli 2026 (v236)
 
