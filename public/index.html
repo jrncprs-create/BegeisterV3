@@ -2116,7 +2116,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v232</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v233</span>
       <button id="dayBtn" class="dag-ic" onclick="openDayOverview()" title="Dagoverzicht" aria-label="Dagoverzicht"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M3 12h2M19 12h2M5.6 18.4l1.4-1.4M17 7l1.4-1.4"/></svg></button>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:14px;font-weight:var(--fw-nadruk);cursor:pointer" title="AI-context bewerken">Jeroen</span>
@@ -4093,7 +4093,7 @@ function _zesMap(cat, naam){
   const c=String(cat||'').trim().toLowerCase(); const n=String(naam||'').toLowerCase();
   const w=(re)=>new RegExp('(^|[^a-z])('+re+')([^a-z]|$)').test(n);
   if(c==='portaal') return 'Portaal';
-  if(['offertes','inkoop','facturen'].includes(c)||w('offerte|offertes|factuur|facturen|invoice|inkoop|bon|budget|calculatie|prijsopgave')) return 'Financieel';
+  if(['offertes','inkoop','facturen','budget'].includes(c)||w('offerte|offertes|factuur|facturen|invoice|inkoop|bon|budget|calculatie[a-z]*|prijsopgave|kostenraming|begroting|raming')) return 'Financieel';
   if(w('projectbrief|briefing|aanvraag|debrief|intake')) return 'Briefing';
   if(w('oplevering|nazorg|eindresultaat|aftermovie')) return 'Oplevering';
   if(c==='media'||/\.(jpe?g|png|gif|webp|heic|heif|bmp|tiff?|svg|mp4|mov|avi|mkv|webm)$/.test(n)) return 'Beeld';
@@ -5841,7 +5841,7 @@ async function pbPortalBgClear(){
 //   PER SOORT  — Afbeeldingen, PDF's, Documenten, Audio & video, Overig. Dit is AFGELEID uit
 //                de extensie. Geen AI, geen keuze, kan nooit fout.
 // Een bestand staat nooit op twee plekken: wat in een financiënmap valt, valt uit de soorten.
-const _FIN_MAPPEN=['Offertes','Inkoop','Facturen'];
+const _FIN_MAPPEN=['Offertes','Inkoop','Facturen','Budget'];
 const _SOORT_VOLGORDE=['Afbeeldingen',"PDF's",'Documenten','Audio & video','Overig'];
 
 function _bestandSoortMap(naam){
@@ -5861,13 +5861,18 @@ function _finMapVan(f){
   const cat=String((f&&f.icon)||'').trim();
   const hit=_FIN_MAPPEN.find(m=>m.toLowerCase()===cat.toLowerCase());
   if(hit) return hit;
+  // De zes-mappen-sortering (en de AI-intake) zet financiële bestanden op categorie
+  // "Financieel". Die categorie is expliciet — dus altijd meenemen, ook als de naam
+  // niets verraadt en ook als het een foto is (bijv. een gefotografeerde bon).
+  const isFin=cat.toLowerCase()==='financieel';
   const n=String((f&&f.name)||'').toLowerCase();
-  if(!_FIN_DOC_EXT.test(n)) return null;
+  if(!isFin && !_FIN_DOC_EXT.test(n)) return null;
   const w=(re)=>new RegExp('(^|[^a-z])(' + re + ')([^a-z]|$)').test(n);
   if(w('offerte|offertes|quote|prijsopgave')) return 'Offertes';
   if(w('factuur|facturen|invoice|rekening')) return 'Facturen';
   if(w('bon|bonnen|bonnetje|kassabon|bestelbevestiging|inkoop|receipt|order')) return 'Inkoop';
-  return null;
+  if(w('budget|budgetten|calculatie[a-z]*|kostenraming|begroting|raming')) return 'Budget';
+  return isFin?'Budget':null;
 }
 
 // Mappen op het projectbord beginnen dicht. Ze stonden allemaal open, ook na een refresh:
