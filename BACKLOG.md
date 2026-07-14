@@ -1,6 +1,6 @@
 # Begeister Workflow — Uitvoerbacklog
 
-_Aangemaakt 14 juli 2026 · hoort bij HANDOFF.md · live versie **v235**_
+_Aangemaakt 14 juli 2026 · hoort bij HANDOFF.md · live versie **v236**_
 
 Elk item hieronder is een **uitvoeritem**: zeg in een chat "doe U3" en Claude voert het uit
 (bouwen → valideren → versiechip ophogen → deployen → verifiëren). Volgorde = aanbevolen volgorde.
@@ -45,28 +45,35 @@ Status bijhouden: `[ ]` open · `[~]` bezig · `[x]` klaar (+ versienummer).
   Automatische detectie: project zonder activiteit >X dagen, offerte zonder reactie >7 dagen,
   taak over deadline. Toont als signaalrij op het Vandaag-scherm. (Bouwt op U1.)
 
-## Fase 2 — Taken & todo
+## Fase 2 — Taken & todo ✅ AFGEROND 14 juli 2026 (v236)
 
-- [ ] **U5 — Deadlines, herinneringen en "vandaag doen"** (M)
-  Deadlineveld op taken, pushherinnering (bestaat deels), en een handmatige vandaag-selectie
-  bovenop de statuskolommen.
-- [ ] **U6 — Terugkerende taken** (S/M)
-  Herhaalpatroon op een taak (wekelijks/maandelijks/per kwartaal, bijv. btw-aangifte). Bij
-  afvinken wordt automatisch de volgende aangemaakt.
-- [ ] **U7 — Bestaande losse taken hergroeperen** (S) _(stond al in HANDOFF §8)_
-  Migratiescript: losse kaartjes van één bron samenvoegen tot één kaart met checklist.
+- [x] **U5 — Deadlines, herinneringen en "vandaag doen"** (M) — v236. Deadlineveld bestond al;
+  toegevoegd: "vandaag"-pil op elke taakkaart (items.vandaag, vervalt vanzelf na de dag), groep
+  "Vandaag doen" bovenaan Taken, telt mee in het dagoverzicht, en ochtendpush 07:30 NL-tijd per
+  persoon (deadline vandaag/te laat + vandaag-selectie) via cron in server.mjs.
+- [x] **U6 — Terugkerende taken** (S/M) — v236. Herhaal-keuze in het taakvenster (wekelijks/
+  maandelijks/per kwartaal, items.herhaal). Bij afvinken maakt _maybeRepeat() automatisch de
+  volgende aan (checklist gereset, deadline één periode verder, nooit in het verleden). ↻-pil
+  op de kaart.
+- [x] **U7 — Bestaande losse taken hergroeperen** (S) — uitgevoerd 14 juli: 38 losse kaartjes
+  uit 12 bronnen samengevoegd tot 12 kaarten met checklist (titel = bron-samenvatting; files/
+  comments herkoppeld; controle: 0 wezen).
 
-## Fase 3 — Directiesecretaresse
+## Fase 3 — Directiesecretaresse ✅ AFGEROND 14 juli 2026 (v236)
 
-- [ ] **U8 — Antwoordconcepten bij intake** (M)
-  Bij elke intake-mail zet de AI direct een concept-antwoord klaar; jij keurt goed of past aan.
-  Verzenden via mailto of (later) SMTP-koppeling.
-- [ ] **U9 — Spraakmemo-transcriptie** (M)
-  .m4a/.mp3-drops worden getranscribeerd (Whisper of vergelijkbaar) en gaan daarna door de
-  normale AI-intake → samenvatting + actiepunten. Er staan al spraakmemo's in het archief.
-- [ ] **U10 — Follow-upmachine** (M)
-  Offerte verstuurd → na 7 dagen herinneringsconcept; factuur → betalingsherinnering na
-  vervaldatum. Gebruikt de pijplijnstatus uit U12. (Bouwt op U2/U8.)
+- [x] **U8 — Antwoordconcepten bij intake** (M) — v236. De intake-extractie levert nu ook een
+  concept-antwoord (sources.suggest_reply); de poller zet hem direct klaar bij nieuwe mails.
+  In het Postvak: blok "Antwoordconcept" onder de mailpreview (bewerkbaar) met Open in Mail
+  (mailto Re:), Kopieer en ✦ voor bestaande mails (nieuw endpoint /api/reply).
+- [x] **U9 — Spraakmemo-transcriptie** (M) — v236. Audio-drops (.m4a/.mp3/.wav/…) gaan in
+  api/readdrop.mjs eerst door de bestaande Groq Whisper-helper (lib/transcribe.mjs) en daarna
+  door de normale extractie → samenvatting + actiepunten; de transcriptie wordt als brontekst
+  bewaard. Vereist GROQ_API_KEY op Railway (stond er al voor de dictafoon).
+- [x] **U10 — Follow-upmachine (versimpeld, afgestemd met Jeroen)** (M) — v236. Voorstel
+  markeren = verstuurd_op gezet (files + documents; bestaande voorstellen ge-backfilled op
+  aanmaakdatum). Dagoverzicht-kaart "Opvolgen": voorstellen 7+ dagen zonder akkoord op dat
+  spoor; klik = herinneringsconcept in Mail (contact van het project als we er één kennen).
+  Volledige versie (facturen, U12-pijplijnstatus) volgt bij Fase 5.
 
 ## Fase 4 — Agenda
 
