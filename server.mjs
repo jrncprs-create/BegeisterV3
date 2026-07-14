@@ -59,6 +59,7 @@ await mount("/api/snelkoppeling", "./api/snelkoppeling.mjs");
 await mount("/api/weer", "./api/weer.mjs");
 await mount("/api/fileproxy", "./api/fileproxy.mjs");
 await mount("/api/notify", "./api/notify.mjs");
+await mount("/api/reply", "./api/reply.mjs");
 await mount("/api/push", "./api/push.mjs");
 await mount("/api/backfill-contacts", "./api/backfill-contacts.mjs");
 await mount("/api/portal", "./api/portal.mjs");
@@ -125,6 +126,37 @@ cron.schedule("7 * * * *", async () => {
     console.error("cron dropbox", e && e.message);
   }
 });
+
+// U5 — Ochtendherinnering (07:30 NL-tijd): een push per persoon met wat er vandaag op het
+// bord ligt (deadline vandaag/te laat + de handmatige "vandaag doen"-selectie). Taken zonder
+// eigenaar tellen bij iedereen mee. Geen taken = geen melding (stilte is ook informatie).
+cron.schedule("30 7 * * *", async () => {
+  try {
+    const { svc } = await import("./lib/usage.mjs");
+    const { sendToWho } = await import("./lib/push.mjs");
+    const db = svc();
+    if (!db) return;
+    const vandaag = new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Amsterdam" }); // YYYY-MM-DD
+    const { data: items } = await db.from("items")
+      .select("title, owner, due, vandaag, status")
+      .in("status", ["todo", "doing"])
+      .is("archived_at", null)
+      .or(`due.lte.${vandaag},vandaag.eq.${vandaag}`);
+    const lijst = items || [];
+    if (!lijst.length) return;
+    for (const wie of ["Jeroen", "Marlon"]) {
+      const mijn = lijst.filter(i => !i.owner || String(i.owner).toLowerCase().includes(wie.toLowerCase()));
+      if (!mijn.length) continue;
+      const teLaat = mijn.filter(i => i.due && i.due < vandaag).length;
+      const titels = mijn.slice(0, 3).map(i => (i.title || "").slice(0, 40)).join(" · ");
+      const body = (mijn.length + " taak" + (mijn.length === 1 ? "" : "en") + " voor vandaag"
+        + (teLaat ? " (" + teLaat + " te laat)" : "") + ": " + titels).slice(0, 140);
+      await sendToWho(db, { title: "Vandaag doen", body, url: "/" }, [wie]);
+    }
+  } catch (e) {
+    console.error("cron dagherinnering", e && e.message);
+  }
+}, { timezone: "Europe/Amsterdam" });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log("Begeister draait op poort " + PORT));
