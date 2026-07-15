@@ -32,3 +32,10 @@ create trigger trg_items_wait_sinds
   for each row execute function public.items_wait_sinds();
 update public.items set wait_sinds = coalesce(updated_at, created_at, now())
 where status = 'wait' and wait_sinds is null;
+
+-- ===== Restant backlog (15 juli 2026) =====
+-- U11b: afspraak-suggesties uit de AI-intake bij de bron (migratie `u11b_u12_appts_finstatus`)
+alter table public.sources add column if not exists suggest_appts jsonb;
+-- U12: status per financieel document (concept -> verstuurd -> akkoord -> betaald)
+alter table public.files add column if not exists fin_status text;
+alter table public.documents add column if not exists fin_status text;
