@@ -101,7 +101,7 @@ export default async function handler(req, res) {
       if (ex.usage) { try { await logUsage(null, { source: "drop-audio", ...ex.usage }); } catch (_) {} }
       return res.status(200).json({
         reply: (ex.summary || "Spraakmemo gelezen.") , transcript,
-        items: ex.items || [], client: ex.client || "", project: ex.project || "",
+        items: ex.items || [], appointments: ex.appointments || [], contacts: ex.contacts || [], client: ex.client || "", project: ex.project || "",
         type: ex.type || "spraakmemo", from: ex.from || (who || ""),
         category: ex.category || "Briefing", subject: ex.subject || name,
       });
@@ -121,7 +121,7 @@ export default async function handler(req, res) {
       if (!docText) return res.status(200).json({ reply: "Het Word-document lijkt leeg of bevat geen leesbare tekst.", items: [] });
       const ex = await extractItems({ text: docText, sender: who || "Document", subject: name, today, catalog, context });
       if (ex.usage) { try { await logUsage(null, { source: "drop-docx", ...ex.usage }); } catch (_) {} }
-      return res.status(200).json({ reply: ex.summary || "Document gelezen.", items: ex.items || [], client: ex.client || "", project: ex.project || "", type: ex.type || "", from: ex.from || "", category: ex.category || "", subject: ex.subject || "" });
+      return res.status(200).json({ reply: ex.summary || "Document gelezen.", items: ex.items || [], appointments: ex.appointments || [], contacts: ex.contacts || [], client: ex.client || "", project: ex.project || "", type: ex.type || "", from: ex.from || "", category: ex.category || "", subject: ex.subject || "" });
     }
 
     // 4) HTML (.html/.htm) → tags/scripts/styles strippen, dan de leesbare tekst laten lezen.
@@ -155,7 +155,7 @@ export default async function handler(req, res) {
       t = t.slice(0, 24000);
       const ex = await extractItems({ text: t, sender: who || "HTML", subject: name, today, catalog, context });
       if (ex.usage) { try { await logUsage(null, { source: "drop-html", ...ex.usage }); } catch (_) {} }
-      return res.status(200).json({ reply: ex.summary || "HTML gelezen.", items: ex.items || [], client: ex.client || "", project: ex.project || "", type: ex.type || "", from: ex.from || "", category: ex.category || "", subject: ex.subject || "" });
+      return res.status(200).json({ reply: ex.summary || "HTML gelezen.", items: ex.items || [], appointments: ex.appointments || [], contacts: ex.contacts || [], client: ex.client || "", project: ex.project || "", type: ex.type || "", from: ex.from || "", category: ex.category || "", subject: ex.subject || "" });
     }
 
     // 5) Platte tekst (.txt/.md/etc.) → extractItems
@@ -163,7 +163,7 @@ export default async function handler(req, res) {
     if (plain) {
       const ex = await extractItems({ text: plain, sender: who || "Tekst", subject: name, today, catalog, context });
       if (ex.usage) { try { await logUsage(null, { source: "drop-text", ...ex.usage }); } catch (_) {} }
-      return res.status(200).json({ reply: ex.summary || "Tekst gelezen.", items: ex.items || [], client: ex.client || "", project: ex.project || "", type: ex.type || "", from: ex.from || "", category: ex.category || "", subject: ex.subject || "" });
+      return res.status(200).json({ reply: ex.summary || "Tekst gelezen.", items: ex.items || [], appointments: ex.appointments || [], contacts: ex.contacts || [], client: ex.client || "", project: ex.project || "", type: ex.type || "", from: ex.from || "", category: ex.category || "", subject: ex.subject || "" });
     }
 
     return res.status(400).json({ error: "leeg of niet-ondersteund bestandstype: " + (mime || name) });
