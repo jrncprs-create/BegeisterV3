@@ -158,5 +158,20 @@ cron.schedule("30 7 * * *", async () => {
   }
 }, { timezone: "Europe/Amsterdam" });
 
+// U17 — Wekelijkse gezondheidscheck (maandag 08:00 NL): duplicaten, wezen en rare
+// financiële waardes → één taakkaart met checklist + push. Stil als er niets is.
+cron.schedule("0 8 * * 1", async () => {
+  try {
+    const { svc } = await import("./lib/usage.mjs");
+    const { draaiGezondheidscheck } = await import("./lib/gezondheid.mjs");
+    const db = svc();
+    if (!db) return;
+    const r = await draaiGezondheidscheck(db);
+    console.log("gezondheidscheck", r);
+  } catch (e) {
+    console.error("cron gezondheidscheck", e && e.message);
+  }
+}, { timezone: "Europe/Amsterdam" });
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log("Begeister draait op poort " + PORT));
