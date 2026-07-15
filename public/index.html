@@ -463,6 +463,39 @@
   .zk-row:hover,.zk-row:focus{background:rgba(255,255,255,.05);color:#fff;outline:none}
   .zk-t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .zk-sub{flex:0 0 auto;font-size:12px;color:var(--mut2);max-width:40%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  /* Leestafel — zelfde taal als de rest: dunne lijnen, ronde hoeken, amber accent */
+  .lt-inner{max-width:860px}
+  .lt-kop{margin:6px 0 18px}
+  .lt-titel{width:100%;background:transparent;border:none;border-bottom:1px solid var(--line);color:var(--txt);font:inherit;font-size:20px;font-weight:var(--fw-nadruk);padding:8px 2px;outline:none}
+  .lt-titel:focus{border-color:var(--primary)}
+  .lt-h{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--primary2);font-weight:var(--fw-nadruk);margin:22px 0 8px}
+  .lt-row{display:flex;align-items:flex-start;gap:12px;padding:12px 10px;border:1px solid var(--line);border-radius:12px;margin-bottom:8px;background:rgba(20,20,22,.72);transition:opacity .15s}
+  .lt-row.uit{opacity:.42}
+  .lt-chk{background:none;border:none;padding:2px 0 0;cursor:pointer;color:var(--txt)}
+  .lt-box{width:20px;height:20px;border-radius:6px;border:1.5px solid var(--mut2);display:inline-flex;align-items:center;justify-content:center;color:var(--txt)}
+  .lt-row:not(.uit) .lt-box{border-color:var(--txt)}
+  .lt-main{flex:1;min-width:0}
+  .lt-tekst{width:100%;background:transparent;border:none;color:var(--txt);font:inherit;font-size:14px;padding:2px 0;outline:none;border-bottom:1px dashed transparent}
+  .lt-tekst:focus{border-bottom-color:var(--line)}
+  .lt-velden{display:flex;flex-wrap:wrap;gap:12px;margin-top:8px}
+  .lt-veld{display:inline-flex;align-items:center;gap:6px;font-size:12px}
+  .lt-vlbl{color:var(--mut2);font-size:10.5px;letter-spacing:.6px;text-transform:uppercase}
+  .lt-veld input,.lt-veld select{background:transparent;border:1px solid var(--line);border-radius:8px;color:var(--mut);font:inherit;font-size:12.5px;padding:3px 8px;outline:none;color-scheme:dark}
+  .lt-veld input:focus,.lt-veld select:focus{border-color:var(--primary)}
+  .lt-veld input[type=text]{width:130px}
+  .lt-hint{font-size:12px;color:var(--mut2);font-style:italic}
+  .lt-seg{display:flex;gap:4px;flex:0 0 auto;flex-wrap:wrap;justify-content:flex-end;max-width:190px}
+  .lt-tbtn{background:none;border:1px solid var(--line);border-radius:999px;color:var(--mut2);font:inherit;font-size:10.5px;letter-spacing:.5px;text-transform:uppercase;padding:3px 9px;cursor:pointer}
+  .lt-tbtn:hover{border-color:rgba(255,255,255,.3)}
+  .lt-tbtn.aan{color:#e6c07a;border-color:#e6c07a}
+  .lt-del{background:none;border:none;color:var(--mut2);cursor:pointer;padding:2px;flex:0 0 auto}
+  .lt-del:hover{color:var(--late)}
+  .lt-add{margin:2px 0 6px}
+  .lt-crow .lt-cnaam{font-size:14px;color:var(--txt);font-weight:var(--fw-nadruk);margin-right:10px}
+  .lt-crow .lt-csub{font-size:12.5px;color:var(--mut2)}
+  .lt-voet{display:flex;gap:10px;margin-top:22px;flex-wrap:wrap}
+  .lt-toepas{border-color:#e6c07a;color:#e6c07a}
+  @media(max-width:700px){ .lt-row{flex-wrap:wrap} .lt-seg{max-width:none;justify-content:flex-start;order:3;width:100%;margin-left:32px} }
   /* U4 — aandacht-signalen op het dagoverzicht */
   .dov-sig{grid-column:span 6}
   .dov-sigrij{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:none;padding:6px 0;cursor:pointer;color:var(--mut);font:inherit;font-size:13.5px;border-bottom:1px solid rgba(255,255,255,.05)}
@@ -2197,7 +2230,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v238</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v239</span>
       <button id="zoekBtn" class="dag-ic" onclick="openZoek()" title="Zoeken — ⌘K / Ctrl+K" aria-label="Zoeken"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg></button>
       <button id="dayBtn" class="dag-ic" onclick="openDayOverview()" title="Dagoverzicht" aria-label="Dagoverzicht"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M3 12h2M19 12h2M5.6 18.4l1.4-1.4M17 7l1.4-1.4"/></svg></button>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
@@ -5221,7 +5254,8 @@ function _bronPreview(wrapId, sid, leegTekst){
   const atts=(s.attachFull&&s.attachFull.length)?s.attachFull:[];
   const raw=s.full||s.text||s.summary||'';
   const aiBtn=String(raw).trim()?`<button class="fv-btn bron-aibtn" onclick="openAiInsight('bron','${s.id}')">✦ Laat AI lezen</button>`:'';
-  const head=`<div class="fmp-head"><div class="fmp-name">${escapeHtml(_srcTitle(s))}</div>${aiBtn}</div>`;
+  const ltKnop=String(raw).trim()?`<button class="fv-btn bron-aibtn" onclick="openLeestafelVoorBron('${s.id}',this)" title="Per punt reviewen: taak, subpunt, afspraak of notitie">${(s.suggestItems&&s.suggestItems.rows&&s.suggestItems.rows.length)?'Leestafel · bewaard':'Leestafel'}</button>`:'';
+  const head=`<div class="fmp-head"><div class="fmp-name">${escapeHtml(_srcTitle(s))}</div>${ltKnop}${aiBtn}</div>`;
   // Mailtekst (of chat) ALTIJD tonen; bijlage(n) eronder — niet meer óf tekst óf beeld.
   const _chatRe=/^[^\n]{1,40}\([^)\n]{1,24}\):\s*/;
   const isChat=(s.kind==='chat')||(String(raw).split('\n').filter(l=>_chatRe.test(l.trim())).length>=2);
@@ -7652,7 +7686,7 @@ function _mapSource(s,atts){
   const full = (s.channel==='email' && s.summary && s.body) ? s.body : null;
   const myAtts=atts.filter(a=>a.source_id===s.id);
   return {id:s.id,channel:s.channel,from:s.sender||'',subject:s.subject||'',proj:s.project_id,date:(s.received_at||'').slice(0,10),ts:(s.received_at||''),
-          kind,text,summary:s.summary||'',full,waSide:s.wa_side||'',suggestReply:s.suggest_reply||'',suggestAppts:Array.isArray(s.suggest_appts)?s.suggest_appts:[],
+          kind,text,summary:s.summary||'',full,waSide:s.wa_side||'',suggestReply:s.suggest_reply||'',suggestAppts:Array.isArray(s.suggest_appts)?s.suggest_appts:[],suggestItems:(s.suggest_items&&typeof s.suggest_items==='object')?s.suggest_items:null,
           attach:myAtts.map(a=>a.filename||'bijlage'),
           attachFull:myAtts.map(a=>({filename:a.filename||'bijlage',storage_path:a.storage_path||'',mime:a.mime||''})),
           images:[]};
@@ -8546,6 +8580,147 @@ function _zoekRender(){
   box.innerHTML=h;
 }
 
+// ===== Leestafel — het reviewscherm voor alles wat de AI leest. =====
+// Elke vondst is een eigen regel: aan/uit, tekst bewerkbaar, en per regel het type
+// (Taak / Subpunt / Afspraak / Notitie). Toepassen maakt precies aan wat aangevinkt staat;
+// "Later invullen" bewaart de (bewerkte) voorstellen bij de bron zodat je ze kunt heropenen.
+let _lt=null;
+const _LT_TYPES=[['taak','Taak'],['subpunt','Subpunt'],['afspraak','Afspraak'],['notitie','Notitie']];
+function openLeestafel(cfg){
+  return new Promise(resolve=>{
+    let rows;
+    if(Array.isArray(cfg.rowsDirect)&&cfg.rowsDirect.length){
+      rows=cfg.rowsDirect.map(r=>Object.assign({on:true,type:'subpunt',t:'',owner:'',contact:'',due:null,date:null,start:null,end:null,location:''},r));
+    } else {
+      rows=[];
+      (cfg.items||[]).forEach(it=>{ const t=String(it.title||it.t||'').trim(); if(!t)return;
+        rows.push({on:true,type:(it.due?'taak':'subpunt'),t,owner:it.owner||'',contact:it.contact||'',due:it.due||null,date:null,start:null,end:null,location:''}); });
+      (cfg.appts||[]).forEach(a=>{ if(!a||!a.title)return;
+        rows.push({on:true,type:'afspraak',t:String(a.title).trim(),owner:'',contact:'',due:null,date:a.date||null,start:a.start?String(a.start).slice(0,5):null,end:a.end?String(a.end).slice(0,5):null,location:a.location||''}); });
+    }
+    const contacts=(cfg.contacts||[]).map(c=>({on:('on' in c)?!!c.on:true,name:String(c.name||'').trim(),email:c.email||'',phone:c.phone||'',company:c.company||'',role:c.role||''})).filter(c=>c.name);
+    _lt={rows,contacts,resolve,titel:String(cfg.titel||cfg.summary||'').trim().slice(0,140),sub:cfg.sub||'',toonLater:cfg.toonLater!==false};
+    ltRender();
+    const ov=document.getElementById('ltOverlay'); if(!ov){resolve(null);return;}
+    ov.setAttribute('aria-hidden','false'); requestAnimationFrame(()=>ov.classList.add('open'));
+  });
+}
+function _ltSluit(){ const ov=document.getElementById('ltOverlay'); if(ov){ ov.classList.remove('open'); ov.setAttribute('aria-hidden','true'); } }
+function ltAnnuleer(){ const r=_lt&&_lt.resolve; _lt=null; _ltSluit(); if(r)r(null); }
+function ltLater(){ if(!_lt)return; const r=_lt.resolve; const uit={later:true,titel:_lt.titel,rows:_lt.rows,contacts:_lt.contacts}; _lt=null; _ltSluit(); if(r)r(uit); }
+function ltPas(){ if(!_lt)return; const r=_lt.resolve; const uit={later:false,titel:_lt.titel,rows:_lt.rows,contacts:_lt.contacts}; _lt=null; _ltSluit(); if(r)r(uit); }
+function ltToggle(i){ if(!_lt||!_lt.rows[i])return; _lt.rows[i].on=!_lt.rows[i].on; ltRender(); }
+function ltType(i,ty){ if(!_lt||!_lt.rows[i])return; _lt.rows[i].type=ty; _lt.rows[i].on=true; ltRender(); }
+function ltCToggle(i){ if(!_lt||!_lt.contacts[i])return; _lt.contacts[i].on=!_lt.contacts[i].on; ltRender(); }
+function ltDel(i){ if(!_lt)return; _lt.rows.splice(i,1); ltRender(); }
+function ltAddRij(){ if(!_lt)return; _lt.rows.push({on:true,type:'taak',t:'',owner:'',contact:'',due:null,date:null,start:null,end:null,location:''}); ltRender();
+  setTimeout(()=>{ const ins=document.querySelectorAll('#ltBody .lt-tekst'); const el=ins[ins.length-1]; if(el)el.focus(); },50); }
+function ltRender(){
+  const body=document.getElementById('ltBody'); if(!body||!_lt)return;
+  const esc=escapeHtml;
+  const chk=on=>`<span class="lt-box">${on?'<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5l10 -10"/></svg>':''}</span>`;
+  const aan=_lt.rows.filter(r=>r.on&&r.type!=='notitie'&&String(r.t||'').trim()).length + _lt.contacts.filter(c=>c.on).length;
+  const rijen=_lt.rows.map((r,i)=>{
+    const seg=_LT_TYPES.map(([k,l])=>`<button class="lt-tbtn${r.type===k?' aan':''}" onclick="ltType(${i},'${k}')">${l}</button>`).join('');
+    let velden='';
+    if(r.type==='taak') velden=`<div class="lt-velden">
+        <span class="lt-veld"><span class="lt-vlbl">wie</span><select onchange="_lt.rows[${i}].owner=this.value"><option value=""${r.owner===''?' selected':''}>&mdash;</option><option${r.owner==='Jeroen'?' selected':''}>Jeroen</option><option${r.owner==='Marlon'?' selected':''}>Marlon</option><option value="Marlon & Jeroen"${r.owner==='Marlon & Jeroen'?' selected':''}>Beiden</option></select></span>
+        <span class="lt-veld"><span class="lt-vlbl">deadline</span><input type="date" value="${r.due||''}" onchange="_lt.rows[${i}].due=this.value||null"></span>
+        <span class="lt-veld"><span class="lt-vlbl">contact</span><input type="text" value="${esc(r.contact||'')}" placeholder="&mdash;" oninput="_lt.rows[${i}].contact=this.value"></span>
+      </div>`;
+    else if(r.type==='afspraak') velden=`<div class="lt-velden">
+        <span class="lt-veld"><span class="lt-vlbl">datum</span><input type="date" value="${r.date||''}" onchange="_lt.rows[${i}].date=this.value||null"></span>
+        <span class="lt-veld"><span class="lt-vlbl">van</span><input type="time" value="${r.start||''}" onchange="_lt.rows[${i}].start=this.value||null"></span>
+        <span class="lt-veld"><span class="lt-vlbl">tot</span><input type="time" value="${r.end||''}" onchange="_lt.rows[${i}].end=this.value||null"></span>
+        <span class="lt-veld"><span class="lt-vlbl">waar</span><input type="text" value="${esc(r.location||'')}" placeholder="&mdash;" oninput="_lt.rows[${i}].location=this.value"></span>
+      </div>`;
+    else if(r.type==='notitie') velden=`<div class="lt-velden"><span class="lt-hint">blijft alleen bij de bron bewaard &mdash; er wordt niets aangemaakt</span></div>`;
+    return `<div class="lt-row${r.on?'':' uit'}">
+      <button class="lt-chk" onclick="ltToggle(${i})" title="${r.on?'Uitzetten':'Aanzetten'}">${chk(r.on)}</button>
+      <div class="lt-main">
+        <input class="lt-tekst" value="${esc(r.t)}" placeholder="omschrijving&hellip;" oninput="_lt.rows[${i}].t=this.value">
+        ${r.on?velden:''}
+      </div>
+      <div class="lt-seg">${seg}</div>
+      <button class="lt-del" onclick="ltDel(${i})" title="Regel verwijderen">${_tIc('<path d="M18 6l-12 12"/><path d="M6 6l12 12"/>',15,1.6)}</button>
+    </div>`;
+  }).join('');
+  const conts=_lt.contacts.length?`<div class="lt-h">Gevonden contacten</div>`+_lt.contacts.map((c,i)=>`<div class="lt-row lt-crow${c.on?'':' uit'}">
+      <button class="lt-chk" onclick="ltCToggle(${i})" title="${c.on?'Niet bewaren':'Bewaren'}">${chk(c.on)}</button>
+      <div class="lt-main"><span class="lt-cnaam">${esc(c.name)}</span><span class="lt-csub">${esc([c.role,c.company,c.email,c.phone].filter(Boolean).join(' · '))}</span></div>
+    </div>`).join(''):'';
+  body.innerHTML=`
+    <div class="lt-kop">
+      <input class="lt-titel" value="${esc(_lt.titel)}" placeholder="Titel van de verzamelkaart&hellip;" oninput="_lt.titel=this.value">
+      ${_lt.sub?`<div class="dov-sub" style="margin-top:6px">${esc(_lt.sub)}</div>`:''}
+      <div class="dov-sub" style="margin-top:4px">Subpunten worden samen &eacute;&eacute;n kaart met checklist &middot; taken worden losse kaarten &middot; afspraken gaan de agenda in.</div>
+    </div>
+    ${rijen||'<div class="dov-sub" style="margin:12px 0">Geen vondsten &mdash; voeg zelf een regel toe.</div>'}
+    <button class="fv-btn ghost lt-add" onclick="ltAddRij()">+ regel toevoegen</button>
+    ${conts}
+    <div class="lt-voet">
+      <button class="fv-btn lt-toepas" onclick="ltPas()">Toepassen${aan?' · '+aan:''}</button>
+      ${_lt.toonLater?'<button class="fv-btn ghost" onclick="ltLater()">Later invullen</button>':''}
+      <button class="fv-btn ghost" onclick="ltAnnuleer()">Annuleren</button>
+    </div>`;
+}
+// Maakt aan wat op de leestafel is aangevinkt. ctx={srcId,projectId}. Geeft {n,firstId}.
+async function _ltApply(cur, ctx){
+  const pid=(ctx&&ctx.projectId)||null, sid=(ctx&&ctx.srcId)||null;
+  const rows=(cur.rows||[]).filter(r=>r.on&&String(r.t||'').trim());
+  const sub=rows.filter(r=>r.type==='subpunt');
+  const taken=rows.filter(r=>r.type==='taak');
+  const appts=rows.filter(r=>r.type==='afspraak'&&r.date);
+  let n=0, firstId=null;
+  if(sub.length){
+    const titel=(String(cur.titel||'').trim()||'Actiepunten').slice(0,140);
+    try{ const ins=await sb.from('items').insert({project_id:pid,source_id:sid,title:titel,status:'todo',checklist:sub.map(r=>({t:r.t.trim(),done:false}))}).select('id').single(); if(ins&&ins.data)firstId=ins.data.id; n++; }catch(_){}
+  }
+  for(const r of taken){ try{ const ins=await sb.from('items').insert({project_id:pid,source_id:sid,title:r.t.trim().slice(0,300),owner:r.owner||null,contact:String(r.contact||'').trim()||null,due:r.due||null,status:'todo'}).select('id').single(); if(!firstId&&ins&&ins.data)firstId=ins.data.id; n++; }catch(_){} }
+  for(const r of appts){ try{ await sb.from('appointments').insert({title:r.t.trim().slice(0,140),date:r.date,start_time:r.start||null,end_time:r.end||null,location:String(r.location||'').trim()||null,kind:'fysiek',project_id:pid}); n++; }catch(_){} }
+  for(const c of (cur.contacts||[])){ if(!c.on||!String(c.name||'').trim())continue;
+    const email=String(c.email||'').trim().toLowerCase();
+    try{
+      if(email) await sb.from('contacts').upsert({name:c.name.trim(),email,phone:String(c.phone||'').trim()||null,company:String(c.company||'').trim()||null,role:String(c.role||'').trim()||null,source_id:sid,project_id:pid},{onConflict:'email'});
+      else{ const ex=await sb.from('contacts').select('id').ilike('name',c.name.trim()).maybeSingle(); if(!(ex&&ex.data)) await sb.from('contacts').insert({name:c.name.trim(),phone:String(c.phone||'').trim()||null,company:String(c.company||'').trim()||null,role:String(c.role||'').trim()||null,source_id:sid,project_id:pid}); }
+      n++;
+    }catch(_){}
+  }
+  return {n,firstId};
+}
+// Leestafel voor een bestaande bron (Postvak): bewaarde voorstellen heropenen, of de
+// bron opnieuw laten lezen en dan per punt reviewen.
+async function openLeestafelVoorBron(sid, btn){
+  const s=(state.sources||[]).find(x=>String(x.id)===String(sid)); if(!s)return;
+  let cfg;
+  if(s.suggestItems&&Array.isArray(s.suggestItems.rows)&&s.suggestItems.rows.length){
+    cfg={rowsDirect:s.suggestItems.rows, contacts:s.suggestItems.contacts||[], titel:s.suggestItems.titel||s.summary||'', sub:(typeof _srcTitle==='function')?_srcTitle(s):''};
+  } else {
+    if(btn){ btn.disabled=true; btn.textContent='✦ Lezen…'; }
+    try{
+      const raw=s.full||s.text||s.summary||'';
+      const r=await fetch('/api/readfile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:raw,name:(typeof _srcTitle==='function')?_srcTitle(s):'bron'})});
+      const d=await r.json(); if(d&&d.error)throw new Error(d.error);
+      cfg={items:(d.tasks||[]).map(t=>({title:String(t)})), appts:(d.appointments||[]).map(a=>({title:a.title,date:a.date||null,start:a.time||null})), contacts:[], titel:s.summary||((typeof _srcTitle==='function')?_srcTitle(s):''), sub:(typeof _srcTitle==='function')?_srcTitle(s):''};
+      try{ if(typeof loadUsage==='function')loadUsage(); }catch(_){}
+    }catch(e){ toonToast('Lezen lukte niet: '+String(e&&e.message||e),'fout'); if(btn){btn.disabled=false;btn.textContent='Leestafel';} return; }
+    if(btn){ btn.disabled=false; btn.textContent='Leestafel'; }
+  }
+  const cur=await openLeestafel(cfg);
+  if(!cur)return;
+  if(cur.later){
+    s.suggestItems={titel:cur.titel,rows:cur.rows,contacts:cur.contacts};
+    try{ await sb.from('sources').update({suggest_items:s.suggestItems}).eq('id',s.id); }catch(_){}
+    toonToast('Voorstellen bewaard bij de bron — heropen ze via Leestafel.');
+    try{ renderPvRight(); }catch(_){} try{ renderPostvak(); }catch(_){}
+    return;
+  }
+  const r=await _ltApply(cur,{srcId:s.id,projectId:s.proj||null});
+  s.suggestItems=null; try{ await sb.from('sources').update({suggest_items:null}).eq('id',s.id); }catch(_){}
+  toonToast('✓ '+r.n+' aangemaakt via de leestafel');
+  try{ await refresh(); }catch(_){}
+}
+
 // ===== U3 — Pijplijn-kanban: alle klantprojecten per fase, projectprijs op de kaart. =====
 // Slepen naar een andere kolom wijzigt de fase (met dezelfde nevenwerking als de fasebalk
 // op het projectbord: de factuurstatus beweegt mee). Klik op een kaart opent het dossier.
@@ -8981,15 +9156,24 @@ async function _dropProcess(f){
   if(res.project_id){ _fileProjectId=res.project_id; q=null; }            // gebruiker koos expliciet een project in de dropdown
   else if(res.client){ _fileProjectId=null; q=null; }                     // klant gekozen zonder project
   if(q){ try{ await _createFromDrop(q, res.project); }catch(_){} }   // nieuwe klant/project aanmaken
-  // Alleen het bestand? Dan geen actiepunten wegschrijven.
-  const _its=(res.metaken===false)?[]:items;
-  await _saveDropToWait(_its, summary, {name:f.name, url:_wurl, kind:(data.kind||'werk'), transcript:(data.transcript||'')}, _dropFileObj, _wurl);
+  // Alleen het bestand? Dan geen actiepunten wegschrijven. Anders eerst langs de
+  // LEESTAFEL: per vondst aan/uit, tekst bijschaven en het type kiezen. Annuleren op de
+  // leestafel = alleen het bestand bewaren (niets weggooien).
+  let _cur=null;
+  const _vondsten=(items.length||((data.appointments||[]).length)||((data.contacts||[]).length));
+  if(res.metaken!==false && _vondsten && (data.kind||'werk')==='werk'){
+    _dzHide();
+    _cur=await openLeestafel({items, appts:data.appointments||[], contacts:data.contacts||[],
+      titel:summary, sub:[(data.type||'').trim(),(data.from||'').trim()||f.name].filter(Boolean).join(' · ')});
+  }
+  const _its=(_cur||res.metaken===false)?[]:items;
+  await _saveDropToWait(_its, summary, {name:f.name, url:_wurl, kind:(data.kind||'werk'), transcript:(data.transcript||'')}, _dropFileObj, _wurl, _cur);
   _dropFileObj=null; _dropFileDone=false;
   _dzHide(); _dropRunNext();
 }
 
 // ✓ op de samenvatting: alle gevonden punten direct in In-afwachting (status wait) + bestand naar /In afwachting/.
-async function _saveDropToWait(items, summary, srcMeta, fileObj, listUrl){
+async function _saveDropToWait(items, summary, srcMeta, fileObj, listUrl, cur){
   const pid=_fileProjectId||null;
   // De bron wordt hier aangemaakt — niet eerder. Zo laat een mislukte read of een ✕ niets achter.
   // We zetten meteen project_id én summary; die bleven vroeger allebei leeg.
@@ -9026,6 +9210,26 @@ async function _saveDropToWait(items, summary, srcMeta, fileObj, listUrl){
       try{ await sb.from('project_board').insert({project_id:(it.project_id||pid||null), kind:'inkoop', text:name, price:(price!=null?price:null), qty:1, status:'te bestellen', source_id:srcId||null, url:purl, sort:n++}); }catch(_){} }
     try{ notifyPartner((who||'Iemand')+' zette een bestellijst ('+items.length+' artikel(en)) klaar.'); }catch(_){}
     try{ _finInk=null; await refresh(); }catch(_){}
+    return;
+  }
+  // LEESTAFEL: de gebruiker beoordeelde de vondsten al per stuk — maak precies dát aan
+  // (of bewaar de voorstellen bij de bron voor later) en sla het bestand op zoals altijd.
+  if(cur){
+    let firstId=null, nGemaakt=0;
+    if(cur.later){ try{ if(srcId) await sb.from('sources').update({suggest_items:{titel:cur.titel||'',rows:cur.rows||[],contacts:cur.contacts||[]}}).eq('id',srcId); }catch(_){} }
+    else { const r=await _ltApply(cur,{srcId,projectId:pid}); firstId=r.firstId; nGemaakt=r.n; }
+    if(fileObj && srcId){ try{ const b64=await fileToB64(fileObj); const aiName=_intakeName(fileObj);
+      const eig = pid ? {owner_type:'project', owner_id:pid} : (firstId ? {owner_type:'task', owner_id:firstId} : {});
+      const up=await fetch('/api/dropbox/list',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(Object.assign({action:'upload',name:aiName,b64,target:'In afwachting',cat:_dropCat||'Concept & ontwerp'},eig))}).then(r=>r.json());
+      if(up&&up.file&&up.file.link){
+        try{ await sb.from('attachments').insert({source_id:srcId, filename:aiName, storage_path:'dropbox:'+up.file.link, mime:fileObj.type||''}); }catch(_){}
+        try{ await sb.from('documents').update({category:_dropCat||'Concept & ontwerp', link:up.file.link,
+          dropbox_path:up.file.link, size:fileObj.size||null, summary:(summary||'').slice(0,2000)||null})
+          .eq('source_id',srcId).eq('filename',aiName); }catch(_){}
+      } }catch(e){ console.warn('bestand bewaren mislukte', e); }}
+    try{ notifyPartner((who||'Iemand')+(cur.later?' bewaarde leestafel-voorstellen bij een bron.':' maakte '+nGemaakt+' punt(en) via de leestafel.')); }catch(_){}
+    try{ await refresh(); }catch(_){}
     return;
   }
   // Eén kaart per bron: bij 2+ actiepunten worden het afvinkbare subpunten (checklist) onder
@@ -9903,6 +10107,16 @@ sb.auth.onAuthStateChange((_e,session)=>{ if(session) startApp(session); else sh
   <div class="modal zoek-modal">
     <input id="zoekIn" placeholder="Zoek in taken, mail, bestanden, afspraken en contacten…" autocomplete="off" oninput="_zoekRender()" onkeydown="_zoekKey(event)">
     <div id="zoekRes" class="zk-res"></div>
+  </div>
+</div>
+<!-- Leestafel — reviewscherm voor alles wat de AI leest: per vondst aan/uit, tekst
+     bijschaven en het type kiezen. In de stijl van het dagoverzicht. -->
+<div id="ltOverlay" class="dayview-ov" aria-hidden="true">
+  <div class="dov-inner lt-inner">
+    <div class="dov-head"><div class="dov-greet">Leestafel</div>
+      <div class="dov-right"><button class="dov-close" onclick="ltAnnuleer()" aria-label="Sluiten" title="Sluiten"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    </div>
+    <div id="ltBody"></div>
   </div>
 </div>
 <!-- U3 — Pijplijn: alle projecten als kaarten per fase; slepen = fase wijzigen -->
