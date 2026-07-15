@@ -1,6 +1,10 @@
 # Begeister Workflow — Uitvoerbacklog
 
-_Aangemaakt 14 juli 2026 · hoort bij HANDOFF.md · live versie **v237**_
+_Aangemaakt 14 juli 2026 · hoort bij HANDOFF.md · live versie **v238**_
+
+> Stand 15 juli 2026: alles is af behalve **U11** (agenda-sync — wacht op OAuth-keuze),
+> **U14** (boekhoudkoppeling — wacht op pakketkeuze + API-sleutel) en **Fase 7**
+> (klantportaal U18/U19 — eigen sessie afgesproken).
 
 Elk item hieronder is een **uitvoeritem**: zeg in een chat "doe U3" en Claude voert het uit
 (bouwen → valideren → versiechip ophogen → deployen → verifiëren). Volgorde = aanbevolen volgorde.
@@ -81,33 +85,41 @@ Status bijhouden: `[ ]` open · `[~]` bezig · `[x]` klaar (+ versienummer).
 
 - [ ] **U11 — Agenda-sync met Google/Apple Calendar** (L)
   Tweeweg-sync van `appointments` via Google Calendar API en/of CalDAV. OAuth-koppeling per
-  teamlid. Grootste losse bouwsteen van deze backlog.
-- [ ] **U11b — Afspraakdetectie uit intake** (S/M)
-  De AI-intake herkent datum/tijd in mails en stelt naast actiepunten ook een agenda-item voor.
-  Kan vóór U11 (werkt ook zonder sync).
+  teamlid. Grootste losse bouwsteen van deze backlog. Wacht op keuze + OAuth-setup van Jeroen.
+- [x] **U11b — Afspraakdetectie uit intake** (S/M) — v238. De intake-extractie herkent expliciete
+  afspraken met datum/tijd (sources.suggest_appts). In het Postvak verschijnt "Gevonden
+  afspraken" onder de mailpreview met een Inplannen-knop → agenda-item, gekoppeld aan het
+  project van de bron.
 
 ## Fase 5 — Financiën
 
-- [ ] **U12 — Offerte/factuur-pijplijn** (M)
-  Status per financieel document: concept → verstuurd → akkoord → betaald, met openstaand saldo
-  per klant en verstuurd-op-datum. Fundament voor U10.
-- [ ] **U13 — Kwartaal-/jaaroverzicht** (M)
-  Omzet, kosten en marge over alle projecten heen, per kwartaal en jaar, op de Financiën-pagina.
+- [x] **U12 — Offerte/factuur-pijplijn** (M) — v238. Status per financieel document
+  (files/documents.fin_status: concept → verstuurd → akkoord → betaald) als klikbare pil in het
+  Offerte & Factuur-blok; "verstuurd" legt eenmalig verstuurd_op vast. Klantregel op Financiën
+  toont het openstaande saldo (gefactureerd, nog niet betaald, incl. btw). De projectpijplijn
+  (fase → factuurstatus + cashflowkaarten) bestond al.
+- [x] **U13 — Kwartaal-/jaaroverzicht** (M) — v238. Blok "Per kwartaal" op de Financiën-pagina:
+  omzet (zeker, ex btw, op factuurdatum of anders projectstart), betaalde kosten (ex btw) en
+  marge per Q1–Q4 + jaartotaal, met ‹ jaar ›-navigatie.
 - [ ] **U14 — Boekhoudkoppeling (Moneybird / e-Boekhouden)** (L)
-  Facturen en betaalstatus synchroniseren zodat niets dubbel wordt bijgehouden. Keuze pakket
-  eerst met Jeroen bepalen.
+  Facturen en betaalstatus synchroniseren zodat niets dubbel wordt bijgehouden. Wacht op
+  pakketkeuze + API-sleutel van Jeroen (afgesproken 15 juli: overslaan tot die er zijn).
 
 ## Fase 6 — Bestanden & zoeken
 
-- [ ] **U15 — Volledig-tekst zoeken** (M/L)
-  De intake leest bestanden al; sla de geëxtraheerde tekst op (kolom of aparte tabel + Postgres
-  full-text index) en maak één zoekbalk over bestanden, mails en taken.
-- [ ] **U16 — AI-hersortering van het bestaande archief** (M)
-  Eenmalige batch: alle bestaande bestanden zonder (goede) categorie door de AI-sortering halen
-  → juiste zes-map en waar mogelijk juist project. Logisch direct na U0c.
-- [ ] **U17 — Wekelijkse gezondheidscheck** (S/M)
-  Cronjob in server.mjs: detecteer duplicaten, wezen en rare financiële waardes; rapporteer als
-  taak/melding. Automatiseert de audit van 14 juli.
+- [x] **U15 — Eén zoekbalk over alles** (M/L) — v238, pragmatisch: loep in de topbar + ⌘K/Ctrl+K
+  opent een zoek-overlay over alles wat de app al in het geheugen heeft: taken (incl.
+  checklistpunten), mail & bronnen (incl. volledige tekst en spraakmemo-transcripties),
+  bestanden, afspraken en contacten. Postgres full-text-index kan later alsnog als de datamassa
+  het client-side zoeken ontgroeit; bestandsinhoud-extractie-opslag staat dan mee op de rol.
+- [x] **U16 — AI-hersortering van het bestaande archief** (M) — uitgevoerd 15 juli via de
+  bestaande /api/sortfiles-batch: 3 ongesorteerde bestanden kregen een map; 0 verplaats-
+  voorstellen. De "Sorteer met AI"-knop op Bestanden blijft voor de toekomst.
+- [x] **U17 — Wekelijkse gezondheidscheck** (S/M) — v238. lib/gezondheid.mjs + cron in
+  server.mjs (maandag 08:00 NL): dubbele bestandsnamen per project, wezen (onbekend
+  project/verwijderde taak) en rare financiële waardes (geen/verdachte projectprijs voorbij
+  briefing) → één taakkaart "Gezondheidscheck — bevindingen" met checklist + push. Geen
+  bevindingen = stil, en een oude open kaart sluit zichzelf.
 
 ## Fase 7 — Klantportaal (stond al in HANDOFF §8)
 
@@ -136,3 +148,6 @@ Status bijhouden: `[ ]` open · `[~]` bezig · `[x]` klaar (+ versienummer).
   pad-whitelist, verplichte sha256-controle, commit via GitHub API met GITHUB_TOKEN als
   Railway-variable. Deployflow voortaan: Claude bouwt + valideert → POST /api/deploy vanuit de
   ingelogde app-sessie → checksum-verificatie op GitHub → Railway-status → live check.
+- **Les 15 juli:** de Cowork GitHub-connector kan wél direct naar main pushen (push_files) —
+  altijd eérst testen i.p.v. aannemen dat hij dicht zit. Kleine bestanden gaan voortaan direct
+  via de connector; alleen index.html (760 KB) gaat via de browser-parenflow of /api/deploy.
