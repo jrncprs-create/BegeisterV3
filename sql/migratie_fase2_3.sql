@@ -39,3 +39,6 @@ alter table public.sources add column if not exists suggest_appts jsonb;
 -- U12: status per financieel document (concept -> verstuurd -> akkoord -> betaald)
 alter table public.files add column if not exists fin_status text;
 alter table public.documents add column if not exists fin_status text;
+
+-- Leestafel (15 juli, migratie `leestafel_suggest_items`): bewaarde AI-voorstellen bij een bron
+alter table public.sources add column if not exists suggest_items jsonb;

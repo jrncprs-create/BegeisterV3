@@ -1,6 +1,6 @@
 # Begeister Workflow — Uitvoerbacklog
 
-_Aangemaakt 14 juli 2026 · hoort bij HANDOFF.md · live versie **v238**_
+_Aangemaakt 14 juli 2026 · hoort bij HANDOFF.md · live versie **v239**_
 
 > Stand 15 juli 2026: alles is af behalve **U11** (agenda-sync — wacht op OAuth-keuze),
 > **U14** (boekhoudkoppeling — wacht op pakketkeuze + API-sleutel) en **Fase 7**
@@ -121,6 +121,19 @@ Status bijhouden: `[ ]` open · `[~]` bezig · `[x]` klaar (+ versienummer).
   briefing) → één taakkaart "Gezondheidscheck — bevindingen" met checklist + push. Geen
   bevindingen = stil, en een oude open kaart sluit zichzelf.
 
+## Op verzoek (15 juli 2026)
+
+- [x] **L1 — Leestafel: reviewscherm voor AI-vondsten** (M) — v239, gevraagd door Jeroen.
+  Paginagroot overzicht (stijl dagoverzicht) dat opent nadat de AI een drop/plak/spraakmemo
+  heeft gelezen: elke vondst als eigen regel met aan/uit-vinkje, bewerkbare tekst en typekeuze
+  Taak / Subpunt / Afspraak / Notitie; per type velden (wie/deadline resp. datum/tijd/waar);
+  gevonden contacten als aparte regels. Knoppen: Toepassen (subpunten → één kaart met checklist,
+  taken → losse kaarten, afspraken → agenda, contacten → Contacten), Later invullen (voorstellen
+  bewaard in sources.suggest_items, heropenen via de Leestafel-knop in het Postvak) en Annuleren
+  (= alleen het bestand bewaren). Elke bestaande bron heeft in het Postvak een Leestafel-knop
+  die de bron (opnieuw) laat lezen of de bewaarde voorstellen heropent. Mail-intake blijft
+  automatisch.
+
 ## Fase 7 — Klantportaal (stond al in HANDOFF §8)
 
 - [ ] **U18 — Opmerkingen op locaties (comment-pins)** (L)
@@ -132,7 +145,7 @@ Status bijhouden: `[ ]` open · `[~]` bezig · `[x]` klaar (+ versienummer).
 
 ## Werkwijze per uitvoeritem
 1. Claude bouwt lokaal en valideert (`new Function()` per scriptblok, `node --check` per .mjs).
-2. Versiechip +1 bij elke index.html-wijziging.
+2. Versiechip +1 bij elke index.html-deploy: `<span class="ver-chip">vNNN</span>` (nu v232). Zo zie je in de app of je deploy live is.
 3. Deploy via de nieuwe flow (API-push voor kleine bestanden; checksum-gecontroleerde
    browser-upload voor index.html). Commit naar main altijd pas na akkoord van Jeroen.
 4. Na deploy: Railway-status checken en live verifiëren.
@@ -150,4 +163,5 @@ Status bijhouden: `[ ]` open · `[~]` bezig · `[x]` klaar (+ versienummer).
   ingelogde app-sessie → checksum-verificatie op GitHub → Railway-status → live check.
 - **Les 15 juli:** de Cowork GitHub-connector kan wél direct naar main pushen (push_files) —
   altijd eérst testen i.p.v. aannemen dat hij dicht zit. Kleine bestanden gaan voortaan direct
-  via de connector; alleen index.html (760 KB) gaat via de browser-parenflow of /api/deploy.
+  via de connector; alleen index.html (760 KB) gaat via de browser-upload (file_upload op de
+  GitHub-uploadpagina — werkt geautomatiseerd, 15 juli bewezen) of /api/deploy.
