@@ -429,6 +429,40 @@
   .pijp-prijs.leeg{opacity:.5;font-style:italic}
   .pijp-leeg{font-size:12px;color:var(--mut2);opacity:.5;text-align:center;padding:18px 0;border:1px dashed var(--line);border-radius:10px}
   .pijp-som{margin-top:10px;font-size:12.5px;color:var(--mut);font-variant-numeric:tabular-nums;text-align:right;min-height:16px}
+  /* U11b — gevonden afspraken bij een bron */
+  .bron-apptrow{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:13.5px}
+  .bron-apptrow:last-child{border-bottom:none}
+  .bron-apptdt{flex:0 0 auto;color:#e6c07a;font-variant-numeric:tabular-nums;font-weight:var(--fw-nadruk)}
+  .bron-appttx{flex:1;min-width:0;color:var(--mut);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .bron-apptok{flex:0 0 auto;font-size:12px;color:var(--mut2)}
+  /* U12 — status per financieel document */
+  .findoc-st{flex:0 0 auto;font-size:10.5px;letter-spacing:.6px;text-transform:uppercase;border:1px solid var(--line);border-radius:999px;padding:2px 9px;background:none;color:var(--mut2);cursor:pointer;font-family:inherit}
+  .findoc-st:hover{border-color:rgba(255,255,255,.3)}
+  .findoc-st.verstuurd{color:#e6c07a;border-color:#e6c07a}
+  .findoc-st.akkoord{color:#9fd0a9;border-color:#9fd0a9}
+  .findoc-st.betaald{color:var(--mut);border-color:var(--line);text-decoration:none}
+  .fin-opensaldo{flex:0 0 auto;font-size:11.5px;color:#e6c07a;border:1px solid #e6c07a;border-radius:999px;padding:1px 8px;font-variant-numeric:tabular-nums;white-space:nowrap}
+  /* U13 — kwartaaloverzicht */
+  .finA-kwnav{float:right;display:inline-flex;align-items:center;gap:8px;font-variant-numeric:tabular-nums}
+  .finA-kwrow{display:grid;grid-template-columns:44px 1fr 1fr 1fr;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:13px;font-variant-numeric:tabular-nums}
+  .finA-kwrow:last-child{border-bottom:none}
+  .finA-kwhead{color:var(--mut2);font-size:11px;letter-spacing:.6px;text-transform:uppercase;border-bottom:1px solid var(--line)}
+  .finA-kwq{color:var(--mut2)}
+  .finA-kwv{text-align:right;color:var(--mut)}
+  .finA-kwv.neg2{opacity:.75}
+  .finA-kwv.neg b{color:var(--late)}
+  .finA-kwtot{border-top:1px solid var(--line);color:var(--tx)}
+  /* U15 — globale zoek-overlay */
+  .zoek-modal{width:680px;max-width:94vw;padding:14px}
+  #zoekIn{width:100%;font:inherit;font-size:16px;background:transparent;border:none;border-bottom:1px solid var(--line);color:var(--tx);padding:10px 6px;outline:none}
+  #zoekIn:focus{border-color:var(--primary)}
+  .zk-res{max-height:58vh;overflow-y:auto;margin-top:10px}
+  .zk-hint{color:var(--mut2);font-size:13px;padding:14px 6px}
+  .zk-grp{font-size:10.5px;letter-spacing:1.1px;text-transform:uppercase;color:var(--primary2);margin:12px 6px 4px;font-weight:var(--fw-nadruk)}
+  .zk-row{display:flex;align-items:baseline;gap:12px;width:100%;text-align:left;background:none;border:none;border-radius:8px;padding:7px 8px;cursor:pointer;color:var(--mut);font:inherit;font-size:14px}
+  .zk-row:hover,.zk-row:focus{background:rgba(255,255,255,.05);color:#fff;outline:none}
+  .zk-t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .zk-sub{flex:0 0 auto;font-size:12px;color:var(--mut2);max-width:40%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   /* U4 — aandacht-signalen op het dagoverzicht */
   .dov-sig{grid-column:span 6}
   .dov-sigrij{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:none;padding:6px 0;cursor:pointer;color:var(--mut);font:inherit;font-size:13.5px;border-bottom:1px solid rgba(255,255,255,.05)}
@@ -2163,7 +2197,8 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v237</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v238</span>
+      <button id="zoekBtn" class="dag-ic" onclick="openZoek()" title="Zoeken — ⌘K / Ctrl+K" aria-label="Zoeken"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg></button>
       <button id="dayBtn" class="dag-ic" onclick="openDayOverview()" title="Dagoverzicht" aria-label="Dagoverzicht"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M3 12h2M19 12h2M5.6 18.4l1.4-1.4M17 7l1.4-1.4"/></svg></button>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:14px;font-weight:var(--fw-nadruk);cursor:pointer" title="AI-context bewerken">Jeroen</span>
@@ -4550,6 +4585,9 @@ function _finDonut(om,inkEx,col){
     ${frac>0.001?`<circle cx="70" cy="70" r="${r}" fill="none" stroke="${arcCol}" stroke-width="13" stroke-linecap="${cap}" stroke-dasharray="${dash} ${(C-dash).toFixed(2)}" transform="rotate(-90 70 70)"/>`:''}
   </svg>`;
 }
+// U13 — jaarkeuze voor het kwartaaloverzicht (standaard het lopende jaar, niet voorbij nu).
+let _finJaar=null;
+function _finSetJaar(d){ const nu=new Date().getFullYear(); _finJaar=((_finJaar||nu)+d); if(_finJaar>nu)_finJaar=nu; renderFinancien(); }
 async function renderFinancien(){
   const w=document.getElementById('financienWrap'); if(!w)return;
   if(_finInk===null){
@@ -4575,7 +4613,7 @@ async function renderFinancien(){
   let tOm=0,tInEx=0,nPrice=0,sumPct=0,cfTeFact=0,cfOpen=0,cfOntv=0,overhead=0; const projStats=[]; const clientStats=[];
   const groups=order.map(client=>{
     const arr=byClient[client]; const ccol=(arr[0]&&arr[0].color)||'#888'; const isBeg=(client==='Begeister');
-    const open=_kClientOpen.has(client); const cActive=((_pbTarget==='finmid'||_pbTarget==='finright')&&_pbPid&&arr.some(p=>p.id===_pbPid)); const editingC=(_kEdit==='c:'+client); let cOm=0,cInEx=0;
+    const open=_kClientOpen.has(client); const cActive=((_pbTarget==='finmid'||_pbTarget==='finright')&&_pbPid&&arr.some(p=>p.id===_pbPid)); const editingC=(_kEdit==='c:'+client); let cOm=0,cInEx=0,cOpenS=0;
     const rows=arr.map((p,idx)=>{
       const col=p.color||ccol; const btw=(p.btw!=null&&p.btw!=='')?Number(p.btw):21;
       const om=(p.projectprijs!=null&&p.projectprijs!=='')?Number(p.projectprijs):null;
@@ -4591,7 +4629,7 @@ async function renderFinancien(){
       else {
         cInEx+=inkEx; tInEx+=inkEx;
         if(omC!=null){ cOm+=omC; tOm+=omC; nPrice++; sumPct+=(margeC/omC)*100; }
-        if(pst==='betaald')cfOntv+=omIncl; else if(pst==='gefactureerd')cfOpen+=omIncl; else if(pst==='geoffreerd')cfTeFact+=omIncl;
+        if(pst==='betaald')cfOntv+=omIncl; else if(pst==='gefactureerd'){cfOpen+=omIncl; cOpenS+=omIncl;} else if(pst==='geoffreerd')cfTeFact+=omIncl;
         projStats.push({id:p.id,name:p.project||'—',color:col,om:omC||0,inkEx,marge:(margeC!=null?margeC:-inkEx)});
       }
       const hasFin=(om!=null&&om!==0)||inkEx>0||openInk>0||pbudget!=null;
@@ -4631,6 +4669,7 @@ async function renderFinancien(){
         ${nameEl}
         <span class="kspring"></span>
         <button class="kicon kpen" onclick="event.stopPropagation();kEditStart('c:${esc(client)}')" title="Naam bewerken">${_penIc}</button>
+        ${cOpenS>0?`<span class="fin-opensaldo" title="U12 — gefactureerd, wacht op betaling (incl. btw)">€${fmtEur(cOpenS)} open</span>`:''}
         ${cValCell}
         <button class="kicon kadd" onclick="event.stopPropagation();addProjectTo('${esc(client)}')" title="Project toevoegen"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 5v14M5 12h14"/></svg></button>
       </div>${open?rows:''}</div>`;
@@ -4687,7 +4726,7 @@ async function renderFinancien(){
       </div></div></div>`;
     const finFact = _intern ? '' : `<div class="pb-sec"><div class="pb-h">Offerte &amp; Factuur</div>
         ${om!=null?`<div class="pb-finline finB-openrow ${openCls}"${openKlik}><span>${openLbl}</span><b>${openVal}</b></div>`:'<div class="finB-openhint">Vul een projectprijs in om facturatie te volgen.</div>'}
-        <div class="finB-docs">${_intakeDocsFor(_pbPid).map(_intakeDocRow).join('')}${_financieleDocs(_pbPid).map(_fileRow).join('')||'<div class="pb-empty">Nog geen offertes, bonnen of facturen. Sleep ze de app in.</div>'}</div>
+        <div class="finB-docs">${_intakeDocsFor(_pbPid).map(_intakeDocRow).join('')}${_financieleDocs(_pbPid).map(_finDocRow).join('')||'<div class="pb-empty">Nog geen offertes, bonnen of facturen. Sleep ze de app in.</div>'}</div>
       </div>`;
     if(fmw) fmw.innerHTML=`<div class="pb-inline pb-board-inline finB-flat" style="--scol:${col};--ccol:${col}">
       ${finFase}
@@ -4717,6 +4756,36 @@ async function renderFinancien(){
   const boek=dated.filter(x=>projById(x.project_id)).slice(0,7).map(x=>`<div class="finA-brow" onclick="selectFinProj('${x.project_id}')"><span class="finA-bdot" style="background:${pjColor(x.project_id)}"></span><span class="finA-btext">${escapeHtml(pjName(x.project_id)||'—')} · ${escapeHtml(_shortName(x.text))}</span><span class="finA-bdate">${_finShortDate(x.created_at)}</span><span class="finA-bamt neg">-€${fmtEur(x.amount)}</span></div>`).join('');
   const orphans=dated.filter(x=>!projById(x.project_id));
   const noRows=orphans.slice(0,12).map(x=>`<div class="finA-nprow"><span class="finA-nptext">${escapeHtml(_shortName(x.text))}</span><span class="finA-npamt">€${fmtEur(x.amount)}</span><button class="finA-npmove" onclick="event.stopPropagation();pbMoveOpen('one','${x.id}')" title="Naar een project/klant verplaatsen">${_tIc('<path d="M17 3l4 4l-4 4"/><path d="M21 7h-13"/><path d="M7 21l-4 -4l4 -4"/><path d="M3 17h13"/>',14,1.4)}</button></div>`).join('');
+  // U13 — Kwartaal-/jaaroverzicht: omzet (zeker, ex btw), betaalde kosten (ex btw) en marge
+  // per kwartaal. Omzet valt in het kwartaal van de factuurdatum (of anders projectstart);
+  // kosten in het kwartaal van de boeking.
+  const _kwJaar=(typeof _finJaar!=='undefined'&&_finJaar)||now.getFullYear();
+  const _kw={1:{om:0,ko:0},2:{om:0,ko:0},3:{om:0,ko:0},4:{om:0,ko:0}};
+  projs.forEach(p=>{
+    if(_geenTraject(p.client))return;
+    const pst=p.invoice_status||'concept';
+    if(!(pst==='geoffreerd'||pst==='gefactureerd'||pst==='betaald'))return;
+    const om=(p.projectprijs!=null&&p.projectprijs!=='')?Number(p.projectprijs):null; if(om==null)return;
+    const d=p.invoice_date?new Date(p.invoice_date):(p.created?new Date(p.created):null); if(!d||isNaN(d))return;
+    if(d.getFullYear()!==_kwJaar)return;
+    _kw[Math.floor(d.getMonth()/3)+1].om+=om;
+  });
+  (_finRows||[]).forEach(x=>{
+    if(!x.created_at)return; const d=new Date(x.created_at); if(isNaN(d)||d.getFullYear()!==_kwJaar)return;
+    const p=projById(x.project_id); const btw=(p&&p.btw!=null&&p.btw!=='')?Number(p.btw):21;
+    _kw[Math.floor(d.getMonth()/3)+1].ko+=x.amount/(1+btw/100);
+  });
+  const _kwTot={om:0,ko:0};
+  const _kwRows=[1,2,3,4].map(q=>{ const k=_kw[q]; _kwTot.om+=k.om; _kwTot.ko+=k.ko; const m=k.om-k.ko;
+    return `<div class="finA-kwrow"><span class="finA-kwq">Q${q}</span><span class="finA-kwv">€${fmtEur(k.om)}</span><span class="finA-kwv neg2">€${fmtEur(k.ko)}</span><span class="finA-kwv ${m<0?'neg':''}"><b>€${fmtEur(m)}</b></span></div>`;
+  }).join('');
+  const _kwM=_kwTot.om-_kwTot.ko;
+  const kwHtml=`<div class="fd-block finA-kwart"><div class="fd-h">Per kwartaal
+      <span class="finA-kwnav"><button class="navbtn" onclick="_finSetJaar(-1)">‹</button><b>${_kwJaar}</b><button class="navbtn" onclick="_finSetJaar(1)">›</button></span></div>
+    <div class="finA-kwrow finA-kwhead"><span class="finA-kwq"></span><span class="finA-kwv">omzet</span><span class="finA-kwv">kosten</span><span class="finA-kwv">marge</span></div>
+    ${_kwRows}
+    <div class="finA-kwrow finA-kwtot"><span class="finA-kwq">${_kwJaar}</span><span class="finA-kwv">€${fmtEur(_kwTot.om)}</span><span class="finA-kwv neg2">€${fmtEur(_kwTot.ko)}</span><span class="finA-kwv ${_kwM<0?'neg':''}"><b>€${fmtEur(_kwM)}</b></span></div>
+  </div>`;
   // Cashflow-kern
   const cfHtml=`<div class="finA-cf">
     <div class="finA-cfcard todo"><div class="finA-cflbl">Nog te factureren</div><div class="finA-cfval">€${fmtEur(cfTeFact)}</div></div>
@@ -4740,6 +4809,9 @@ async function renderFinancien(){
     ${cfHtml}
     <div class="finA-blocks">
       <div class="fd-block"><div class="fd-h">Winst per klant</div>${csRows||'<div class="fd-empty">Nog geen inkomsten of kosten.</div>'}</div>
+      ${kwHtml}
+    </div>
+    <div class="finA-blocks">
       <div class="fd-block"><div class="fd-h">Nog in te kopen${up.length?` · <b class="finA-uptot">€${fmtEur(upTot)}</b>`:''}</div>${upRows||'<div class="fd-empty">Niets openstaand om te bestellen.</div>'}</div>
     </div>
     <div class="finA-blocks">
@@ -5162,8 +5234,41 @@ function _bronPreview(wrapId, sid, leegTekst){
       + '<div class="fmp-stage bron-stage" id="bronStage"><div class="fmp-none">Bijlage laden…</div></div>'
       + '<div id="bronStrip"></div></div>'
     : '';
-  w.innerHTML=head+bodyHtml+_replyBlokHTML(s)+attHtml;
+  w.innerHTML=head+bodyHtml+_apptBlokHTML(s)+_replyBlokHTML(s)+attHtml;
   if(bruikbaar.length) _bronLoadAlleBijlagen(bruikbaar);
+}
+// ── U11b — Gevonden afspraken bij een bron: tonen + met één klik inplannen. ──
+function _apptBlokHTML(s){
+  const lijst=(s&&s.suggestAppts)||[]; if(!lijst.length) return '';
+  const rows=lijst.map((a,i)=>{
+    if(!a||!a.date) return '';
+    const dt=new Date(a.date+'T00:00:00');
+    const wanneer=isNaN(dt)?a.date:dt.toLocaleDateString('nl-NL',{weekday:'short',day:'numeric',month:'short'});
+    const tijd=a.start?(' '+String(a.start).slice(0,5)+(a.end?'–'+String(a.end).slice(0,5):'')):'';
+    return `<div class="bron-apptrow">
+      <span class="bron-apptdt">${escapeHtml(wanneer)}${escapeHtml(tijd)}</span>
+      <span class="bron-appttx">${escapeHtml(a.title||'Afspraak')}${a.location?' · '+escapeHtml(a.location):''}</span>
+      ${a.done?'<span class="bron-apptok">✓ ingepland</span>':`<button class="fv-btn" onclick="event.stopPropagation();_apptPlan('${s.id}',${i},this)">Inplannen</button>`}
+    </div>`;
+  }).join('');
+  if(!rows.trim()) return '';
+  return `<div class="bron-reply bron-appts"><div class="bron-reply-h"><span>Gevonden afspraken</span></div>${rows}</div>`;
+}
+async function _apptPlan(sid,i,btn){
+  const s=(state.sources||[]).find(x=>String(x.id)===String(sid)); if(!s)return;
+  const a=(s.suggestAppts||[])[i]; if(!a||!a.date)return;
+  if(btn){ btn.disabled=true; btn.textContent='Inplannen…'; }
+  try{
+    const rec={ title:(a.title||'Afspraak').slice(0,140), date:a.date,
+      start_time:a.start?String(a.start).slice(0,5):null, end_time:a.end?String(a.end).slice(0,5):null,
+      location:a.location||null, kind:'fysiek', project_id:s.proj||null };
+    const ins=await sb.from('appointments').insert(rec).select('*').single();
+    if(ins&&ins.data){ state.appointments=state.appointments||[]; state.appointments.push(_mapAppt(ins.data)); }
+    a.done=true;
+    try{ await sb.from('sources').update({suggest_appts:s.suggestAppts}).eq('id',s.id); }catch(_){}
+    toonToast('Ingepland: '+(a.title||'afspraak'));
+    try{ renderPvRight(); }catch(_){} try{ renderPostvak(); }catch(_){} try{ renderAgenda(); }catch(_){}
+  }catch(e){ toonToast('Inplannen lukte niet: '+(e&&e.message||e),'fout'); if(btn){ btn.disabled=false; btn.textContent='Inplannen'; } }
 }
 // ── U8 — Antwoordconcept: bij e-mails staat het AI-concept klaar (of maak je er één met ✦).
 // Bewerkbaar; "Open in Mail" zet het als Re:-antwoord aan de afzender klaar.
@@ -5495,7 +5600,7 @@ function _bronPreviewHTML(s){
 function _pvTreeItem(s){
   const open=(String(_pvSel)===String(s.id)); const dt=s.date?_finShortDate(s.date):''; const nAtt=(s.attachFull&&s.attachFull.length)?s.attachFull.length:0;
   let h=`<div class="mtree-item${open?' open':''}" onclick="pvToggleItem('${s.id}')"><div class="cmain"><div class="cname">${escapeHtml(_srcTitle(s))}</div><div class="crole">${escapeHtml(dt)}${nAtt?' · '+nAtt+' bijlage'+(nAtt>1?'n':''):''}</div></div><button class="bron-del" onclick="event.stopPropagation();srcDelete('${s.id}')" title="Bron verwijderen" aria-label="Bron verwijderen">${_tIc('<path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M7 7l1 13h8l1-13"/>',16,1.6)}</button></div>`;
-  if(open) h+=`<div class="mtree-detail">${_bronPreviewHTML(s)}${_replyBlokHTML(s)}</div>`;
+  if(open) h+=`<div class="mtree-detail">${_bronPreviewHTML(s)}${_apptBlokHTML(s)}${_replyBlokHTML(s)}</div>`;
   return h;
 }
 function _pvTreeMobile(wrap){
@@ -6003,6 +6108,32 @@ function _pbMapKop(naam, aantal, dicht, extraKlasse){
 // dus ook schermafbeeldingen. Alleen wat in een financiënmap hoort.
 function _financieleDocs(pid){
   return (_filesFor('project',pid)||[]).filter(f=>!!_finMapVan(f));
+}
+// ── U12 — status per financieel document: concept → verstuurd → akkoord → betaald. ──
+// Klik op de pil = één stap verder (na betaald weer terug naar concept). Bij "verstuurd"
+// wordt de verstuurd-op-datum vastgelegd (één keer) — die voedt ook de opvolg-signalen.
+const _FIN_STATUSSEN=[['concept','concept'],['verstuurd','verstuurd'],['akkoord','akkoord'],['betaald','betaald']];
+function _finDocStatus(f){ return f.fin_status || (f.verstuurd_op?'verstuurd':'concept'); }
+function _finDocRow(f){
+  const ic=_fileGlyph(f.name||'');
+  const st=_finDocStatus(f);
+  const vs=f.verstuurd_op?new Date(f.verstuurd_op).toLocaleDateString('nl-NL',{day:'numeric',month:'short'}):null;
+  const tip=(st==='verstuurd'&&vs)?('Verstuurd op '+vs+' — klik voor de volgende stap'):('Status: '+st+' — klik voor de volgende stap');
+  return `<div class="kfile"><div class="kfile-main" onclick="event.stopPropagation();openFileViewer('${f.id}')" title="Voorvertonen"><span class="kfile-ic">${ic}</span><span class="kfile-name">${escapeHtml(f.name||'bestand')}</span></div>`
+    +`<button class="findoc-st ${st}" onclick="event.stopPropagation();_finDocCycle('${f.id}')" title="${escapeHtml(tip)}">${st}${(st==='verstuurd'&&vs)?' · '+vs:''}</button>`
+    +`<button class="kfile-ai" title="AI leest dit bestand" onclick="event.stopPropagation();openAiInsight('file','${f.id}')">${_tIc(_TABCHAN.asterisk,16,1.7)}</button>`
+    +`<button class="kfile-del" title="Bestand verwijderen" onclick="event.stopPropagation();deleteFile('${f.id}')">${_tIc('<path d="M18 6l-12 12"/><path d="M6 6l12 12"/>',16,1.7)}</button>`
+    +`<div class="kfile-sum" id="fsum_${f.id}">${escapeHtml(f.summary||'')}</div></div>`;
+}
+async function _finDocCycle(id){
+  const f=_fileById(id); if(!f)return;
+  const volg={concept:'verstuurd',verstuurd:'akkoord',akkoord:'betaald',betaald:'concept'};
+  const ns=volg[_finDocStatus(f)]||'verstuurd';
+  f.fin_status=ns;
+  const patch={fin_status:ns};
+  if(ns==='verstuurd'&&!f.verstuurd_op){ f.verstuurd_op=new Date().toISOString(); patch.verstuurd_op=f.verstuurd_op; }
+  try{ await _fileUpdate(f,patch); }catch(e){ toonToast('Opslaan mislukte: '+(e&&e.message||e),'fout'); }
+  try{ renderFinancien(); }catch(_){}
 }
 // Projectbord-Bestanden: dezelfde vaste mappen als de Bestanden-boom. Bij een klantproject
 // staan de zeven mappen er altijd (ook leeg); niet-passende categorieën blijven als extra map.
@@ -6536,7 +6667,7 @@ function _searchGlyph(){return '<svg viewBox="0 0 24 24" width="16" height="16" 
    Deze twee helpers vertalen een wijziging naar de juiste tabel en kolomnamen,
    zodat de rest van de pagina zich er niets van hoeft aan te trekken. */
 function _fileById(fid){ return (state.files||[]).find(x=>String(x.id)===String(fid))||null; }
-const _DOC_KOLOM={ name:'filename', icon:'category', owner_id:'project_id', summary:'summary', visible_to_client:'visible_to_client', is_voorstel:'is_voorstel', voorstel_soort:'voorstel_soort', verstuurd_op:'verstuurd_op' };
+const _DOC_KOLOM={ name:'filename', icon:'category', owner_id:'project_id', summary:'summary', visible_to_client:'visible_to_client', is_voorstel:'is_voorstel', voorstel_soort:'voorstel_soort', verstuurd_op:'verstuurd_op', fin_status:'fin_status' };
 async function _fileUpdate(fOrId, patch){
   const f=(typeof fOrId==='string')?_fileById(fOrId):fOrId;
   if(!f) return false;
@@ -7521,7 +7652,7 @@ function _mapSource(s,atts){
   const full = (s.channel==='email' && s.summary && s.body) ? s.body : null;
   const myAtts=atts.filter(a=>a.source_id===s.id);
   return {id:s.id,channel:s.channel,from:s.sender||'',subject:s.subject||'',proj:s.project_id,date:(s.received_at||'').slice(0,10),ts:(s.received_at||''),
-          kind,text,summary:s.summary||'',full,waSide:s.wa_side||'',suggestReply:s.suggest_reply||'',
+          kind,text,summary:s.summary||'',full,waSide:s.wa_side||'',suggestReply:s.suggest_reply||'',suggestAppts:Array.isArray(s.suggest_appts)?s.suggest_appts:[],
           attach:myAtts.map(a=>a.filename||'bijlage'),
           attachFull:myAtts.map(a=>({filename:a.filename||'bijlage',storage_path:a.storage_path||'',mime:a.mime||''})),
           images:[]};
@@ -7555,7 +7686,7 @@ async function sbLoad(){
       owner_type:'project', owner_id:String(d.project_id),
       name:d.filename||'bijlage', link:d.link||'', icon:d.category||'',
       bytes:d.size||null, summary:d.summary||null,
-      is_voorstel:!!d.is_voorstel, voorstel_soort:d.voorstel_soort||null, visible_to_client:!!d.visible_to_client, verstuurd_op:d.verstuurd_op||null,
+      is_voorstel:!!d.is_voorstel, voorstel_soort:d.voorstel_soort||null, visible_to_client:!!d.visible_to_client, verstuurd_op:d.verstuurd_op||null, fin_status:d.fin_status||null,
       storage_path:d.storage_path||'', created_at:d.created_at }));
   const projects=p.data||[], items=i.data||[], sources=s.data||[], atts=a.data||[];
   state.contacts = (c && c.data) ? c.data : [];
@@ -8386,6 +8517,33 @@ async function _dovVulWeer(){
     + (nat?' · <span class="dov-weernat">'+d.vandaag.regenkans+'% kans op regen</span>':' · '+d.vandaag.regenkans+'% regen')
     + '</div>'
     + '<div class="dov-weerreg">Morgen '+d.morgen.min+'° tot '+d.morgen.max+'° · '+escapeHtml(d.morgen.tekst)+'</div>';
+}
+
+// ===== U15 — Eén zoekbalk over alles (⌘K / Ctrl+K of de loep in de topbar). =====
+// Doorzoekt wat al in het geheugen staat: taken (incl. checklistpunten), mail & bronnen
+// (incl. volledige tekst en spraakmemo-transcripties), bestanden, afspraken en contacten.
+function openZoek(){ const ov=document.getElementById('zoekOverlay'); if(!ov)return; ov.classList.add('open'); const i=document.getElementById('zoekIn'); if(i){ i.value=''; setTimeout(()=>{try{i.focus();}catch(_){}},60); } _zoekRender(); }
+function closeZoek(){ const ov=document.getElementById('zoekOverlay'); if(ov)ov.classList.remove('open'); }
+function _zoekKey(e){ if(e.key==='Escape'){ closeZoek(); return; } if(e.key==='Enter'){ const first=document.querySelector('#zoekRes .zk-row'); if(first)first.click(); } }
+document.addEventListener('keydown',e=>{ if((e.metaKey||e.ctrlKey)&&String(e.key).toLowerCase()==='k'){ e.preventDefault(); openZoek(); } });
+function _zoekRender(){
+  const q=((document.getElementById('zoekIn')||{}).value||'').trim().toLowerCase();
+  const box=document.getElementById('zoekRes'); if(!box)return;
+  if(q.length<2){ box.innerHTML='<div class="zk-hint">Typ minstens 2 tekens — ik doorzoek taken, mail & WhatsApp, bestanden, afspraken en contacten.</div>'; return; }
+  const hit=s=>String(s||'').toLowerCase().includes(q);
+  const res=[];
+  try{ allItems().forEach(({p,it})=>{ if(it.status==='done'&&!hit(it.t))return; const inCk=(it.checklist||[]).some(c=>hit(c&&c.t)); if(hit(it.t)||inCk||hit(it.contact)) res.push({grp:'Taken',t:it.t||'taak',sub:(p.client||'')+(p.project?' · '+p.project:'')+(it.status==='done'?' · klaar':''),act:`closeZoek();openModal('${it.id}')`}); }); }catch(_){}
+  (state.sources||[]).forEach(s=>{ if(hit(s.subject)||hit(s.from)||hit(s.summary)||hit(s.text)||hit(s.full)) res.push({grp:'Postvak & bronnen',t:(typeof _srcTitle==='function'?_srcTitle(s):(s.subject||s.from||'bron')),sub:(s.channel||'')+(s.date?' · '+s.date:''),act:`closeZoek();gotoSource('${s.id}')`}); });
+  (state.files||[]).forEach(f=>{ if(hit(f.name)||hit(f.summary)){ let loc=''; try{ loc=(_fmFileLoc(f).client||''); }catch(_){} res.push({grp:'Bestanden',t:f.name||'bestand',sub:loc,act:`closeZoek();openFileViewer('${f.id}')`}); } });
+  (state.appointments||[]).forEach(a=>{ if(hit(a.t)||hit(a.location)) res.push({grp:'Afspraken',t:a.t||'afspraak',sub:(a.date||'')+(a.start?' · '+a.start:''),act:`closeZoek();setView('agenda')`}); });
+  (state.contacts||[]).forEach(c=>{ if(hit(c.name)||hit(c.company)||hit(c.email)) res.push({grp:'Contacten',t:c.name||'contact',sub:c.company||c.email||'',act:`closeZoek();setView('contacten')`}); });
+  if(!res.length){ box.innerHTML='<div class="zk-hint">Niets gevonden voor “'+escapeHtml(q)+'”.</div>'; return; }
+  const volg=['Taken','Postvak & bronnen','Bestanden','Afspraken','Contacten'];
+  let h='';
+  volg.forEach(g=>{ const rr=res.filter(r=>r.grp===g).slice(0,8); if(!rr.length)return;
+    h+='<div class="zk-grp">'+g+'</div>'+rr.map(r=>`<button class="zk-row" onclick="${r.act}"><span class="zk-t">${escapeHtml(r.t)}</span><span class="zk-sub">${escapeHtml(r.sub||'')}</span></button>`).join('');
+  });
+  box.innerHTML=h;
 }
 
 // ===== U3 — Pijplijn-kanban: alle klantprojecten per fase, projectprijs op de kaart. =====
@@ -9738,6 +9896,13 @@ sb.auth.onAuthStateChange((_e,session)=>{ if(session) startApp(session); else sh
   <div id="dovBg"></div>
   <div class="dov-inner">
     <div id="dayBody"></div>
+  </div>
+</div>
+<!-- U15 — Eén zoekbalk over alles: taken, mail & bronnen, bestanden, afspraken, contacten -->
+<div id="zoekOverlay" class="overlay" onclick="if(event.target===this)closeZoek()">
+  <div class="modal zoek-modal">
+    <input id="zoekIn" placeholder="Zoek in taken, mail, bestanden, afspraken en contacten…" autocomplete="off" oninput="_zoekRender()" onkeydown="_zoekKey(event)">
+    <div id="zoekRes" class="zk-res"></div>
   </div>
 </div>
 <!-- U3 — Pijplijn: alle projecten als kaarten per fase; slepen = fase wijzigen -->
