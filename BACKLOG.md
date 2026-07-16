@@ -1,6 +1,6 @@
 # Begeister Workflow — Uitvoerbacklog
 
-_Aangemaakt 14 juli 2026 · hoort bij HANDOFF.md · live versie **v244**_
+_Aangemaakt 14 juli 2026 · hoort bij HANDOFF.md · live versie **v247**_
 
 > Stand 15 juli 2026: alles is af behalve **U11** (agenda-sync — wacht op OAuth-keuze),
 > **U14** (boekhoudkoppeling — wacht op pakketkeuze + API-sleutel) en **Fase 7**
@@ -181,6 +181,14 @@ Status bijhouden: `[ ]` open · `[~]` bezig · `[x]` klaar (+ versienummer).
   één zoek-loepje (de ⌘K-zoek dekt taken, bronnen, bestandsnamen, afspraken én
   contacten; een contact-resultaat opent nu direct het contact). De oude pagina's
   blijven in de code staan.
+
+- [x] **L7 — Bronkop-bakje + bewerken-reparatie** (S) — v245–v247, 16 juli.
+  v245: vuilnisbakje op elke bronkop in de bundelvensters (hele cluster verwijderen,
+  met de zeker?-bevestiging op de knop zelf). v246: bugfix — subpunten waren sinds de
+  planning-verbouwing nergens meer te bewerken; het Actiepunten-blok staat terug in het
+  bewerken-venster zodra een kaart subpunten heeft, klik op een regel = tekst aanpassen,
+  en bron-koppen zonder kaart openen nu de bron-overlay. v247: huisstijl-vinkjes ook op
+  die subpunt-regels.
 
 ## Fase 7 — Klantportaal (stond al in HANDOFF §8)
 
