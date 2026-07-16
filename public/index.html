@@ -519,6 +519,20 @@
   .m-pingbtn{background:transparent;border:1px solid var(--line);border-radius:10px;padding:7px 11px;cursor:pointer;color:var(--mut);display:inline-flex;transition:color .12s,border-color .12s}
   .m-pingbtn:hover{color:#fff;border-color:var(--mut2)}
   .m-pingbtn.ok{color:#34d399;border-color:#34d399}
+  /* V244 — dossier als woonplek */
+  .nav-loep{background:none;border:none;cursor:pointer;color:var(--mut2);padding:4px 8px;display:inline-flex;align-items:center}
+  .nav-loep:hover{color:#fff}
+  .pb-fmtree{margin-top:2px}
+  .pb-fmtree .fm-name{color:var(--scol)}
+  .pb-fmtree .fm-file .fm-name{color:var(--mut)}
+  .pb-fmtree .fm-file:hover .fm-name{color:var(--txt)}
+  .pb-conrow{display:flex;align-items:center;gap:10px;padding:7px 0;cursor:pointer}
+  .pb-conrow .cname{font-size:14px;color:var(--scol)}
+  .pb-conrow .crole{font-size:12px;color:var(--mut2)}
+  .pb-conrow .cquick{margin-left:auto;display:flex;gap:10px}
+  .pb-conrow .cquick a{color:var(--mut2)}
+  .pb-conrow .cquick a:hover{color:#fff}
+  .pb-h .pb-hbtns{display:inline-flex;align-items:center;gap:6px}
   .bk{border:1px dashed var(--line);border-radius:14px;padding:12px;margin-bottom:12px}
   .bk-kop{margin-bottom:8px}
   .bk-ttl{display:block;font-size:13px;color:var(--txt);font-weight:var(--fw-nadruk);line-height:1.4}
@@ -2303,15 +2317,15 @@
       <button data-v="beheer" onclick="setView('beheer')">Klanten</button>
       <!-- V241: Pijplijn en Financiën tijdelijk uit het menu (afgesproken 16 juli) —
            de code en data blijven staan; Financiën komt in een latere fase opnieuw ontworpen terug. -->
-      <button data-v="files" onclick="setView('files')">Bestanden</button>
-      <button data-v="contacten" onclick="setView('contacten')">Contacten</button>
+      <!-- V244: Bestanden en Contacten wonen voortaan in het klantdossier; het loepje zoekt door alles heen. -->
+      <button class="nav-loep" onclick="openZoek()" title="Zoeken — ⌘K / Ctrl+K" aria-label="Zoeken"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg></button>
       <button id="pushBtn" onclick="enablePush()" title="Meldingen aanzetten">Meldingen</button>
       <button id="clipBtn" class="nav-picto" onclick="pasteAsSource()" aria-label="Plakken — plak het klembord op het dashboard" title="Plakken — plak het klembord op het dashboard"><svg viewBox="0 0 24 24" width="16" height="16" style="vertical-align:-3px" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M8 5H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/></svg><span class="nav-picto-lbl">Plakken</span></button>
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v243</span>
-      <button id="zoekBtn" class="dag-ic" onclick="openZoek()" title="Zoeken — ⌘K / Ctrl+K" aria-label="Zoeken"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg></button>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v244</span>
+      <!-- V244: loep verhuisd naar het hoofdmenu (waar Bestanden/Contacten stonden). -->
       <!-- V242: Dagoverzicht voorlopig uit beeld (afgesproken 16 juli) — openDayOverview en de overlay blijven in de code staan. -->
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:14px;font-weight:var(--fw-nadruk);cursor:pointer" title="AI-context bewerken">Jeroen</span>
@@ -4415,7 +4429,14 @@ function _renderProjBoard(){
   // Klantkant-balk (achtergrond + letterkleur voor het portaal): alleen bij klantprojecten,
   // niet in de financiën-boards. Staat boven het dossier.
   const secKlantkant=(!_geenTraject(p.client)&&_pbTarget!=='finmid'&&_pbTarget!=='finright')?_secKlantkant(p):'';
-  const secFiles=`<div class="pb-sec"><div class="pb-h">Bestanden <button class="pb-hadd" onclick="dropboxPick('project','${_pbPid}')" title="Bestand koppelen">+</button></div>${_bestandenPerSoort(_projFilesAll(_pbPid), col, !_geenTraject(p.client))}</div>`;
+  // V244: alles woont bij de klant — bestandenboom van de Bestanden-pagina (deze klant),
+  // klik op een bestand opent de voorvertoning als overlay; contacten van de klant erbij.
+  const _klant=p.client||'';
+  const _fKey='ks|files|'+_klant, _fDicht=(typeof _bvDicht!=='undefined')&&_bvDicht.has(_fKey);
+  const secFiles=`<div class="pb-sec"><div class="pb-h"><span>Bestanden</span><span class="pb-hbtns"><button class="pb-hadd" onclick="dropboxPick('project','${_pbPid}')" title="Bestand koppelen">+</button>${_bvChev(_fKey,_fDicht,col)}</span></div>${_fDicht?'':`<div class="pb-fmtree">${_fmBuildTree('',_klant).replace(/fmFileClick\(/g,'openFileViewer(')}</div>`}</div>`;
+  const _conList=(state.contacts||[]).filter(c=>{ try{ return _contactClientOf(c)===_klant; }catch(_){ return false; } }).sort((a,b)=>String(a.name||'').localeCompare(String(b.name||'')));
+  const _cKey='ks|con|'+_klant, _cDicht=(typeof _bvDicht!=='undefined')&&_bvDicht.has(_cKey);
+  const secContacts=`<div class="pb-sec"><div class="pb-h"><span>Contacten${_conList.length?' · '+_conList.length:''}</span><span class="pb-hbtns"><button class="pb-hadd" onclick="openContactModal(null)" title="Nieuw contact">+</button>${_bvChev(_cKey,_cDicht,col)}</span></div>${_cDicht?'':((_conList.map(c=>`<div class="pb-conrow" onclick="openContactModal('${c.id}')"><div class="cmain"><div class="cname">${esc(c.name||'(naamloos)')}</div>${c.role?`<div class="crole">${esc(c.role)}</div>`:''}</div><div class="cquick">${_conQuick(c)}</div></div>`).join(''))||'<div class="pb-empty">Nog geen contacten.</div>')}</div>`;
   // Bestellijst — dezelfde inkoop-items als 'Inkopen' in Financiën, met masterlink naar de hele verlanglijst
   const _inkSrcCnt={}; inkopen.forEach(x=>{ if(x.source_id)_inkSrcCnt[x.source_id]=(_inkSrcCnt[x.source_id]||0)+1; });
   const _listSid=Object.keys(_inkSrcCnt).find(sid=>_inkSrcCnt[sid]>=2);
@@ -4428,10 +4449,10 @@ function _renderProjBoard(){
   const _bestBesteld=inkopenOpen.filter(x=>x.status==='besteld');
   const _openTot=inkopenOpen.reduce((s,x)=>s+((x.price!=null&&x.price!=='')?Number(x.price):0)*(x.qty||1),0);
   const secBestel=`<div class="pb-sec"><div class="pb-h"><span>Bestellijst</span><span class="pb-hbtns">${inkopen.length?`<button class="pb-ai" onclick="pbOrderAll()" title="Zet de hele lijst in één keer in je Amazon-mandje">${_tIc('<path d="M6 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M17 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M17 17h-11v-14h-2"/><path d="M6 5l14 1l-1 7h-13"/>',16,1.7)}</button>`:''}<button class="pb-ai" onclick="pbInkPaste()" title="Plak een verlanglijst of winkelwagen — AI maakt er regels van">${_tIc(_TABCHAN.asterisk,15,1.7)}<span>lijst</span></button>${inkopen.length?`<button class="pb-ai" onclick="pbMoveOpen('all')" title="Hele bestellijst naar een ander project/klant verplaatsen">${_tIc('<path d="M17 3l4 4l-4 4"/><path d="M21 7h-13"/><path d="M7 21l-4 -4l4 -4"/><path d="M3 17h13"/>',15,1.5)}</button><button class="pb-listdel" onclick="pbDelBestel()" title="Hele bestellijst verwijderen"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/></svg></button>`:''}</span></div>${_masterLink}${_bestNietBesteld.length?_bestNietBesteld.map(inkRow).join(''):(_bestBesteld.length?'':'<div class="pb-empty">Nog geen bestellingen.</div>')}<div class="pb-add"><input class="pb-in" data-kind="inkoop" placeholder="+ artikel toevoegen…" onkeydown="pbAddKey(event,'inkoop')"></div>${inkopenOpen.length?`<div class="pb-besteltot"><span class="pb-btlbl">Totaal</span><span class="pb-btval"><span class="pb-btnum"><span class="pb-eur">€</span><b>${fmtEur(_openTot)}</b></span><span class="pb-btsub">excl. <span class="pb-eur">€</span><span class="pb-btsnum">${fmtEur(_openTot/(1+btwPct/100))}</span></span></span></div>`:''}${_bestBesteld.length?`<div class="pb-besteld-sec"><div class="pb-h">Besteld <span class="pb-donecnt">${_bestBesteld.length}</span></div>${_bestBesteld.map(inkRow).join('')}</div>`:''}</div>`;
-  const _body=(_pbMode==='financien')?secBestel:(secKlantkant+secOms+secFase+secWait+secTaken+secBestel+secDone+secAppt+secFiles+secPrijs+secNotes);
+  const _body=(_pbMode==='financien')?secBestel:(secKlantkant+secOms+secFase+secWait+secTaken+secBestel+secDone+secContacts+secAppt+secFiles+secPrijs+secNotes);
   const _head=`<div class="pb-head"><span class="kbadge" style="background:${col}">${esc(initial)}</span><div class="pb-title"><b>${esc(p.client||'')}</b>${p.project?'<span> · '+esc(p.project)+'</span>':''}${_pbMode==='financien'?'<span style="color:'+col+'"> · inkoop</span>':''}</div></div>`;
   if(_pbTarget==='finmid'||_pbTarget==='finright'){ const el=document.getElementById(_pbTarget==='finright'?'finRightWrap':'finMidWrap'); const _cls=(_pbTarget==='finright')?'pb-inline pb-board-inline':'pb-inline'; const _h=(_pbTarget==='finright')?'':_head; if(el)el.innerHTML=`<div class="${_cls}" style="--scol:${col}">${_h}${_body}</div>`; return; }
-  if(_pbTarget==='beheer'){ const el=document.getElementById('beheerBoardWrap'); if(el)el.innerHTML=`<div class="pb-inline pb-board-inline" style="--scol:${col}"><div class="pb-grid"><div class="pb-colL">${secKlantkant}${secOms}${secFase}${secWait}${secTaken}${secBestel}${secDone}</div><div class="pb-colR">${secAppt}${secFiles}${secPrijs}${secNotes}</div></div></div>`; return; }
+  if(_pbTarget==='beheer'){ const el=document.getElementById('beheerBoardWrap'); if(el)el.innerHTML=`<div class="pb-inline pb-board-inline" style="--scol:${col}"><div class="pb-grid"><div class="pb-colL">${secKlantkant}${secOms}${secFase}${secWait}${secTaken}${secBestel}${secDone}</div><div class="pb-colR">${secContacts}${secAppt}${secFiles}${secPrijs}${secNotes}</div></div></div>`; return; }
   if(!ov)return;
   ov.innerHTML=`<div class="modal pb-modal" style="--scol:${col};width:100%;max-width:none">
     <button class="modal-close" onclick="closeProjectBoard()" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
@@ -6824,7 +6845,7 @@ let _inspGeladen=false;
 async function _inspTelling(){ if(_inspGeladen)return; _inspGeladen=true; try{ await _inspLoad(); _renderFmTree(); }catch(_){} }
 async function fmNewClient(){ const name=((await uiPrompt('Naam nieuwe map:'))||'').trim(); if(!name) return; const col=_nextClientColor(); const icon=(name[0]||'?').toUpperCase(); try{ await sb.from('projects').insert({client:name,project:'',color:col,icon,sort:0}); }catch(_){} _fmOpen.add(name); await refresh(); try{ const row=document.querySelector('#fmTree .fm-crow[data-client="'+((window.CSS&&CSS.escape)?CSS.escape(name):name)+'"]'); if(row)row.scrollIntoView({block:'start',behavior:'smooth'}); }catch(_){} }
 function fmToggle(k){ if(_inspAan){ _inspAan=false; setView('files'); }
-  if(_fmOpen.has(k))_fmOpen.delete(k); else _fmOpen.add(k); _renderFmTree(); }
+  if(_fmOpen.has(k))_fmOpen.delete(k); else _fmOpen.add(k); _renderFmTree(); try{ if((_pbTarget==='beheer'||document.getElementById('projOverlay'))&&_pbPid)_renderProjBoard(); }catch(_){} }
 function _penGlyph(){ return '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4l10.5 -10.5a2.1 2.1 0 0 0 -3 -3l-10.5 10.5v3"/><path d="M13.5 6.5l3 3"/></svg>'; }
 function _trashGlyph(){ return '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/></svg>'; }
 // De boom noemt de afwezigheid van een map 'Niet gesorteerd'; de database noemt hem '' of NULL.
@@ -6918,7 +6939,10 @@ async function fmDeleteFolder(btn){ const fid=btn.dataset.fold; const fo=(state.
 function _fk(s){ return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
 function _renderFmTree(){
   const t=document.getElementById('fmTree'); if(!t) return;
-  const q=(_fmQuery||'').trim().toLowerCase();
+  t.innerHTML=_fmBuildTree((_fmQuery||'').trim().toLowerCase(),null);
+}
+// V244: dezelfde mappenboom, desgewenst voor één klant (het klantdossier gebruikt dit).
+function _fmBuildTree(q,alleenKlant){
   const groups={};
   (state.files||[]).forEach(f=>{
     if(f.folder_id) return;   // zit in een losse map -> daar getoond
@@ -6951,7 +6975,8 @@ function _renderFmTree(){
     P.order.sort((a,b)=>{ const ia=_TREE_MAPPEN.indexOf(a), ib=_TREE_MAPPEN.indexOf(b);
       if(ia<0&&ib<0) return 0; if(ia<0) return 1; if(ib<0) return -1; return ia-ib; });
   });
-  const clients=Object.keys(groups).sort((a,b)=> a==='Geen klant'?1:(b==='Geen klant'?-1:a.localeCompare(b)));
+  let clients=Object.keys(groups).sort((a,b)=> a==='Geen klant'?1:(b==='Geen klant'?-1:a.localeCompare(b)));
+  if(alleenKlant) clients=clients.filter(c=>c===alleenKlant);
   let html='';
   clients.forEach(c=>{
     const g=groups[c]; const projHtml=[];
@@ -6973,6 +6998,7 @@ function _renderFmTree(){
       projHtml.push(`<div class="fm-row fm-prow${popen?' open':''}" draggable="true" ondragstart="fmFolderDragStart(event,'project',this)" data-drop="1" data-client="${escapeHtml(c)}" data-pid="${escapeHtml(pid)}" data-cat="" ondragover="fmDragOver(event)" ondragleave="fmDragLeave(event)" ondrop="fmDrop(event)" onclick="fmToggle('${_fk(pkey)}')"><span class="fm-tw">▸</span><span class="fm-ic" style="color:${g.col}">${_folderGlyph()}</span><span class="fm-name">${escapeHtml(pr.name)}</span><button class="fm-edit" style="margin-left:auto" data-kind="project" data-pid="${escapeHtml(pid)}" onclick="event.stopPropagation();fmRename(this)" title="Naam wijzigen">${_penGlyph()}</button></div><div class="fm-kids"${popen?'':' style="display:none"'}>${catHtml.join('')}</div>`);
     });
     if(!projHtml.length && c==='Geen klant') return;
+    if(alleenKlant){ html+=projHtml.join(''); return; }
     const open=q?true:_fmOpen.has(c);
     html+=`<div class="fm-client"><div class="fm-row fm-crow${open?' open':''}" data-drop="1" data-client="${escapeHtml(c)}" data-pid="__alg__" data-cat="" ondragover="fmDragOver(event)" ondragleave="fmDragLeave(event)" ondrop="fmDrop(event)" onclick="fmToggle('${_fk(c)}')"><span class="fm-tw">▸</span><span class="fm-badge" style="background:${g.col}">${escapeHtml((String(c).trim()[0]||'?').toUpperCase())}</span><span class="fm-name" style="color:${g.col}">${escapeHtml(c)}</span><button class="fm-edit" style="margin-left:auto" data-kind="client" data-client="${escapeHtml(c)}" onclick="event.stopPropagation();fmRename(this)" title="Naam wijzigen">${_penGlyph()}</button></div><div class="fm-kids"${open?'':' style="display:none"'}>${projHtml.join('')}</div></div>`;
   });
@@ -6984,7 +7010,8 @@ function _renderFmTree(){
     + '<span class="fm-name">Inspiratie</span>'
     + (inspN?'<span class="fm-cnt">'+inspN+'</span>':'')
     + '</div></div>');
-  t.innerHTML=(insp+rootF+html)||'<div class="hint">Nog geen bestanden — of nog niet gesorteerd. Klik “Sorteer met AI”.</div>';
+  if(alleenKlant) return html||'<div class="pb-empty">Nog geen bestanden bij deze klant.</div>';
+  return (insp+rootF+html)||'<div class="hint">Nog geen bestanden — of nog niet gesorteerd. Klik “Sorteer met AI”.</div>';
 }
 let _fmDragId=null, _fmDragFolder=null, _fmDragLoose=null;
 function fmDragStart(e,id){ _fmDragId=id; _fmDragFolder=null; try{e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',id);}catch(_){}}
@@ -8652,7 +8679,7 @@ function _zoekRender(){
   (state.sources||[]).forEach(s=>{ if(hit(s.subject)||hit(s.from)||hit(s.summary)||hit(s.text)||hit(s.full)) res.push({grp:'Postvak & bronnen',t:(typeof _srcTitle==='function'?_srcTitle(s):(s.subject||s.from||'bron')),sub:(s.channel||'')+(s.date?' · '+s.date:''),act:`closeZoek();gotoSource('${s.id}')`}); });
   (state.files||[]).forEach(f=>{ if(hit(f.name)||hit(f.summary)){ let loc=''; try{ loc=(_fmFileLoc(f).client||''); }catch(_){} res.push({grp:'Bestanden',t:f.name||'bestand',sub:loc,act:`closeZoek();openFileViewer('${f.id}')`}); } });
   (state.appointments||[]).forEach(a=>{ if(hit(a.t)||hit(a.location)) res.push({grp:'Afspraken',t:a.t||'afspraak',sub:(a.date||'')+(a.start?' · '+a.start:''),act:`closeZoek();setView('agenda')`}); });
-  (state.contacts||[]).forEach(c=>{ if(hit(c.name)||hit(c.company)||hit(c.email)) res.push({grp:'Contacten',t:c.name||'contact',sub:c.company||c.email||'',act:`closeZoek();setView('contacten')`}); });
+  (state.contacts||[]).forEach(c=>{ if(hit(c.name)||hit(c.company)||hit(c.email)) res.push({grp:'Contacten',t:c.name||'contact',sub:c.company||c.email||'',act:`closeZoek();openContactModal('${c.id}')`}); });
   if(!res.length){ box.innerHTML='<div class="zk-hint">Niets gevonden voor “'+escapeHtml(q)+'”.</div>'; return; }
   const volg=['Taken','Postvak & bronnen','Bestanden','Afspraken','Contacten'];
   let h='';
