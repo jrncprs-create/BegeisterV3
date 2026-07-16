@@ -485,7 +485,7 @@
   .bv-rij:hover{background:rgba(255,255,255,.03)}
   .bv-rij.af{opacity:.45}
   .bv-chk{background:none;border:none;padding:0;cursor:pointer;display:inline-flex;flex:0 0 auto}
-  .bv-tx{flex:1;min-width:0;font-size:13px;color:var(--mut);cursor:pointer;line-height:1.5}
+  .bv-tx{flex:1;min-width:0;font-size:13px;color:var(--mut);cursor:pointer;line-height:1.5;overflow-wrap:anywhere;word-break:break-word}
   .bv-rij:hover .bv-tx{color:var(--txt)}
   .bv-meta{font-size:10.5px;color:var(--mut2);margin-left:8px;white-space:nowrap}
   .bv-src,.bv-del{background:none;border:none;color:var(--mut2);cursor:pointer;padding:2px;flex:0 0 auto;opacity:0;transition:opacity .12s,color .12s}
@@ -584,7 +584,7 @@
   .brief-lead{font-size:14.5px;line-height:1.5;color:var(--txt);margin:0 0 18px}
   .brief-sec{margin-bottom:18px}
   .brief-h{font-size:11px;letter-spacing:1.1px;text-transform:uppercase;font-weight:var(--fw-nadruk);color:var(--mut2);margin:0 0 8px}
-  .brief-punt{font-size:14px;line-height:1.5;padding:4px 0 4px 16px;position:relative;color:var(--txt)}
+  .brief-punt{font-size:14px;line-height:1.5;padding:4px 0 4px 16px;position:relative;color:var(--txt);overflow-wrap:anywhere}
   .brief-punt::before{content:"";position:absolute;left:2px;top:11px;width:5px;height:5px;border-radius:50%;background:var(--scol)}
   .brief-oe .brief-h{color:#e6c07a}
   .brief-oe .brief-punt::before{background:#e6c07a}
@@ -621,7 +621,7 @@
   .bk-sel select{flex:1;min-width:0;background:transparent;border:1px solid var(--line);border-radius:999px;color:var(--mut);font:inherit;font-size:11.5px;padding:3px 8px;outline:none;color-scheme:dark}
   .bk-rij{display:flex;align-items:center;gap:8px;padding:3px 0}
   .bk-rij.uit{opacity:.4}
-  .bk-tx{flex:1;min-width:0;background:transparent;border:none;border-bottom:1px dashed transparent;color:var(--mut);font:inherit;font-size:12.5px;outline:none;padding:1px 0}
+  .bk-tx{flex:1;min-width:0;background:transparent;border:none;border-bottom:1px dashed transparent;color:var(--mut);font:inherit;font-size:12.5px;outline:none;padding:1px 0;overflow-wrap:anywhere}
   .bk-tx:focus{border-bottom-color:var(--line);color:var(--txt)}
   .bk-type{background:none;border:1px solid var(--line);border-radius:999px;color:var(--mut2);font:inherit;font-size:10px;letter-spacing:.5px;text-transform:uppercase;padding:2px 8px;cursor:pointer;flex:0 0 auto}
   .bk-type.aan{color:#e6c07a;border-color:#e6c07a}
@@ -2410,7 +2410,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v255</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v256</span>
       <!-- V244: loep verhuisd naar het hoofdmenu (waar Bestanden/Contacten stonden). -->
       <!-- V242: Dagoverzicht voorlopig uit beeld (afgesproken 16 juli) — openDayOverview en de overlay blijven in de code staan. -->
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
