@@ -941,6 +941,7 @@
   .pb-row input[type=checkbox],
   .pb-board-inline .pb-row input[type=checkbox],
   .pb-board-inline .pb-donerow input[type=checkbox],
+  .m-ckrow input[type=checkbox],
   .org-row input[type=checkbox],
   .prop-row input[type=checkbox],
   .vr-tasks .vr-tk input[type=checkbox]{
@@ -950,12 +951,14 @@
     transition:background .12s,border-color .12s;
   }
   .pb-row input[type=checkbox]:checked,
+  .m-ckrow input[type=checkbox]:checked,
   .pb-board-inline .pb-row input[type=checkbox]:checked{ background:var(--scol,#888);border-color:var(--scol,#888) }
   .pb-board-inline .pb-donerow input[type=checkbox]:checked{ background:var(--mut2);border-color:var(--mut2) }
   .org-row input[type=checkbox]:checked{ background:#34d399;border-color:#34d399 }
   .prop-row input[type=checkbox]:checked{ background:#fff;border-color:#fff }
   .vr-tasks .vr-tk input[type=checkbox]:checked{ background:#c8a24a;border-color:#c8a24a }
   .pb-row input[type=checkbox]:checked::after,
+  .m-ckrow input[type=checkbox]:checked::after,
   .pb-board-inline .pb-row input[type=checkbox]:checked::after,
   .pb-board-inline .pb-donerow input[type=checkbox]:checked::after,
   .org-row input[type=checkbox]:checked::after,
@@ -2327,7 +2330,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v246</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v247</span>
       <!-- V244: loep verhuisd naar het hoofdmenu (waar Bestanden/Contacten stonden). -->
       <!-- V242: Dagoverzicht voorlopig uit beeld (afgesproken 16 juli) — openDayOverview en de overlay blijven in de code staan. -->
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
