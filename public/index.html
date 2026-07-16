@@ -589,6 +589,7 @@
   .brief-oe .brief-h{color:#e6c07a}
   .brief-oe .brief-punt::before{background:#e6c07a}
   .brief-loading{display:flex;flex-direction:column;align-items:center;gap:14px;padding:48px 20px;color:var(--mut);text-align:center}
+  .brief-voet{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
   .brief-loading svg{opacity:.7;animation:briefpulse 1.4s ease-in-out infinite}
   @keyframes briefpulse{0%,100%{opacity:.35}50%{opacity:.9}}
   .pb-inkprijs{display:flex;flex-direction:column;align-items:flex-end;margin-left:auto;cursor:pointer;line-height:1.2}
@@ -2404,7 +2405,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v253</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v254</span>
       <!-- V244: loep verhuisd naar het hoofdmenu (waar Bestanden/Contacten stonden). -->
       <!-- V242: Dagoverzicht voorlopig uit beeld (afgesproken 16 juli) — openDayOverview en de overlay blijven in de code staan. -->
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
@@ -4637,24 +4638,54 @@ async function ftDel(id){ if(!(await uiConfirm('Dit feit verwijderen?')))return;
   try{ await sb.from('facts').delete().eq('id',id); }catch(_){}
   _renderProjBoard(); }
 // L9 — "Zet op een rijtje": AI-briefing van het open project.
-async function openBriefing(){
-  const p=projById(_pbPid); if(!p)return;
-  const col=PROJCOL[p.id]||'#888';
+function _briefData(pid){
+  const p=projById(pid); if(!p)return null;
   const ti=iso(TODAY);
   const open=(p.items||[]).filter(it=>it.status!=='done'&&it.status!=='wait');
   const taken=open.map(it=>{ const d=it.due?(' [deadline '+it.due+']'):''; const w=it.owner?(' ('+it.owner+')'):''; return (it.t||'')+w+d; });
   const wacht=(p.items||[]).filter(it=>it.status==='wait').map(it=>{ const dg=it.waitSinds?Math.floor((Date.now()-new Date(it.waitSinds).getTime())/86400000):null; return (it.t||'')+(it.contact?(' — op '+it.contact):'')+(dg!=null?(' ('+dg+'d)'):''); });
-  const feiten=(state.facts||[]).filter(f=>String(f.project_id||'')===String(_pbPid)).map(f=>f.text||'');
-  const afspraken=(state.appointments||[]).filter(a=>String(a.projectId)===String(_pbPid)&&String(a.date||'')>=ti).map(a=>(a.t||'afspraak')+(a.date?(' — '+a.date):'')+(a.start?(' '+String(a.start).slice(0,5)):''));
-  const bronnen=(state.sources||[]).filter(sc=>String(sc.proj||'')===String(_pbPid)&&sc.summary).slice(0,12).map(sc=>sc.summary);
+  const feiten=(state.facts||[]).filter(f=>String(f.project_id||'')===String(pid)).map(f=>f.text||'');
+  const afspraken=(state.appointments||[]).filter(a=>String(a.projectId)===String(pid)&&String(a.date||'')>=ti).map(a=>(a.t||'afspraak')+(a.date?(' — '+a.date):'')+(a.start?(' '+String(a.start).slice(0,5)):''));
+  const bronnen=(state.sources||[]).filter(sc=>String(sc.proj||'')===String(pid)&&sc.summary).slice(0,12).map(sc=>sc.summary);
   const _ink=(_pbItems||[]).filter(x=>x.kind==='inkoop'&&x.price!=null).reduce((s2,x)=>s2+Number(x.price)*(x.qty||1),0);
   const geld={ prijs:(p.projectprijs!=null?('€'+fmtEur(Number(p.projectprijs))):null), inkoop:_ink?('€'+fmtEur(_ink)):null, marge:(p.projectprijs!=null?('€'+fmtEur(Number(p.projectprijs)-_ink/1.21)):null) };
+  return {client:p.client,project:p.project,today:ti,taken,feiten,afspraken,wacht,geld,bronnen};
+}
+let _briefLast=null;
+async function openBriefing(){
+  const p=projById(_pbPid); if(!p)return;
+  const col=PROJCOL[p.id]||'#888';
+  const payload=_briefData(_pbPid); if(!payload)return;
   _briefRender({loading:true, client:p.client, project:p.project, col});
   let d=null;
-  try{ const r=await fetch('/api/briefing',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({client:p.client,project:p.project,today:ti,taken,feiten,afspraken,wacht,geld,bronnen})}); d=await r.json(); }catch(_){}
+  try{ const r=await fetch('/api/briefing',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}); d=await r.json(); }catch(_){}
   try{ if(typeof loadUsage==='function')loadUsage(); }catch(_){}
   if(!d||d.error){ _briefRender({error:true, client:p.client, project:p.project, col}); return; }
+  _briefLast={pid:_pbPid, client:p.client, project:p.project, data:d};
   _briefRender({data:d, client:p.client, project:p.project, col});
+}
+// Briefing als platte tekst (voor bewaren en pushen).
+function _briefTekst(o){ const d=o.data||{}; let t=(o.client||'')+(o.project?' · '+o.project:'')+' — op een rijtje ('+new Date().toLocaleDateString('nl-NL',{day:'numeric',month:'long'})+')\n\n';
+  if(d.waar_staan_we)t+=d.waar_staan_we+'\n\n';
+  if((d.open_eindjes||[]).length)t+='OPEN EINDJES\n'+d.open_eindjes.map(x=>'• '+x).join('\n')+'\n\n';
+  (d.secties||[]).forEach(sc=>{ t+=String(sc.titel).toUpperCase()+'\n'+sc.punten.map(x=>'• '+x).join('\n')+'\n\n'; });
+  return t.trim(); }
+// Knop 1 — bewaren in het dossier (bovenaan de Notities).
+async function briefBewaar(btn){
+  if(!_briefLast)return; const p=projById(_briefLast.pid); if(!p)return;
+  const tekst=_briefTekst(_briefLast);
+  const oud=(p.notes||'').trim();
+  p.notes=(tekst+(oud?'\n\n———\n\n'+oud:''));
+  try{ await sb.from('projects').update({notes:p.notes}).eq('id',p.id); }catch(_){}
+  if(btn){ btn.classList.add('ok'); btn.textContent='Bewaard in Notities'; }
+  try{ if(_pbTarget&&_pbPid)_renderProjBoard(); }catch(_){}
+}
+// Knop 2 — naar de ander pushen met doorklik naar het project.
+async function briefPush(btn){
+  if(!_briefLast)return; const ander=(who==='Marlon')?'Jeroen':'Marlon';
+  const naam=(_briefLast.client||'')+(_briefLast.project?' · '+_briefLast.project:'');
+  try{ await fetch('/api/notify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:[ander],title:who+' → jou',body:'Overzicht '+naam+' — kijk je even mee?',url:'/?project='+_briefLast.pid})}); }catch(_){}
+  if(btn){ btn.classList.add('ok'); btn.textContent='Naar '+ander+' gestuurd'; }
 }
 function _briefRender(o){
   let ov=document.getElementById('briefOv'); if(ov)ov.remove();
@@ -4668,9 +4699,10 @@ function _briefRender(o){
     const oe=(d.open_eindjes||[]).length?`<div class="brief-sec brief-oe"><div class="brief-h">Open eindjes</div>${d.open_eindjes.map(x=>`<div class="brief-punt">${escapeHtml(x)}</div>`).join('')}</div>`:'';
     body=`${d.waar_staan_we?`<p class="brief-lead">${escapeHtml(d.waar_staan_we)}</p>`:''}${oe}${secs}`;
   }
+  const voet=(o.data)?`<div class="brief-voet"><button class="fv-btn" onclick="briefBewaar(this)">Bewaar in dossier</button><button class="fv-btn" onclick="briefPush(this)">Stuur naar ${(who==='Marlon')?'Jeroen':'Marlon'}</button></div>`:'';
   ov.innerHTML=`<div class="modal brief-modal" style="--scol:${o.col||'#888'}"><button class="modal-close" onclick="document.getElementById('briefOv').remove()"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     <div class="brief-kop"><span class="brief-badge" style="background:${o.col||'#888'}">${escapeHtml((String(o.client||'?').trim()[0]||'?').toUpperCase())}</span><h3>${naam}</h3></div>
-    <div class="brief-body">${body}</div></div>`;
+    <div class="brief-body">${body}</div>${voet}</div>`;
   document.body.appendChild(ov); requestAnimationFrame(()=>ov.classList.add('open'));
   ov.addEventListener('click',e=>{ if(e.target===ov)ov.remove(); });
 }
@@ -4824,16 +4856,14 @@ function _omsBron(pid){
 }
 async function pbAiOms(btn){
   const p=projById(_pbPid); if(!p)return;
-  const f=_omsBron(_pbPid);
   const sec=btn&&btn.closest('.pb-omssec');
   const zet=(m)=>{ const el=sec&&sec.querySelector('.pb-omsmsg'); if(el)el.textContent=m; else if(sec)sec.insertAdjacentHTML('beforeend','<div class="pb-omsmsg">'+escapeHtml(m)+'</div>'); };
-  if(!f){ zet('Geen leesbaar document bij dit project — sleep er een briefing of pitch in.'); return; }
-  if(btn)btn.disabled=true; zet('Lezen uit '+(f.name||'document')+'…');
+  const payload=_briefData(_pbPid); if(!payload){ zet('Nog te weinig info bij dit project.'); return; }
+  if(btn)btn.disabled=true; zet('De AI vat het hele project samen…');
   try{
-    const pl=await _aiLeesPayload(f);
-    const r=await fetch('/api/readfile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({mode:'text'},pl))});
+    const r=await fetch('/api/briefing',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
     const d=await r.json(); if(d&&d.error) throw new Error(d.error);
-    const sum=String((d&&d.summary)||'').trim();
+    const sum=String((d&&d.omschrijving)||'').trim();
     if(!sum) throw new Error('geen omschrijving gevonden');
     p.description=sum;
     await sb.from('projects').update({description:sum}).eq('id',_pbPid);
