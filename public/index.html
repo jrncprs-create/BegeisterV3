@@ -502,6 +502,16 @@
   .bv:hover .bv-kop .bv-kopdel{opacity:.8}
   .bv.dicht{padding-bottom:9px}
   .bv-bronkop .bv-chev{margin-left:2px}
+  /* V242 */
+  .pb-chk{background:transparent !important;border:none !important;padding:0;cursor:pointer;color:var(--scol,#9a9aa2);flex:0 0 auto;display:inline-flex;line-height:0;opacity:.92;border-radius:0;-webkit-appearance:none;appearance:none}
+  .pb-chk:hover{opacity:1}
+  .pb-donerow .pb-chk{color:var(--mut2)}
+  #projOverlay .pb-bud{background:transparent;border:none;text-align:right;color:var(--scol)}
+  #projOverlay .pb-bud:focus{outline:none}
+  .pb-prijsrow{justify-content:flex-end}
+  .uic-zeker{color:#e0726f !important;opacity:1 !important}
+  .uic-zeker svg{stroke:#e0726f}
+  .uic-zeker::after{content:"zeker?";font-size:11px;letter-spacing:.4px;margin-left:6px;color:#e0726f;line-height:1}
   .bk{border:1px dashed var(--line);border-radius:14px;padding:12px;margin-bottom:12px}
   .bk-kop{margin-bottom:8px}
   .bk-ttl{display:block;font-size:13px;color:var(--txt);font-weight:var(--fw-nadruk);line-height:1.4}
@@ -2293,9 +2303,9 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v241</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v242</span>
       <button id="zoekBtn" class="dag-ic" onclick="openZoek()" title="Zoeken — ⌘K / Ctrl+K" aria-label="Zoeken"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg></button>
-      <button id="dayBtn" class="dag-ic" onclick="openDayOverview()" title="Dagoverzicht" aria-label="Dagoverzicht"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M3 12h2M19 12h2M5.6 18.4l1.4-1.4M17 7l1.4-1.4"/></svg></button>
+      <!-- V242: Dagoverzicht voorlopig uit beeld (afgesproken 16 juli) — openDayOverview en de overlay blijven in de code staan. -->
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
       <span id="who" onclick="openContextModal()" style="font-size:14px;font-weight:var(--fw-nadruk);cursor:pointer" title="AI-context bewerken">Jeroen</span>
       <button id="logoutBtn" class="dag-ic" onclick="uitloggenApp()" title="Uitloggen" aria-label="Uitloggen"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-2"/><path d="M9 12h11M17 9l3 3-3 3"/></svg></button>
@@ -4388,7 +4398,7 @@ function _renderProjBoard(){
   const _finOpen=!!(_pbPriceOpen&&_pbPriceOpen[_pbPid]);
   const secPrijs=(_finEmpty&&!_finOpen)
     ? `<div class="pb-sec"><div class="pb-h"><span>Projectprijs</span><button class="pb-hadd" onclick="pbOpenPrice()" title="Prijs &amp; budget toevoegen">+</button></div></div>`
-    : `<div class="pb-sec"><div class="pb-h">Projectprijs</div><div class="pb-prijsrow">€ <input class="pb-bud" type="text" inputmode="decimal" value="${omzetEx!=null?String(omzetEx).replace('.',','):''}" placeholder="—" onchange="pbSetProjectprijs(this.value)"></div><div class="pb-finline"><span>Inkoop</span><b>€${fmtEur(inkExcl)}</b></div><div class="pb-finline marge ${(marge!=null&&marge<0)?'neg':''}"><span>Winst</span><b>${omzetEx!=null?'€'+fmtEur(marge):'—'}</b></div></div>`;
+    : `<div class="pb-sec"><div class="pb-h">Projectprijs</div><div class="pb-prijsrow">€ <input class="pb-bud" type="text" inputmode="decimal" value="${omzetEx!=null?String(omzetEx).replace('.',','):''}" placeholder="—" onchange="pbSetProjectprijs(this.value)"></div>${(inkTotal&&inkExcl>=0.005)?`<div class="pb-finline"><span>Inkoop</span><b>€${fmtEur(inkExcl)}</b></div>`:''}${(omzetEx!=null&&marge!=null)?`<div class="pb-finline marge ${marge<0?'neg':''}"><span>Winst</span><b>€${fmtEur(marge)}</b></div>`:''}</div>`;
   const secCheck=`<div class="pb-sec"><div class="pb-h">Checklist <button class="pb-ai" onclick="pbAiTodos(this)" title="AI-startchecklist">${_tIc(_TABCHAN.asterisk,15,1.7)}<span>AI</span></button></div>${todos.map(cbRow).join('')}<div class="pb-add"><input class="pb-in" data-kind="todo" placeholder="+ todo toevoegen…" onkeydown="pbAddKey(event,'todo')"></div></div>`;
   const secInk=`<div class="pb-sec"><div class="pb-h"><span>Inkopen</span><span class="pb-hbtns"><button class="pb-ai" onclick="pbInkPaste()" title="Plak een winkelwagen of lijst — AI maakt er een bestellijst van">${_tIc(_TABCHAN.asterisk,15,1.7)}<span>lijst</span></button><button class="pb-ai" onclick="pbInkLink()" title="Toevoegen via productlink">+ link</button></span></div>${inkopen.map(inkRow).join('')}<div class="pb-add"><input class="pb-in" data-kind="inkoop" placeholder="+ inkoop toevoegen…" onkeydown="pbAddKey(event,'inkoop')"></div><div class="pb-ink-foot"><span class="pb-tot">Inkoop <b>€${fmtEur(inkTotal)}</b></span><span class="pb-budwrap">Projectprijs excl. €<input class="pb-bud" type="text" inputmode="decimal" value="${omzetEx!=null?String(omzetEx).replace('.',','):''}" placeholder="—" onchange="pbSetProjectprijs(this.value)"></span>${omzetEx!=null?`<span class="pb-rest">incl. €${fmtEur(omzetIn)}</span><span class="pb-rest ${marge<0?'over':''}">marge €${fmtEur(marge)}</span>`:''}<span class="pb-budwrap">Klantbudget €<input class="pb-bud" type="text" inputmode="decimal" value="${budget!=null?String(budget).replace('.',','):''}" placeholder="—" onchange="pbSetBudget(this.value)"></span></div></div>`;
   const secAppt=`<div class="pb-sec"><div class="pb-h">Afspraken <button class="pb-hadd" onclick="openApptModal(null,'${_pbPid}')" title="Afspraak toevoegen">+</button></div>${appts.length?appts.map(apptRow).join(''):'<div class="pb-empty">Nog geen afspraken.</div>'}</div>`;
@@ -7421,24 +7431,18 @@ function _fillApptClientSelect(sel,selected){
   sel.innerHTML='<option value="">Klant / project</option><option value="__new__">+ Nieuwe klant…</option>'+state.projects.filter(p=>p.id!=='__inbox__').map(p=>`<option value="${p.id}">${escapeHtml(p.client)}${p.project?' · '+escapeHtml(p.project):''}</option>`).join('');
   if(selected!=null) sel.value=selected;
 }
+// V242: geen bevestigingsvenster meer. De aangeklikte knop kleurt rood met "zeker?";
+// nogmaals klikken binnen 4 seconden bevestigt. Zelfde patroon als de wisknop in het Postvak.
+let _uicLastBtn=null;
+document.addEventListener('pointerdown',e=>{ try{ const b=e.target.closest('button,[role=button],.wisknop'); if(b)_uicLastBtn=b; }catch(_){} },true);
 function uiConfirm(title,opts){
-  opts=opts||{};
-  const okLabel=opts.ok||'Verwijderen';
-  const danger=opts.danger!==false;
-  return new Promise(resolve=>{
-    const ov=document.createElement('div'); ov.className='overlay';
-    ov.innerHTML='<div class="modal" style="width:420px;max-width:92vw;padding:24px 22px">'
-      +'<h3 style="margin:0 0 18px">'+escapeHtml(title)+'</h3>'
-      +'<div class="foot" style="display:flex;justify-content:flex-end;gap:10px;margin-top:8px">'
-      +'<button class="btn ghost uic-cancel">Annuleren</button>'
-      +'<button class="btn uic-ok'+(danger?' danger':'')+'"'+(danger?' style="color:#f87171"':'')+'>'+escapeHtml(okLabel)+'</button></div></div>';
-    document.body.appendChild(ov);
-    requestAnimationFrame(()=>ov.classList.add('open'));
-    const done=v=>{ ov.classList.remove('open'); setTimeout(()=>ov.remove(),320); resolve(v); };
-    ov.querySelector('.uic-ok').onclick=()=>done(true);
-    ov.querySelector('.uic-cancel').onclick=()=>done(false);
-    ov.addEventListener('click',e=>{ if(e.target===ov) done(false); });
-  });
+  const btn=_uicLastBtn;
+  if(!btn) return Promise.resolve(window.confirm(title));   // vangnet (bv. sneltoets)
+  if(btn._uicArmed){ clearTimeout(btn._uicT); btn._uicArmed=false; btn.classList.remove('uic-zeker'); if(btn._uicTtl!=null){btn.setAttribute('title',btn._uicTtl);btn._uicTtl=null;} return Promise.resolve(true); }
+  btn._uicArmed=true; btn.classList.add('uic-zeker');
+  btn._uicTtl=btn.getAttribute('title'); btn.setAttribute('title',title);
+  btn._uicT=setTimeout(()=>{ btn._uicArmed=false; btn.classList.remove('uic-zeker'); if(btn._uicTtl!=null){btn.setAttribute('title',btn._uicTtl);btn._uicTtl=null;} },4000);
+  return Promise.resolve(false);
 }
 // kleur per klant: nieuwe klanten krijgen automatisch een volgende paletkleur
 function _nextClientColor(){ const taken=new Set(); (state.projects||[]).forEach(p=>{ if(p.id!=='__inbox__'&&p.color) taken.add(String(p.color).toLowerCase()); }); return _freshColor(taken); }
@@ -9153,7 +9157,7 @@ async function dovNaarInspiratie(id){ closeDayOverview();
 
 function dovOpenItem(id){ closeDayOverview(); setTimeout(()=>{ try{ openModal(id); }catch(_){} }, 220); }
 function dovOpenClient(c){ closeDayOverview(); try{ const p=(state.projects||[]).find(x=>x.client===c&&x.id!=='__inbox__'); setView('taken'); if(p){ activeTab=p.id; render(); } }catch(_){} }
-function maybeShowDayOverview(){ try{ const k='dayview_'+iso(TODAY); if(localStorage.getItem(k))return; localStorage.setItem(k,'1'); }catch(_){} openDayOverview(); }
+function maybeShowDayOverview(){ /* V242: dagoverzicht voorlopig uit beeld — niets automatisch openen */ }
 // Autofill/AutoFill-suggesties overal uitzetten
 function _killAutofill(root){ try{ (root||document).querySelectorAll('input,textarea').forEach(el=>{ if(el.dataset.naf)return; el.dataset.naf='1'; el.setAttribute('autocomplete','off'); el.setAttribute('autocorrect','off'); el.setAttribute('autocapitalize','off'); el.setAttribute('spellcheck','false'); }); }catch(_){} }
 try{ new MutationObserver(ms=>{ for(const m of ms){ for(const n of m.addedNodes){ if(n&&n.nodeType===1){ if(n.matches&&n.matches('input,textarea')) _killAutofill(n.parentNode||document); else if(n.querySelector&&n.querySelector('input,textarea')) _killAutofill(n); } } } }).observe(document.body,{childList:true,subtree:true}); }catch(_){}
