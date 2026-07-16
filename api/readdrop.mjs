@@ -16,6 +16,11 @@ function visionSystem({ context, today, who, dates, catalog }) {
   const cat = (catalog || []).map(c => `- ${c.project_id} → ${c.client} · ${c.project}`).join("\n") || "(nog geen klanten/projecten)";
   return `Je bent de AI-assistent van Begeister (licht, decor, events). Je krijgt een BESTAND (foto/screenshot van een appje of mail, een PDF, een document of een whiteboard).
 Vat in 1 KORTE zin samen wat erin staat, en haal er concrete ACTIEPUNTEN uit als die er zijn. Verzin niets.
+WEES STRENG met taken: een taak is er alleen als er echt iets te DOEN staat. Maten, specificaties,
+aantallen, materiaallijsten, technische gegevens = FEITEN ("facts"), geen taken. Verzin NOOIT een
+controle- of check-taak bij een specificatie. Liever 0 taken dan een verzonnen taak.
+Geef "facts" = korte, zelfstandig leesbare feitzinnen die het waard zijn om bij het project te
+onthouden (maten, lijsten samengevat, tijden, locaties, keuzes). Max ~140 tekens per feit, 0-5 stuks.
 owner = "Jeroen" of "Marlon" of leeg. contact = externe persoon of leeg. due = YYYY-MM-DD of null. status = todo. project_id = ALLEEN als klant/project eenduidig in het bestand staat én matcht met de catalogus, anders null (dan vult de gebruiker het zelf).
 ${context ? "VASTE CONTEXT (team/bedrijf — gebruik dit):\n" + context + "\n" : ""}VANDAAG: ${today || ""}. GEBRUIKER: ${who || ""}. Reken geen weekdagen zelf uit; gebruik de datumtabel.
 DATUMTABEL:\n${dates || "(geen)"}
@@ -25,7 +30,7 @@ Geef "type" = kort documenttype in 1-2 woorden (bv. "pitchdeck", "offerte", "fac
 Geef "category" = kies de best passende map uit deze VASTE lijst: Briefing, Concept & ontwerp, Techniek, Beeld, Financieel, Oplevering. Bij twijfel: "Concept & ontwerp". Richtlijn: Briefing = aanvraag/projectbrief/intake/debrief; Concept & ontwerp = concept/moodboard/lichtontwerp/decor/ontwerp; Techniek = tekeningen/plattegronden/draaiboek/planning/leveranciers/patch/rigging; Beeld = foto's/video/referenties/inspiratie; Financieel = offerte/factuur/bon/inkoop/budget/calculatie/prijsopgave; Oplevering = eindfoto's/nazorg/aftermovie/eindresultaat.
 Geef "subject" = kort, concreet onderwerp van het document in 2-3 woorden (zo bondig mogelijk), ZONDER klantnaam en ZONDER datum, MÉT het documenttype erin verwerkt als dat logisch is (bv. "licht offerte", "concept", "draaiboek opbouw", "factuur huur"). Geen interne codenamen of projectcodes. Kleine letters, gewone spaties, geen leestekens.
 Geef "kind" = "werk", "inspiratie" of "prive". "inspiratie" = beeld, sfeer, referentie of een mooie foto zónder concrete actie. "prive" = persoonlijk, niets met werk te maken. Bij "inspiratie" laat je "items" ALTIJD leeg — een referentiebeeld levert geen actiepunten op. Bij twijfel: "werk".
-Antwoord ALLEEN met geldige JSON: {"reply":"korte samenvatting (1 zin)","client":"","project":"","type":"","from":"","category":"","subject":"","kind":"werk","items":[{"title":"","owner":"","contact":"","due":null,"status":"todo","project_id":null}]}`;
+Antwoord ALLEEN met geldige JSON: {"reply":"korte samenvatting (1 zin)","client":"","project":"","type":"","from":"","category":"","subject":"","kind":"werk","items":[{"title":"","owner":"","contact":"","due":null,"status":"todo","project_id":null}],"facts":["..."]}`;
 }
 
 async function aiFromBlocks(blocks, opts, src) {
@@ -50,7 +55,8 @@ async function aiFromBlocks(blocks, opts, src) {
   const kind = ["werk", "inspiratie", "prive"].includes(parsed.kind) ? parsed.kind : "werk";
   // Inspiratie levert nooit actiepunten op — hard afdwingen, niet alleen vragen.
   const items = (kind === "inspiratie") ? [] : (Array.isArray(parsed.items) ? parsed.items : []);
-  return { reply: parsed.reply || "", items, kind, client: (parsed.client || "").toString().trim(), project: (parsed.project || "").toString().trim(), type: (parsed.type || "").toString().trim(), from: (parsed.from || "").toString().trim(), category: (parsed.category || "").toString().trim(), subject: (parsed.subject || "").toString().trim() };
+  const facts = (kind === "inspiratie") ? [] : (Array.isArray(parsed.facts) ? parsed.facts : []).map(f => String(f || "").trim()).filter(Boolean).slice(0, 10);
+  return { reply: parsed.reply || "", items, facts, kind, client: (parsed.client || "").toString().trim(), project: (parsed.project || "").toString().trim(), type: (parsed.type || "").toString().trim(), from: (parsed.from || "").toString().trim(), category: (parsed.category || "").toString().trim(), subject: (parsed.subject || "").toString().trim() };
 }
 
 export default async function handler(req, res) {
@@ -101,7 +107,7 @@ export default async function handler(req, res) {
       if (ex.usage) { try { await logUsage(null, { source: "drop-audio", ...ex.usage }); } catch (_) {} }
       return res.status(200).json({
         reply: (ex.summary || "Spraakmemo gelezen.") , transcript,
-        items: ex.items || [], appointments: ex.appointments || [], contacts: ex.contacts || [], client: ex.client || "", project: ex.project || "",
+        items: ex.items || [], facts: ex.facts || [], appointments: ex.appointments || [], contacts: ex.contacts || [], client: ex.client || "", project: ex.project || "",
         type: ex.type || "spraakmemo", from: ex.from || (who || ""),
         category: ex.category || "Briefing", subject: ex.subject || name,
       });
@@ -121,7 +127,7 @@ export default async function handler(req, res) {
       if (!docText) return res.status(200).json({ reply: "Het Word-document lijkt leeg of bevat geen leesbare tekst.", items: [] });
       const ex = await extractItems({ text: docText, sender: who || "Document", subject: name, today, catalog, context });
       if (ex.usage) { try { await logUsage(null, { source: "drop-docx", ...ex.usage }); } catch (_) {} }
-      return res.status(200).json({ reply: ex.summary || "Document gelezen.", items: ex.items || [], appointments: ex.appointments || [], contacts: ex.contacts || [], client: ex.client || "", project: ex.project || "", type: ex.type || "", from: ex.from || "", category: ex.category || "", subject: ex.subject || "" });
+      return res.status(200).json({ reply: ex.summary || "Document gelezen.", items: ex.items || [], facts: ex.facts || [], appointments: ex.appointments || [], contacts: ex.contacts || [], client: ex.client || "", project: ex.project || "", type: ex.type || "", from: ex.from || "", category: ex.category || "", subject: ex.subject || "" });
     }
 
     // 4) HTML (.html/.htm) → tags/scripts/styles strippen, dan de leesbare tekst laten lezen.
@@ -155,7 +161,7 @@ export default async function handler(req, res) {
       t = t.slice(0, 24000);
       const ex = await extractItems({ text: t, sender: who || "HTML", subject: name, today, catalog, context });
       if (ex.usage) { try { await logUsage(null, { source: "drop-html", ...ex.usage }); } catch (_) {} }
-      return res.status(200).json({ reply: ex.summary || "HTML gelezen.", items: ex.items || [], appointments: ex.appointments || [], contacts: ex.contacts || [], client: ex.client || "", project: ex.project || "", type: ex.type || "", from: ex.from || "", category: ex.category || "", subject: ex.subject || "" });
+      return res.status(200).json({ reply: ex.summary || "HTML gelezen.", items: ex.items || [], facts: ex.facts || [], appointments: ex.appointments || [], contacts: ex.contacts || [], client: ex.client || "", project: ex.project || "", type: ex.type || "", from: ex.from || "", category: ex.category || "", subject: ex.subject || "" });
     }
 
     // 5) Platte tekst (.txt/.md/etc.) → extractItems
@@ -163,7 +169,7 @@ export default async function handler(req, res) {
     if (plain) {
       const ex = await extractItems({ text: plain, sender: who || "Tekst", subject: name, today, catalog, context });
       if (ex.usage) { try { await logUsage(null, { source: "drop-text", ...ex.usage }); } catch (_) {} }
-      return res.status(200).json({ reply: ex.summary || "Tekst gelezen.", items: ex.items || [], appointments: ex.appointments || [], contacts: ex.contacts || [], client: ex.client || "", project: ex.project || "", type: ex.type || "", from: ex.from || "", category: ex.category || "", subject: ex.subject || "" });
+      return res.status(200).json({ reply: ex.summary || "Tekst gelezen.", items: ex.items || [], facts: ex.facts || [], appointments: ex.appointments || [], contacts: ex.contacts || [], client: ex.client || "", project: ex.project || "", type: ex.type || "", from: ex.from || "", category: ex.category || "", subject: ex.subject || "" });
     }
 
     return res.status(400).json({ error: "leeg of niet-ondersteund bestandstype: " + (mime || name) });
