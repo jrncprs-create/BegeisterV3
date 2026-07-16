@@ -199,8 +199,30 @@ Status bijhouden: `[ ]` open · `[~]` bezig · `[x]` klaar (+ versienummer).
   te wisselen, en een knop "alleen bewaren" (bestand + feiten opslaan, nul taken).
   Dossier: blok "Wat we weten" (uitklapbaar) met feiten in klantkleur, ↪ bron, klik =
   aanpassen, + = zelf toevoegen. Bonus: het bewerken-venster heeft weer een Bron-knop
-  (was sinds de planning-verbouwing kwijt). Volgende stappen: L8b grote schoonmaak van
-  bestaande taken, L9 vraag & briefing over het dossier, L10 draaiboek-gesprek.
+  (was sinds de planning-verbouwing kwijt).
+
+- [x] **L8b — Grote schoonmaak** (M) — v250. Bezem-knop in de Taken-kolom: AI (api/opschonen)
+  houdt alle open taken tegen het licht en stelt per taak voor: verwijderen (verzonnen/dubbel),
+  omzetten naar feit, naar de omschrijving (scope), of samenvoegen. Reviewscherm met per regel
+  aan/uit; niets gebeurt zonder akkoord.
+
+- [x] **L8c — Artikel-popup** (S) — v250/v251. Inkoop/bestellijst: "+ artikel" opent een popup
+  met omschrijving, link (AI haalt titel + prijs uit de link via linkbeeld), aantal en bedrag
+  p/st. Bestellijst-regel opgeschoond: prijs alleen-lezen, bewerken via potloodje/popup, met
+  vuilnisbak in de popup.
+
+- [x] **L-verplaats — Bestand echt verplaatsen** (S) — v248. "Verplaats…" in de bestand-overlay:
+  kies klant/project/map, echt verplaatsen (geen kopie).
+
+- [x] **L-uifix — Schermpjes rechtgetrokken** (S) — v251, feedback Jeroen 16 juli.
+  Leestafel: klant- en projectkeuze in de huisstijl + feit-type (→ Wat we weten). Artikel-popup:
+  vuilnisbak. Bestellijst: rustige regel-opmaak.
+
+> WERK IN UITVOERING (afgesproken 16 juli): database rechttrekken via reviewschermen (AI stelt
+> voor, Jeroen keurt goed): (1) 56 losse bronnen per klant koppelen, (2) ~36 bestanden van
+> klant-niveau naar de juiste projectmap, (3) ~10 lege Begeister-subprojecten opruimen tot een
+> handvol. Daarna L9 (vraag & briefing over het dossier) en L10 (draaiboek-gesprek). Ook nog:
+> chat-AI verzint soms bron-details — temperen zodra de data schoon is.
 
 ## Fase 7 — Klantportaal (stond al in HANDOFF §8)
 
