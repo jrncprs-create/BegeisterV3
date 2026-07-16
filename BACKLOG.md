@@ -1,6 +1,6 @@
 # Begeister Workflow — Uitvoerbacklog
 
-_Aangemaakt 14 juli 2026 · hoort bij HANDOFF.md · live versie **v243**_
+_Aangemaakt 14 juli 2026 · hoort bij HANDOFF.md · live versie **v244**_
 
 > Stand 15 juli 2026: alles is af behalve **U11** (agenda-sync — wacht op OAuth-keuze),
 > **U14** (boekhoudkoppeling — wacht op pakketkeuze + API-sleutel) en **Fase 7**
@@ -170,6 +170,17 @@ Status bijhouden: `[ ]` open · `[~]` bezig · `[x]` klaar (+ versienummer).
   één regeltje typen → push naar de ander ("Jeroen → jou: …", klik = item open) én
   dezelfde tekst als @-opmerking bij het item als vangnet en geschiedenis. Geen apart
   berichtensysteem nodig.
+
+- [x] **L6 — Alles woont bij de klant** (M) — v244, gevraagd door Jeroen 16 juli.
+  Klanten, bestanden en contacten leefden op drie plekken; nu is het klantdossier de
+  woonplek. Rechterkolom: Contacten (bovenaan, uitklapbaar, klik = contact bewerken,
+  + = nieuw) → Afspraken → Bestanden (de echte mappenboom van de Bestanden-pagina,
+  gefilterd op de klant: uitklappen, hernoemen, verwijderen, tellingen; klik op een
+  bestand = voorvertoning als overlay met Laat AI lezen / Download / Dropbox) →
+  Projectprijs → Notities. Hoofdmenu: knoppen Bestanden en Contacten vervangen door
+  één zoek-loepje (de ⌘K-zoek dekt taken, bronnen, bestandsnamen, afspraken én
+  contacten; een contact-resultaat opent nu direct het contact). De oude pagina's
+  blijven in de code staan.
 
 ## Fase 7 — Klantportaal (stond al in HANDOFF §8)
 
