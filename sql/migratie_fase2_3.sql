@@ -42,3 +42,12 @@ alter table public.documents add column if not exists fin_status text;
 
 -- Leestafel (15 juli, migratie `leestafel_suggest_items`): bewaarde AI-voorstellen bij een bron
 alter table public.sources add column if not exists suggest_items jsonb;
+
+-- L8a (16 juli 2026, migratie `l8a_facts_wat_we_weten`): feitenlaag "Wat we weten"
+create table if not exists public.facts (
+  id uuid primary key default gen_random_uuid(),
+  project_id uuid references public.projects(id) on delete cascade,
+  source_id uuid references public.sources(id) on delete set null,
+  text text not null,
+  created_at timestamptz not null default now()
+);
