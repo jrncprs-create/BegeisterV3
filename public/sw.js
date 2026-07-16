@@ -39,7 +39,13 @@ self.addEventListener('notificationclick', (event) => {
   const url = (event.notification.data && event.notification.data.url) || '/';
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
-      for (const c of list) { if ('focus' in c) { return c.focus(); } }
+      for (const c of list) {
+        if ('focus' in c) {
+          // App staat al open: focussen en het adres doorgeven (de app opent dan het item).
+          try { c.postMessage({ type: 'openUrl', url }); } catch (_) {}
+          return c.focus();
+        }
+      }
       return self.clients.openWindow(url);
     })
   );
