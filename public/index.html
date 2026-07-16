@@ -594,8 +594,13 @@
   .kkprev-sub{font-size:14px;opacity:.85;margin-top:8px}
   /* Paginagrote portal-preview */
   .overlay.kkprev-full{align-items:flex-start;justify-content:center;padding:0;overflow-y:auto}
-  .ppp-frame{position:relative;width:min(760px,100%);height:100dvh;background:#0b0b0d;box-shadow:0 0 80px rgba(0,0,0,.6)}
-  .ppp-iframe{width:100%;height:100%;border:none;display:block}
+  .overlay.kkprev-full{padding:0;align-items:stretch;justify-content:stretch}
+  .ppp-full{width:100vw;height:100dvh;display:flex;flex-direction:column;background:#0b0b0d}
+  .ppp-top{flex:0 0 auto;height:46px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:#000;color:#fff;z-index:2}
+  .ppp-top .ppp-badge{position:static;background:none;padding:0;font-size:11px;letter-spacing:.7px;text-transform:uppercase;color:rgba(255,255,255,.6)}
+  .ppp-top .ppp-x{background:transparent;border:none;color:rgba(255,255,255,.75);cursor:pointer;display:inline-flex;padding:4px}
+  .ppp-top .ppp-x:hover{color:#fff}
+  .ppp-iframe{flex:1;width:100%;border:none;display:block}
   .ppp-page{position:relative;width:min(720px,100%);min-height:100%;background:#0b0b0d;box-shadow:0 0 80px rgba(0,0,0,.6)}
   .ppp-x{position:fixed;top:16px;right:16px;z-index:3;background:rgba(0,0,0,.5);border-radius:50%;color:#fff}
   .ppp-badge{position:absolute;top:14px;left:14px;z-index:2;font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:#fff;background:rgba(0,0,0,.45);padding:5px 11px;border-radius:999px}
@@ -2446,7 +2451,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v261</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v262</span>
       <!-- V244: loep verhuisd naar het hoofdmenu (waar Bestanden/Contacten stonden). -->
       <!-- V242: Dagoverzicht voorlopig uit beeld (afgesproken 16 juli) — openDayOverview en de overlay blijven in de code staan. -->
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
@@ -6475,7 +6480,7 @@ function _secKlantkant(p){
   const kKey='ks|kk|'+p.id, dicht=!((typeof _bvDicht!=='undefined')&&_bvDicht.has(kKey));  // standaard dicht
   const naam=heeftImg?(p.portal_bg_name||_urlBasename(p.portal_bg_image)):'';
   const preview=heeftImg
-    ? `<div class="pb-kk-preview"><div class="pb-kk-thumb" style="background-image:url('${escapeHtml(p.portal_bg_image)}')"></div><div class="pb-kk-pmain"><div class="pb-kk-pnaam">${escapeHtml(naam)}</div><div class="pb-kk-phint">zwarte overlay + witte tekst</div></div><button class="pb-kk-eye" onclick="pbPortalPreview()" title="Bekijk de hele portaalpagina zoals de klant het ziet">${_tIc('<path d="M2 12s3.5 -7 10 -7s10 7 10 7s-3.5 7 -10 7s-10 -7 -10 -7z"/><circle cx="12" cy="12" r="3"/>',16,1.6)}<span>bekijk</span></button></div>`
+    ? `<div class="pb-kk-preview"><div class="pb-kk-thumb" style="background-image:url('${escapeHtml(p.portal_bg_image)}')"></div><div class="pb-kk-pmain"><div class="pb-kk-pnaam">${escapeHtml(naam)}</div><div class="pb-kk-phint">zwarte overlay + witte tekst</div></div></div>`
     : `<div class="pb-kk-rij"><span class="pb-kk-hint">Nog geen achtergrond — zwart + klantkleur (standaard).</span></div>`;
   const acties=`<div class="pb-kk-rij"><button class="pb-kk-btn" onclick="pbPortalImg()">${heeftImg?'Afbeelding wijzigen':'Afbeelding kiezen'}</button>${heeftImg?'<button class="pb-kk-reset" onclick="pbPortalBgClear()">verwijderen</button>':''}<button class="pb-kk-btn" onclick="pbPortalPreview()">Bekijk als klant</button></div>`;
   return `<div class="pb-sec pb-klantkant"><div class="pb-h pb-kk-h" onclick="_bvKlap('${kKey}')"><span>Klantkant</span>${_bvChev(kKey,dicht,col)}</div>`
@@ -6490,7 +6495,7 @@ function pbPortalPreview(){
   const p=projById(_pbPid); if(!p)return;
   let ov=document.getElementById('kkPrev'); if(ov)ov.remove();
   ov=document.createElement('div'); ov.id='kkPrev'; ov.className='overlay kkprev-full';
-  ov.innerHTML=`<div class="ppp-frame"><div class="ppp-badge">voorbeeld · zo ziet de klant het</div><button class="modal-close ppp-x" onclick="document.getElementById('kkPrev').remove()"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button><iframe class="ppp-iframe" src="/portaal.html?preview=${encodeURIComponent(p.id)}" title="Klantportaal-voorbeeld"></iframe></div>`;
+  ov.innerHTML=`<div class="ppp-full"><div class="ppp-top"><span class="ppp-badge">voorbeeld · zo ziet de klant het</span><button class="ppp-x" onclick="document.getElementById('kkPrev').remove()" title="Sluiten"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><iframe class="ppp-iframe" src="/portaal.html?preview=${encodeURIComponent(p.id)}" title="Klantportaal-voorbeeld"></iframe></div>`;
   document.body.appendChild(ov); requestAnimationFrame(()=>ov.classList.add('open'));
   ov.addEventListener('click',e=>{ if(e.target===ov)ov.remove(); });
 }
