@@ -1,6 +1,6 @@
 # Begeister Workflow — Uitvoerbacklog
 
-_Aangemaakt 14 juli 2026 · hoort bij HANDOFF.md · live versie **v241**_
+_Aangemaakt 14 juli 2026 · hoort bij HANDOFF.md · live versie **v242**_
 
 > Stand 15 juli 2026: alles is af behalve **U11** (agenda-sync — wacht op OAuth-keuze),
 > **U14** (boekhoudkoppeling — wacht op pakketkeuze + API-sleutel) en **Fase 7**
@@ -154,6 +154,13 @@ Status bijhouden: `[ ]` open · `[~]` bezig · `[x]` klaar (+ versienummer).
   schaling bij klikken opgelost (desktop: body scrollt niet meer). Per venster en per
   broncluster een inklap/uitklap-pijltje rechts (onthouden), kruisje rechts op de venster-kop
   (alles verwijderen, met bevestiging) en op elke regel; bronkop-titels afgekapt op 48 tekens.
+
+- [x] **L4 — Kleine schaafronde** (S) — v242, feedback Jeroen 16 juli.
+  Verwijderen bevestigt overal op de knop zelf (rood "zeker?", tweede klik binnen 4s =
+  weg) — geen bevestigingsvenster meer. Huisstijl-vinkjes in klantkleur nu ook in het
+  dossier-venster. Projectprijs: bedrag + euroteken rechts zonder kader; regels zonder
+  bekende waarde (Inkoop €0, Winst —) worden weggelaten. Dagoverzicht voorlopig uit
+  beeld (knop en auto-open weg; code blijft staan).
 
 ## Fase 7 — Klantportaal (stond al in HANDOFF §8)
 
