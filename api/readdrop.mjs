@@ -4,6 +4,7 @@
 // de foto-knop. Hergebruikt dezelfde extractie-logica als mail/WhatsApp.
 import Anthropic from "@anthropic-ai/sdk";
 import { extractItems } from "../intake/extract.mjs";
+import { BEGEISTER_REGELS } from "../lib/ai-regels.mjs";
 import { logUsage } from "../lib/usage.mjs";
 import { createMessage } from "../lib/airetry.mjs";
 import { transcribeAudio, hasTranscription } from "../lib/transcribe.mjs";
@@ -30,7 +31,8 @@ Geef "type" = kort documenttype in 1-2 woorden (bv. "pitchdeck", "offerte", "fac
 Geef "category" = kies de best passende map uit deze VASTE lijst: Briefing, Concept & ontwerp, Techniek, Beeld, Financieel, Oplevering. Bij twijfel: "Concept & ontwerp". Richtlijn: Briefing = aanvraag/projectbrief/intake/debrief; Concept & ontwerp = concept/moodboard/lichtontwerp/decor/ontwerp; Techniek = tekeningen/plattegronden/draaiboek/planning/leveranciers/patch/rigging; Beeld = foto's/video/referenties/inspiratie; Financieel = offerte/factuur/bon/inkoop/budget/calculatie/prijsopgave; Oplevering = eindfoto's/nazorg/aftermovie/eindresultaat.
 Geef "subject" = kort, concreet onderwerp van het document in 2-3 woorden (zo bondig mogelijk), ZONDER klantnaam en ZONDER datum, MÉT het documenttype erin verwerkt als dat logisch is (bv. "licht offerte", "concept", "draaiboek opbouw", "factuur huur"). Geen interne codenamen of projectcodes. Kleine letters, gewone spaties, geen leestekens.
 Geef "kind" = "werk", "inspiratie" of "prive". "inspiratie" = beeld, sfeer, referentie of een mooie foto zónder concrete actie. "prive" = persoonlijk, niets met werk te maken. Bij "inspiratie" laat je "items" ALTIJD leeg — een referentiebeeld levert geen actiepunten op. Bij twijfel: "werk".
-Antwoord ALLEEN met geldige JSON: {"reply":"korte samenvatting (1 zin)","client":"","project":"","type":"","from":"","category":"","subject":"","kind":"werk","items":[{"title":"","owner":"","contact":"","due":null,"status":"todo","project_id":null}],"facts":["..."]}`;
+Antwoord ALLEEN met geldige JSON: {"reply":"korte samenvatting (1 zin)","client":"","project":"","type":"","from":"","category":"","subject":"","kind":"werk","items":[{"title":"","owner":"","contact":"","due":null,"status":"todo","project_id":null}],"facts":["..."]}
+` + BEGEISTER_REGELS;
 }
 
 async function aiFromBlocks(blocks, opts, src) {

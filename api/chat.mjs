@@ -8,6 +8,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { svc, logUsage, countWebSearches } from "../lib/usage.mjs";
 import { createMessage } from "../lib/airetry.mjs";
+import { BEGEISTER_REGELS } from "../lib/ai-regels.mjs";
 
 const KEY = (process.env.ANTHROPIC_API_KEY || "").trim();
 const anthropic = KEY ? new Anthropic({ apiKey: KEY }) : null;
@@ -226,7 +227,7 @@ export default async function handler(req, res) {
     const ap = (appts || []).slice(0, 40)
       .map(a => `- ${a.date}${a.start ? " " + a.start : ""} | ${a.title} (${a.kind === "bel" ? "bel" : "fysiek"})${a.contact ? " met " + a.contact : ""}${a.client ? " [" + a.client + "]" : ""}`)
       .join("\n") || "(nog geen afspraken gepland)";
-    const sys = `${SYSTEM}${context ? "\n\nVASTE CONTEXT (achtergrondinfo over het team en bedrijf — gebruik dit altijd):\n" + context : ""}\n\nVANDAAG: ${today || ""}\nGEBRUIKER: ${who || ""}\n\nDATUMTABEL (gebruik deze voor alle relatieve dagen):\n${dates}\n\nCATALOGUS (project_id → klant · project):\n${cat}\n\nBESTAANDE OPENSTAANDE TAKEN (met id; voor dubbele-check, werkdruk, en updates/removes):\n${ex}\n\nBESTAANDE AFSPRAKEN (komende; voor dubbele-check):\n${ap}`;
+    const sys = `${SYSTEM}\n${BEGEISTER_REGELS}${context ? "\n\nVASTE CONTEXT (achtergrondinfo over het team en bedrijf — gebruik dit altijd):\n" + context : ""}\n\nVANDAAG: ${today || ""}\nGEBRUIKER: ${who || ""}\n\nDATUMTABEL (gebruik deze voor alle relatieve dagen):\n${dates}\n\nCATALOGUS (project_id → klant · project):\n${cat}\n\nBESTAANDE OPENSTAANDE TAKEN (met id; voor dubbele-check, werkdruk, en updates/removes):\n${ex}\n\nBESTAANDE AFSPRAKEN (komende; voor dubbele-check):\n${ap}`;
     const messages = (history || []).slice(-24).map(m => ({
       role: m.role === "assistant" ? "assistant" : "user",
       content: String(m.content || ""),
