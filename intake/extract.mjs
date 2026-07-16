@@ -1,6 +1,7 @@
 // Haalt met Claude gestructureerde actiepunten uit een binnengekomen bericht.
 import Anthropic from "@anthropic-ai/sdk";
 import { createMessage } from "../lib/airetry.mjs";
+import { BEGEISTER_REGELS } from "../lib/ai-regels.mjs";
 
 const KEY = (process.env.ANTHROPIC_API_KEY || "").trim();
 const anthropic = KEY ? new Anthropic({ apiKey: KEY }) : null;
@@ -83,7 +84,8 @@ Regels:
 - appointments = afspraken/meetings die EXPLICIET in het bericht worden voorgesteld of bevestigd, mét een concrete datum. Per afspraak: title (kort, bv. "Meeting Willem — Landjuweel"), date (YYYY-MM-DD, reken relatief t.o.v. VANDAAG), start (HH:MM of null), end (HH:MM of null), location (of ""). GEEN afspraken verzinnen; een deadline is geen afspraak. Geen concrete datum = niet opnemen. Meestal is dit een lege lijst.
 - reply = een kort CONCEPT-ANTWOORD op het bericht (alleen bij een e-mail die om een reactie vraagt, anders ""). Nederlands, vriendelijk en professioneel, 3-6 zinnen. Begin met "Beste <voornaam>," of "Hoi <voornaam>," (voornaam uit de afzender; anders "Beste,"). Beantwoord wat er gevraagd wordt; weet je iets niet (prijs, datum, beschikbaarheid), zeg dan dat je erop terugkomt — verzin NIETS. Sluit af met "Groet," en daarna niets (de ondertekenaar vult de app zelf in).
 - BESTELLIJST/WINKELWAGEN/VERLANGLIJST: gaat de gelinkte pagina over een winkelwagen, verlanglijst of productlijst van een webshop (Amazon, Bol, Coolblue, enz.), maak dan van ELK product één item. Zet de prijs in de titel tussen haakjes, bv. "H03VV-F snoer zwart 25m (€21,05)". Geef bij zo'n item "url" = de DIRECTE productlink (de <…>-URL die in de opgehaalde pagina direct bij dat product staat). Kun je de productlink niet vinden, dan url = null. Bij gewone actiepunten (geen product) is url altijd null.
-- Geef ALLEEN geldige JSON terug, geen uitleg eromheen.`;
+- Geef ALLEEN geldige JSON terug, geen uitleg eromheen.
+` + BEGEISTER_REGELS;
 
 /**
  * @param {{text:string, sender?:string, subject?:string, today:string,
