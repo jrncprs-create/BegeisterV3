@@ -495,7 +495,7 @@
   .bv-scheiding{height:1px;background:var(--line);margin:8px 0 2px}
   .bv-chev{background:none;border:none;cursor:pointer;padding:2px;flex:0 0 auto;display:inline-flex;opacity:.7;transition:transform .18s,opacity .12s}
   .bv-chev:hover{opacity:1}
-  .bv-chev.dicht{transform:rotate(-90deg)}
+  .bv-chev.dicht{transform:rotate(180deg)}
   .bv-kop .bv-chev{margin-left:6px}
   .bv-kopdel{margin-left:2px}
   .bv-kop .bv-kopdel{opacity:0}
@@ -585,6 +585,9 @@
   .pb-kk-phint{font-size:11.5px;color:var(--mut2)}
   .pb-kk-eye{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;background:transparent;border:1px solid var(--line);border-radius:999px;padding:6px 12px;color:var(--mut);cursor:pointer;font-size:12.5px}
   .pb-kk-eye:hover{color:#fff;border-color:var(--mut2)}
+  .kkl-status{font-size:13px;color:var(--mut2);margin:0 0 14px;line-height:1.5}
+  .kkl-pwrow{display:flex;gap:8px;align-items:center}
+  .kkl-pwrow .art-in{flex:1}
   .kkprev-wrap{position:relative;width:min(920px,94vw)}
   .kkprev-x{position:absolute;top:-6px;right:-6px;z-index:2;background:rgba(0,0,0,.5);border-radius:50%}
   .kkprev-stage{position:relative;width:100%;aspect-ratio:16/9;border-radius:16px;overflow:hidden;background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center}
@@ -1099,8 +1102,8 @@
   .pb-notes{width:100%;min-height:150px;background:transparent;border:1px solid var(--line);border-radius:12px;padding:11px 12px;font-size:14px;font-family:inherit;resize:vertical;margin-top:2px}
   /* Projectomschrijving: één alinea, in te klappen met het pijltje. */
   .pb-omsh{cursor:pointer;user-select:none}
-  .pb-omschev{transition:transform .18s ease;opacity:.6;margin-left:4px}
-  .pb-omschev.open{transform:rotate(180deg)}
+  .pb-omschev{transition:transform .18s ease;opacity:.6;margin-left:4px;transform:rotate(180deg)}
+  .pb-omschev.open{transform:rotate(0deg)}
   /* Groeit mee met de tekst: geen scrollbalk, geen sleepgreep, geen vaste hoogte. */
   .pb-oms{min-height:0;height:auto;line-height:1.5;overflow:hidden;resize:none}
   .pb-omsmsg{font-size:12px;color:var(--mut2);margin-top:6px;line-height:1.45}
@@ -2451,7 +2454,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v262</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v263</span>
       <!-- V244: loep verhuisd naar het hoofdmenu (waar Bestanden/Contacten stonden). -->
       <!-- V242: Dagoverzicht voorlopig uit beeld (afgesproken 16 juli) — openDayOverview en de overlay blijven in de code staan. -->
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
@@ -6482,7 +6485,8 @@ function _secKlantkant(p){
   const preview=heeftImg
     ? `<div class="pb-kk-preview"><div class="pb-kk-thumb" style="background-image:url('${escapeHtml(p.portal_bg_image)}')"></div><div class="pb-kk-pmain"><div class="pb-kk-pnaam">${escapeHtml(naam)}</div><div class="pb-kk-phint">zwarte overlay + witte tekst</div></div></div>`
     : `<div class="pb-kk-rij"><span class="pb-kk-hint">Nog geen achtergrond — zwart + klantkleur (standaard).</span></div>`;
-  const acties=`<div class="pb-kk-rij"><button class="pb-kk-btn" onclick="pbPortalImg()">${heeftImg?'Afbeelding wijzigen':'Afbeelding kiezen'}</button>${heeftImg?'<button class="pb-kk-reset" onclick="pbPortalBgClear()">verwijderen</button>':''}<button class="pb-kk-btn" onclick="pbPortalPreview()">Bekijk als klant</button></div>`;
+  const acties=`<div class="pb-kk-rij"><button class="pb-kk-btn" onclick="pbPortalImg()">${heeftImg?'Afbeelding wijzigen':'Afbeelding kiezen'}</button>${heeftImg?'<button class="pb-kk-reset" onclick="pbPortalBgClear()">verwijderen</button>':''}<button class="pb-kk-btn" onclick="pbPortalPreview()">Bekijk als klant</button></div>`
+    +`<div class="pb-kk-rij"><span class="pb-kk-lbl">Klant-login</span><button class="pb-kk-btn" onclick="kkLogin('${_qs(p.client)}')">Login beheren</button></div>`;
   return `<div class="pb-sec pb-klantkant"><div class="pb-h pb-kk-h" onclick="_bvKlap('${kKey}')"><span>Klantkant</span>${_bvChev(kKey,dicht,col)}</div>`
     +(dicht?'':(preview+acties))
     +`<input type="file" id="pbBgFile" accept="image/*" style="display:none" onchange="pbPortalBgImage(this.files&&this.files[0]);this.value=''">`
@@ -6500,6 +6504,45 @@ function pbPortalPreview(){
   ov.addEventListener('click',e=>{ if(e.target===ov)ov.remove(); });
 }
 function pbPortalImg(){ const el=document.getElementById('pbBgFile'); if(el)el.click(); }
+// Team-aanroep naar /api/portalbeheer (met bearer-token van de ingelogde teamsessie).
+async function _beheerApi(action, extra){
+  const s=await sb.auth.getSession(); const token=s&&s.data&&s.data.session&&s.data.session.access_token;
+  if(!token) throw new Error('niet ingelogd');
+  const r=await fetch('/api/portalbeheer',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify(Object.assign({action},extra||{}))});
+  const j=await r.json().catch(()=>({error:'onleesbaar'}));
+  if(!r.ok) throw new Error(j.error||'er ging iets mis');
+  return j;
+}
+// Klant-login (portal-account): e-mail tonen, login aanmaken of wachtwoord resetten.
+async function kkLogin(client){
+  client=String(client||'').trim(); if(!client)return;
+  let ov=document.getElementById('kkLoginOv'); if(ov)ov.remove();
+  ov=document.createElement('div'); ov.id='kkLoginOv'; ov.className='overlay';
+  ov.innerHTML=`<div class="modal art-modal"><button class="modal-close" onclick="document.getElementById('kkLoginOv').remove()"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <h3 class="art-titel">Klant-login · ${escapeHtml(client)}</h3>
+    <div class="kkl-status" id="kkl_status">Laden…</div>
+    <label class="art-lbl">E-mailadres (inlognaam)</label>
+    <input id="kkl_email" class="art-in" type="email" placeholder="klant@voorbeeld.nl" autocomplete="off">
+    <label class="art-lbl">Wachtwoord <span class="art-hint">min. 8 tekens — laat leeg om alleen de e-mail te wijzigen</span></label>
+    <div class="kkl-pwrow"><input id="kkl_pw" class="art-in" type="text" placeholder="nieuw wachtwoord" autocomplete="off"><button class="pb-kk-btn" type="button" onclick="const i=document.getElementById('kkl_pw');i.value=_kklGenPw()">genereer</button></div>
+    <div class="lt-voet"><button class="fv-btn ghost" onclick="document.getElementById('kkLoginOv').remove()">Sluiten</button><button class="fv-btn bk-ok" onclick="kkLoginSave('${_qs(client)}',this)">Opslaan</button></div></div>`;
+  document.body.appendChild(ov); requestAnimationFrame(()=>ov.classList.add('open'));
+  ov.addEventListener('click',e=>{ if(e.target===ov)ov.remove(); });
+  try{ const d=await _beheerApi('login_get',{client_name:client}); const st=document.getElementById('kkl_status'); const em=document.getElementById('kkl_email');
+    if(d&&d.email){ if(st)st.textContent='Bestaande login — pas de e-mail aan of stel een nieuw wachtwoord in.'; if(em)em.value=d.email; }
+    else { if(st)st.textContent='Nog geen login. Vul e-mail + wachtwoord in om er een aan te maken.'; }
+  }catch(e){ const st=document.getElementById('kkl_status'); if(st)st.textContent='Kon de login niet laden: '+(e.message||e); }
+}
+function _kklGenPw(){ const a='abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let s=''; for(let i=0;i<12;i++)s+=a[Math.floor(Math.random()*a.length)]; return s; }
+async function kkLoginSave(client,btn){
+  const email=(document.getElementById('kkl_email').value||'').trim();
+  const pw=(document.getElementById('kkl_pw').value||'');
+  if(btn){ btn.disabled=true; btn.textContent='Bezig…'; }
+  try{ const d=await _beheerApi('login_set',{client_name:client,email,password:pw});
+    toonToast(d.nieuw?'Login aangemaakt voor '+email:'Login bijgewerkt.');
+    const ov=document.getElementById('kkLoginOv'); if(ov)ov.remove();
+  }catch(e){ if(btn){btn.disabled=false;btn.textContent='Opslaan';} const st=document.getElementById('kkl_status'); if(st)st.textContent='Mislukt: '+(e.message||e); }
+}
 async function pbPortalBgImage(file){
   if(!file)return; const p=projById(_pbPid); if(!p)return;
   if(!/^image\//.test(file.type||'')){ toonToast('Kies een afbeelding.','fout'); return; }
@@ -9130,7 +9173,7 @@ function _bvCkRij(p,it,c,i){
   return `<div class="bv-rij${c.done?' af':''}"><button class="bv-chk" onclick="event.stopPropagation();checklistToggle('${it.id}',${i})">${_bvBoxSvg(c.done?'#5a5a5f':col,c.done)}</button><span class="bv-tx" onclick="openModal('${it.id}')">${c.done?'<s>':''}${escapeHtml(c.t||'')}${c.done?'</s>':''}</span>${c.done?`<button class="bv-del" onclick="event.stopPropagation();checklistDel('${it.id}',${i})" title="Verwijderen">${_tIc('<path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/>',13,1.6)}</button>`:''}</div>`;
 }
 let _bvDicht=(()=>{try{return new Set(JSON.parse(localStorage.getItem('bv_dicht')||'[]'))}catch(_){return new Set()}})();
-function _bvKlap(key){ if(_bvDicht.has(key))_bvDicht.delete(key); else _bvDicht.add(key); try{localStorage.setItem('bv_dicht',JSON.stringify([..._bvDicht]));}catch(_){} try{render();}catch(_){} }
+function _bvKlap(key){ if(_bvDicht.has(key))_bvDicht.delete(key); else _bvDicht.add(key); try{localStorage.setItem('bv_dicht',JSON.stringify([..._bvDicht]));}catch(_){} try{render();}catch(_){} try{ if(_pbPid&&(_pbTarget==='beheer'||(document.getElementById('projOverlay')&&document.getElementById('projOverlay').classList.contains('open'))))_renderProjBoard(); }catch(_){} }
 function _bvChev(key,dicht,col){ return `<button class="bv-chev${dicht?' dicht':''}" style="color:${col||'var(--mut2)'}" onclick="event.stopPropagation();_bvKlap('${key}')" title="${dicht?'Uitklappen':'Inklappen'}"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6l6 -6"/></svg></button>`; }
 function _bvKort(t){ t=String(t||'').trim(); return t.length>48?(t.slice(0,47).trimEnd()+'…'):t; }
 function _bvBronkop(p,titel,sid,klik,klapKey,dicht,wegKlik){
