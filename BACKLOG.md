@@ -1,6 +1,6 @@
 # Begeister Workflow — Uitvoerbacklog
 
-_Aangemaakt 14 juli 2026 · hoort bij HANDOFF.md · live versie **v242**_
+_Aangemaakt 14 juli 2026 · hoort bij HANDOFF.md · live versie **v243**_
 
 > Stand 15 juli 2026: alles is af behalve **U11** (agenda-sync — wacht op OAuth-keuze),
 > **U14** (boekhoudkoppeling — wacht op pakketkeuze + API-sleutel) en **Fase 7**
@@ -161,6 +161,15 @@ Status bijhouden: `[ ]` open · `[~]` bezig · `[x]` klaar (+ versienummer).
   dossier-venster. Projectprijs: bedrag + euroteken rechts zonder kader; regels zonder
   bekende waarde (Inkoop €0, Winst —) worden weggelaten. Dagoverzicht voorlopig uit
   beeld (knop en auto-open weg; code blijft staan).
+
+- [x] **L5 — Toewijzen + aandacht-push met doorklik** (M) — v243, gevraagd door Jeroen 16 juli.
+  Toewijzen aan de ander (bestaande Wie-vinkjes) en @mentions in opmerkingen sturen al een
+  push; die meldingen linken nu naar het item zelf: klik op de push opent de app mét dat
+  item open (deep link /?item=… en /?project=…; staat de app al open dan geeft de service
+  worker het adres door zonder herladen). Nieuw: aandacht-knop in het bewerken-venster —
+  één regeltje typen → push naar de ander ("Jeroen → jou: …", klik = item open) én
+  dezelfde tekst als @-opmerking bij het item als vangnet en geschiedenis. Geen apart
+  berichtensysteem nodig.
 
 ## Fase 7 — Klantportaal (stond al in HANDOFF §8)
 
