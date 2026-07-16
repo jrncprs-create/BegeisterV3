@@ -25,7 +25,7 @@ const FASE_LABEL = {
   oplevering: "Oplevering", betaald: "Betaald",
 };
 
-const SECTIES = ["omschrijving", "voortgang", "taken", "afspraken", "bestanden", "projectprijs", "notities"];
+const SECTIES = ["omschrijving", "feiten", "voortgang", "taken", "afspraken", "bestanden", "projectprijs", "notities"];
 
 // Zes vaste mappen, overal hetzelfde. De onderliggende AI-categorie (Concept, Media, …) en
 // de financiën-categorieën (Offertes/Inkoop/Facturen) blijven bestaan — dit is puur de
@@ -86,8 +86,13 @@ async function projectPagina(db, p) {
     secties: zicht,
     omschrijving: zicht.omschrijving ? (p.description || "") : "",
     toon_omschrijving: !!zicht.omschrijving,
+    toon_feiten: !!zicht.feiten,
     toon_voortgang: !!zicht.voortgang,
   };
+  if (zicht.feiten) {
+    try { const { data: fdata } = await db.from("facts").select("text").eq("project_id", pid).order("created_at");
+      pagina.feiten = (fdata || []).map((f) => f.text).filter(Boolean); } catch (_) { pagina.feiten = []; }
+  } else { pagina.feiten = []; }
 
   const [items, appts, files, docs, cmts, appr] = await Promise.all([
     db.from("items").select("id,title,status,client_zichtbaar").eq("project_id", pid).eq("client_zichtbaar", true),
