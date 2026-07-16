@@ -62,6 +62,7 @@ await mount("/api/notify", "./api/notify.mjs");
 await mount("/api/reply", "./api/reply.mjs");
 await mount("/api/push", "./api/push.mjs");
 await mount("/api/backfill-contacts", "./api/backfill-contacts.mjs");
+await mount("/api/opschonen", "./api/opschonen.mjs");
 await mount("/api/portal", "./api/portal.mjs");
 await mount("/api/portalbeheer", "./api/portalbeheer.mjs");
 await mount("/api/deploy", "./api/deploy.mjs");
