@@ -538,6 +538,41 @@
   .pb-h .pb-hbtns{display:inline-flex;align-items:center;gap:6px}
   /* L8a — Wat we weten + feit-regels */
   .m-bronbtn{margin-right:8px}
+  /* L8b — grote schoonmaak */
+  .cb-schoon{color:var(--mut2)}
+  .cb-schoon:hover{color:#fff}
+  .cb-schoon.bezig{opacity:.5;pointer-events:none}
+  .sch-rij{display:flex;align-items:flex-start;gap:11px;padding:11px 2px;border-bottom:1px solid var(--line)}
+  .sch-rij.uit{opacity:.4}
+  .sch-main{flex:1;min-width:0}
+  .sch-tx{font-size:14px;line-height:1.4}
+  .sch-naar{font-size:13px;color:var(--txt);opacity:.85;margin-top:3px}
+  .sch-mee,.sch-reden{font-size:12px;color:var(--mut2);margin-top:2px}
+  .sch-actie{flex:0 0 auto;font-size:11px;letter-spacing:.4px;text-transform:uppercase;padding:3px 9px;border-radius:999px;border:1px solid var(--line);color:var(--mut2);white-space:nowrap;margin-top:1px}
+  .sch-verwijderen{color:#e0726f;border-color:color-mix(in srgb,#e0726f 40%,transparent)}
+  .sch-feit{color:#e6c07a;border-color:color-mix(in srgb,#e6c07a 40%,transparent)}
+  .sch-scope{color:#8ab4f8;border-color:color-mix(in srgb,#8ab4f8 40%,transparent)}
+  .sch-samenvoegen{color:#8fd19e;border-color:color-mix(in srgb,#8fd19e 40%,transparent)}
+  .sch-modal{width:640px;max-width:94vw;max-height:86vh;display:flex;flex-direction:column}
+  .sch-titel{margin:0 0 4px;font-size:20px}
+  .sch-lead{color:var(--mut2);font-size:13px;margin:0 0 14px}
+  .sch-lijst{flex:1;overflow-y:auto;min-height:0;margin:0 -4px;padding:0 4px}
+  /* L8c — artikel-popup */
+  .art-modal{width:440px;max-width:94vw}
+  .art-titel{margin:0 0 16px;font-size:20px}
+  .art-lbl{display:block;font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:var(--mut2);margin:12px 0 5px}
+  .art-hint{text-transform:none;letter-spacing:0;opacity:.7;margin-left:6px}
+  .art-in{width:100%;box-sizing:border-box;background:transparent;border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:14px;color:var(--txt);font-family:inherit}
+  .art-in:focus{outline:none;border-color:var(--mut2)}
+  .art-linkrow{display:flex;gap:8px;align-items:center}
+  .art-linkrow .art-in{flex:1}
+  .art-haal{flex:0 0 auto;white-space:nowrap}
+  .art-haal.bezig{opacity:.5;pointer-events:none}
+  .art-tworow{display:flex;gap:14px}
+  .art-tworow>div{flex:1}
+  .art-eur{display:flex;align-items:center;gap:6px;color:var(--mut2)}
+  .art-eur .art-in{text-align:right}
+  .pb-inkedit{margin-left:2px}
   #m_comments{display:flex;flex-wrap:wrap;align-items:center;gap:0}
   #m_comments .m-ping{flex:1 1 100%}
   .pb-feit{display:flex;align-items:flex-start;gap:8px;padding:6px 0}
@@ -2343,7 +2378,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v249</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v250</span>
       <!-- V244: loep verhuisd naar het hoofdmenu (waar Bestanden/Contacten stonden). -->
       <!-- V242: Dagoverzicht voorlopig uit beeld (afgesproken 16 juli) — openDayOverview en de overlay blijven in de code staan. -->
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
@@ -4080,7 +4115,7 @@ function renderTaken(){
   if(isDesk3()){
     let _bar=va&&va.querySelector('.colbar');
     if(va&&!_bar){ _bar=document.createElement('div'); _bar.className='colbar'; va.insertBefore(_bar, va.firstChild); }
-    if(_bar) _bar.innerHTML=`<span class="cb-title">Taken</span><button class="cb-add" title="Nieuwe taak" aria-label="Nieuwe taak" onclick="newTask()">+</button><div class="cb-spacer"></div><div class="cb-who"><span class="tw-opt${(whoFilter==='all'||whoFilter==='Jeroen')?' on':''}" onclick="setWhoFilter('Jeroen')">Jeroen</span><span class="tw-amp${whoFilter==='all'?' on':''}" onclick="setWhoFilter('all')">&amp;</span><span class="tw-opt${(whoFilter==='all'||whoFilter==='Marlon')?' on':''}" onclick="setWhoFilter('Marlon')">Marlon</span></div>`;
+    if(_bar) _bar.innerHTML=`<span class="cb-title">Taken</span><button class="cb-add" title="Nieuwe taak" aria-label="Nieuwe taak" onclick="newTask()">+</button><button class="cb-add cb-schoon" title="Grote schoonmaak — laat de AI de open taken tegen het licht houden" onclick="openSchoonmaak(this)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l6 -6"/><path d="M9 9l6 6"/><path d="M14.5 5.5l4 4l-8.5 8.5h-4v-4z"/></svg></button><div class="cb-spacer"></div><div class="cb-who"><span class="tw-opt${(whoFilter==='all'||whoFilter==='Jeroen')?' on':''}" onclick="setWhoFilter('Jeroen')">Jeroen</span><span class="tw-amp${whoFilter==='all'?' on':''}" onclick="setWhoFilter('all')">&amp;</span><span class="tw-opt${(whoFilter==='all'||whoFilter==='Marlon')?' on':''}" onclick="setWhoFilter('Marlon')">Marlon</span></div>`;
   } else { const _bar=va&&va.querySelector('.colbar'); if(_bar)_bar.remove(); const b=va&&va.querySelector('.col-add'); if(b)b.remove(); }
   const tabs=document.getElementById('ptabs');
   const allOpen=allItems().filter(x=>x.it.status!=='done').length;
@@ -4108,6 +4143,81 @@ function renderTaken(){
 }
 async function setTab(t){if(t==='__new__'){const r=await _newClientPrompt();if(r&&r.id)activeTab=r.id;render();return;}if(t==='__manage__'){setView('beheer');return;}if(t==='__newproj__'){const cl=(filterClient&&filterClient!=='all')?filterClient:null;if(cl){await addProjectTo(cl);}else{setView('beheer');}return;}if(t==='__manageproj__'){setView('beheer');return;}activeTab=t;_animateNext=true;render();}
 function setWhoFilter(name){ whoFilter=(whoFilter===name)?'all':name; _animateNext=false; render(); }
+
+// L8b — Grote schoonmaak: de AI houdt alle open taken tegen het licht (houden/verwijderen/
+// samenvoegen/feit/scope). Voorstellen komen op een reviewscherm; niets gebeurt zonder akkoord.
+let _schoonVs=[];
+async function openSchoonmaak(btn){
+  if(btn){ btn.disabled=true; btn.classList.add('bezig'); }
+  const open=allItems().filter(x=>x.it.status!=='done'&&x.p.id!=='__inbox__')
+    .map(x=>({id:x.it.id,title:x.it.t||'',owner:x.it.owner||'',due:x.it.due||null,status:x.it.status,client:x.p.client||'',project:x.p.project||''}));
+  if(!open.length){ if(btn){btn.disabled=false;btn.classList.remove('bezig');} try{toonToast('Geen open taken om op te schonen.');}catch(_){} return; }
+  let vs=[];
+  try{ const r=await fetch('/api/opschonen',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({items:open,context:_ctxForChat?_ctxForChat():''})}); const d=await r.json(); vs=Array.isArray(d.voorstellen)?d.voorstellen:[]; }catch(_){}
+  if(btn){ btn.disabled=false; btn.classList.remove('bezig'); }
+  const byId={}; open.forEach(o=>byId[o.id]=o);
+  _schoonVs=vs.filter(v=>byId[v.id]).map(v=>({...v,on:true,_it:byId[v.id]}));
+  _schoonRender(open.length);
+}
+function _schoonActieLabel(v){
+  if(v.actie==='verwijderen')return 'verwijderen';
+  if(v.actie==='feit')return 'wordt feit';
+  if(v.actie==='scope')return 'naar omschrijving';
+  if(v.actie==='samenvoegen')return 'samenvoegen';
+  return v.actie;
+}
+function _schoonRender(totaal){
+  let ov=document.getElementById('schoonOv'); if(ov)ov.remove();
+  ov=document.createElement('div'); ov.id='schoonOv'; ov.className='overlay lt-ov';
+  if(!_schoonVs.length){
+    ov.innerHTML=`<div class="modal sch-modal"><button class="modal-close" onclick="document.getElementById('schoonOv').remove()"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button><h3 class="sch-titel">Grote schoonmaak</h3><p class="sch-lead">De AI heeft ${totaal} open taken bekeken en vond niets om op te schonen — je lijst is netjes.</p><div class="lt-voet"><button class="fv-btn" onclick="document.getElementById('schoonOv').remove()">Sluiten</button></div></div>`;
+    document.body.appendChild(ov); requestAnimationFrame(()=>ov.classList.add('open')); return;
+  }
+  const rows=_schoonVs.map((v,i)=>{
+    const naar=(v.actie==='feit'||v.actie==='scope'||v.actie==='samenvoegen')&&v.naar?`<div class="sch-naar">→ ${escapeHtml(v.naar)}</div>`:'';
+    const mee=(v.actie==='samenvoegen'&&Array.isArray(v.met)&&v.met.length)?`<div class="sch-mee">voegt samen met ${v.met.length} andere taak${v.met.length===1?'':'en'}</div>`:'';
+    const reden=v.reden?`<div class="sch-reden">${escapeHtml(v.reden)}</div>`:'';
+    return `<div class="sch-rij${v.on?'':' uit'}">
+      <button class="bv-chk" onclick="_schoonToggle(${i})">${_bvBoxSvg(v.on?'#c9c9cd':'#5a5a5f',v.on)}</button>
+      <div class="sch-main"><div class="sch-tx">${escapeHtml(v._it.title)}</div>${naar}${mee}${reden}</div>
+      <span class="sch-actie sch-${v.actie}">${_schoonActieLabel(v)}</span>
+    </div>`;
+  }).join('');
+  ov.innerHTML=`<div class="modal sch-modal"><button class="modal-close" onclick="document.getElementById('schoonOv').remove()"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button><h3 class="sch-titel">Grote schoonmaak</h3><p class="sch-lead">${totaal} open taken bekeken · ${_schoonVs.length} voorstel${_schoonVs.length===1?'':'len'}. Vink aan wat je wilt toepassen.</p><div class="sch-lijst">${rows}</div>
+    <div class="lt-voet"><button class="fv-btn ghost" onclick="document.getElementById('schoonOv').remove()">Annuleren</button><button class="fv-btn bk-ok" onclick="_schoonToepassen(this)">Toepassen wat aangevinkt staat</button></div></div>`;
+  document.body.appendChild(ov); requestAnimationFrame(()=>ov.classList.add('open'));
+  ov.addEventListener('click',e=>{ if(e.target===ov)ov.remove(); });
+}
+function _schoonToggle(i){ if(_schoonVs[i]){ _schoonVs[i].on=!_schoonVs[i].on; const r=document.querySelectorAll('#schoonOv .sch-rij')[i]; if(r){ r.classList.toggle('uit',!_schoonVs[i].on); const b=r.querySelector('.bv-chk'); if(b)b.innerHTML=_bvBoxSvg(_schoonVs[i].on?'#c9c9cd':'#5a5a5f',_schoonVs[i].on); } } }
+async function _schoonToepassen(btn){
+  if(btn){ btn.disabled=true; btn.textContent='Bezig…'; }
+  const doe=_schoonVs.filter(v=>v.on);
+  let n=0;
+  for(const v of doe){
+    const r=findItem(v.id); if(!r){ continue; }
+    const pid=r.p&&r.p.id!=='__inbox__'?r.p.id:null;
+    try{
+      if(v.actie==='verwijderen'){
+        r.p.items=r.p.items.filter(x=>x.id!==v.id); await sb.from('items').delete().eq('id',v.id); n++;
+      } else if(v.actie==='feit'){
+        await sb.from('facts').insert({project_id:pid,source_id:r.it.src||null,text:String(v.naar||r.it.t).slice(0,300)});
+        r.p.items=r.p.items.filter(x=>x.id!==v.id); await sb.from('items').delete().eq('id',v.id); n++;
+      } else if(v.actie==='scope'){
+        if(pid){ const oud=(r.p.description||'').trim(); const nieuw=(oud?oud+String.fromCharCode(10):'')+String(v.naar||r.it.t).trim();
+          r.p.description=nieuw; try{ await sb.from('projects').update({description:nieuw}).eq('id',pid); }catch(_){} }
+        r.p.items=r.p.items.filter(x=>x.id!==v.id); await sb.from('items').delete().eq('id',v.id); n++;
+      } else if(v.actie==='samenvoegen'){
+        const titel=String(v.naar||r.it.t).slice(0,300); r.it.t=titel;
+        try{ await sb.from('items').update({title:titel}).eq('id',v.id); }catch(_){}
+        for(const mid of (v.met||[])){ const mr=findItem(mid); if(mr){ mr.p.items=mr.p.items.filter(x=>x.id!==mid); try{ await sb.from('items').delete().eq('id',mid); }catch(_){} } }
+        n++;
+      }
+    }catch(_){}
+  }
+  const ov=document.getElementById('schoonOv'); if(ov)ov.remove();
+  try{ toonToast('Schoonmaak toegepast — '+n+' wijziging'+(n===1?'':'en')); }catch(_){}
+  try{ await refresh(); }catch(_){}
+}
 // Afgevinkt-archief onder de Taken-lijst (2 weken zichtbaar, daarna auto-verwijderd)
 let _archOpen=false;
 function toggleArchOpen(){ _archOpen=!_archOpen; renderTaken(); }
@@ -4416,7 +4526,7 @@ function _renderProjBoard(){
     const priceCell=(qty>1)
       ? `<div class="pb-pcell"><div class="pb-ptot"><span class="pb-eur">€</span><span class="pb-tnum">${pr!=null?fmtEur(pr*qty):'—'}</span></div><div class="pb-punit"><span class="pb-qty">${qty} ×</span><span class="pb-eur">€</span><input class="pb-price pb-punitin" type="text" inputmode="decimal" value="${unitVal}" placeholder="—" onclick="event.stopPropagation()" onchange="pbSetPrice('${x.id}',this.value)" title="Prijs per stuk"></div></div>`
       : `<div class="pb-pcell"><div class="pb-ptot"><span class="pb-eur">€</span><input class="pb-price" type="text" inputmode="decimal" value="${unitVal}" placeholder="—" onclick="event.stopPropagation()" onchange="pbSetPrice('${x.id}',this.value)" title="Prijs"></div></div>`;
-    return `<div class="pb-row pb-ink" data-tid="${x.id}"${x.image?` data-img="${escapeHtml(x.image)}"`:''}><button class="pb-chk" onclick="pbInkOrdered('${x.id}')" title="${x.status==='besteld'?'Terugzetten naar te bestellen':'Markeer als besteld'}">${_pbChk(x.status==='besteld')}</button>${nameCell}${priceCell}<button class="pb-move" onclick="event.preventDefault();event.stopPropagation();pbMoveOpen('one','${x.id}')" title="Verplaats naar ander project/klant">${_tIc('<path d="M17 3l4 4l-4 4"/><path d="M21 7h-13"/><path d="M7 21l-4 -4l4 -4"/><path d="M3 17h13"/>',15,1.4)}</button><button class="pb-del" onclick="event.preventDefault();pbDel('${x.id}')" title="Verwijderen">×</button></div>`; };
+    return `<div class="pb-row pb-ink" data-tid="${x.id}"${x.image?` data-img="${escapeHtml(x.image)}"`:''}><button class="pb-chk" onclick="pbInkOrdered('${x.id}')" title="${x.status==='besteld'?'Terugzetten naar te bestellen':'Markeer als besteld'}">${_pbChk(x.status==='besteld')}</button>${nameCell}${priceCell}<button class="pb-edit pb-inkedit" onclick="event.preventDefault();event.stopPropagation();pbArtikel('${x.id}')" title="Aantal, link en bedrag aanpassen">${_penGlyph()}</button><button class="pb-move" onclick="event.preventDefault();event.stopPropagation();pbMoveOpen('one','${x.id}')" title="Verplaats naar ander project/klant">${_tIc('<path d="M17 3l4 4l-4 4"/><path d="M21 7h-13"/><path d="M7 21l-4 -4l4 -4"/><path d="M3 17h13"/>',15,1.4)}</button><button class="pb-del" onclick="event.preventDefault();pbDel('${x.id}')" title="Verwijderen">×</button></div>`; };
   const doneInkRow=(x)=>`<div class="pb-row pb-donerow"><button class="pb-chk" onclick="pbInkCheck('${x.id}',false)" title="Terugzetten">${_pbChk(true)}</button><span class="pb-tx done">${esc(x.text||'')}</span></div>`;
   const apptRow=(a)=>{ const d=a.date?d3date(a.date):''; return `<div class="pb-row pb-appt"><span class="pb-tx">${esc(a.t||'Afspraak')}</span><span class="pb-when">${esc(d)}${a.start?' · '+esc(String(a.start).slice(0,5)):''}</span>${_pbKz('appt',a.id,a.kz)}<button class="pb-edit" onclick="openApptModal('${a.id}')" title="Bewerken">${_penIc}</button></div>`; };
   // Voortgang: waar staan we in het klanttraject. Interne projecten (Begeister) en privé
@@ -4441,7 +4551,7 @@ function _renderProjBoard(){
     ? `<div class="pb-sec"><div class="pb-h"><span>Projectprijs</span><button class="pb-hadd" onclick="pbOpenPrice()" title="Prijs &amp; budget toevoegen">+</button></div></div>`
     : `<div class="pb-sec"><div class="pb-h">Projectprijs</div><div class="pb-prijsrow">€ <input class="pb-bud" type="text" inputmode="decimal" value="${omzetEx!=null?String(omzetEx).replace('.',','):''}" placeholder="—" onchange="pbSetProjectprijs(this.value)"></div>${(inkTotal&&inkExcl>=0.005)?`<div class="pb-finline"><span>Inkoop</span><b>€${fmtEur(inkExcl)}</b></div>`:''}${(omzetEx!=null&&marge!=null)?`<div class="pb-finline marge ${marge<0?'neg':''}"><span>Winst</span><b>€${fmtEur(marge)}</b></div>`:''}</div>`;
   const secCheck=`<div class="pb-sec"><div class="pb-h">Checklist <button class="pb-ai" onclick="pbAiTodos(this)" title="AI-startchecklist">${_tIc(_TABCHAN.asterisk,15,1.7)}<span>AI</span></button></div>${todos.map(cbRow).join('')}<div class="pb-add"><input class="pb-in" data-kind="todo" placeholder="+ todo toevoegen…" onkeydown="pbAddKey(event,'todo')"></div></div>`;
-  const secInk=`<div class="pb-sec"><div class="pb-h"><span>Inkopen</span><span class="pb-hbtns"><button class="pb-ai" onclick="pbInkPaste()" title="Plak een winkelwagen of lijst — AI maakt er een bestellijst van">${_tIc(_TABCHAN.asterisk,15,1.7)}<span>lijst</span></button><button class="pb-ai" onclick="pbInkLink()" title="Toevoegen via productlink">+ link</button></span></div>${inkopen.map(inkRow).join('')}<div class="pb-add"><input class="pb-in" data-kind="inkoop" placeholder="+ inkoop toevoegen…" onkeydown="pbAddKey(event,'inkoop')"></div><div class="pb-ink-foot"><span class="pb-tot">Inkoop <b>€${fmtEur(inkTotal)}</b></span><span class="pb-budwrap">Projectprijs excl. €<input class="pb-bud" type="text" inputmode="decimal" value="${omzetEx!=null?String(omzetEx).replace('.',','):''}" placeholder="—" onchange="pbSetProjectprijs(this.value)"></span>${omzetEx!=null?`<span class="pb-rest">incl. €${fmtEur(omzetIn)}</span><span class="pb-rest ${marge<0?'over':''}">marge €${fmtEur(marge)}</span>`:''}<span class="pb-budwrap">Klantbudget €<input class="pb-bud" type="text" inputmode="decimal" value="${budget!=null?String(budget).replace('.',','):''}" placeholder="—" onchange="pbSetBudget(this.value)"></span></div></div>`;
+  const secInk=`<div class="pb-sec"><div class="pb-h"><span>Inkopen</span><span class="pb-hbtns"><button class="pb-ai" onclick="pbInkPaste()" title="Plak een winkelwagen of lijst — AI maakt er een bestellijst van">${_tIc(_TABCHAN.asterisk,15,1.7)}<span>lijst</span></button><button class="pb-ai" onclick="pbArtikel()" title="Artikel toevoegen — omschrijving, link, aantal en bedrag">+ artikel</button></span></div>${inkopen.map(inkRow).join('')}<div class="pb-add"><input class="pb-in" data-kind="inkoop" placeholder="+ snel item (alleen tekst)…" onkeydown="pbAddKey(event,'inkoop')"></div><div class="pb-ink-foot"><span class="pb-tot">Inkoop <b>€${fmtEur(inkTotal)}</b></span><span class="pb-budwrap">Projectprijs excl. €<input class="pb-bud" type="text" inputmode="decimal" value="${omzetEx!=null?String(omzetEx).replace('.',','):''}" placeholder="—" onchange="pbSetProjectprijs(this.value)"></span>${omzetEx!=null?`<span class="pb-rest">incl. €${fmtEur(omzetIn)}</span><span class="pb-rest ${marge<0?'over':''}">marge €${fmtEur(marge)}</span>`:''}<span class="pb-budwrap">Klantbudget €<input class="pb-bud" type="text" inputmode="decimal" value="${budget!=null?String(budget).replace('.',','):''}" placeholder="—" onchange="pbSetBudget(this.value)"></span></div></div>`;
   const secAppt=`<div class="pb-sec"><div class="pb-h">Afspraken <button class="pb-hadd" onclick="openApptModal(null,'${_pbPid}')" title="Afspraak toevoegen">+</button></div>${appts.length?appts.map(apptRow).join(''):'<div class="pb-empty">Nog geen afspraken.</div>'}</div>`;
   const secNotes=`<div class="pb-sec"><div class="pb-h">Notities</div><textarea class="pb-notes" placeholder="Vrije notities voor dit project…" onblur="pbSaveNotes(this.value)">${esc(p.notes||'')}</textarea></div>`;
   // "Opmerkingen" is vervallen: Notities doet hetzelfde en stond er al.
@@ -4472,7 +4582,7 @@ function _renderProjBoard(){
   const _bestNietBesteld=inkopenOpen.filter(x=>x.status!=='besteld');
   const _bestBesteld=inkopenOpen.filter(x=>x.status==='besteld');
   const _openTot=inkopenOpen.reduce((s,x)=>s+((x.price!=null&&x.price!=='')?Number(x.price):0)*(x.qty||1),0);
-  const secBestel=`<div class="pb-sec"><div class="pb-h"><span>Bestellijst</span><span class="pb-hbtns">${inkopen.length?`<button class="pb-ai" onclick="pbOrderAll()" title="Zet de hele lijst in één keer in je Amazon-mandje">${_tIc('<path d="M6 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M17 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M17 17h-11v-14h-2"/><path d="M6 5l14 1l-1 7h-13"/>',16,1.7)}</button>`:''}<button class="pb-ai" onclick="pbInkPaste()" title="Plak een verlanglijst of winkelwagen — AI maakt er regels van">${_tIc(_TABCHAN.asterisk,15,1.7)}<span>lijst</span></button>${inkopen.length?`<button class="pb-ai" onclick="pbMoveOpen('all')" title="Hele bestellijst naar een ander project/klant verplaatsen">${_tIc('<path d="M17 3l4 4l-4 4"/><path d="M21 7h-13"/><path d="M7 21l-4 -4l4 -4"/><path d="M3 17h13"/>',15,1.5)}</button><button class="pb-listdel" onclick="pbDelBestel()" title="Hele bestellijst verwijderen"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/></svg></button>`:''}</span></div>${_masterLink}${_bestNietBesteld.length?_bestNietBesteld.map(inkRow).join(''):(_bestBesteld.length?'':'<div class="pb-empty">Nog geen bestellingen.</div>')}<div class="pb-add"><input class="pb-in" data-kind="inkoop" placeholder="+ artikel toevoegen…" onkeydown="pbAddKey(event,'inkoop')"></div>${inkopenOpen.length?`<div class="pb-besteltot"><span class="pb-btlbl">Totaal</span><span class="pb-btval"><span class="pb-btnum"><span class="pb-eur">€</span><b>${fmtEur(_openTot)}</b></span><span class="pb-btsub">excl. <span class="pb-eur">€</span><span class="pb-btsnum">${fmtEur(_openTot/(1+btwPct/100))}</span></span></span></div>`:''}${_bestBesteld.length?`<div class="pb-besteld-sec"><div class="pb-h">Besteld <span class="pb-donecnt">${_bestBesteld.length}</span></div>${_bestBesteld.map(inkRow).join('')}</div>`:''}</div>`;
+  const secBestel=`<div class="pb-sec"><div class="pb-h"><span>Bestellijst</span><span class="pb-hbtns">${inkopen.length?`<button class="pb-ai" onclick="pbOrderAll()" title="Zet de hele lijst in één keer in je Amazon-mandje">${_tIc('<path d="M6 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M17 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M17 17h-11v-14h-2"/><path d="M6 5l14 1l-1 7h-13"/>',16,1.7)}</button>`:''}<button class="pb-ai" onclick="pbArtikel()" title="Artikel toevoegen — omschrijving, link, aantal en bedrag">+ artikel</button><button class="pb-ai" onclick="pbInkPaste()" title="Plak een verlanglijst of winkelwagen — AI maakt er regels van">${_tIc(_TABCHAN.asterisk,15,1.7)}<span>lijst</span></button>${inkopen.length?`<button class="pb-ai" onclick="pbMoveOpen('all')" title="Hele bestellijst naar een ander project/klant verplaatsen">${_tIc('<path d="M17 3l4 4l-4 4"/><path d="M21 7h-13"/><path d="M7 21l-4 -4l4 -4"/><path d="M3 17h13"/>',15,1.5)}</button><button class="pb-listdel" onclick="pbDelBestel()" title="Hele bestellijst verwijderen"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/></svg></button>`:''}</span></div>${_masterLink}${_bestNietBesteld.length?_bestNietBesteld.map(inkRow).join(''):(_bestBesteld.length?'':'<div class="pb-empty">Nog geen bestellingen.</div>')}<div class="pb-add"><input class="pb-in" data-kind="inkoop" placeholder="+ snel item (alleen tekst)…" onkeydown="pbAddKey(event,'inkoop')"></div>${inkopenOpen.length?`<div class="pb-besteltot"><span class="pb-btlbl">Totaal</span><span class="pb-btval"><span class="pb-btnum"><span class="pb-eur">€</span><b>${fmtEur(_openTot)}</b></span><span class="pb-btsub">excl. <span class="pb-eur">€</span><span class="pb-btsnum">${fmtEur(_openTot/(1+btwPct/100))}</span></span></span></div>`:''}${_bestBesteld.length?`<div class="pb-besteld-sec"><div class="pb-h">Besteld <span class="pb-donecnt">${_bestBesteld.length}</span></div>${_bestBesteld.map(inkRow).join('')}</div>`:''}</div>`;
   const _body=(_pbMode==='financien')?secBestel:(secKlantkant+secOms+secWeten+secFase+secWait+secTaken+secBestel+secDone+secContacts+secAppt+secFiles+secPrijs+secNotes);
   const _head=`<div class="pb-head"><span class="kbadge" style="background:${col}">${esc(initial)}</span><div class="pb-title"><b>${esc(p.client||'')}</b>${p.project?'<span> · '+esc(p.project)+'</span>':''}${_pbMode==='financien'?'<span style="color:'+col+'"> · inkoop</span>':''}</div></div>`;
   if(_pbTarget==='finmid'||_pbTarget==='finright'){ const el=document.getElementById(_pbTarget==='finright'?'finRightWrap':'finMidWrap'); const _cls=(_pbTarget==='finright')?'pb-inline pb-board-inline':'pb-inline'; const _h=(_pbTarget==='finright')?'':_head; if(el)el.innerHTML=`<div class="${_cls}" style="--scol:${col}">${_h}${_body}</div>`; return; }
@@ -4981,7 +5091,47 @@ async function renderFinancien(){
     </div>
   </div>`;
 }
-async function pbInkLink(){ const url=((await uiPrompt('Plak een productlink (Amazon of web):'))||'').trim(); if(!/^https?:\/\//i.test(url))return; let meta={}; try{ meta=await fetch('/api/linkmeta',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url})}).then(r=>r.json()); }catch(_){} const name=(meta&&meta.title)?String(meta.title).slice(0,140):url; try{ const ins=await sb.from('project_board').insert({project_id:_pbPid,kind:'inkoop',text:name,qty:1,url,sort:_pbItems.length}).select().single(); if(ins&&ins.data)_pbItems.push(ins.data); }catch(_){} _renderProjBoard(); }
+// L8c — artikel-popup: omschrijving, link (AI haalt titel + prijs op), aantal, bedrag per stuk.
+function pbArtikel(id){
+  const x=id?_pbItems.find(i=>String(i.id)===String(id)):null;
+  let ov=document.getElementById('artOv'); if(ov)ov.remove();
+  ov=document.createElement('div'); ov.id='artOv'; ov.className='overlay';
+  ov.innerHTML=`<div class="modal art-modal"><button class="modal-close" onclick="document.getElementById('artOv').remove()"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <h3 class="art-titel">${x?'Artikel bewerken':'Artikel toevoegen'}</h3>
+    <label class="art-lbl">Link <span class="art-hint">plak en de AI vult omschrijving + bedrag</span></label>
+    <div class="art-linkrow"><input id="art_url" class="art-in" type="url" placeholder="https://…" value="${x?escapeHtml(x.url||''):''}"><button class="pb-ai art-haal" onclick="pbArtikelHaal(this)" title="Uit de link halen">${_tIc(_TABCHAN.asterisk,15,1.7)}<span>haal op</span></button></div>
+    <label class="art-lbl">Omschrijving</label>
+    <input id="art_naam" class="art-in" placeholder="Wat is het?" value="${x?escapeHtml(_cleanInkName(x.text||'')):''}">
+    <div class="art-tworow">
+      <div><label class="art-lbl">Aantal</label><input id="art_qty" class="art-in" type="number" min="1" step="1" value="${x&&x.qty?x.qty:1}"></div>
+      <div><label class="art-lbl">Bedrag p/st</label><div class="art-eur">€ <input id="art_prijs" class="art-in" type="text" inputmode="decimal" placeholder="—" value="${x&&x.price!=null&&x.price!==''?String(x.price).replace('.',','):''}"></div></div>
+    </div>
+    <div class="lt-voet"><button class="fv-btn ghost" onclick="document.getElementById('artOv').remove()">Annuleren</button><button class="fv-btn bk-ok" onclick="pbArtikelOpslaan('${id||''}',this)">${x?'Opslaan':'Toevoegen'}</button></div></div>`;
+  document.body.appendChild(ov); requestAnimationFrame(()=>ov.classList.add('open'));
+  ov.addEventListener('click',e=>{ if(e.target===ov)ov.remove(); });
+  setTimeout(()=>{ const f=document.getElementById(x?'art_naam':'art_url'); if(f)f.focus(); },60);
+}
+async function pbArtikelHaal(btn){
+  const url=(document.getElementById('art_url').value||'').trim(); if(!/^https?:\/\//i.test(url)){ try{toonToast('Plak eerst een geldige link.');}catch(_){} return; }
+  if(btn){ btn.classList.add('bezig'); }
+  let meta={}; try{ meta=await fetch('/api/linkmeta',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url})}).then(r=>r.json()); }catch(_){}
+  if(btn){ btn.classList.remove('bezig'); }
+  const naam=document.getElementById('art_naam'); if(naam&&!naam.value.trim()&&meta&&meta.title) naam.value=String(meta.title).slice(0,140);
+  const pr=document.getElementById('art_prijs'); if(pr&&!pr.value.trim()&&meta&&meta.price!=null) pr.value=String(meta.price).replace('.',',');
+}
+async function pbArtikelOpslaan(id,btn){
+  const url=(document.getElementById('art_url').value||'').trim();
+  const naam=(document.getElementById('art_naam').value||'').trim()||url;
+  if(!naam){ try{toonToast('Vul een omschrijving of link in.');}catch(_){} return; }
+  const qty=Math.max(1,parseInt(document.getElementById('art_qty').value||'1',10)||1);
+  const price=_parseEur(document.getElementById('art_prijs').value);
+  if(btn){ btn.disabled=true; btn.textContent='Bezig…'; }
+  const patch={text:naam,qty,url:url||null,price:(price!=null?price:null)};
+  if(id){ const x=_pbItems.find(i=>String(i.id)===String(id)); if(x)Object.assign(x,patch); try{ await sb.from('project_board').update(patch).eq('id',id); }catch(_){} }
+  else { try{ const ins=await sb.from('project_board').insert({project_id:_pbPid,kind:'inkoop',status:'te bestellen',sort:_pbItems.length,...patch}).select().single(); if(ins&&ins.data)_pbItems.push(ins.data); }catch(_){} }
+  const ov=document.getElementById('artOv'); if(ov)ov.remove();
+  _finInk=null; _renderProjBoard();
+}
 // ASIN uit een Amazon-productlink halen (voor de "Bestel alles"-mandje-URL).
 function _amazonAsin(u){ try{ const url=new URL(u); if(!/amazon\./i.test(url.hostname)) return null; const m=url.pathname.match(/\/(?:dp|gp\/product|gp\/aw\/d|product)\/([A-Z0-9]{10})/i); return m?m[1].toUpperCase():null; }catch(_){ return null; } }
 // Route B: alle Amazon-items met een ASIN in één keer in het Amazon-mandje zetten.
