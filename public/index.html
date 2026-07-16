@@ -463,6 +463,53 @@
   .zk-row:hover,.zk-row:focus{background:rgba(255,255,255,.05);color:#fff;outline:none}
   .zk-t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .zk-sub{flex:0 0 auto;font-size:12px;color:var(--mut2);max-width:40%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  /* V240 — bundelvensters (klantkleur via --kk), accord-kaarten en upload-voortgang */
+  .bv{border:1px solid var(--line);border-radius:14px;padding:13px 14px;margin-bottom:12px;background:rgba(20,20,22,.5)}
+  .bv-kop{display:flex;align-items:center;gap:9px;padding-bottom:4px}
+  .bv-kop .picon{width:24px;height:24px;border-radius:7px;color:#0e0e10;font-size:11px;font-weight:var(--fw-nadruk);display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto}
+  .bv-naam{font-size:13.5px;color:var(--kk);font-weight:var(--fw-nadruk);cursor:pointer;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .bv-naamsub{opacity:.75;font-weight:400}
+  .bv-feiten{margin-left:auto;font-size:11px;color:var(--mut2);flex:0 0 auto}
+  .bv-bronkop{display:flex;align-items:baseline;gap:8px;border-bottom:1px solid;padding:8px 0 4px;margin-top:2px}
+  .bv-bronttl{font-size:12.5px;font-weight:var(--fw-nadruk);cursor:pointer;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .bv-bronknop{display:inline-flex;align-items:center;gap:4px;font-size:11px;background:none;border:none;cursor:pointer;padding:0;font-family:inherit;flex:0 0 auto}
+  .bv-rijen{padding:4px 0 2px}
+  .bv-rij{display:flex;align-items:center;gap:9px;padding:4px 2px;border-radius:8px}
+  .bv-rij:hover{background:rgba(255,255,255,.03)}
+  .bv-rij.af{opacity:.45}
+  .bv-chk{background:none;border:none;padding:0;cursor:pointer;display:inline-flex;flex:0 0 auto}
+  .bv-tx{flex:1;min-width:0;font-size:13px;color:var(--mut);cursor:pointer;line-height:1.5}
+  .bv-rij:hover .bv-tx{color:var(--txt)}
+  .bv-meta{font-size:10.5px;color:var(--mut2);margin-left:8px;white-space:nowrap}
+  .bv-src,.bv-del{background:none;border:none;color:var(--mut2);cursor:pointer;padding:2px;flex:0 0 auto;opacity:0;transition:opacity .12s,color .12s}
+  .bv-rij:hover .bv-src,.bv-rij:hover .bv-del,.bv-rij.af .bv-del{opacity:1}
+  .bv-src{color:var(--kk)}
+  .bv-del:hover{color:var(--late)}
+  .bv-scheiding{height:1px;background:var(--line);margin:8px 0 2px}
+  .bk{border:1px dashed var(--line);border-radius:14px;padding:12px;margin-bottom:12px}
+  .bk-kop{margin-bottom:8px}
+  .bk-ttl{display:block;font-size:13px;color:var(--txt);font-weight:var(--fw-nadruk);line-height:1.4}
+  .bk-sub{font-size:11px;color:var(--mut2)}
+  .bk-sel{display:flex;gap:6px;margin-bottom:8px}
+  .bk-sel select{flex:1;min-width:0;background:transparent;border:1px solid var(--line);border-radius:999px;color:var(--mut);font:inherit;font-size:11.5px;padding:3px 8px;outline:none;color-scheme:dark}
+  .bk-rij{display:flex;align-items:center;gap:8px;padding:3px 0}
+  .bk-rij.uit{opacity:.4}
+  .bk-tx{flex:1;min-width:0;background:transparent;border:none;border-bottom:1px dashed transparent;color:var(--mut);font:inherit;font-size:12.5px;outline:none;padding:1px 0}
+  .bk-tx:focus{border-bottom-color:var(--line);color:var(--txt)}
+  .bk-type{background:none;border:1px solid var(--line);border-radius:999px;color:var(--mut2);font:inherit;font-size:10px;letter-spacing:.5px;text-transform:uppercase;padding:2px 8px;cursor:pointer;flex:0 0 auto}
+  .bk-type.aan{color:#e6c07a;border-color:#e6c07a}
+  .bk-avelden{display:flex;gap:6px;margin:2px 0 4px 24px}
+  .bk-avelden input{background:transparent;border:1px solid var(--line);border-radius:8px;color:var(--mut);font:inherit;font-size:11.5px;padding:2px 7px;outline:none;color-scheme:dark}
+  .bk-voet{display:flex;gap:8px;margin-top:9px}
+  .bk-ok{border-color:#e6c07a;color:#e6c07a}
+  .dp{border:1px dashed var(--line);border-radius:14px;padding:11px 12px;margin-bottom:12px}
+  .dp-rij{margin-bottom:10px}
+  .dp-rij:last-child{margin-bottom:0}
+  .dp-naam{display:block;font-size:12px;color:var(--mut);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:90px}
+  .dp-st{float:right;font-size:11px;color:var(--mut2)}
+  .dp-balk{height:3px;background:var(--line);border-radius:99px;margin-top:6px;overflow:hidden}
+  .dp-vul{height:3px;background:#e6c07a;border-radius:99px;transition:width .4s}
+  .dp-vul.fout{background:var(--late)}
   /* Leestafel — zelfde taal als de rest: dunne lijnen, ronde hoeken, amber accent */
   .lt-inner{max-width:860px}
   .lt-kop{margin:6px 0 18px}
@@ -2230,7 +2277,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v239</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v240</span>
       <button id="zoekBtn" class="dag-ic" onclick="openZoek()" title="Zoeken — ⌘K / Ctrl+K" aria-label="Zoeken"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg></button>
       <button id="dayBtn" class="dag-ic" onclick="openDayOverview()" title="Dagoverzicht" aria-label="Dagoverzicht"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M3 12h2M19 12h2M5.6 18.4l1.4-1.4M17 7l1.4-1.4"/></svg></button>
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
@@ -3822,7 +3869,6 @@ function taskCard(p,it,idx,mode,fresh){
     <div class="t-pills">
       <span class="pill who">${escapeHtml(it.owner||'—')}</span>${it.contact?`<span class="pill contact">↳ ${escapeHtml(it.contact)}</span>`:''}${stPill}${srcPill}
       ${it.herhaal?`<span class="pill herh" title="Terugkerende taak — bij afvinken komt de volgende vanzelf">↻ ${_HERHAAL_LBL[it.herhaal]||it.herhaal}</span>`:''}
-      ${(!done&&(mode==='taken'))?`<span class="pill vdg${_isVandaag(it)?' on':''}" onclick="event.stopPropagation();toggleVandaag('${it.id}')" title="${_isVandaag(it)?'Staat op vandaag — klik om eraf te halen':'Zet op de vandaag-lijst'}">vandaag</span>`:''}
       <span class="pill edit" onclick="${oc}">pas aan</span>
     </div>
   </div>`;
@@ -3984,22 +4030,14 @@ function renderTaken(){
   else if(filterClient!=='all'){ base=state.projects.filter(p=>p.id!=='__inbox__'&&p.client===filterClient).flatMap(p=>p.items.map(it=>({p,it}))); }
   else base=allItems();
   const _scope=base.filter(x=> x.p.id!=='__inbox__' && (whoFilter==='all'||_ownerMatch(x.it.owner,whoFilter)));
-  const rows=sortRows(_scope.filter(x=>x.it.status!=='wait' && x.it.status!=='done'));
-  const _now=Date.now(), _fresh=x=>(_now-(x.it.created||0))<3600000;
-  // U5: de handmatige vandaag-selectie staat als eigen groep bovenaan, boven "Net binnen".
-  const _vd=rows.filter(x=>_isVandaag(x.it));
-  const _rest=rows.filter(x=>!_isVandaag(x.it));
-  const _fr=_rest.filter(_fresh), _rs=_rest.filter(x=>!_fresh(x));
-  let _h='', _i=0;
-  if(_vd.length) _h+='<div class="afgroup vdg-groep">Vandaag doen</div>'+_vd.map(({p,it})=>taskCard(p,it,_i++,'taken')).join('')+((_fr.length||_rs.length)?'<div class="fresh-sep"></div>':'');
-  if(_fr.length) _h+='<div class="afgroup">Net binnen</div>'+_fr.map(({p,it})=>taskCard(p,it,_i++,'taken',true)).join('')+(_rs.length?'<div class="fresh-sep"></div>':'');
-  _h+=_rs.map(({p,it})=>taskCard(p,it,_i++,'taken')).join('');
-  // Afgevinkt-archief: verdwijnen uit de actieve lijst, blijven 2 weken hier, daarna auto-opgeruimd
-  const _done=_scope.filter(x=>x.it.status==='done').sort((a,b)=>(b.it.archived||0)-(a.it.archived||0));
-  let _arch='';
-  if(_done.length){ _arch=`<div class="af-arch${_archOpen?' open':''}"><div class="af-archhead" onclick="toggleArchOpen()"><span class="af-archchk">✓</span><span class="af-archlbl">Afgevinkt</span><span class="af-archcnt">${_done.length}</span><span class="af-archsub">laatste 2 weken</span><span class="af-archchev">${_chevIc}</span></div>${_archOpen?('<div class="af-archlist">'+_done.map(({p,it})=>archRow(p,it)).join('')+'</div>'):''}</div>`; }
-  document.getElementById('list').innerHTML=(_h||'<div class="hint">Geen actiepunten.</div>')+_arch;
-  if(typeof wireTaskDrag==='function') wireTaskDrag();
+  // V240: bundelvensters per klant · project (in klantkleur), met bronkoppen voor punten
+  // die uit één document/mail kwamen. Afgevinkte regels blijven gedimd staan (met ×)
+  // tot de 14-daagse opruiming ze weghaalt.
+  const perProj={}, volg=[];
+  _scope.forEach(({p,it})=>{ if(it.status==='wait')return; if(!perProj[p.id]){perProj[p.id]={p,items:[]};volg.push(p.id);} perProj[p.id].items.push(it); });
+  volg.sort((a,b)=>{ const ma=Math.max(0,...perProj[a].items.map(i=>i.created||0)), mb=Math.max(0,...perProj[b].items.map(i=>i.created||0)); return mb-ma; });
+  const _h=volg.map(pid=>{ const g=perProj[pid]; if(!g.items.some(i=>i.status!=='done'))return ''; return _bvVenster(g.p,g.items,'taken'); }).join('');
+  document.getElementById('list').innerHTML=_h||'<div class="hint">Geen actiepunten.</div>';
 }
 async function setTab(t){if(t==='__new__'){const r=await _newClientPrompt();if(r&&r.id)activeTab=r.id;render();return;}if(t==='__manage__'){setView('beheer');return;}if(t==='__newproj__'){const cl=(filterClient&&filterClient!=='all')?filterClient:null;if(cl){await addProjectTo(cl);}else{setView('beheer');}return;}if(t==='__manageproj__'){setView('beheer');return;}activeTab=t;_animateNext=true;render();}
 function setWhoFilter(name){ whoFilter=(whoFilter===name)?'all':name; _animateNext=false; render(); }
@@ -6504,16 +6542,16 @@ function renderRail(){
     _wbar.innerHTML='<span class="cb-title">In afwachting</span><button class="cb-add" title="Nieuw in-afwachting-item" aria-label="Nieuw in-afwachting-item" onclick="newWait()">+</button>';
   } else if(_wb){ const _wbar=_wb.querySelector('.colbar'); if(_wbar)_wbar.remove(); const wa=_wb.querySelector('.wacht-add'); if(wa)wa.remove(); }
   const list=document.getElementById('wachterList');
-  const _now=Date.now(), _fresh=f=>(_now-(f.it.created||0))<3600000;
-  const _fr=shown.filter(_fresh), _rs=shown.filter(f=>!_fresh(f));
-  let _h='', _i=0;
-  if(_fr.length) _h+='<div class="afgroup">Net binnen</div>'+_fr.map(f=>taskCard(f.p,f.it,_i++,'wachter',true)).join('')+(_rs.length?'<div class="fresh-sep"></div>':'');
-  _h+=_rs.map(f=>taskCard(f.p,f.it,_i++,'wachter')).join('');
+  // V240: 1) upload-voortgang per bestand, 2) accord-kaarten (AI vulde in, mens keurt),
+  // 3) bestaande in-afwachting-items gebundeld per klant · project.
+  let _h=_dropProgHTML()+_accordKaartenHTML();
+  const perProj={}, volg=[];
+  shown.forEach(f=>{ if(!perProj[f.p.id]){perProj[f.p.id]={p:f.p,items:[]};volg.push(f.p.id);} perProj[f.p.id].items.push(f.it); });
+  _h+=volg.map(pid=>_bvVenster(perProj[pid].p,perProj[pid].items,'wacht')).join('');
   if(list) list.innerHTML = _h || '<div class="hint">Niets dat nu aandacht vraagt <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="vertical-align:-1px"><path d="M12 5v14"/><path d="M6 8l12 8"/><path d="M18 8l-12 8"/></svg></div>';
   const undated=allItems().filter(x=>x.it.status!=='done'&&!x.it.due&&x.it.status!=='wait').length;
   const foot=document.getElementById('wachterFoot');
   if(foot) foot.textContent = undated ? `${undated} actiepunt(en) staan nog zonder datum` : '';
-  if(typeof wireDrag==='function') wireDrag();
 }
 
 // gedropt bestand bij goedkeuren fysiek verhuizen: /Begeister/In afwachting/ -> /Begeister/Klant/Project/categorie/
@@ -7494,8 +7532,10 @@ function openModal(id, src, defStatus, presetPid){
   ov.classList.toggle('incol',incol);
   ov.classList.toggle('incol-left', incol && src==='wachter');   // In-afwachting-item: bewerk in de linkerkolom
   if(incol){const tb=document.querySelector('.topbar');ov.style.top=(tb?Math.round(tb.getBoundingClientRect().height):0)+'px';} else ov.style.top='';
-  const mck=document.getElementById('m_checklist');if(mck)mck.innerHTML=(isNew||!r)?'':_checklistHTML(r.it);
-  const mf=document.getElementById('m_files');if(mf)mf.innerHTML=_filesHTML('task', editingId);
+  // V240: checklist- en bestandenblok weg uit het bewerken-venster — een regel is één punt,
+  // bestanden bereik je via de bron. Opmerkingen blijft (klein) voor @Jeroen/@Marlon-overleg.
+  const mck=document.getElementById('m_checklist');if(mck)mck.innerHTML='';
+  const mf=document.getElementById('m_files');if(mf)mf.innerHTML='';
   const mc=document.getElementById('m_comments');if(mc)mc.innerHTML=isNew?'':(typeof _cmtBtnHTML==='function'?_cmtBtnHTML('task',editingId):'');
   ov.classList.add('open');}
 function updateDueLabel(){const el=document.getElementById('m_due_label');if(!el)return;
@@ -8580,6 +8620,114 @@ function _zoekRender(){
   box.innerHTML=h;
 }
 
+// ===== V240 — Bundelvensters, accord-kaarten en upload-voortgang. =====
+// Regel-anatomie overal gelijk: hokje (klantkleur) · zin (klik = bewerken-venster) · klein
+// ↪ naar de bron. Punten uit één document staan onder een bronkop met streep in klantkleur.
+// Afgevinkt = gedimd + × om te verwijderen.
+function _bvBoxSvg(col,done,pijl){ return `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="${col}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="5.5"/>${done?'<path d="M8 12.4l2.7 2.7L16.5 9"/>':''}${(pijl&&!done)?'<path d="M9 12h6M13 9l3 3-3 3"/>':''}</svg>`; }
+function _bvSrcSvg(){ return '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16V9a3 3 0 0 1 3-3h12"/><path d="M15 2l4 4-4 4"/></svg>'; }
+function _bvMeta(it){ const m=[]; if(it.owner)m.push(it.owner); if(it.due){try{m.push(dueInfo(it.due).txt);}catch(_){}} const wd=_waitDagen(it); if(wd!=null)m.push('wacht'+(it.contact?' op '+it.contact:'')+' · '+wd+'d'); if(it.herhaal&&_HERHAAL_LBL[it.herhaal])m.push('↻ '+_HERHAAL_LBL[it.herhaal]); return m.join(' · '); }
+function _bvRij(p,it,mode){
+  const col=PROJCOL[p.id]||'#888';
+  const done=it.status==='done';
+  const hokje = mode==='wacht'
+    ? `<button class="bv-chk" onclick="event.stopPropagation();approveWait('${it.id}')" title="Akkoord — naar Taken">${_bvBoxSvg(col,false,true)}</button>`
+    : `<button class="bv-chk" onclick="event.stopPropagation();toggle('${it.id}')" title="${done?'Terugzetten':'Afvinken'}">${_bvBoxSvg(done?'#5a5a5f':col,done)}</button>`;
+  const meta=_bvMeta(it);
+  const oc = mode==='wacht' ? `openModal('${it.id}','wachter')` : `openModal('${it.id}')`;
+  const srcIc = (it.src&&!done)?`<button class="bv-src" onclick="event.stopPropagation();gotoSource('${it.src}')" title="Naar de bron">${_bvSrcSvg()}</button>`:'';
+  const del = (done)?`<button class="bv-del" onclick="event.stopPropagation();bvVerwijder('${it.id}')" title="Verwijderen">${_tIc('<path d="M6 6l12 12M18 6L6 18"/>',13,1.6)}</button>`
+            : (mode==='wacht'?`<button class="bv-del" onclick="event.stopPropagation();rejectWait('${it.id}')" title="Afwijzen — verwijderen">${_tIc('<path d="M6 6l12 12M18 6L6 18"/>',13,1.6)}</button>`:'');
+  return `<div class="bv-rij${done?' af':''}" data-id="${it.id}">${hokje}<span class="bv-tx" onclick="${oc}">${done?'<s>':''}${escapeHtml(it.t||'')}${done?'</s>':''}${meta?`<span class="bv-meta">${escapeHtml(meta)}</span>`:''}</span>${srcIc}${del}</div>`;
+}
+function _bvCkRij(p,it,c,i){
+  const col=PROJCOL[p.id]||'#888';
+  return `<div class="bv-rij${c.done?' af':''}"><button class="bv-chk" onclick="event.stopPropagation();checklistToggle('${it.id}',${i})">${_bvBoxSvg(c.done?'#5a5a5f':col,c.done)}</button><span class="bv-tx" onclick="openModal('${it.id}')">${c.done?'<s>':''}${escapeHtml(c.t||'')}${c.done?'</s>':''}</span>${c.done?`<button class="bv-del" onclick="event.stopPropagation();checklistDel('${it.id}',${i})" title="Verwijderen">${_tIc('<path d="M6 6l12 12M18 6L6 18"/>',13,1.6)}</button>`:''}</div>`;
+}
+function _bvBronkop(p,titel,sid,klik){
+  const col=PROJCOL[p.id]||'#888';
+  return `<div class="bv-bronkop" style="border-color:${col}"><span class="bv-bronttl" style="color:${col}"${klik?` onclick="${klik}"`:''}>${escapeHtml(titel||'Bron')}</span>${sid?`<button class="bv-bronknop" style="color:${col}" onclick="gotoSource('${sid}')" title="Naar de bron">${_bvSrcSvg()}<span>bron</span></button>`:''}</div>`;
+}
+function _bvVenster(p,items,mode){
+  const col=PROJCOL[p.id]||'#888'; const esc=escapeHtml;
+  const open=items.filter(x=>x.status!=='done').length;
+  const ic=esc(p.icon||(((p.client||'?')[0]||'?').toUpperCase()));
+  const naam=p.id==='__inbox__'?'Geen klant — koppel via de regel':(esc(p.client||'—')+(p.project?' <span class="bv-naamsub">· '+esc(p.project)+'</span>':''));
+  const perBron={}, los=[], klCards=[];
+  items.forEach(it=>{ if(Array.isArray(it.checklist)&&it.checklist.length){klCards.push(it);return;} if(it.src)(perBron[it.src]=perBron[it.src]||[]).push(it); else los.push(it); });
+  let h='';
+  klCards.forEach(it=>{ h+=_bvBronkop(p,it.t||'Actiepunten',it.src,`openModal('${it.id}'${mode==='wacht'?",'wachter'":''})`)+'<div class="bv-rijen">'+it.checklist.map((c,i)=>_bvCkRij(p,it,c,i)).join('')+'</div>'; });
+  Object.entries(perBron).forEach(([sid,arr])=>{
+    if(arr.length>=2){ const src=(state.sources||[]).find(x=>String(x.id)===String(sid));
+      h+=_bvBronkop(p,(src?((typeof _srcTitle==='function')?_srcTitle(src):(src.subject||'Bron')):'Bron'),sid)+'<div class="bv-rijen">'+arr.map(it=>_bvRij(p,it,mode)).join('')+'</div>'; }
+    else los.push(...arr);
+  });
+  los.sort((a,b)=>((a.status==='done')-(b.status==='done'))||((a.due?d(a.due).getTime():8.64e15)-(b.due?d(b.due).getTime():8.64e15))||((b.created||0)-(a.created||0)));
+  if(los.length) h+=(h?'<div class="bv-scheiding"></div>':'')+'<div class="bv-rijen">'+los.map(it=>_bvRij(p,it,mode)).join('')+'</div>';
+  const kopKlik=(p.id!=='__inbox__')?` onclick="openProjectBoard('${p.id}','klanten')"`:'';
+  return `<div class="bv" style="--kk:${col}">
+    <div class="bv-kop"><span class="picon" style="background:${col}">${ic}</span><span class="bv-naam"${kopKlik}>${naam}</span><span class="bv-feiten">${open?open+' open':'alles af'}</span></div>
+    ${h}
+  </div>`;
+}
+async function bvVerwijder(id){ const r=findItem(id); if(!r)return; if(!(await uiConfirm('Dit afgevinkte punt definitief verwijderen?')))return; r.p.items=r.p.items.filter(i=>i.id!==r.it.id); try{ await sb.from('items').delete().eq('id',id); }catch(_){} try{render();}catch(_){} }
+
+// ── Upload-voortgang (linkerkolom, per bestand tekst + balk) ──
+let _dropProg=[];
+function _dpUpdate(x,pct,st){ x.pct=pct; x.st=st; try{renderRail();}catch(_){} }
+function _dropProgHTML(){ if(!_dropProg.length)return '';
+  return '<div class="dp">'+_dropProg.map(x=>`<div class="dp-rij"><span class="dp-st">${escapeHtml(x.st)}</span><span class="dp-naam">${escapeHtml(x.naam)}</span><div class="dp-balk"><div class="dp-vul${x.fout?' fout':''}" style="width:${x.pct}%"></div></div></div>`).join('')+'</div>'; }
+
+// ── Accord-kaarten: AI vulde in, een mens keurt (klant/project + per regel aan/uit). ──
+let _bkState={};
+function _accordBronnen(){ return (state.sources||[]).filter(s=>s.channel==='drop'&&s.suggestItems&&Array.isArray(s.suggestItems.rows)&&s.suggestItems.rows.length); }
+function _accordKaartenHTML(){
+  return _accordBronnen().map(s=>{
+    const st=_bkState[s.id]||(_bkState[s.id]={rows:JSON.parse(JSON.stringify(s.suggestItems.rows)),contacts:s.suggestItems.contacts||[],client:s.suggestItems.client||'',project_id:s.proj||'',titel:s.suggestItems.titel||s.summary||''});
+    const kl=uniqueClients();
+    const klOpts='<option value="">— klant —</option>'+kl.map(c=>`<option${st.client===c?' selected':''}>${escapeHtml(c)}</option>`).join('');
+    const projs=state.projects.filter(p=>p.id!=='__inbox__'&&p.client===st.client);
+    const prOpts='<option value="">— project —</option>'+projs.map(p=>`<option value="${p.id}"${st.project_id===p.id?' selected':''}>${escapeHtml(p.project||p.client)}</option>`).join('');
+    const rows=st.rows.map((r,i)=>{
+      const uit=r.on===false; const isA=r.type==='afspraak';
+      let h=`<div class="bk-rij${uit?' uit':''}">
+        <button class="bv-chk" onclick="bkToggle('${s.id}',${i})" title="${uit?'Meenemen':'Overslaan'}">${_bvBoxSvg(uit?'#5a5a5f':'#c9c9cd',false)}</button>
+        <input class="bk-tx" value="${escapeHtml(r.t||'')}" oninput="_bkState['${s.id}'].rows[${i}].t=this.value">
+        <button class="bk-type${isA?' aan':''}" onclick="bkType('${s.id}',${i})">${isA?'afspraak':'taak'}</button>
+      </div>`;
+      if(isA&&!uit) h+=`<div class="bk-avelden"><input type="date" value="${r.date||''}" onchange="_bkState['${s.id}'].rows[${i}].date=this.value||null"><input type="time" value="${r.start||''}" onchange="_bkState['${s.id}'].rows[${i}].start=this.value||null"></div>`;
+      return h;
+    }).join('');
+    return `<div class="bk">
+      <div class="bk-kop"><span class="bk-ttl">${escapeHtml(st.titel||'Nieuw binnengekomen')}</span><span class="bk-sub">${escapeHtml((typeof _srcTitle==='function')?_srcTitle(s):'bron')} · AI vulde ${st.rows.length} punt${st.rows.length===1?'':'en'} in</span></div>
+      <div class="bk-sel"><select onchange="bkClient('${s.id}',this.value)">${klOpts}</select><select onchange="_bkState['${s.id}'].project_id=this.value">${prOpts}</select></div>
+      ${rows}
+      <div class="bk-voet"><button class="fv-btn bk-ok" onclick="bkAkkoord('${s.id}',this)">✓ akkoord → taken</button><button class="fv-btn ghost" onclick="bkWeg('${s.id}')" title="Voorstellen weggooien (bron en bestand blijven)">×</button></div>
+    </div>`;
+  }).join('');
+}
+function bkToggle(sid,i){ const st=_bkState[sid]; if(!st||!st.rows[i])return; st.rows[i].on=(st.rows[i].on===false); renderRail(); }
+function bkType(sid,i){ const st=_bkState[sid]; if(!st||!st.rows[i])return; st.rows[i].type=(st.rows[i].type==='afspraak')?'taak':'afspraak'; st.rows[i].on=true; renderRail(); }
+function bkClient(sid,v){ const st=_bkState[sid]; if(!st)return; st.client=v; st.project_id=''; renderRail(); }
+async function bkAkkoord(sid,btn){
+  const st=_bkState[sid]; const s=(state.sources||[]).find(x=>String(x.id)===String(sid)); if(!st||!s)return;
+  if(btn){ btn.disabled=true; btn.textContent='Bezig…'; }
+  let pid=st.project_id||null;
+  if(!pid&&st.client){ const p=state.projects.find(x=>x.id!=='__inbox__'&&x.client===st.client); pid=p?p.id:null; }
+  const rows=st.rows.filter(r=>r.on!==false&&String(r.t||'').trim()).map(r=>({on:true,type:(r.type==='afspraak')?'afspraak':'taak',t:r.t,owner:r.owner||'',contact:r.contact||'',due:r.due||null,date:r.date||null,start:r.start||null,end:r.end||null,location:r.location||''}));
+  const r=await _ltApply({titel:st.titel,rows,contacts:st.contacts||[]},{srcId:s.id,projectId:pid});
+  try{ await sb.from('sources').update({suggest_items:null, project_id:pid||s.proj||null}).eq('id',s.id); }catch(_){}
+  s.suggestItems=null; if(pid)s.proj=pid; delete _bkState[sid];
+  toonToast('✓ '+r.n+' punt'+(r.n===1?'':'en')+' aangemaakt');
+  try{ await refresh(); }catch(_){}
+}
+async function bkWeg(sid){
+  const s=(state.sources||[]).find(x=>String(x.id)===String(sid)); if(!s)return;
+  if(!(await uiConfirm('Voorstellen weggooien? De bron en het bestand blijven bewaard.')))return;
+  try{ await sb.from('sources').update({suggest_items:null}).eq('id',s.id); }catch(_){}
+  s.suggestItems=null; delete _bkState[sid]; renderRail();
+}
+
 // ===== Leestafel — het reviewscherm voor alles wat de AI leest. =====
 // Elke vondst is een eigen regel: aan/uit, tekst bewerkbaar, en per regel het type
 // (Taak / Subpunt / Afspraak / Notitie). Toepassen maakt precies aan wat aangevinkt staat;
@@ -9051,9 +9199,51 @@ async function _pdfFirstPagePreview(file){
 }
 
 async function handleDroppedFiles(list){
-  _dropFiles=[...list];
-  try{ if(typeof dismissWelcome==='function') dismissWelcome(); }catch(_){}   // chat verdwijnt bij droppen
-  _dropRunNext();
+  // V240: meerdere bestanden tegelijk, elk met eigen voortgang in de linkerkolom.
+  // Geen overlays: de AI leest en vult in, de kaart verschijnt bij In afwachting
+  // en dáár keur je hem (met klant/project-keuze) goed.
+  try{ if(typeof dismissWelcome==='function') dismissWelcome(); }catch(_){}
+  try{ if(!['taken','agenda','wachter','afspraken'].includes(view)) setView(isDesk3()?'taken':'wachter'); }catch(_){}
+  for(const f of [...list]) _dropVerwerk(f);
+}
+async function _dropVerwerk(f){
+  const x={naam:f.name,pct:5,st:'voorbereiden…',fout:false}; _dropProg.push(x); try{renderRail();}catch(_){}
+  try{
+    const b64=await fileToB64(f); _dpUpdate(x,25,'AI leest…');
+    const catalog=state.projects.filter(p=>p.id!=='__inbox__').map(p=>({project_id:p.id,client:p.client,project:p.project||''}));
+    const r=await fetch('/api/readdrop',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:f.name,mime:f.type||'',b64,catalog,today:iso(TODAY),dates:dateTable(),who,context:_ctxForChat()})});
+    const data=await r.json(); if(data&&data.error) throw new Error(data.error);
+    _dpUpdate(x,70,'opslaan…');
+    await _saveDropAuto(data,f,b64);
+    _dpUpdate(x,100,'klaar ✓');
+    try{ loadUsage(); }catch(_){}
+    setTimeout(()=>{ _dropProg=_dropProg.filter(y=>y!==x); try{renderRail();}catch(_){} },1800);
+    try{ await refresh(); }catch(_){}
+  }catch(e){
+    x.fout=true; _dpUpdate(x,100,'mislukt — '+String(e&&e.message||e).slice(0,60));
+    setTimeout(()=>{ _dropProg=_dropProg.filter(y=>y!==x); try{renderRail();}catch(_){} },7000);
+  }
+}
+// Bron + bestand meteen bewaren; de AI-vulling wacht als accord-kaart op een mens.
+async function _saveDropAuto(data,f,b64){
+  const kind=data.kind||'werk';
+  const summary=(data.reply||'').trim();
+  const rows=[];
+  (data.items||[]).forEach(it=>{ const t=String(it.title||'').trim(); if(t)rows.push({on:true,type:'taak',t,owner:it.owner||'',contact:it.contact||'',due:it.due||null}); });
+  (data.appointments||[]).forEach(a=>{ if(a&&a.title&&a.date)rows.push({on:true,type:'afspraak',t:String(a.title).trim(),date:a.date,start:a.start?String(a.start).slice(0,5):null,end:a.end?String(a.end).slice(0,5):null,location:a.location||''}); });
+  const suggest=(kind==='werk'&&rows.length)?{titel:summary.slice(0,140),rows,contacts:data.contacts||[],client:(data.client||'').trim()}:null;
+  const _body=data.transcript?(f.name+'\n\n'+data.transcript).slice(0,12000):f.name;
+  let srcId=null;
+  try{ const ins=await sb.from('sources').insert({channel:'drop',sender:who||'Sleep',body:_body,summary:summary.slice(0,2000)||null,processed:true,triage:(kind!=='werk')?kind:null,suggest_items:suggest}).select('id').single(); srcId=ins&&ins.data?ins.data.id:null; }catch(_){}
+  if(kind==='inspiratie'){ try{ const bordId=await _inspOngesorteerdBord(); await sb.from('insp_items').insert({board_id:bordId,type:'image',title:(summary||f.name).slice(0,120),url:null,project_id:null,sort:0}); }catch(_){} }
+  if(srcId){ try{
+    _dropSubject=(data.subject||'').trim(); _dropClient=(data.client||'').trim(); _dropProj=(data.project||'').trim(); _dropCat=((data.category||'').trim())||'Concept & ontwerp';
+    const aiName=_intakeName(f);
+    const up=await fetch('/api/dropbox/list',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'upload',name:aiName,b64,target:'In afwachting',cat:_dropCat})}).then(r=>r.json());
+    if(up&&up.file&&up.file.link){
+      try{ await sb.from('attachments').insert({source_id:srcId,filename:aiName,storage_path:'dropbox:'+up.file.link,mime:f.type||''}); }catch(_){}
+      try{ await sb.from('documents').update({category:_dropCat,link:up.file.link,dropbox_path:up.file.link,size:f.size||null,summary:summary.slice(0,2000)||null}).eq('source_id',srcId).eq('filename',aiName); }catch(_){}
+    } }catch(e){ console.warn('bestand bewaren mislukte',e); } }
 }
 // Klembord-knop (menu): plak overal HTML-tekst (met links + thumbnails) als BRON voor de AI.
 // Probeert het klembord automatisch te lezen; lukt dat niet → handmatig plakvak.
