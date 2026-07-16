@@ -2330,7 +2330,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v247</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v248</span>
       <!-- V244: loep verhuisd naar het hoofdmenu (waar Bestanden/Contacten stonden). -->
       <!-- V242: Dagoverzicht voorlopig uit beeld (afgesproken 16 juli) — openDayOverview en de overlay blijven in de code staan. -->
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
@@ -3021,6 +3021,7 @@
     <span class="fv-count" id="fv_count"></span>
     <div class="fv-actions">
       <button class="fv-btn fv-ai" onclick="var _f=_fvList[_fvIdx];if(_f)openAiInsight('file',_f.id)" title="Laat AI dit document lezen"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" style="vertical-align:-2px;margin-right:6px"><path d="M12 5v14"/><path d="M6 8l12 8"/><path d="M18 8l-12 8"/></svg>Laat AI lezen</button>
+      <button class="fv-btn" onclick="fvVerplaats()" title="Verplaats dit bestand naar een andere klant, project of map (echt verplaatsen, geen kopie)">Verplaats…</button>
       <button class="fv-btn" onclick="fvOpenOriginal()" title="Download in standaardprogramma">Download origineel</button>
       <button class="fv-btn" onclick="fvOpenDropbox()" title="Open in Dropbox">Open in Dropbox</button>
       <button class="fv-x" onclick="closeFileViewer()" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
@@ -6421,6 +6422,53 @@ async function fvOpenOriginal(){ const f=_fvList[_fvIdx]; if(!f)return;
   if(f.link){ window.open(_fvDl(f.link),'_blank','noopener'); return; }
   const u=await _attUrl(f); if(u) window.open(u,'_blank','noopener'); }
 function fvOpenDropbox(){ const f=_fvList[_fvIdx]; if(f)window.open(f.link,'_blank','noopener'); }
+// V248: bestand verplaatsen naar een andere klant/project/map — echt verplaatsen, geen kopie.
+function fvVerplaats(){
+  const f=_fvList[_fvIdx]; if(!f)return;
+  let ov=document.getElementById('fvMove'); if(ov)ov.remove();
+  ov=document.createElement('div'); ov.id='fvMove'; ov.className='overlay';
+  const cls=uniqueClients();
+  const curClient=(f.owner_type==='client')?String(f.owner_id):(((projById(f.owner_id)||{}).client)||cls[0]);
+  const opts=cls.map(c=>`<option${c===curClient?' selected':''}>${escapeHtml(c)}</option>`).join('');
+  ov.innerHTML=`<div class="modal" style="width:430px;max-width:92vw;padding:24px 22px">
+    <h3 style="margin:0 0 6px">Verplaats bestand</h3>
+    <div style="color:var(--mut2);font-size:13px;margin-bottom:14px">${escapeHtml(f.name||'')}</div>
+    <div class="m-fld"><select id="fvmv_client" onchange="_fvmvProjs()">${opts}</select></div>
+    <div class="m-fld"><select id="fvmv_proj"></select></div>
+    <div class="m-fld"><select id="fvmv_map"></select></div>
+    <div class="foot" style="display:flex;justify-content:flex-end;gap:10px;margin-top:14px">
+      <button class="btn ghost" onclick="document.getElementById('fvMove').remove()">Annuleren</button>
+      <button class="btn" onclick="fvVerplaatsDoe()">Verplaatsen</button>
+    </div></div>`;
+  document.body.appendChild(ov);
+  requestAnimationFrame(()=>ov.classList.add('open'));
+  ov.addEventListener('click',e=>{ if(e.target===ov)ov.remove(); });
+  _fvmvProjs();
+}
+function _fvmvProjs(){
+  const cl=document.getElementById('fvmv_client').value;
+  const f=_fvList[_fvIdx]||{};
+  const ps=(state.projects||[]).filter(p=>p.id!=='__inbox__'&&p.client===cl);
+  const curPid=(f.owner_type==='project')?String(f.owner_id):'__alg__';
+  document.getElementById('fvmv_proj').innerHTML='<option value="__alg__">Algemeen (klantniveau)</option>'+ps.map(p=>`<option value="${p.id}"${String(p.id)===curPid?' selected':''}>${escapeHtml(p.project||'—')}</option>`).join('');
+  const maps=_TREE_MAPPEN.slice(); const cur=(typeof _cat==='function'?_cat(f):'')||'';
+  if(cur&&!maps.includes(cur))maps.push(cur);
+  document.getElementById('fvmv_map').innerHTML=maps.map(m=>`<option${m===cur?' selected':''}>${escapeHtml(m)}</option>`).join('');
+}
+async function fvVerplaatsDoe(){
+  const f=_fvList[_fvIdx]; if(!f)return;
+  const cl=document.getElementById('fvmv_client').value, pid=document.getElementById('fvmv_proj').value, map=document.getElementById('fvmv_map').value;
+  const patch={ icon:map, folder_id:null };
+  if(pid==='__alg__'){ patch.owner_type='client'; patch.owner_id=cl; }
+  else Object.assign(patch,_veiligeOwner(pid,cl));
+  Object.assign(f,patch);
+  const mv=document.getElementById('fvMove'); if(mv)mv.remove();
+  try{ await _fileUpdate(f.id,patch); }catch(e){ try{toonToast('Opslaan mislukte: '+(e.message||e),'fout');}catch(_){} }
+  try{ toonToast('Verplaatst naar '+cl+' · '+map); }catch(_){}
+  try{ _renderFmTree(); }catch(_){}
+  try{ if(_pbTarget&&_pbPid)_renderProjBoard(); }catch(_){}
+  try{ render(); }catch(_){}
+}
 // ✦ Laat AI lezen: analyseert het bestand, toont links de resultaten terwijl de preview soepel krimpt.
 let _fvAiTimer=null,_fvAiBullets=[],_fvAiData={},_aiCtx=null;
 function _fvAiReset(){ if(_fvAiTimer){clearInterval(_fvAiTimer);_fvAiTimer=null;} const fv=document.getElementById('fileViewer'); if(fv)fv.classList.remove('fv-split'); const b=document.getElementById('fv_results'); if(b)b.innerHTML=''; }
