@@ -71,6 +71,9 @@ Regels:
 - scope = één zin die beschrijft wat Begeister voor dit project doet, ALLEEN als het bericht
   dat expliciet zegt of duidelijk maakt (bv. "wij verzorgen licht en opbouw voor Sloase
   2026"), anders "".
+- kind = "werk" | "inspiratie" | "prive" | "chitchat". "inspiratie" = sfeer/referentie zonder actie;
+  "prive" = persoonlijk maar wél met een taak/afspraak; "chitchat" = losse persoonlijke chatter,
+  ruis of spam zonder enige waarde. Bij twijfel: "werk".
 - owner = wie binnen Begeister het oppakt: "Jeroen" of "Marlon". Weet je het niet, laat leeg.
 - contact = de externe persoon waar het mee te maken heeft (bv. Leon, Willem, Noa). Mag leeg.
 - due = ISO-datum (YYYY-MM-DD) alleen als er een concrete datum/deadline genoemd is, anders null.
@@ -125,6 +128,7 @@ Geef JSON in exact dit formaat:
   ],
   "facts": [ "..." ],
   "scope": "",
+  "kind": "werk",
   "contacts": [
     { "name": "...", "email": "", "phone": "", "company": "", "role": "" }
   ],
@@ -169,10 +173,11 @@ Geef JSON in exact dit formaat:
       facts: (Array.isArray(parsed.facts) ? parsed.facts : [])
         .map(f => String(f || "").trim()).filter(Boolean).slice(0, 10),
       scope: (parsed.scope || "").toString().trim(),
+      kind: ["werk","inspiratie","prive","chitchat"].includes(parsed.kind) ? parsed.kind : "werk",
       usage,
     };
   } catch (e) {
     console.error("Kon Claude-antwoord niet als JSON lezen:", raw);
-    return { items: [], summary: "", contacts: [], facts: [], scope: "", usage };
+    return { items: [], summary: "", contacts: [], facts: [], scope: "", kind: "werk", usage };
   }
 }

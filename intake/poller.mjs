@@ -185,56 +185,57 @@ export async function run() {
         }
 
         // 3) Claude haalt actiepunten (en contacten) eruit
-        const { items, summary, contacts, usage, client: exClient = "", project: exProject = "", reply: exReply = "", appointments: exAppts = [], facts: exFacts = [] } = await extractItems({
+        const { items, summary, contacts, usage, client: exClient = "", project: exProject = "", reply: exReply = "", appointments: exAppts = [], facts: exFacts = [], kind: exKind = "werk" } = await extractItems({
           text: body, sender, subject: mail.subject || "", today, catalog, context,
         });
         // verbruik loggen (faalt stil)
         if (usage) await logUsage(db, { source: "intake", ...usage });
-        if (items.length) {
-          // V240: één item per actiepunt (met eigen wie/contact/deadline). De app bundelt ze
-          // in beeld per bron en per klant · project — geen verzamelkaart met checklist meer.
-          for (const it of items) {
-            await db.from("items").insert({
-              project_id: it.project_id || null,
-              source_id: source.id,
-              title: it.title,
-              owner: it.owner || null,
-              contact: it.contact || null,
-              due: it.due || null,
-              status: ["todo", "doing", "wait", "done"].includes(it.status) ? it.status : "todo",
-              checklist: [],
-            });
-          }
+
+        // Project van dit bericht bepalen (voor de kaart en de bronkoppeling).
+        let msgProject = (items.find(it => it.project_id) || {}).project_id || null;
+        if (!msgProject && (exClient || exProject)) {
+          const norm = v => String(v || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+          const nc = norm(exClient), np = norm(exProject);
+          const hit = (nc && np && catalog.find(c => norm(c.client) === nc && norm(c.project) === np))
+                   || (nc && catalog.find(c => norm(c.client) === nc));
+          if (hit) msgProject = hit.project_id;
         }
 
-        // L8a: feiten ("wat we weten") bewaren bij het project van dit bericht.
-        try {
-          const factProject = (items.find(it => it.project_id) || {}).project_id || null;
+        // V252 — ÉÉN ROUTE: de mail-intake maakt niet langer stilletjes taken/feiten aan, maar
+        // legt (net als drops) een accord-kaart klaar in "In afwachting". De mens keurt goed.
+        // Zo glipt er niets ongezien binnen en loopt alle intake via dezelfde poort.
+        const _rows = [];
+        if (exKind === "werk") {
+          for (const it of items) {
+            const t = String(it.title || "").trim(); if (!t) continue;
+            _rows.push({ on: true, type: "taak", t, owner: it.owner || "", contact: it.contact || "", due: it.due || null });
+          }
+          for (const a of exAppts) {
+            if (a && a.title && a.date) _rows.push({ on: true, type: "afspraak", t: String(a.title).trim(), date: a.date, start: a.start ? String(a.start).slice(0,5) : null, end: a.end ? String(a.end).slice(0,5) : null, location: a.location || "" });
+          }
           for (const ft of exFacts) {
-            await db.from("facts").insert({ project_id: factProject, source_id: source.id, text: ft });
+            const t = String(ft || "").trim(); if (t) _rows.push({ on: true, type: "feit", t });
           }
-        } catch (e) { console.error("feit-fout:", e.message); }
+        }
+        const suggest = (exKind === "werk" && _rows.length)
+          ? { titel: (summary || mail.subject || "").slice(0, 140), rows: _rows, contacts: contacts || [], client: exClient || "" }
+          : null;
 
-        // 3b) gevonden contacten opslaan (dedupe op e-mail; anders op naam)
+        // 3b) gevonden contacten: bij een kaart gaan ze mee in de review; anders (geen kaart)
+        // direct opslaan zodat ze niet verloren gaan.
         try {
-          // project_id van dit bericht: het eerste item dat een eenduidig project kreeg
-          let msgProject = (items.find(it => it.project_id) || {}).project_id || null;
-          // Vangnet voor offertes/facturen met (bijna) lege body: match de door Claude herkende
-          // klant/project tegen de catalogus, zodat het document tóch aan het project hangt.
-          if (!msgProject && (exClient || exProject)) {
-            const norm = v => String(v || "").toLowerCase().replace(/[^a-z0-9]/g, "");
-            const nc = norm(exClient), np = norm(exProject);
-            const hit = (nc && np && catalog.find(c => norm(c.client) === nc && norm(c.project) === np))
-                     || (nc && catalog.find(c => norm(c.client) === nc));
-            if (hit) msgProject = hit.project_id;
-          }
-          if (msgProject) await db.from("sources").update({ project_id: msgProject }).eq("id", source.id);
-          await saveContacts(db, contacts, source.id, msgProject);
+          if (!suggest) await saveContacts(db, contacts, source.id, msgProject);
         } catch (e) { console.error("contact-fout:", e.message); }
 
-        // U8: het AI-concept-antwoord meteen klaarzetten bij de bron (alleen e-mail).
-        // U11b: herkende afspraken (datum/tijd) als voorstel bij de bron — inplannen doe je in de app.
-        await db.from("sources").update({ processed: true, summary: summary || null, suggest_reply: exReply || null, suggest_appts: exAppts.length ? exAppts : null }).eq("id", source.id);
+        // U8/U11b + de accord-kaart klaarzetten bij de bron.
+        await db.from("sources").update({
+          processed: true,
+          project_id: msgProject || null,
+          summary: summary || null,
+          suggest_reply: exReply || null,
+          suggest_appts: exAppts.length ? exAppts : null,
+          suggest_items: suggest,
+        }).eq("id", source.id);
 
         // 1 melding per binnengekomen bericht — korte AI-samenvatting
         try {
