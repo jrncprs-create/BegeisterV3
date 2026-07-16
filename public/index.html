@@ -502,6 +502,9 @@
   .bv:hover .bv-kop .bv-kopdel{opacity:.8}
   .bv.dicht{padding-bottom:9px}
   .bv-bronkop .bv-chev{margin-left:2px}
+  .bv-bronweg{background:none;border:none;cursor:pointer;padding:2px;color:var(--mut2);display:inline-flex;opacity:0;transition:opacity .12s}
+  .bv:hover .bv-bronweg{opacity:.6}
+  .bv-bronweg:hover{opacity:1 !important}
   /* V242 */
   .pb-chk{background:transparent !important;border:none !important;padding:0;cursor:pointer;color:var(--scol,#9a9aa2);flex:0 0 auto;display:inline-flex;line-height:0;opacity:.92;border-radius:0;-webkit-appearance:none;appearance:none}
   .pb-chk:hover{opacity:1}
@@ -2324,7 +2327,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v244</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v245</span>
       <!-- V244: loep verhuisd naar het hoofdmenu (waar Bestanden/Contacten stonden). -->
       <!-- V242: Dagoverzicht voorlopig uit beeld (afgesproken 16 juli) — openDayOverview en de overlay blijven in de code staan. -->
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
@@ -8733,9 +8736,20 @@ let _bvDicht=(()=>{try{return new Set(JSON.parse(localStorage.getItem('bv_dicht'
 function _bvKlap(key){ if(_bvDicht.has(key))_bvDicht.delete(key); else _bvDicht.add(key); try{localStorage.setItem('bv_dicht',JSON.stringify([..._bvDicht]));}catch(_){} try{render();}catch(_){} }
 function _bvChev(key,dicht,col){ return `<button class="bv-chev${dicht?' dicht':''}" style="color:${col||'var(--mut2)'}" onclick="event.stopPropagation();_bvKlap('${key}')" title="${dicht?'Uitklappen':'Inklappen'}"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6l6 -6"/></svg></button>`; }
 function _bvKort(t){ t=String(t||'').trim(); return t.length>48?(t.slice(0,47).trimEnd()+'…'):t; }
-function _bvBronkop(p,titel,sid,klik,klapKey,dicht){
+function _bvBronkop(p,titel,sid,klik,klapKey,dicht,wegKlik){
   const col=PROJCOL[p.id]||'#888';
-  return `<div class="bv-bronkop" style="border-color:${col}"><span class="bv-bronttl" style="color:${col}"${klik?` onclick="${klik}"`:''} title="${escapeHtml(titel||'')}">${escapeHtml(_bvKort(titel)||'Bron')}</span>${sid?`<button class="bv-bronknop" style="color:${col}" onclick="openBronOverlay('${sid}')" title="Bron bekijken">${_bvSrcSvg()}<span>bron</span></button>`:''}${klapKey?_bvChev(klapKey,dicht,col):''}</div>`;
+  const weg=wegKlik?`<button class="bv-bronweg" onclick="event.stopPropagation();${wegKlik}" title="Dit cluster verwijderen"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M7 7l1 13h8l1-13"/></svg></button>`:'';
+  return `<div class="bv-bronkop" style="border-color:${col}"><span class="bv-bronttl" style="color:${col}"${klik?` onclick="${klik}"`:''} title="${escapeHtml(titel||'')}">${escapeHtml(_bvKort(titel)||'Bron')}</span>${sid?`<button class="bv-bronknop" style="color:${col}" onclick="openBronOverlay('${sid}')" title="Bron bekijken">${_bvSrcSvg()}<span>bron</span></button>`:''}${weg}${klapKey?_bvChev(klapKey,dicht,col):''}</div>`;
+}
+// Heel broncluster verwijderen (alle punten uit die ene bron binnen dit venster).
+async function bvBronWeg(pid,sid,mode){
+  const proj=projById(pid); if(!proj)return;
+  const ids=(proj.items||[]).filter(it=>String(it.src||'')===String(sid)&&(mode==='wacht'?it.status==='wait':it.status!=='wait')&&!(Array.isArray(it.checklist)&&it.checklist.length)).map(it=>it.id);
+  if(!ids.length)return;
+  if(!(await uiConfirm('Alle '+ids.length+' punt'+(ids.length===1?'':'en')+' van deze bron verwijderen?')))return;
+  try{ await sb.from('items').delete().in('id',ids); }catch(_){}
+  proj.items=proj.items.filter(it=>!ids.includes(it.id));
+  try{render();}catch(_){}
 }
 function _bvVenster(p,items,mode){
   const col=PROJCOL[p.id]||'#888'; const esc=escapeHtml;
@@ -8749,12 +8763,12 @@ function _bvVenster(p,items,mode){
     const perBron={}, los=[], klCards=[];
     items.forEach(it=>{ if(Array.isArray(it.checklist)&&it.checklist.length){klCards.push(it);return;} if(it.src)(perBron[it.src]=perBron[it.src]||[]).push(it); else los.push(it); });
     klCards.forEach(it=>{ const bKey=vKey+'|k'+it.id, bDicht=_bvDicht.has(bKey);
-      h+=_bvBronkop(p,it.t||'Actiepunten',it.src,`openModal('${it.id}'${mode==='wacht'?",'wachter'":''})`,bKey,bDicht);
+      h+=_bvBronkop(p,it.t||'Actiepunten',it.src,`openModal('${it.id}'${mode==='wacht'?",'wachter'":''})`,bKey,bDicht,`bvVerwijder('${it.id}')`);
       if(!bDicht) h+='<div class="bv-rijen">'+it.checklist.map((c,i)=>_bvCkRij(p,it,c,i)).join('')+'</div>'; });
     Object.entries(perBron).forEach(([sid,arr])=>{
       if(arr.length>=2){ const src=(state.sources||[]).find(x=>String(x.id)===String(sid));
         const bKey=vKey+'|s'+sid, bDicht=_bvDicht.has(bKey);
-        h+=_bvBronkop(p,(src?((typeof _srcTitle==='function')?_srcTitle(src):(src.subject||'Bron')):'Bron'),sid,null,bKey,bDicht);
+        h+=_bvBronkop(p,(src?((typeof _srcTitle==='function')?_srcTitle(src):(src.subject||'Bron')):'Bron'),sid,null,bKey,bDicht,`bvBronWeg('${p.id}','${sid}','${mode}')`);
         if(!bDicht) h+='<div class="bv-rijen">'+arr.map(it=>_bvRij(p,it,mode)).join('')+'</div>'; }
       else los.push(...arr);
     });
@@ -8778,7 +8792,7 @@ async function bvVensterWeg(pid,mode){
   proj.items=proj.items.filter(it=>!ids.includes(it.id));
   try{ await refresh(); }catch(_){}
 }
-async function bvVerwijder(id){ const r=findItem(id); if(!r)return; if(!(await uiConfirm('Dit afgevinkte punt definitief verwijderen?')))return; r.p.items=r.p.items.filter(i=>i.id!==r.it.id); try{ await sb.from('items').delete().eq('id',id); }catch(_){} try{render();}catch(_){} }
+async function bvVerwijder(id){ const r=findItem(id); if(!r)return; if(!(await uiConfirm('Dit punt definitief verwijderen?')))return; r.p.items=r.p.items.filter(i=>i.id!==r.it.id); try{ await sb.from('items').delete().eq('id',id); }catch(_){} try{render();}catch(_){} }
 
 // ── Upload-voortgang (linkerkolom, per bestand tekst + balk) ──
 let _dropProg=[];
