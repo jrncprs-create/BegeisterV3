@@ -54,6 +54,22 @@ van bekende klanten/projecten. Je taak: haal er concrete, losse ACTIEPUNTEN uit.
 Regels:
 - Eén actiepunt = één concrete taak of afspraak. Splits samengestelde zinnen.
 - Verzin niets. Alleen wat echt in het bericht staat.
+- WEES STRENG met taken (L8a, 16 juli 2026): een taak is er alleen als er echt iets te DOEN staat
+  (een werkwoord met een handeling: regelen, sturen, bevestigen, maken, bellen…). Maten,
+  specificaties, aantallen, materiaallijsten, technische gegevens = FEITEN, geen taken.
+  Verzin NOOIT een controle- of check-taak bij een specificatie ("controleer of de maten
+  kloppen" is verboden tenzij het bericht daar letterlijk om vraagt). Een algemene
+  omschrijving van wat Begeister gaat doen ("wij doen het licht en de opbouw") is SCOPE,
+  geen taak. Liever 0 taken dan een verzonnen taak.
+- facts = korte, zelfstandig leesbare FEITZINNEN die het waard zijn om te onthouden bij het
+  project: maten ("bogentent: breedte 6,20 m, zijhoogte 2,44 m, nokhoogte 4,50 m"),
+  materiaal- of apparatuurlijsten (vat samen: "Willem neemt eigen licht mee: 8x PAR64, 2x
+  haze…"), locatiegegevens, tijden van het evenement, technische specificaties, gemaakte
+  keuzes ("klant kiest voor warme kleurtemperatuur"). Elk feit kort (max ~140 tekens),
+  feitelijk, zonder mening. Geen feiten die al een taak of afspraak zijn. Meestal 0-5 stuks.
+- scope = één zin die beschrijft wat Begeister voor dit project doet, ALLEEN als het bericht
+  dat expliciet zegt of duidelijk maakt (bv. "wij verzorgen licht en opbouw voor Sloase
+  2026"), anders "".
 - owner = wie binnen Begeister het oppakt: "Jeroen" of "Marlon". Weet je het niet, laat leeg.
 - contact = de externe persoon waar het mee te maken heeft (bv. Leon, Willem, Noa). Mag leeg.
 - due = ISO-datum (YYYY-MM-DD) alleen als er een concrete datum/deadline genoemd is, anders null.
@@ -105,6 +121,8 @@ Geef JSON in exact dit formaat:
   "items": [
     { "title": "...", "owner": "Jeroen|Marlon|", "contact": "", "due": null, "status": "todo", "project_id": null, "url": null }
   ],
+  "facts": [ "..." ],
+  "scope": "",
   "contacts": [
     { "name": "...", "email": "", "phone": "", "company": "", "role": "" }
   ],
@@ -146,10 +164,13 @@ Geef JSON in exact dit formaat:
       reply: (parsed.reply || "").toString().trim(),
       appointments: (Array.isArray(parsed.appointments) ? parsed.appointments : [])
         .filter(a => a && a.title && /^\d{4}-\d{2}-\d{2}$/.test(String(a.date || ""))),
+      facts: (Array.isArray(parsed.facts) ? parsed.facts : [])
+        .map(f => String(f || "").trim()).filter(Boolean).slice(0, 10),
+      scope: (parsed.scope || "").toString().trim(),
       usage,
     };
   } catch (e) {
     console.error("Kon Claude-antwoord niet als JSON lezen:", raw);
-    return { items: [], summary: "", contacts: [], usage };
+    return { items: [], summary: "", contacts: [], facts: [], scope: "", usage };
   }
 }

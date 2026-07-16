@@ -185,7 +185,7 @@ export async function run() {
         }
 
         // 3) Claude haalt actiepunten (en contacten) eruit
-        const { items, summary, contacts, usage, client: exClient = "", project: exProject = "", reply: exReply = "", appointments: exAppts = [] } = await extractItems({
+        const { items, summary, contacts, usage, client: exClient = "", project: exProject = "", reply: exReply = "", appointments: exAppts = [], facts: exFacts = [] } = await extractItems({
           text: body, sender, subject: mail.subject || "", today, catalog, context,
         });
         // verbruik loggen (faalt stil)
@@ -206,6 +206,14 @@ export async function run() {
             });
           }
         }
+
+        // L8a: feiten ("wat we weten") bewaren bij het project van dit bericht.
+        try {
+          const factProject = (items.find(it => it.project_id) || {}).project_id || null;
+          for (const ft of exFacts) {
+            await db.from("facts").insert({ project_id: factProject, source_id: source.id, text: ft });
+          }
+        } catch (e) { console.error("feit-fout:", e.message); }
 
         // 3b) gevonden contacten opslaan (dedupe op e-mail; anders op naam)
         try {
