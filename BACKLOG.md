@@ -1,6 +1,6 @@
 # Begeister Workflow — Uitvoerbacklog
 
-_Aangemaakt 14 juli 2026 · hoort bij HANDOFF.md · live versie **v247**_
+_Aangemaakt 14 juli 2026 · hoort bij HANDOFF.md · live versie **v249**_
 
 > Stand 15 juli 2026: alles is af behalve **U11** (agenda-sync — wacht op OAuth-keuze),
 > **U14** (boekhoudkoppeling — wacht op pakketkeuze + API-sleutel) en **Fase 7**
@@ -189,6 +189,18 @@ Status bijhouden: `[ ]` open · `[~]` bezig · `[x]` klaar (+ versienummer).
   bewerken-venster zodra een kaart subpunten heeft, klik op een regel = tekst aanpassen,
   en bron-koppen zonder kaart openen nu de bron-overlay. v247: huisstijl-vinkjes ook op
   die subpunt-regels.
+
+- [x] **L8a — Feitenlaag: "Wat we weten"** (M) — v249, ontworpen met Jeroen 16 juli.
+  Niet alles wat binnenkomt is een taak. Nieuwe tabel `facts` (migratie
+  l8a_facts_wat_we_weten): feiten per project met bronkoppeling. De AI-extractie (mail,
+  drops én vision/schetsen) levert naast taken nu ook feiten (maten, lijsten, tijden,
+  keuzes) en is streng afgesteld: geen verzonnen controle-taken meer, scope is geen taak,
+  liever 0 taken dan een verzonnen taak. Accord-kaart: per regel taak → afspraak → feit
+  te wisselen, en een knop "alleen bewaren" (bestand + feiten opslaan, nul taken).
+  Dossier: blok "Wat we weten" (uitklapbaar) met feiten in klantkleur, ↪ bron, klik =
+  aanpassen, + = zelf toevoegen. Bonus: het bewerken-venster heeft weer een Bron-knop
+  (was sinds de planning-verbouwing kwijt). Volgende stappen: L8b grote schoonmaak van
+  bestaande taken, L9 vraag & briefing over het dossier, L10 draaiboek-gesprek.
 
 ## Fase 7 — Klantportaal (stond al in HANDOFF §8)
 
