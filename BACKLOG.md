@@ -1,6 +1,6 @@
 # Begeister Workflow — Uitvoerbacklog
 
-_Aangemaakt 14 juli 2026 · hoort bij HANDOFF.md · live versie **v239**_
+_Aangemaakt 14 juli 2026 · hoort bij HANDOFF.md · live versie **v240**_
 
 > Stand 15 juli 2026: alles is af behalve **U11** (agenda-sync — wacht op OAuth-keuze),
 > **U14** (boekhoudkoppeling — wacht op pakketkeuze + API-sleutel) en **Fase 7**
@@ -133,6 +133,18 @@ Status bijhouden: `[ ]` open · `[~]` bezig · `[x]` klaar (+ versienummer).
   (= alleen het bestand bewaren). Elke bestaande bron heeft in het Postvak een Leestafel-knop
   die de bron (opnieuw) laat lezen of de bewaarde voorstellen heropent. Mail-intake blijft
   automatisch.
+
+- [x] **L2 — Planning-verbouwing** (L) — v240, ontworpen met Jeroen (schetsen 15 juli).
+  Drie-kolommenflow hersteld en verfijnd: meerdere bestanden tegelijk slepen met per bestand
+  voortgang (tekst + balk) bovenin de linkerkolom; drops worden zonder overlays automatisch
+  gelezen en verschijnen als accord-kaart bij In afwachting (AI vult in — regels aan/uit,
+  tekst bewerkbaar, taak/afspraak-toggle, klant/project-keuze; ✓ akkoord → losse taken en
+  agenda-items). Middenkolom toont bundelvensters per klant · project in de klantkleur, met
+  bronkoppen (streep + ↪ bron rechts) voor punten uit één document; regel = hokje · zin
+  (klik = bewerken-venster) · klein ↪; afgevinkt = gedimd + × om te verwijderen. Bewerken-
+  venster is slanker (checklist- en bestandenblok weg, Opmerkingen blijft). De mail-poller
+  maakt voortaan losse punten per actiepunt; de app bundelt ze in beeld. "Vandaag" komt in
+  een volgende stap terug als tijdskop.
 
 ## Fase 7 — Klantportaal (stond al in HANDOFF §8)
 
