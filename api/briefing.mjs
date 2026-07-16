@@ -25,9 +25,12 @@ Regels:
 - "secties" = de logische blokken die er zijn (laat een blok weg als er niks voor is). Gebruik
   titels als "Nog te doen", "Wat we weten", "Komende afspraken", "Wacht op", "Geld".
 - "open_eindjes" = de scherpe lijst van wat nog onduidelijk of onaf is. Dit is het waardevolste deel.
+- "omschrijving" = ÉÉN alinea die beschrijft waar dit project in de kern over gaat: de klant, wat
+  Begeister levert en het event/de opdracht. Dit is GEEN samenvatting van één document en GEEN
+  statusupdate — het is de blijvende projectomschrijving. Baseer je op alle gegevens samen.
 
 Antwoord ALLEEN met geldige JSON:
-{"waar_staan_we":"...","secties":[{"titel":"Nog te doen","punten":["..."]}],"open_eindjes":["..."]}
+{"waar_staan_we":"...","omschrijving":"...","secties":[{"titel":"Nog te doen","punten":["..."]}],"open_eindjes":["..."]}
 ` + BEGEISTER_REGELS;
 
 export default async function handler(req, res) {
@@ -73,11 +76,12 @@ Geef het overzicht als JSON.`;
       });
     } catch (_) {}
     const raw = resp.content.map(b => (b.type === "text" ? b.text : "")).join("");
-    let out = { waar_staan_we: "", secties: [], open_eindjes: [] };
+    let out = { waar_staan_we: "", omschrijving: "", secties: [], open_eindjes: [] };
     try {
       const p = JSON.parse(raw.slice(raw.indexOf("{"), raw.lastIndexOf("}") + 1));
       out = {
         waar_staan_we: String(p.waar_staan_we || "").trim(),
+        omschrijving: String(p.omschrijving || "").trim(),
         secties: Array.isArray(p.secties) ? p.secties.filter(s => s && s.titel && Array.isArray(s.punten) && s.punten.length) : [],
         open_eindjes: Array.isArray(p.open_eindjes) ? p.open_eindjes.map(x => String(x).trim()).filter(Boolean) : [],
       };
