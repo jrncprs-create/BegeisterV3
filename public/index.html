@@ -633,6 +633,10 @@
   .brief-punt::before{content:"";position:absolute;left:2px;top:11px;width:5px;height:5px;border-radius:50%;background:var(--scol)}
   .brief-oe .brief-h{color:#e6c07a}
   .brief-oe .brief-punt::before{background:#e6c07a}
+  .brief-kies{display:flex;align-items:flex-start;gap:9px;padding-left:0}
+  .brief-kies::before{display:none}
+  .brief-kies .bv-chk{padding-top:3px}
+  .brief-oehint{text-transform:none;letter-spacing:0;font-weight:var(--fw);color:var(--mut2);margin-left:8px}
   .brief-loading{display:flex;flex-direction:column;align-items:center;gap:14px;padding:48px 20px;color:var(--mut);text-align:center}
   .brief-voet{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
   .brief-loading svg{opacity:.7;animation:briefpulse 1.4s ease-in-out infinite}
@@ -2461,7 +2465,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v264</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v265</span>
       <!-- V244: loep verhuisd naar het hoofdmenu (waar Bestanden/Contacten stonden). -->
       <!-- V242: Dagoverzicht voorlopig uit beeld (afgesproken 16 juli) — openDayOverview en de overlay blijven in de code staan. -->
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
@@ -4727,6 +4731,26 @@ function _briefTekst(o){ const d=o.data||{}; let t=(o.client||'')+(o.project?' �
   if((d.open_eindjes||[]).length)t+='OPEN EINDJES\n'+d.open_eindjes.map(x=>'• '+x).join('\n')+'\n\n';
   (d.secties||[]).forEach(sc=>{ t+=String(sc.titel).toUpperCase()+'\n'+sc.punten.map(x=>'• '+x).join('\n')+'\n\n'; });
   return t.trim(); }
+let _briefSel=new Set();
+function briefKies(i){
+  if(_briefSel.has(i))_briefSel.delete(i); else _briefSel.add(i);
+  const rij=document.getElementById('boe_'+i); if(rij){ const b=rij.querySelector('.bv-chk'); if(b)b.innerHTML=_bvBoxSvg(_briefSel.has(i)?'#e6c07a':'#5a5a5f',_briefSel.has(i)); }
+  const kn=document.querySelector('#briefOv .brief-neem'); if(kn){ kn.style.display=_briefSel.size?'inline-flex':'none'; kn.textContent='Neem op als taken · '+_briefSel.size; }
+}
+async function briefNeemOp(btn){
+  if(!_briefLast||!_briefSel.size)return;
+  const d=_briefLast.data||{}; const eindjes=d.open_eindjes||[];
+  if(btn){ btn.disabled=true; btn.textContent='Bezig…'; }
+  let n=0;
+  for(const i of [..._briefSel]){
+    const t=String(eindjes[i]||'').trim(); if(!t)continue;
+    try{ await sb.from('items').insert({project_id:_briefLast.pid,title:t.slice(0,300),status:'todo'}); n++; }catch(_){}
+  }
+  toonToast('✓ '+n+' open eindje'+(n===1?'':'s')+' als taak opgenomen');
+  _briefSel=new Set();
+  const ov=document.getElementById('briefOv'); if(ov)ov.remove();
+  try{ await refresh(); }catch(_){}
+}
 // Knop 1 — bewaren in het dossier (bovenaan de Notities).
 async function briefBewaar(btn){
   if(!_briefLast)return; const p=projById(_briefLast.pid); if(!p)return;
@@ -4752,11 +4776,12 @@ function _briefRender(o){
   if(o.loading){ body=`<div class="brief-loading">${_tIc(_TABCHAN.asterisk,22,1.6)}<span>De AI zet ${naam} op een rijtje…</span></div>`; }
   else if(o.error){ body=`<div class="brief-loading">Dat lukte even niet — probeer het zo nog eens.</div>`; }
   else { const d=o.data;
+    _briefSel=new Set();
     const secs=(d.secties||[]).map(s=>`<div class="brief-sec"><div class="brief-h" style="color:${o.col}">${escapeHtml(s.titel)}</div>${s.punten.map(pt=>`<div class="brief-punt">${escapeHtml(pt)}</div>`).join('')}</div>`).join('');
-    const oe=(d.open_eindjes||[]).length?`<div class="brief-sec brief-oe"><div class="brief-h">Open eindjes</div>${d.open_eindjes.map(x=>`<div class="brief-punt">${escapeHtml(x)}</div>`).join('')}</div>`:'';
+    const oe=(d.open_eindjes||[]).length?`<div class="brief-sec brief-oe"><div class="brief-h">Open eindjes <span class="brief-oehint">vink aan wat een taak moet worden</span></div>${d.open_eindjes.map((x,i)=>`<div class="brief-punt brief-kies" id="boe_${i}"><button class="bv-chk" onclick="briefKies(${i})">${_bvBoxSvg('#5a5a5f',false)}</button><span>${escapeHtml(x)}</span></div>`).join('')}</div>`:'';
     body=`${d.waar_staan_we?`<p class="brief-lead">${escapeHtml(d.waar_staan_we)}</p>`:''}${oe}${secs}`;
   }
-  const voet=(o.data)?`<div class="brief-voet"><button class="fv-btn" onclick="briefBewaar(this)">Bewaar in dossier</button><button class="fv-btn" onclick="briefPush(this)">Stuur naar ${(who==='Marlon')?'Jeroen':'Marlon'}</button></div>`:'';
+  const voet=(o.data)?`<div class="brief-voet"><button class="fv-btn bk-ok brief-neem" onclick="briefNeemOp(this)" style="display:none">Neem op als taken</button><button class="fv-btn" onclick="briefBewaar(this)">Bewaar in dossier</button><button class="fv-btn" onclick="briefPush(this)">Stuur naar ${(who==='Marlon')?'Jeroen':'Marlon'}</button></div>`:'';
   ov.innerHTML=`<div class="modal brief-modal" style="--scol:${o.col||'#888'}"><button class="modal-close" onclick="document.getElementById('briefOv').remove()"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     <div class="brief-kop"><span class="brief-badge" style="background:${o.col||'#888'}">${escapeHtml((String(o.client||'?').trim()[0]||'?').toUpperCase())}</span><h3>${naam}</h3></div>
     <div class="brief-body">${body}</div>${voet}</div>`;
