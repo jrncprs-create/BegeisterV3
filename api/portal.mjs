@@ -143,10 +143,32 @@ export default async function handler(req, res) {
   const db = svc();
   if (!db) return fout(res, 500, "geen database");
 
+  const { action } = req.body || {};
+
+  // Team-preview: een teamlid (Jeroen/Marlon) bekijkt de ECHTE portalpagina van één project,
+  // zoals de klant het ziet. Zelfde render (projectPagina) — niets nieuws verzonnen.
+  if (action === "preview") {
+    try {
+      const kop = String(req.headers.authorization || "");
+      const token = kop.startsWith("Bearer ") ? kop.slice(7).trim() : "";
+      const { data: au } = token ? await db.auth.getUser(token) : { data: null };
+      const uid = au && au.user && au.user.id;
+      if (!uid) return fout(res, 401, "niet ingelogd");
+      const { data: team } = await db.from("team_users").select("user_id").eq("user_id", uid).maybeSingle();
+      if (!team) return fout(res, 403, "alleen team");
+      const { project_id } = req.body || {};
+      const { data: p } = await db.from("projects")
+        .select("id,project,client_id,phase,description,notes,projectprijs,btw,portal_secties,portal_bg,portal_bg_image,idee_akkoord_op,budget_akkoord_op")
+        .eq("id", project_id).maybeSingle();
+      if (!p || !p.project) return fout(res, 404, "geen portaal voor dit project");
+      const { data: klant } = p.client_id ? await db.from("clients").select("id,name,color").eq("id", p.client_id).maybeSingle() : { data: null };
+      const pg = await projectPagina(db, p); pg.bg_image = p.portal_bg_image || null;
+      return res.status(200).json({ klant: { naam: (klant && klant.name) || (p.client_id ? "Klant" : "—"), kleur: (klant && klant.color) || "#8a8a8a" }, projecten: [pg], preview: true });
+    } catch (e) { return fout(res, 500, String(e.message || e)); }
+  }
+
   const ik = await wieBelt(db, req);
   if (!ik) return fout(res, 401, "niet ingelogd");
-
-  const { action } = req.body || {};
 
   try {
     if (action === "data") {
