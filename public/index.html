@@ -2386,7 +2386,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v251</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v252</span>
       <!-- V244: loep verhuisd naar het hoofdmenu (waar Bestanden/Contacten stonden). -->
       <!-- V242: Dagoverzicht voorlopig uit beeld (afgesproken 16 juli) — openDayOverview en de overlay blijven in de code staan. -->
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
@@ -9051,7 +9051,7 @@ function _dropProgHTML(){ if(!_dropProg.length)return '';
 
 // ── Accord-kaarten: AI vulde in, een mens keurt (klant/project + per regel aan/uit). ──
 let _bkState={};
-function _accordBronnen(){ return (state.sources||[]).filter(s=>s.channel==='drop'&&s.suggestItems&&Array.isArray(s.suggestItems.rows)&&s.suggestItems.rows.length); }
+function _accordBronnen(){ return (state.sources||[]).filter(s=>s.suggestItems&&Array.isArray(s.suggestItems.rows)&&s.suggestItems.rows.length); }
 function _accordKaartenHTML(){
   return _accordBronnen().map(s=>{
     const st=_bkState[s.id]||(_bkState[s.id]={rows:JSON.parse(JSON.stringify(s.suggestItems.rows)),contacts:s.suggestItems.contacts||[],client:s.suggestItems.client||'',project_id:s.proj||'',titel:s.suggestItems.titel||s.summary||''});
