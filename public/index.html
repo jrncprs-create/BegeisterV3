@@ -577,6 +577,21 @@
   .pb-brief{margin-left:auto;background:transparent;border:1px solid color-mix(in srgb,var(--scol) 40%,var(--line));border-radius:999px;padding:6px 13px;color:var(--scol);cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-size:12.5px;white-space:nowrap;transition:background .12s}
   .pb-brief:hover{background:color-mix(in srgb,var(--scol) 14%,transparent)}
   .pb-beheerhead{display:flex;justify-content:flex-end;margin-bottom:8px}
+  .pb-kk-h{cursor:pointer}
+  .pb-kk-preview{display:flex;align-items:center;gap:12px;margin:4px 0 10px}
+  .pb-kk-thumb{width:64px;height:44px;border-radius:8px;background-size:cover;background-position:center;flex:0 0 auto;border:1px solid var(--line)}
+  .pb-kk-pmain{flex:1;min-width:0}
+  .pb-kk-pnaam{font-size:13.5px;color:var(--txt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pb-kk-phint{font-size:11.5px;color:var(--mut2)}
+  .pb-kk-eye{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;background:transparent;border:1px solid var(--line);border-radius:999px;padding:6px 12px;color:var(--mut);cursor:pointer;font-size:12.5px}
+  .pb-kk-eye:hover{color:#fff;border-color:var(--mut2)}
+  .kkprev-wrap{position:relative;width:min(920px,94vw)}
+  .kkprev-x{position:absolute;top:-6px;right:-6px;z-index:2;background:rgba(0,0,0,.5);border-radius:50%}
+  .kkprev-stage{position:relative;width:100%;aspect-ratio:16/9;border-radius:16px;overflow:hidden;background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center}
+  .kkprev-ov{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.35),rgba(0,0,0,.72))}
+  .kkprev-tekst{position:relative;text-align:center;color:#fff;padding:20px}
+  .kkprev-klant{font-size:28px;font-weight:var(--fw-nadruk);letter-spacing:.3px}
+  .kkprev-sub{font-size:14px;opacity:.85;margin-top:8px}
   .brief-modal{width:600px;max-width:94vw;max-height:86vh;display:flex;flex-direction:column}
   .brief-kop{display:flex;align-items:center;gap:12px;margin:0 0 16px}
   .brief-kop h3{margin:0;font-size:19px}
@@ -2413,7 +2428,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v257</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v258</span>
       <!-- V244: loep verhuisd naar het hoofdmenu (waar Bestanden/Contacten stonden). -->
       <!-- V242: Dagoverzicht voorlopig uit beeld (afgesproken 16 juli) — openDayOverview en de overlay blijven in de code staan. -->
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
@@ -4595,7 +4610,8 @@ function _renderProjBoard(){
   // L8a — Wat we weten: feiten van dit project, met bron-link, bewerkbaar.
   const _ftList=(state.facts||[]).filter(x=>String(x.project_id||'')===String(_pbPid));
   const _ftKey='ks|feit|'+_pbPid, _ftDicht=(typeof _bvDicht!=='undefined')&&_bvDicht.has(_ftKey);
-  const secWeten=`<div class="pb-sec"><div class="pb-h"><span>Wat we weten${_ftList.length?' · '+_ftList.length:''}</span><span class="pb-hbtns"><button class="pb-hadd" onclick="ftAdd('${_pbPid}')" title="Feit toevoegen">+</button>${_bvChev(_ftKey,_ftDicht,col)}</span></div>${_ftDicht?'':((_ftList.map(x=>`<div class="pb-feit"><span class="pb-feittx" onclick="ftEdit('${x.id}')" title="Klik om aan te passen">${esc(x.text||'')}</span>${x.source_id?`<button class="bv-bronknop pb-feitbron" onclick="openBronOverlay('${x.source_id}')" title="Bron bekijken">${_bvSrcSvg()}</button>`:''}<button class="bv-del pb-feitdel" onclick="ftDel('${x.id}')" title="Verwijderen">${_tIc('<path d="M6 6l12 12M18 6L6 18"/>',13,1.6)}</button></div>`).join(''))||'<div class="pb-empty">Nog geen feiten. Ze komen uit binnengekomen berichten, of voeg er zelf een toe met +.</div>')}</div>`;
+  const _kzFeit=(!_geenTraject(p.client))?('<button class="pb-kz'+(((p.portal_secties||{}).feiten)?' aan':'')+'" onclick="event.stopPropagation();pbToggleClientItem(\'sec\',\'feiten\')" title="Zichtbaar voor de klant (aan/uit)">'+_KLANT_IC+'</button>'):'';
+  const secWeten=`<div class="pb-sec"><div class="pb-h"><span>Wat we weten${_ftList.length?' · '+_ftList.length:''}</span><span class="pb-hbtns">${_kzFeit}<button class="pb-hadd" onclick="ftAdd('${_pbPid}')" title="Feit toevoegen">+</button>${_bvChev(_ftKey,_ftDicht,col)}</span></div>${_ftDicht?'':((_ftList.map(x=>`<div class="pb-feit"><span class="pb-feittx" onclick="ftEdit('${x.id}')" title="Klik om aan te passen">${esc(x.text||'')}</span>${x.source_id?`<button class="bv-bronknop pb-feitbron" onclick="openBronOverlay('${x.source_id}')" title="Bron bekijken">${_bvSrcSvg()}</button>`:''}<button class="bv-del pb-feitdel" onclick="ftDel('${x.id}')" title="Verwijderen">${_tIc('<path d="M6 6l12 12M18 6L6 18"/>',13,1.6)}</button></div>`).join(''))||'<div class="pb-empty">Nog geen feiten. Ze komen uit binnengekomen berichten, of voeg er zelf een toe met +.</div>')}</div>`;
   // Klantkant-balk (achtergrond + letterkleur voor het portaal): alleen bij klantprojecten,
   // niet in de financiën-boards. Staat boven het dossier.
   const secKlantkant=(!_geenTraject(p.client)&&_pbTarget!=='finmid'&&_pbTarget!=='finright')?_secKlantkant(p):'';
@@ -6437,14 +6453,29 @@ async function pbSetVoorstelSoort(id, soort){
 // overheen met witte tekst. Eén kleine uploadknop volstaat; opgeslagen in projects.portal_bg_image.
 function _secKlantkant(p){
   const heeftImg=!!p.portal_bg_image;
-  return `<div class="pb-sec pb-klantkant"><div class="pb-h">Klantkant</div>`
-    +`<div class="pb-kk-rij"><span class="pb-kk-lbl">Achtergrond</span>`
-    +`<button class="pb-kk-btn" onclick="pbPortalImg()" title="Achtergrondafbeelding voor het klantportaal">${heeftImg?'Afbeelding wijzigen':'Afbeelding kiezen'}</button>`
-    +`${heeftImg?'<button class="pb-kk-reset" onclick="pbPortalBgClear()" title="Achtergrondafbeelding verwijderen">verwijderen</button>':''}`
-    +`<span class="pb-kk-hint">${heeftImg?'zwarte overlay + witte tekst':'zwart + klantkleur (standaard)'}</span>`
-    +`</div>`
+  const col=PROJCOL[p.id]||'#888';
+  const kKey='ks|kk|'+p.id, dicht=(typeof _bvDicht!=='undefined')&&_bvDicht.has(kKey);
+  const naam=heeftImg?(p.portal_bg_name||_urlBasename(p.portal_bg_image)):'';
+  const preview=heeftImg
+    ? `<div class="pb-kk-preview"><div class="pb-kk-thumb" style="background-image:url('${escapeHtml(p.portal_bg_image)}')"></div><div class="pb-kk-pmain"><div class="pb-kk-pnaam">${escapeHtml(naam)}</div><div class="pb-kk-phint">zwarte overlay + witte tekst</div></div><button class="pb-kk-eye" onclick="pbPortalPreview()" title="Bekijk zoals de klant het ziet">${_tIc('<path d="M2 12s3.5 -7 10 -7s10 7 10 7s-3.5 7 -10 7s-10 -7 -10 -7z"/><circle cx="12" cy="12" r="3"/>',16,1.6)}<span>bekijk</span></button></div>`
+    : `<div class="pb-kk-rij"><span class="pb-kk-hint">Nog geen achtergrond — zwart + klantkleur (standaard).</span></div>`;
+  const acties=`<div class="pb-kk-rij"><button class="pb-kk-btn" onclick="pbPortalImg()">${heeftImg?'Afbeelding wijzigen':'Afbeelding kiezen'}</button>${heeftImg?'<button class="pb-kk-reset" onclick="pbPortalBgClear()">verwijderen</button>':''}${heeftImg?'<button class="pb-kk-btn" onclick="pbPortalPreview()">Bekijk als klant</button>':''}</div>`;
+  return `<div class="pb-sec pb-klantkant"><div class="pb-h pb-kk-h" onclick="_bvKlap('${kKey}')"><span>Klantkant</span>${_bvChev(kKey,dicht,col)}</div>`
+    +(dicht?'':(preview+acties))
     +`<input type="file" id="pbBgFile" accept="image/*" style="display:none" onchange="pbPortalBgImage(this.files&&this.files[0]);this.value=''">`
     +`</div>`;
+}
+function _urlBasename(u){ try{ const s=String(u||'').split('?')[0].split('/').pop(); return decodeURIComponent(s||'afbeelding'); }catch(_){ return 'afbeelding'; } }
+// Bekijk zoals de klant het ziet: de achtergrond met zwarte overlay + witte tekst.
+function pbPortalPreview(){
+  const p=projById(_pbPid); if(!p||!p.portal_bg_image)return;
+  let ov=document.getElementById('kkPrev'); if(ov)ov.remove();
+  ov=document.createElement('div'); ov.id='kkPrev'; ov.className='overlay';
+  const titel=escapeHtml((p.client||'')+(p.project?' · '+p.project:''));
+  ov.innerHTML=`<div class="kkprev-wrap"><button class="modal-close kkprev-x" onclick="document.getElementById('kkPrev').remove()"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <div class="kkprev-stage" style="background-image:url('${escapeHtml(p.portal_bg_image)}')"><div class="kkprev-ov"></div><div class="kkprev-tekst"><div class="kkprev-klant">${titel}</div><div class="kkprev-sub">Zo ziet de klant de portaalpagina.</div></div></div></div>`;
+  document.body.appendChild(ov); requestAnimationFrame(()=>ov.classList.add('open'));
+  ov.addEventListener('click',e=>{ if(e.target===ov)ov.remove(); });
 }
 function pbPortalImg(){ const el=document.getElementById('pbBgFile'); if(el)el.click(); }
 async function pbPortalBgImage(file){
@@ -6458,8 +6489,8 @@ async function pbPortalBgImage(file){
     if(up.error) throw up.error;
     const pub=sb.storage.from('shared').getPublicUrl(path);
     const url=pub&&pub.data&&pub.data.publicUrl; if(!url) throw new Error('geen publieke URL');
-    p.portal_bg_image=url;
-    await sb.from('projects').update({portal_bg_image:url}).eq('id',_pbPid);
+    p.portal_bg_image=url; p.portal_bg_name=file.name||_urlBasename(url);
+    await sb.from('projects').update({portal_bg_image:url, portal_bg_name:p.portal_bg_name}).eq('id',_pbPid);
     toonToast('Achtergrond ingesteld.');
   }catch(e){ toonToast('Upload mislukte: '+(e.message||e),'fout'); }
   _renderProjBoard();
@@ -8186,7 +8217,7 @@ async function sbLoad(){
   const _mapProj=pr=>({id:pr.id,client:pr.client,project:pr.project,color:pr.color,icon:pr.icon,role:pr.role,
     projectprijs:pr.projectprijs, btw:pr.btw, budget:pr.budget, notes:pr.notes,
     invoice_status:pr.invoice_status, invoice_date:pr.invoice_date, phase:pr.phase||'briefing', description:pr.description||'',
-    portal_secties:pr.portal_secties||null, portal_gepubliceerd:!!pr.portal_gepubliceerd, portal_bg:pr.portal_bg||null, portal_bg_image:pr.portal_bg_image||null,
+    portal_secties:pr.portal_secties||null, portal_gepubliceerd:!!pr.portal_gepubliceerd, portal_bg:pr.portal_bg||null, portal_bg_image:pr.portal_bg_image||null, portal_bg_name:pr.portal_bg_name||null,
     idee_akkoord_op:pr.idee_akkoord_op||null, budget_akkoord_op:pr.budget_akkoord_op||null,
     created: pr.created_at?new Date(pr.created_at).getTime():0,
     items: items.filter(x=>x.project_id===pr.id).map(_mapItem)});
