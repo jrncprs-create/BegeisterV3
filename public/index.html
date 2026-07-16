@@ -2327,7 +2327,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v245</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v246</span>
       <!-- V244: loep verhuisd naar het hoofdmenu (waar Bestanden/Contacten stonden). -->
       <!-- V242: Dagoverzicht voorlopig uit beeld (afgesproken 16 juli) — openDayOverview en de overlay blijven in de code staan. -->
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
@@ -7591,7 +7591,7 @@ function openModal(id, src, defStatus, presetPid){
   if(incol){const tb=document.querySelector('.topbar');ov.style.top=(tb?Math.round(tb.getBoundingClientRect().height):0)+'px';} else ov.style.top='';
   // V240: checklist- en bestandenblok weg uit het bewerken-venster — een regel is één punt,
   // bestanden bereik je via de bron. Opmerkingen blijft (klein) voor @Jeroen/@Marlon-overleg.
-  const mck=document.getElementById('m_checklist');if(mck)mck.innerHTML='';
+  const mck=document.getElementById('m_checklist');if(mck)mck.innerHTML=(!isNew&&r&&Array.isArray(r.it.checklist)&&r.it.checklist.length)?_checklistHTML(r.it):'';
   const mf=document.getElementById('m_files');if(mf)mf.innerHTML='';
   const mc=document.getElementById('m_comments');if(mc)mc.innerHTML=isNew?'':((typeof _cmtBtnHTML==='function'?_cmtBtnHTML('task',editingId):'')+_pingHTML());
   ov.classList.add('open');}
@@ -7624,12 +7624,13 @@ document.getElementById('overlay').addEventListener('click',e=>{if(e.target.id==
 // Checklist (subpunten) op een taak — één kaart per bron met afvinkbare actiepunten.
 function _checklistHTML(it){
   const cl=Array.isArray(it.checklist)?it.checklist:[];
-  const rows=cl.map((c,i)=>`<label class="m-ckrow"><input type="checkbox" ${c.done?'checked':''} onchange="checklistToggle('${it.id}',${i})"><span class="m-cktx${c.done?' done':''}">${escapeHtml(c.t||'')}</span><button type="button" class="m-ckdel" onclick="checklistDel('${it.id}',${i})" title="Verwijderen">×</button></label>`).join('');
+  const rows=cl.map((c,i)=>`<label class="m-ckrow"><input type="checkbox" ${c.done?'checked':''} onchange="checklistToggle('${it.id}',${i})"><span class="m-cktx${c.done?' done':''}" onclick="event.preventDefault();checklistEdit('${it.id}',${i})" title="Klik om de tekst aan te passen">${escapeHtml(c.t||'')}</span><button type="button" class="m-ckdel" onclick="checklistDel('${it.id}',${i})" title="Verwijderen">×</button></label>`).join('');
   const done=cl.filter(c=>c.done).length;
   return `<div class="m-checklist"><div class="m-ckhead">Actiepunten${cl.length?` · ${done}/${cl.length}`:''}</div>${rows}<div class="m-ckadd"><input id="m_ckin" placeholder="+ actiepunt toevoegen…" autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();checklistAdd('${it.id}');}"></div></div>`;
 }
 async function _checklistSave(it){ try{ await sb.from('items').update({checklist:it.checklist||[]}).eq('id',it.id); }catch(e){ toonToast('Opslaan mislukte: '+(e.message||e),'fout'); } }
 function _checklistRerender(it){ const m=document.getElementById('m_checklist'); if(m)m.innerHTML=_checklistHTML(it); try{render();}catch(_){} }
+async function checklistEdit(id,i){ const r=findItem(id); if(!r||!r.it.checklist||!r.it.checklist[i])return; const nv=((await uiPrompt('Punt aanpassen:', r.it.checklist[i].t||''))||'').trim(); if(!nv||nv===r.it.checklist[i].t)return; r.it.checklist[i].t=nv; _checklistRerender(r.it); _checklistSave(r.it); }
 function checklistToggle(id,i){ const r=findItem(id); if(!r||!r.it.checklist||!r.it.checklist[i])return; r.it.checklist[i].done=!r.it.checklist[i].done; _checklistRerender(r.it); _checklistSave(r.it); }
 function checklistDel(id,i){ const r=findItem(id); if(!r||!Array.isArray(r.it.checklist))return; r.it.checklist.splice(i,1); _checklistRerender(r.it); _checklistSave(r.it); }
 function checklistAdd(id){ const inp=document.getElementById('m_ckin'); const t=inp?(inp.value||'').trim():''; if(!t)return; const r=findItem(id); if(!r)return; r.it.checklist=(Array.isArray(r.it.checklist)?r.it.checklist:[]).concat([{t,done:false}]); _checklistRerender(r.it); const ni=document.getElementById('m_ckin'); if(ni)ni.focus(); _checklistSave(r.it); }
@@ -8768,7 +8769,7 @@ function _bvVenster(p,items,mode){
     Object.entries(perBron).forEach(([sid,arr])=>{
       if(arr.length>=2){ const src=(state.sources||[]).find(x=>String(x.id)===String(sid));
         const bKey=vKey+'|s'+sid, bDicht=_bvDicht.has(bKey);
-        h+=_bvBronkop(p,(src?((typeof _srcTitle==='function')?_srcTitle(src):(src.subject||'Bron')):'Bron'),sid,null,bKey,bDicht,`bvBronWeg('${p.id}','${sid}','${mode}')`);
+        h+=_bvBronkop(p,(src?((typeof _srcTitle==='function')?_srcTitle(src):(src.subject||'Bron')):'Bron'),sid,`openBronOverlay('${sid}')`,bKey,bDicht,`bvBronWeg('${p.id}','${sid}','${mode}')`);
         if(!bDicht) h+='<div class="bv-rijen">'+arr.map(it=>_bvRij(p,it,mode)).join('')+'</div>'; }
       else los.push(...arr);
     });
