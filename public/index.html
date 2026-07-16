@@ -578,7 +578,10 @@
   .pb-brief:hover{background:color-mix(in srgb,var(--scol) 14%,transparent)}
   .pb-beheerhead{display:flex;justify-content:flex-end;margin-bottom:8px}
   .pb-kk-h{cursor:pointer}
-  .pb-kk-preview{display:flex;align-items:center;gap:12px;margin:4px 0 10px}
+  .pb-kk-preview{display:flex;align-items:center;gap:12px;margin:4px 0 6px}
+  .pb-kk-ics{margin-left:auto;display:inline-flex;gap:4px}
+  .pb-kk-ic{background:transparent;border:none;cursor:pointer;color:var(--mut2);padding:6px;display:inline-flex;border-radius:8px;transition:color .12s,background .12s}
+  .pb-kk-ic:hover{color:#fff;background:rgba(255,255,255,.06)}
   .pb-kk-thumb{width:64px;height:44px;border-radius:8px;background-size:cover;background-position:center;flex:0 0 auto;border:1px solid var(--line)}
   .pb-kk-pmain{flex:1;min-width:0}
   .pb-kk-pnaam{font-size:13.5px;color:var(--txt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -683,10 +686,14 @@
   .lt-inner{max-width:860px}
   .lt-kop{margin:6px 0 18px}
   .lt-titel{width:100%;background:transparent;border:none;border-bottom:1px solid var(--line);color:var(--txt);font:inherit;font-size:20px;font-weight:var(--fw-nadruk);padding:8px 2px;outline:none}
-  .lt-titel:focus{border-color:var(--primary)}
+  .lt-titel:focus{border-color:var(--ltc,var(--primary))}
   .lt-koppel{display:flex;gap:10px;margin-top:12px}
-  .lt-sel{flex:1;background:transparent;border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:14px;color:var(--txt);font-family:inherit}
-  .lt-sel:focus{outline:none;border-color:var(--mut2)}
+  .lt-koppel select{flex:1;background:rgba(20,20,22,.72);border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:14px;color:var(--txt);font-family:inherit;-webkit-appearance:none;appearance:none}
+  .lt-koppel select:focus{outline:none;border-color:var(--ltc,var(--mut2))}
+  .lt-kopregel{display:flex;align-items:center;gap:12px}
+  .lt-badge{width:30px;height:30px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;color:#0e0d10;font-weight:var(--fw-nadruk);flex:0 0 auto}
+  .lt-row .bv-chk{padding-top:3px}
+  .lt-row .bk-type{flex:0 0 auto;margin-top:1px}
   .lt-h{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--primary2);font-weight:var(--fw-nadruk);margin:22px 0 8px}
   .lt-row{display:flex;align-items:flex-start;gap:12px;padding:12px 10px;border:1px solid var(--line);border-radius:12px;margin-bottom:8px;background:rgba(20,20,22,.72);transition:opacity .15s}
   .lt-row.uit{opacity:.42}
@@ -2454,7 +2461,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v263</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v264</span>
       <!-- V244: loep verhuisd naar het hoofdmenu (waar Bestanden/Contacten stonden). -->
       <!-- V242: Dagoverzicht voorlopig uit beeld (afgesproken 16 juli) — openDayOverview en de overlay blijven in de code staan. -->
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
@@ -6482,17 +6489,22 @@ function _secKlantkant(p){
   const col=PROJCOL[p.id]||'#888';
   const kKey='ks|kk|'+p.id, dicht=!((typeof _bvDicht!=='undefined')&&_bvDicht.has(kKey));  // standaard dicht
   const naam=heeftImg?(p.portal_bg_name||_urlBasename(p.portal_bg_image)):'';
+  const _ic=(paths,tt,fn)=>`<button class="pb-kk-ic" onclick="${fn}" title="${tt}">${_tIc(paths,16,1.6)}</button>`;
+  const _icons=
+     _ic('<path d="M2 12s3.5 -7 10 -7s10 7 10 7s-3.5 7 -10 7s-10 -7 -10 -7z"/><circle cx="12" cy="12" r="3"/>','Bekijk als klant — de echte portalpagina','pbPortalPreview()')
+    +_ic('<path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4"/><path d="M13.5 6.5l4 4"/>',heeftImg?'Achtergrondafbeelding wijzigen':'Achtergrondafbeelding kiezen','pbPortalImg()')
+    +(heeftImg?_ic('<path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M7 7l1 13h8l1-13"/>','Achtergrond verwijderen','pbPortalBgClear()'):'')
+    +_ic('<circle cx="8" cy="15" r="4"/><path d="M10.85 12.15l6.15 -6.15"/><path d="M18 5l2 2"/><path d="M15 8l2 2"/>','Klant-login beheren',`kkLogin('${_qs(p.client)}')`);
   const preview=heeftImg
-    ? `<div class="pb-kk-preview"><div class="pb-kk-thumb" style="background-image:url('${escapeHtml(p.portal_bg_image)}')"></div><div class="pb-kk-pmain"><div class="pb-kk-pnaam">${escapeHtml(naam)}</div><div class="pb-kk-phint">zwarte overlay + witte tekst</div></div></div>`
-    : `<div class="pb-kk-rij"><span class="pb-kk-hint">Nog geen achtergrond — zwart + klantkleur (standaard).</span></div>`;
-  const acties=`<div class="pb-kk-rij"><button class="pb-kk-btn" onclick="pbPortalImg()">${heeftImg?'Afbeelding wijzigen':'Afbeelding kiezen'}</button>${heeftImg?'<button class="pb-kk-reset" onclick="pbPortalBgClear()">verwijderen</button>':''}<button class="pb-kk-btn" onclick="pbPortalPreview()">Bekijk als klant</button></div>`
-    +`<div class="pb-kk-rij"><span class="pb-kk-lbl">Klant-login</span><button class="pb-kk-btn" onclick="kkLogin('${_qs(p.client)}')">Login beheren</button></div>`;
+    ? `<div class="pb-kk-preview"><div class="pb-kk-thumb" style="background-image:url('${escapeHtml(p.portal_bg_image)}')" title="zwarte overlay + witte tekst"></div><div class="pb-kk-pmain"><div class="pb-kk-pnaam">${escapeHtml(naam)}</div></div><span class="pb-kk-ics">${_icons}</span></div>`
+    : `<div class="pb-kk-preview"><div class="pb-kk-pmain"><div class="pb-kk-pnaam" style="color:var(--mut2)">Geen achtergrond — zwart + klantkleur</div></div><span class="pb-kk-ics">${_icons}</span></div>`;
+  const acties='';
   return `<div class="pb-sec pb-klantkant"><div class="pb-h pb-kk-h" onclick="_bvKlap('${kKey}')"><span>Klantkant</span>${_bvChev(kKey,dicht,col)}</div>`
     +(dicht?'':(preview+acties))
     +`<input type="file" id="pbBgFile" accept="image/*" style="display:none" onchange="pbPortalBgImage(this.files&&this.files[0]);this.value=''">`
     +`</div>`;
 }
-function _urlBasename(u){ try{ const s=String(u||'').split('?')[0].split('/').pop(); return decodeURIComponent(s||'afbeelding'); }catch(_){ return 'afbeelding'; } }
+function _urlBasename(u){ try{ let s=String(u||'').split('?')[0].split('/').pop(); s=decodeURIComponent(s||'afbeelding'); if(/^[0-9a-f-]{30,}/i.test(s)){ const ext=(s.split('.').pop()||'').toLowerCase(); return 'achtergrond'+(ext?'.'+ext:''); } return s; }catch(_){ return 'afbeelding'; } }
 // Bekijk als klant: open de ECHTE portalpagina van dit project in een preview-iframe
 // (dezelfde pagina die de klant ziet, gestuurd door de poppetjes). Niets nieuws verzonnen.
 function pbPortalPreview(){
@@ -9335,6 +9347,7 @@ function ltLater(){ if(!_lt)return; const r=_lt.resolve; const uit={later:true,t
 function ltPas(){ if(!_lt)return; const r=_lt.resolve; const uit={later:false,titel:_lt.titel,rows:_lt.rows,contacts:_lt.contacts,client:_lt.client,project_id:_lt.project_id}; _lt=null; _ltSluit(); if(r)r(uit); }
 function ltToggle(i){ if(!_lt||!_lt.rows[i])return; _lt.rows[i].on=!_lt.rows[i].on; ltRender(); }
 function ltType(i,ty){ if(!_lt||!_lt.rows[i])return; _lt.rows[i].type=ty; _lt.rows[i].on=true; ltRender(); }
+function ltTypeVolgende(i){ if(!_lt||!_lt.rows[i])return; const volg=_LT_TYPES.map(t=>t[0]); const cur=volg.indexOf(_lt.rows[i].type); _lt.rows[i].type=volg[(cur+1)%volg.length]; _lt.rows[i].on=true; ltRender(); }
 function ltSetClient(v){ if(!_lt)return; _lt.client=v; _lt.project_id=''; ltRender(); }
 function ltSetProject(v){ if(!_lt)return; _lt.project_id=v; ltRender(); }
 function ltCToggle(i){ if(!_lt||!_lt.contacts[i])return; _lt.contacts[i].on=!_lt.contacts[i].on; ltRender(); }
@@ -9347,7 +9360,8 @@ function ltRender(){
   const chk=on=>`<span class="lt-box">${on?'<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5l10 -10"/></svg>':''}</span>`;
   const aan=_lt.rows.filter(r=>r.on&&r.type!=='notitie'&&String(r.t||'').trim()).length + _lt.contacts.filter(c=>c.on).length;
   const rijen=_lt.rows.map((r,i)=>{
-    const seg=_LT_TYPES.map(([k,l])=>`<button class="lt-tbtn${r.type===k?' aan':''}" onclick="ltType(${i},'${k}')">${l}</button>`).join('');
+    const _tl=(_LT_TYPES.find(t=>t[0]===r.type)||_LT_TYPES[0])[1];
+    const seg=`<button class="bk-type aan" onclick="ltTypeVolgende(${i})" title="Klik om te wisselen: taak → subpunt → afspraak → feit → notitie">${_tl.toLowerCase()}</button>`;
     let velden='';
     if(r.type==='taak') velden=`<div class="lt-velden">
         <span class="lt-veld"><span class="lt-vlbl">wie</span><select onchange="_lt.rows[${i}].owner=this.value"><option value=""${r.owner===''?' selected':''}>&mdash;</option><option${r.owner==='Jeroen'?' selected':''}>Jeroen</option><option${r.owner==='Marlon'?' selected':''}>Marlon</option><option value="Marlon & Jeroen"${r.owner==='Marlon & Jeroen'?' selected':''}>Beiden</option></select></span>
@@ -9363,24 +9377,27 @@ function ltRender(){
     else if(r.type==='feit') velden=`<div class="lt-velden"><span class="lt-hint">wordt bewaard onder &lsquo;Wat we weten&rsquo; bij het project</span></div>`;
     else if(r.type==='notitie') velden=`<div class="lt-velden"><span class="lt-hint">blijft alleen bij de bron bewaard &mdash; er wordt niets aangemaakt</span></div>`;
     return `<div class="lt-row${r.on?'':' uit'}">
-      <button class="lt-chk" onclick="ltToggle(${i})" title="${r.on?'Uitzetten':'Aanzetten'}">${chk(r.on)}</button>
+      <button class="bv-chk" onclick="ltToggle(${i})" title="${r.on?'Uitzetten':'Aanzetten'}">${_bvBoxSvg(r.on?'var(--ltc, #c9c9cd)':'#5a5a5f',r.on)}</button>
       <div class="lt-main">
         <input class="lt-tekst" value="${esc(r.t)}" placeholder="omschrijving&hellip;" oninput="_lt.rows[${i}].t=this.value">
         ${r.on?velden:''}
       </div>
       <div class="lt-seg">${seg}</div>
-      <button class="lt-del" onclick="ltDel(${i})" title="Regel verwijderen">${_tIc('<path d="M18 6l-12 12"/><path d="M6 6l12 12"/>',15,1.6)}</button>
+      <button class="lt-del" onclick="ltDel(${i})" title="Regel verwijderen">${_tIc('<path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M7 7l1 13h8l1-13"/>',15,1.5)}</button>
     </div>`;
   }).join('');
   const conts=_lt.contacts.length?`<div class="lt-h">Gevonden contacten</div>`+_lt.contacts.map((c,i)=>`<div class="lt-row lt-crow${c.on?'':' uit'}">
       <button class="lt-chk" onclick="ltCToggle(${i})" title="${c.on?'Niet bewaren':'Bewaren'}">${chk(c.on)}</button>
       <div class="lt-main"><span class="lt-cnaam">${esc(c.name)}</span><span class="lt-csub">${esc([c.role,c.company,c.email,c.phone].filter(Boolean).join(' · '))}</span></div>
     </div>`).join(''):'';
+  const _ltCol=_lt.client?(_clientColor(_lt.client)||'#c9c9cd'):'#c9c9cd';
+  body.style.setProperty('--ltc',_ltCol);
+  const _ltBadge=_lt.client?`<span class="lt-badge" style="background:${_ltCol}">${esc((String(_lt.client).trim()[0]||'?').toUpperCase())}</span>`:'';
   body.innerHTML=`
     <div class="lt-kop">
-      <input class="lt-titel" value="${esc(_lt.titel)}" placeholder="Titel van de verzamelkaart&hellip;" oninput="_lt.titel=this.value">
+      <div class="lt-kopregel">${_ltBadge}<input class="lt-titel" value="${esc(_lt.titel)}" placeholder="Titel van de verzamelkaart&hellip;" oninput="_lt.titel=this.value"></div>
       ${_lt.sub?`<div class="dov-sub" style="margin-top:6px">${esc(_lt.sub)}</div>`:''}
-      <div class="lt-koppel"><select class="lt-sel" onchange="ltSetClient(this.value)"><option value="">&mdash; klant &mdash;</option>${uniqueClients().filter(Boolean).map(c=>`<option${_lt.client===c?' selected':''}>${esc(c)}</option>`).join('')}</select><select class="lt-sel" onchange="ltSetProject(this.value)"><option value="">&mdash; project &mdash;</option>${state.projects.filter(pp=>pp.id!=='__inbox__'&&pp.client===_lt.client).map(pp=>`<option value="${pp.id}"${_lt.project_id===pp.id?' selected':''}>${esc(pp.project||pp.client)}</option>`).join('')}</select></div>
+      <div class="lt-koppel bk-sel"><select onchange="ltSetClient(this.value)"><option value="">&mdash; klant &mdash;</option>${uniqueClients().filter(Boolean).map(c=>`<option${_lt.client===c?' selected':''}>${esc(c)}</option>`).join('')}</select><select onchange="ltSetProject(this.value)"><option value="">&mdash; project &mdash;</option>${state.projects.filter(pp=>pp.id!=='__inbox__'&&pp.client===_lt.client).map(pp=>`<option value="${pp.id}"${_lt.project_id===pp.id?' selected':''}>${esc(pp.project||pp.client)}</option>`).join('')}</select></div>
       <div class="dov-sub" style="margin-top:4px">Subpunten &rarr; &eacute;&eacute;n kaart met checklist &middot; taken &rarr; losse kaarten &middot; afspraken &rarr; agenda &middot; feiten &rarr; Wat we weten.</div>
     </div>
     ${rijen||'<div class="dov-sub" style="margin:12px 0">Geen vondsten &mdash; voeg zelf een regel toe.</div>'}
