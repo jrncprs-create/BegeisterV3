@@ -1066,7 +1066,7 @@
   }
   .pb-tx{flex:1;font-size:14px}
   .pb-tx.done{text-decoration:line-through;opacity:.55}
-  .pb-del{background:transparent;border:none;cursor:pointer;font-size:17px;line-height:1;padding:0 3px;opacity:.6}
+  .pb-del{background:transparent;border:none;cursor:pointer;font-size:17px;line-height:0;padding:0 3px;opacity:.6;display:inline-flex;align-items:center}
   .pb-del:hover{opacity:1}
   .pb-appt{justify-content:space-between}
   .pb-when{font-size:13px;color:var(--mut);flex:0 0 auto;margin-left:10px}
@@ -2428,7 +2428,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v258</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v259</span>
       <!-- V244: loep verhuisd naar het hoofdmenu (waar Bestanden/Contacten stonden). -->
       <!-- V242: Dagoverzicht voorlopig uit beeld (afgesproken 16 juli) — openDayOverview en de overlay blijven in de code staan. -->
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
@@ -4565,7 +4565,7 @@ function _renderProjBoard(){
   const takenT=(p.items||[]).filter(i=>i.status!=='done'&&i.status!=='wait');
   const doneT=(p.items||[]).filter(i=>i.status==='done');
   const doneRow=(it)=>`<div class="pb-row pb-donerow"><button class="pb-chk" onclick="pbUncheckTask('${it.id}')" title="Terugzetten">${_pbChk(true)}</button><span class="pb-tx done">${esc(it.t||'')}</span>${_pbKz('task',it.id,it.kz)}<button class="pb-edit" onclick="openModal('${it.id}')" title="Bewerken">${_penIc}</button></div>`;
-  const cbRow=(x)=>`<label class="pb-row"><input type="checkbox" ${x.done?'checked':''} onchange="pbToggle('${x.id}',this.checked)"><span class="pb-tx${x.done?' done':''}">${esc(x.text)}</span><button class="pb-del" onclick="event.preventDefault();pbDel('${x.id}')" title="Verwijderen">×</button></label>`;
+  const cbRow=(x)=>`<label class="pb-row"><input type="checkbox" ${x.done?'checked':''} onchange="pbToggle('${x.id}',this.checked)"><span class="pb-tx${x.done?' done':''}">${esc(x.text)}</span><button class="pb-del" onclick="event.preventDefault();pbDel('${x.id}')" title="Verwijderen">${_tIc('<path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/>',14,1.6)}</button></label>`;
   const _lnkIc='<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 15l6-6"/><path d="M11 6l1-1a3.5 3.5 0 015 5l-1 1"/><path d="M13 18l-1 1a3.5 3.5 0 01-5-5l1-1"/></svg>';
   const _stCol={'te bestellen':['rgba(186,117,23,.16)','#d8a64a'],'besteld':['rgba(24,95,165,.2)','#7db0e6']};
   const inkRow=(x)=>{ const pr=(x.price!=null&&x.price!=='')?Number(x.price):null; const qty=x.qty||1;
@@ -4577,7 +4577,7 @@ function _renderProjBoard(){
     const totaal=pr!=null?('€'+fmtEur(pr*qty)):'—';
     const sub=(qty>1&&pr!=null)?`<span class="pb-inksub">${qty} × €${unitVal}</span>`:(qty>1?`<span class="pb-inksub">${qty} ×</span>`:'');
     const priceCell=`<div class="pb-inkprijs" onclick="event.stopPropagation();pbArtikel('${x.id}')" title="Aanpassen"><span class="pb-inktot">${totaal}</span>${sub}</div>`;
-    return `<div class="pb-row pb-ink" data-tid="${x.id}"${x.image?` data-img="${escapeHtml(x.image)}"`:''}><button class="pb-chk" onclick="pbInkOrdered('${x.id}')" title="${x.status==='besteld'?'Terugzetten naar te bestellen':'Markeer als besteld'}">${_pbChk(x.status==='besteld')}</button>${nameCell}${priceCell}<button class="pb-edit pb-inkedit" onclick="event.preventDefault();event.stopPropagation();pbArtikel('${x.id}')" title="Aantal, link en bedrag aanpassen">${_penGlyph()}</button><button class="pb-del" onclick="event.preventDefault();event.stopPropagation();pbDel('${x.id}')" title="Verwijderen">×</button></div>`; };
+    return `<div class="pb-row pb-ink" data-tid="${x.id}"${x.image?` data-img="${escapeHtml(x.image)}"`:''}><button class="pb-chk" onclick="pbInkOrdered('${x.id}')" title="${x.status==='besteld'?'Terugzetten naar te bestellen':'Markeer als besteld'}">${_pbChk(x.status==='besteld')}</button>${nameCell}${priceCell}<button class="pb-edit pb-inkedit" onclick="event.preventDefault();event.stopPropagation();pbArtikel('${x.id}')" title="Aantal, link en bedrag aanpassen">${_penGlyph()}</button><button class="pb-del" onclick="event.preventDefault();event.stopPropagation();pbDel('${x.id}')" title="Verwijderen">${_tIc('<path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/>',14,1.6)}</button></div>`; };
   const doneInkRow=(x)=>`<div class="pb-row pb-donerow"><button class="pb-chk" onclick="pbInkCheck('${x.id}',false)" title="Terugzetten">${_pbChk(true)}</button><span class="pb-tx done">${esc(x.text||'')}</span></div>`;
   const apptRow=(a)=>{ const d=a.date?d3date(a.date):''; return `<div class="pb-row pb-appt"><span class="pb-tx">${esc(a.t||'Afspraak')}</span><span class="pb-when">${esc(d)}${a.start?' · '+esc(String(a.start).slice(0,5)):''}</span>${_pbKz('appt',a.id,a.kz)}<button class="pb-edit" onclick="openApptModal('${a.id}')" title="Bewerken">${_penIc}</button></div>`; };
   // Voortgang: waar staan we in het klanttraject. Interne projecten (Begeister) en privé
@@ -4611,7 +4611,7 @@ function _renderProjBoard(){
   const _ftList=(state.facts||[]).filter(x=>String(x.project_id||'')===String(_pbPid));
   const _ftKey='ks|feit|'+_pbPid, _ftDicht=(typeof _bvDicht!=='undefined')&&_bvDicht.has(_ftKey);
   const _kzFeit=(!_geenTraject(p.client))?('<button class="pb-kz'+(((p.portal_secties||{}).feiten)?' aan':'')+'" onclick="event.stopPropagation();pbToggleClientItem(\'sec\',\'feiten\')" title="Zichtbaar voor de klant (aan/uit)">'+_KLANT_IC+'</button>'):'';
-  const secWeten=`<div class="pb-sec"><div class="pb-h"><span>Wat we weten${_ftList.length?' · '+_ftList.length:''}</span><span class="pb-hbtns">${_kzFeit}<button class="pb-hadd" onclick="ftAdd('${_pbPid}')" title="Feit toevoegen">+</button>${_bvChev(_ftKey,_ftDicht,col)}</span></div>${_ftDicht?'':((_ftList.map(x=>`<div class="pb-feit"><span class="pb-feittx" onclick="ftEdit('${x.id}')" title="Klik om aan te passen">${esc(x.text||'')}</span>${x.source_id?`<button class="bv-bronknop pb-feitbron" onclick="openBronOverlay('${x.source_id}')" title="Bron bekijken">${_bvSrcSvg()}</button>`:''}<button class="bv-del pb-feitdel" onclick="ftDel('${x.id}')" title="Verwijderen">${_tIc('<path d="M6 6l12 12M18 6L6 18"/>',13,1.6)}</button></div>`).join(''))||'<div class="pb-empty">Nog geen feiten. Ze komen uit binnengekomen berichten, of voeg er zelf een toe met +.</div>')}</div>`;
+  const secWeten=`<div class="pb-sec"><div class="pb-h"><span>Wat we weten${_ftList.length?' · '+_ftList.length:''}</span><span class="pb-hbtns">${_kzFeit}<button class="pb-hadd" onclick="ftAdd('${_pbPid}')" title="Feit toevoegen">+</button>${_bvChev(_ftKey,_ftDicht,col)}</span></div>${_ftDicht?'':((_ftList.map(x=>`<div class="pb-feit"><span class="pb-feittx" onclick="ftEdit('${x.id}')" title="Klik om aan te passen">${esc(x.text||'')}</span>${x.source_id?`<button class="bv-bronknop pb-feitbron" onclick="openBronOverlay('${x.source_id}')" title="Bron bekijken">${_bvSrcSvg()}</button>`:''}<button class="bv-del pb-feitdel" onclick="ftDel('${x.id}')" title="Verwijderen">${_tIc('<path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/>',13,1.6)}</button></div>`).join(''))||'<div class="pb-empty">Nog geen feiten. Ze komen uit binnengekomen berichten, of voeg er zelf een toe met +.</div>')}</div>`;
   // Klantkant-balk (achtergrond + letterkleur voor het portaal): alleen bij klantprojecten,
   // niet in de financiën-boards. Staat boven het dossier.
   const secKlantkant=(!_geenTraject(p.client)&&_pbTarget!=='finmid'&&_pbTarget!=='finright')?_secKlantkant(p):'';
@@ -9100,12 +9100,12 @@ function _bvRij(p,it,mode){
   const meta=_bvMeta(it);
   const oc = mode==='wacht' ? `openModal('${it.id}','wachter')` : `openModal('${it.id}')`;
   const srcIc = (it.src&&!done)?`<button class="bv-src" onclick="event.stopPropagation();openBronOverlay('${it.src}')" title="Bron bekijken">${_bvSrcSvg()}</button>`:'';
-  const del = `<button class="bv-del" onclick="event.stopPropagation();${mode==='wacht'?`rejectWait('${it.id}')`:`bvVerwijder('${it.id}')`}" title="Verwijderen">${_tIc('<path d="M6 6l12 12M18 6L6 18"/>',13,1.6)}</button>`;
+  const del = `<button class="bv-del" onclick="event.stopPropagation();${mode==='wacht'?`rejectWait('${it.id}')`:`bvVerwijder('${it.id}')`}" title="Verwijderen">${_tIc('<path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/>',13,1.6)}</button>`;
   return `<div class="bv-rij${done?' af':''}" data-id="${it.id}">${hokje}<span class="bv-tx" onclick="${oc}">${done?'<s>':''}${escapeHtml(it.t||'')}${done?'</s>':''}${meta?`<span class="bv-meta">${escapeHtml(meta)}</span>`:''}</span>${srcIc}${del}</div>`;
 }
 function _bvCkRij(p,it,c,i){
   const col=PROJCOL[p.id]||'#888';
-  return `<div class="bv-rij${c.done?' af':''}"><button class="bv-chk" onclick="event.stopPropagation();checklistToggle('${it.id}',${i})">${_bvBoxSvg(c.done?'#5a5a5f':col,c.done)}</button><span class="bv-tx" onclick="openModal('${it.id}')">${c.done?'<s>':''}${escapeHtml(c.t||'')}${c.done?'</s>':''}</span>${c.done?`<button class="bv-del" onclick="event.stopPropagation();checklistDel('${it.id}',${i})" title="Verwijderen">${_tIc('<path d="M6 6l12 12M18 6L6 18"/>',13,1.6)}</button>`:''}</div>`;
+  return `<div class="bv-rij${c.done?' af':''}"><button class="bv-chk" onclick="event.stopPropagation();checklistToggle('${it.id}',${i})">${_bvBoxSvg(c.done?'#5a5a5f':col,c.done)}</button><span class="bv-tx" onclick="openModal('${it.id}')">${c.done?'<s>':''}${escapeHtml(c.t||'')}${c.done?'</s>':''}</span>${c.done?`<button class="bv-del" onclick="event.stopPropagation();checklistDel('${it.id}',${i})" title="Verwijderen">${_tIc('<path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/>',13,1.6)}</button>`:''}</div>`;
 }
 let _bvDicht=(()=>{try{return new Set(JSON.parse(localStorage.getItem('bv_dicht')||'[]'))}catch(_){return new Set()}})();
 function _bvKlap(key){ if(_bvDicht.has(key))_bvDicht.delete(key); else _bvDicht.add(key); try{localStorage.setItem('bv_dicht',JSON.stringify([..._bvDicht]));}catch(_){} try{render();}catch(_){} }
@@ -9152,7 +9152,7 @@ function _bvVenster(p,items,mode){
   }
   const kopKlik=(p.id!=='__inbox__')?` onclick="openProjectBoard('${p.id}','klanten')"`:'';
   return `<div class="bv${vDicht?' dicht':''}" style="--kk:${col}">
-    <div class="bv-kop"><span class="bv-badge" style="background:${col}">${ic}</span><span class="bv-naam"${kopKlik}>${naam}</span><span class="bv-feiten">${open?open+' open':'alles af'}</span>${_bvChev(vKey,vDicht,col)}<button class="bv-del bv-kopdel" onclick="event.stopPropagation();bvVensterWeg('${p.id}','${mode}')" title="Alles in dit venster verwijderen">${_tIc('<path d="M6 6l12 12M18 6L6 18"/>',13,1.6)}</button></div>
+    <div class="bv-kop"><span class="bv-badge" style="background:${col}">${ic}</span><span class="bv-naam"${kopKlik}>${naam}</span><span class="bv-feiten">${open?open+' open':'alles af'}</span>${_bvChev(vKey,vDicht,col)}<button class="bv-del bv-kopdel" onclick="event.stopPropagation();bvVensterWeg('${p.id}','${mode}')" title="Alles in dit venster verwijderen">${_tIc('<path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/>',13,1.6)}</button></div>
     ${h}
   </div>`;
 }
