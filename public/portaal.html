@@ -26,7 +26,7 @@ button{font-family:inherit;font-weight:var(--fw);cursor:pointer}
 :focus-visible{outline:none;box-shadow:0 0 0 2px var(--bg),0 0 0 4px color-mix(in srgb,var(--scol) 60%,transparent)}
 
 .wrap{max-width:1200px;margin:0 auto;padding:0 26px 70px}
-.kop{position:sticky;top:0;z-index:5;background:var(--bg);display:flex;align-items:center;gap:12px;padding:18px 0 14px;border-bottom:1px solid color-mix(in srgb,var(--scol) 34%,transparent)}
+.kop{position:sticky;top:0;z-index:5;background:transparent;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;gap:12px;padding:18px 0 14px;border-bottom:1px solid color-mix(in srgb,var(--scol) 20%,transparent)}
 .merk{width:22px;height:26px;flex:none;color:var(--scol)}
 .kop-naam{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:17px}
 .kop-naam b{color:var(--scol);font-weight:var(--fw-nadruk)} .kop-naam span{color:color-mix(in srgb,var(--scol) 70%,transparent)}
@@ -144,6 +144,7 @@ const CHEV='<svg class="chev" viewBox="0 0 24 24" width="13" height="13" fill="n
 const FICO='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/></svg>';
 
 const EMBED=new URLSearchParams(location.search).get('embed')==='1';
+const PREVIEW=new URLSearchParams(location.search).get('preview');
 let DATA=null, ACTIEF=0;
 const OPEN_OPM=new Set();
 
@@ -193,7 +194,7 @@ function themaToe(p){
   if(img){
     // Achtergrondafbeelding → automatisch zwarte overlay + witte tekst.
     root.style.setProperty('--scol', '#f4efe9');
-    document.body.style.background='linear-gradient(rgba(0,0,0,.62),rgba(0,0,0,.68)), url("'+String(img).replace(/"/g,'&quot;')+'") center/cover no-repeat fixed, #0d0d0d';
+    document.body.style.background='linear-gradient(rgba(0,0,0,.76),rgba(0,0,0,.86)), url("'+String(img).replace(/"/g,'&quot;')+'") center/cover no-repeat fixed, #0d0d0d';
   } else {
     // Standaard → zwarte achtergrond + klantkleur-letters.
     root.style.setProperty('--scol', klant);
@@ -299,13 +300,13 @@ function toonVoorstel(link,naam){
   ov.classList.add('on');
 }
 
-async function laad(){ const j=await api('data'); DATA=j; if(ACTIEF>=DATA.projecten.length)ACTIEF=0; render(); }
+async function laad(){ const j=PREVIEW?await api('preview',{project_id:PREVIEW}):await api('data'); DATA=j; if(ACTIEF>=DATA.projecten.length)ACTIEF=0; render(); }
 
 async function start(){
   const s=await sb.auth.getSession();
   if(!s.data.session) return toonLogin();
   const email=(s.data.session.user&&s.data.session.user.email)||'';
-  if(!EMBED && /jeroen|marlon/i.test(email)){ location.replace('/'); return; }
+  if(!EMBED && !PREVIEW && /jeroen|marlon/i.test(email)){ location.replace('/'); return; }
   try{ await laad(); }
   catch(e){ if(/niet ingelogd/.test(e.message)) return toonLogin();
     document.getElementById('app').innerHTML='<div class="wrap"><div class="midden">Er staat nog geen portaal voor je klaar.<br><span style="font-size:13px">Neem contact op met Begeister als dit niet klopt.</span></div></div>'; }
