@@ -512,6 +512,13 @@
   .uic-zeker{color:#e0726f !important;opacity:1 !important}
   .uic-zeker svg{stroke:#e0726f}
   .uic-zeker::after{content:"zeker?";font-size:11px;letter-spacing:.4px;margin-left:6px;color:#e0726f;line-height:1}
+  /* V243 — aandacht vragen */
+  .m-ping{display:flex;gap:8px;margin-top:10px;align-items:center}
+  .m-ping input{flex:1;background:transparent;border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:13px;color:var(--txt);font-family:inherit}
+  .m-ping input:focus{outline:none;border-color:var(--mut2)}
+  .m-pingbtn{background:transparent;border:1px solid var(--line);border-radius:10px;padding:7px 11px;cursor:pointer;color:var(--mut);display:inline-flex;transition:color .12s,border-color .12s}
+  .m-pingbtn:hover{color:#fff;border-color:var(--mut2)}
+  .m-pingbtn.ok{color:#34d399;border-color:#34d399}
   .bk{border:1px dashed var(--line);border-radius:14px;padding:12px;margin-bottom:12px}
   .bk-kop{margin-bottom:8px}
   .bk-ttl{display:block;font-size:13px;color:var(--txt);font-weight:var(--fw-nadruk);line-height:1.4}
@@ -2303,7 +2310,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v242</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v243</span>
       <button id="zoekBtn" class="dag-ic" onclick="openZoek()" title="Zoeken — ⌘K / Ctrl+K" aria-label="Zoeken"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg></button>
       <!-- V242: Dagoverzicht voorlopig uit beeld (afgesproken 16 juli) — openDayOverview en de overlay blijven in de code staan. -->
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
@@ -7556,7 +7563,7 @@ function openModal(id, src, defStatus, presetPid){
   // bestanden bereik je via de bron. Opmerkingen blijft (klein) voor @Jeroen/@Marlon-overleg.
   const mck=document.getElementById('m_checklist');if(mck)mck.innerHTML='';
   const mf=document.getElementById('m_files');if(mf)mf.innerHTML='';
-  const mc=document.getElementById('m_comments');if(mc)mc.innerHTML=isNew?'':(typeof _cmtBtnHTML==='function'?_cmtBtnHTML('task',editingId):'');
+  const mc=document.getElementById('m_comments');if(mc)mc.innerHTML=isNew?'':((typeof _cmtBtnHTML==='function'?_cmtBtnHTML('task',editingId):'')+_pingHTML());
   ov.classList.add('open');}
 function updateDueLabel(){const el=document.getElementById('m_due_label');if(!el)return;
   el.textContent=mDue?d(mDue).toLocaleDateString('nl-NL',{weekday:'short',day:'numeric',month:'long',year:'numeric'}):'Deadline';
@@ -7579,7 +7586,7 @@ async function saveModal(){const r=findItem(editingId);if(!r)return;
   if(np){ if(/^[0-9a-f-]{36}$/i.test(np)) _patch.project_id=np; else if(np==='__none__'||np==='__inbox__') _patch.project_id=null; }
   try{ await sb.from('items').update(_patch).eq('id',_id); }catch(_){}
   // Gerichte melding bij (nieuwe) toewijzing aan een collega.
-  try{ _notifyAssign(_oldOwner,_newOwner,_title); }catch(_){}
+  try{ _notifyAssign(_oldOwner,_newOwner,_title,_id); }catch(_){}
   closeModal();render();}
 async function deleteItem(){const r=findItem(editingId);if(!r)return;if(!(await uiConfirm('Dit actiepunt verwijderen?')))return;r.p.items=r.p.items.filter(i=>i.id!==r.it.id);try{await sb.from('items').delete().eq('id',r.it.id);}catch(_){}closeModal();render();}
 document.getElementById('overlay').addEventListener('click',e=>{if(e.target.id==='overlay')closeModal();});
@@ -7628,9 +7635,24 @@ async function _cmtSend(){ const inp=document.getElementById('cmtInput'); if(!in
   _cmtRender();
   try{ if(_pbTarget&&_pbPid) _renderProjBoard(); }catch(_){}
   const targets=mentions.filter(n=>n.toLowerCase()!==author.toLowerCase());
-  if(targets.length){ try{ await fetch('/api/notify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:targets,title:'Nieuwe opmerking',body:author+' · '+_cmtLabel(_cmtCtx.scope,_cmtCtx.id)+': '+text.slice(0,120),url:'/'})}); }catch(_){} }
+  if(targets.length){ const _du=(_cmtCtx.scope==='task')?('/?item='+_cmtCtx.id):('/?project='+_cmtCtx.id); try{ await fetch('/api/notify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:targets,title:'Nieuwe opmerking',body:author+' · '+_cmtLabel(_cmtCtx.scope,_cmtCtx.id)+': '+text.slice(0,120),url:_du})}); }catch(_){} }
 }
 function _cmtInputKey(e){ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); _cmtSend(); } }
+// V243: vraag de ander om aandacht — één regeltje, gaat als push (klik = dit item open)
+// en komt als @-opmerking bij het item te staan (vangnet als de push gemist wordt).
+function _pingHTML(){ const ander=(who==='Marlon')?'Jeroen':'Marlon';
+  return `<div class="m-ping"><input id="m_ping" placeholder="vraag aandacht van ${ander}…" autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();pingAnder();}"><button type="button" class="m-pingbtn" onclick="pingAnder()" title="Stuur ${ander} een melding — klik op de melding opent dit item">${_tIc('<path d="M10 14l11 -11"/><path d="M21 3l-6.5 18a.55 .55 0 0 1 -1 0l-3.5 -7l-7 -3.5a.55 .55 0 0 1 0 -1z"/>',15,1.5)}</button></div>`; }
+async function pingAnder(){
+  const inp=document.getElementById('m_ping'); if(!inp||!editingId)return;
+  const ander=(who==='Marlon')?'Jeroen':'Marlon';
+  const r=findItem(editingId); const titel=(r&&r.it&&r.it.t)||'een taak';
+  const text=(inp.value||'').trim()||'wil je hier even naar kijken?';
+  const row={scope:'task',ref_id:editingId,author:who,body:'@'+ander+' '+text,mentions:[ander]};
+  try{ const q=await sb.from('comments').insert(row).select().single(); if(q&&q.data){ state.comments=state.comments||[]; state.comments.push(q.data);} }catch(_){}
+  try{ await fetch('/api/notify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:[ander],title:who+' → jou',body:text+' — '+String(titel).slice(0,80),url:'/?item='+editingId})}); }catch(_){}
+  const mc=document.getElementById('m_comments'); if(mc)mc.innerHTML=_cmtBtnHTML('task',editingId)+_pingHTML();
+  const b=document.querySelector('.m-pingbtn'); if(b){ b.classList.add('ok'); setTimeout(()=>{ try{b.classList.remove('ok');}catch(_){} },1400); }
+}
 function _cmtOnInput(e){ const inp=e.target; const v=inp.value; const caret=inp.selectionStart||v.length; const before=v.slice(0,caret); const m=before.match(/@(\w*)$/);
   if(!m){ _cmtMenuHide(); return; } const q=m[1].toLowerCase(); const opts=CMT_PEOPLE.filter(n=>n.toLowerCase().startsWith(q)); if(!opts.length){ _cmtMenuHide(); return; }
   const menu=document.getElementById('cmtMenu'); if(!menu)return; menu.innerHTML=opts.map(n=>`<button type="button" onmousedown="event.preventDefault();_cmtPick('${n}')"><span class="cmt-av" style="background:${_whoCol[n]}">${n[0]}</span>${n}</button>`).join(''); menu.classList.add('open'); }
@@ -8013,7 +8035,7 @@ saveModal = async function(){
     if(ins&&ins.data) lastAddedIds=[ins.data.id];
     if(rec.project_id && activeTab!=='all') activeTab=rec.project_id;
     notifyPartner((who||'Iemand')+' voegde een taak toe: '+title);
-    try{ _notifyAssign('', rec.owner||'', title); }catch(_){}
+    try{ _notifyAssign('', rec.owner||'', title, (ins&&ins.data)?ins.data.id:null); }catch(_){}
     _animateNext=true;
     if(_dropQueue.length){ const nx=_dropQueue.shift(); await refreshTaken(); _openDraftModal(nx); return; }   // volgend gevonden punt
     if(_dropFiles.length){ _dropSrc=null; _dropAdvancing=true; closeModal(); _dropAdvancing=false; await refreshTaken(); _dropRunNext(); return; }   // volgend bestand
@@ -8030,7 +8052,7 @@ saveModal = async function(){
   await sb.from('items').update(patch).eq('id',editingId);
   if(patch.project_id && patch.project_id!==r.p.id && activeTab!=='all') activeTab=patch.project_id;
   notifyPartner((who||'Iemand')+' paste een taak aan: '+(patch.title||r.it.t));
-  try{ _notifyAssign(_oldOwner, patch.owner||'', patch.title||r.it.t); }catch(_){}
+  try{ _notifyAssign(_oldOwner, patch.owner||'', patch.title||r.it.t, editingId); }catch(_){}
   closeModal(); await refreshTaken();};
 
 deleteItem = async function(){const r=findItem(editingId);if(!r)return;
@@ -9806,7 +9828,7 @@ function knownIds(){return new Set(state.projects.filter(p=>p.id!=='__inbox__').
 function notifyPartner(body){ if(!body)return; try{ fetch('/api/notify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({actor:who||'',body})}); }catch(_){ } }
 // Gerichte push wanneer een taak aan een collega wordt toegewezen (eigenaar gewijzigd).
 // Stuurt alleen naar wie NIEUW is toegevoegd én niet de actor zelf is.
-function _notifyAssign(oldOwner,newOwner,title){
+function _notifyAssign(oldOwner,newOwner,title,id){
   try{
     const PEOPLE=['Jeroen','Marlon'];
     const has=(s,n)=> new RegExp('(^|[^A-Za-z])'+n+'([^A-Za-z]|$)','i').test(String(s||''));
@@ -9814,7 +9836,7 @@ function _notifyAssign(oldOwner,newOwner,title){
     const targets=PEOPLE.filter(n=> has(newOwner,n) && !has(oldOwner,n) && n.toLowerCase()!==actor.toLowerCase());
     if(!targets.length)return;
     fetch('/api/notify',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({to:targets,title:'Nieuw voor jou',body:(actor||'Iemand')+' wees je toe: '+(title||'een taak'),url:'/'})}).catch(()=>{});
+      body:JSON.stringify({to:targets,title:'Nieuw voor jou',body:(actor||'Iemand')+' wees je toe: '+(title||'een taak'),url:id?('/?item='+id):'/'})}).catch(()=>{});
   }catch(_){}
 }
 // AI-first: voorstel tonen (samenvatting + af-vinkbare, bewerkbare lijst) en
@@ -10274,6 +10296,7 @@ function createImage(){if(isMobile()&&view!=='home')setView('home');addMsg('ai',
 // ── PWA + push-notificaties ──
 const VAPID_PUBLIC="BFD467bSbNKmU9lhok7tTlkRMt_QpM-d-_Nn4_R1Z86-F5I5NkvB3Bj0xSBMz-HkHFYHdupnActbSp4_3J7uJlg";
 if('serviceWorker' in navigator){ navigator.serviceWorker.register('/sw.js').catch(()=>{});
+  navigator.serviceWorker.addEventListener('message',ev=>{ try{ const d=ev.data||{}; if(d.type==='openUrl'&&d.url){ const q=new URLSearchParams(String(d.url).split('?')[1]||''); const it=q.get('item'), pr=q.get('project'); if(it)openModal(it); else if(pr)openProjectBoard(pr,'klanten'); } }catch(_){} });
   navigator.serviceWorker.ready.then(async reg=>{ try{ const s=await reg.pushManager.getSubscription(); updatePushBtn(!!s); }catch(_){ } }); }
 function updatePushBtn(on){ const b=document.getElementById('pushBtn'); if(!b)return; b.textContent = on ? 'Meldingen ✓' : 'Meldingen'; b.title = on ? 'Meldingen uitzetten' : 'Meldingen aanzetten'; }
 function isStandalone(){ return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone===true; }
@@ -10335,6 +10358,9 @@ async function startApp(session){
   who = /jeroen/i.test(email)?'Jeroen':(/marlon/i.test(email)?'Marlon':'Jeroen');
   const el=document.getElementById('who'); if(el){el.textContent=who;} const av=document.getElementById('userAv'); if(av)av.textContent=who[0];
   await refresh();
+  try{ const q=new URLSearchParams(location.search); const _di=q.get('item'), _dp=q.get('project');
+    if(_di||_dp){ try{history.replaceState({},'',location.pathname);}catch(_){}
+      setTimeout(()=>{ try{ if(_di)openModal(_di); else if(_dp)openProjectBoard(_dp,'klanten'); }catch(_){} },500); } }catch(_){}
   loadUsage();
   applyLayout();
   if(!_booted){_booted=true; setView(isMobile()?'wachter':'taken'); showWelcome();
