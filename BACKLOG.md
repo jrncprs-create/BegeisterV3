@@ -1,6 +1,6 @@
 # Begeister Workflow — Uitvoerbacklog
 
-_Aangemaakt 14 juli 2026 · hoort bij HANDOFF.md · live versie **v240**_
+_Aangemaakt 14 juli 2026 · hoort bij HANDOFF.md · live versie **v241**_
 
 > Stand 15 juli 2026: alles is af behalve **U11** (agenda-sync — wacht op OAuth-keuze),
 > **U14** (boekhoudkoppeling — wacht op pakketkeuze + API-sleutel) en **Fase 7**
@@ -145,6 +145,15 @@ Status bijhouden: `[ ]` open · `[~]` bezig · `[x]` klaar (+ versienummer).
   venster is slanker (checklist- en bestandenblok weg, Opmerkingen blijft). De mail-poller
   maakt voortaan losse punten per actiepunt; de app bundelt ze in beeld. "Vandaag" komt in
   een volgende stap terug als tijdskop.
+
+- [x] **L3 — Planning-verfijning** (M) — v241, feedback Jeroen 16 juli.
+  Pijplijn- en Financiën-knoppen tijdelijk uit het menu (achterkant blijft staan; Financiën
+  wordt later opnieuw ontworpen). Klantkleur nu ook op de venster-badge; huisstijl-vinkjes
+  ook in dossier/projectbord. Klik op "bron" in de middenkolom opent de bron als overlay
+  (voorbeeld + afspraak-/antwoordvoorstel + knop naar Postvak). Scrollbar-flits en breedte-
+  schaling bij klikken opgelost (desktop: body scrollt niet meer). Per venster en per
+  broncluster een inklap/uitklap-pijltje rechts (onthouden), kruisje rechts op de venster-kop
+  (alles verwijderen, met bevestiging) en op elke regel; bronkop-titels afgekapt op 48 tekens.
 
 ## Fase 7 — Klantportaal (stond al in HANDOFF §8)
 
