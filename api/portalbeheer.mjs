@@ -138,6 +138,45 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true });
     }
 
+    // ── Klant-login (portal-account) inzien/aanmaken ──────────────────────────
+    // Wachtwoorden zijn versleuteld en NIET terug te lezen; we tonen het e-mailadres
+    // (de inlognaam) en laten het team een login aanmaken of het wachtwoord resetten.
+    if (action === "login_get") {
+      const { client_name } = req.body || {};
+      const { data: kl } = await db.from("clients").select("id").ilike("name", String(client_name || "").trim()).maybeSingle();
+      if (!kl) return res.status(200).json({ email: null });
+      const { data: cu } = await db.from("client_users").select("email").eq("client_id", kl.id).maybeSingle();
+      return res.status(200).json({ email: (cu && cu.email) || null });
+    }
+
+    if (action === "login_set") {
+      const { client_name } = req.body || {};
+      const email = String((req.body || {}).email || "").trim().toLowerCase();
+      const password = String((req.body || {}).password || "");
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return fout(res, 400, "geen geldig e-mailadres");
+      if (password && password.length < 8) return fout(res, 400, "wachtwoord minstens 8 tekens");
+      const { data: kl } = await db.from("clients").select("id").ilike("name", String(client_name || "").trim()).maybeSingle();
+      if (!kl) return fout(res, 404, "klant niet gevonden");
+      const { data: cu } = await db.from("client_users").select("user_id").eq("client_id", kl.id).maybeSingle();
+      if (cu && cu.user_id) {
+        // Bestaat al → e-mail en/of wachtwoord bijwerken.
+        const patch = { email }; if (password) patch.password = password;
+        const { error: ue } = await db.auth.admin.updateUserById(cu.user_id, patch);
+        if (ue) throw ue;
+        await db.from("client_users").update({ email }).eq("user_id", cu.user_id);
+        return res.status(200).json({ ok: true, email, nieuw: false });
+      }
+      // Nog geen login → auth-gebruiker aanmaken + koppelen.
+      if (!password) return fout(res, 400, "geef een wachtwoord voor de nieuwe login");
+      const { data: nieuw, error: ce } = await db.auth.admin.createUser({ email, password, email_confirm: true });
+      if (ce) throw ce;
+      const uid = nieuw && nieuw.user && nieuw.user.id;
+      if (!uid) throw new Error("aanmaken mislukte");
+      const { error: le } = await db.from("client_users").insert({ user_id: uid, client_id: kl.id, email });
+      if (le) throw le;
+      return res.status(200).json({ ok: true, email, nieuw: true });
+    }
+
     return fout(res, 400, "onbekende actie");
   } catch (e) {
     console.error("portalbeheer", action, e && e.message);
