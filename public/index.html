@@ -573,6 +573,11 @@
   .art-eur{display:flex;align-items:center;gap:6px;color:var(--mut2)}
   .art-eur .art-in{text-align:right}
   .pb-inkedit{margin-left:2px}
+  .pb-inkprijs{display:flex;flex-direction:column;align-items:flex-end;margin-left:auto;cursor:pointer;line-height:1.2}
+  .pb-inktot{font-size:14px;color:var(--scol);font-weight:var(--fw-nadruk)}
+  .pb-inksub{font-size:11px;color:var(--mut2)}
+  .art-del{color:#e0726f;border-color:color-mix(in srgb,#e0726f 40%,transparent)}
+  .art-del:hover{color:#fff;background:#e0726f;border-color:#e0726f}
   #m_comments{display:flex;flex-wrap:wrap;align-items:center;gap:0}
   #m_comments .m-ping{flex:1 1 100%}
   .pb-feit{display:flex;align-items:flex-start;gap:8px;padding:6px 0}
@@ -613,6 +618,9 @@
   .lt-kop{margin:6px 0 18px}
   .lt-titel{width:100%;background:transparent;border:none;border-bottom:1px solid var(--line);color:var(--txt);font:inherit;font-size:20px;font-weight:var(--fw-nadruk);padding:8px 2px;outline:none}
   .lt-titel:focus{border-color:var(--primary)}
+  .lt-koppel{display:flex;gap:10px;margin-top:12px}
+  .lt-sel{flex:1;background:transparent;border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:14px;color:var(--txt);font-family:inherit}
+  .lt-sel:focus{outline:none;border-color:var(--mut2)}
   .lt-h{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--primary2);font-weight:var(--fw-nadruk);margin:22px 0 8px}
   .lt-row{display:flex;align-items:flex-start;gap:12px;padding:12px 10px;border:1px solid var(--line);border-radius:12px;margin-bottom:8px;background:rgba(20,20,22,.72);transition:opacity .15s}
   .lt-row.uit{opacity:.42}
@@ -2378,7 +2386,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v250</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v251</span>
       <!-- V244: loep verhuisd naar het hoofdmenu (waar Bestanden/Contacten stonden). -->
       <!-- V242: Dagoverzicht voorlopig uit beeld (afgesproken 16 juli) — openDayOverview en de overlay blijven in de code staan. -->
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
@@ -4523,10 +4531,11 @@ function _renderProjBoard(){
     const ttl=x.url?'Open bij de verkoper':'Zoek dit artikel bij de webshop';
     const unitVal=pr!=null?String(pr).replace('.',','):'';
     const nameCell=`<div class="pb-ink-name"><a class="pb-tx pb-itxlink" href="${href}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="${ttl}">${esc(_cleanInkName(x.text))}</a></div>`;
-    const priceCell=(qty>1)
-      ? `<div class="pb-pcell"><div class="pb-ptot"><span class="pb-eur">€</span><span class="pb-tnum">${pr!=null?fmtEur(pr*qty):'—'}</span></div><div class="pb-punit"><span class="pb-qty">${qty} ×</span><span class="pb-eur">€</span><input class="pb-price pb-punitin" type="text" inputmode="decimal" value="${unitVal}" placeholder="—" onclick="event.stopPropagation()" onchange="pbSetPrice('${x.id}',this.value)" title="Prijs per stuk"></div></div>`
-      : `<div class="pb-pcell"><div class="pb-ptot"><span class="pb-eur">€</span><input class="pb-price" type="text" inputmode="decimal" value="${unitVal}" placeholder="—" onclick="event.stopPropagation()" onchange="pbSetPrice('${x.id}',this.value)" title="Prijs"></div></div>`;
-    return `<div class="pb-row pb-ink" data-tid="${x.id}"${x.image?` data-img="${escapeHtml(x.image)}"`:''}><button class="pb-chk" onclick="pbInkOrdered('${x.id}')" title="${x.status==='besteld'?'Terugzetten naar te bestellen':'Markeer als besteld'}">${_pbChk(x.status==='besteld')}</button>${nameCell}${priceCell}<button class="pb-edit pb-inkedit" onclick="event.preventDefault();event.stopPropagation();pbArtikel('${x.id}')" title="Aantal, link en bedrag aanpassen">${_penGlyph()}</button><button class="pb-move" onclick="event.preventDefault();event.stopPropagation();pbMoveOpen('one','${x.id}')" title="Verplaats naar ander project/klant">${_tIc('<path d="M17 3l4 4l-4 4"/><path d="M21 7h-13"/><path d="M7 21l-4 -4l4 -4"/><path d="M3 17h13"/>',15,1.4)}</button><button class="pb-del" onclick="event.preventDefault();pbDel('${x.id}')" title="Verwijderen">×</button></div>`; };
+    // Prijs is alleen-lezen; bewerken gaat via de artikel-popup (potloodje). Zo blijft de regel rustig.
+    const totaal=pr!=null?('€'+fmtEur(pr*qty)):'—';
+    const sub=(qty>1&&pr!=null)?`<span class="pb-inksub">${qty} × €${unitVal}</span>`:(qty>1?`<span class="pb-inksub">${qty} ×</span>`:'');
+    const priceCell=`<div class="pb-inkprijs" onclick="event.stopPropagation();pbArtikel('${x.id}')" title="Aanpassen"><span class="pb-inktot">${totaal}</span>${sub}</div>`;
+    return `<div class="pb-row pb-ink" data-tid="${x.id}"${x.image?` data-img="${escapeHtml(x.image)}"`:''}><button class="pb-chk" onclick="pbInkOrdered('${x.id}')" title="${x.status==='besteld'?'Terugzetten naar te bestellen':'Markeer als besteld'}">${_pbChk(x.status==='besteld')}</button>${nameCell}${priceCell}<button class="pb-edit pb-inkedit" onclick="event.preventDefault();event.stopPropagation();pbArtikel('${x.id}')" title="Aantal, link en bedrag aanpassen">${_penGlyph()}</button><button class="pb-del" onclick="event.preventDefault();event.stopPropagation();pbDel('${x.id}')" title="Verwijderen">×</button></div>`; };
   const doneInkRow=(x)=>`<div class="pb-row pb-donerow"><button class="pb-chk" onclick="pbInkCheck('${x.id}',false)" title="Terugzetten">${_pbChk(true)}</button><span class="pb-tx done">${esc(x.text||'')}</span></div>`;
   const apptRow=(a)=>{ const d=a.date?d3date(a.date):''; return `<div class="pb-row pb-appt"><span class="pb-tx">${esc(a.t||'Afspraak')}</span><span class="pb-when">${esc(d)}${a.start?' · '+esc(String(a.start).slice(0,5)):''}</span>${_pbKz('appt',a.id,a.kz)}<button class="pb-edit" onclick="openApptModal('${a.id}')" title="Bewerken">${_penIc}</button></div>`; };
   // Voortgang: waar staan we in het klanttraject. Interne projecten (Begeister) en privé
@@ -5106,7 +5115,7 @@ function pbArtikel(id){
       <div><label class="art-lbl">Aantal</label><input id="art_qty" class="art-in" type="number" min="1" step="1" value="${x&&x.qty?x.qty:1}"></div>
       <div><label class="art-lbl">Bedrag p/st</label><div class="art-eur">€ <input id="art_prijs" class="art-in" type="text" inputmode="decimal" placeholder="—" value="${x&&x.price!=null&&x.price!==''?String(x.price).replace('.',','):''}"></div></div>
     </div>
-    <div class="lt-voet"><button class="fv-btn ghost" onclick="document.getElementById('artOv').remove()">Annuleren</button><button class="fv-btn bk-ok" onclick="pbArtikelOpslaan('${id||''}',this)">${x?'Opslaan':'Toevoegen'}</button></div></div>`;
+    <div class="lt-voet">${x?`<button class="fv-btn art-del" onclick="pbArtikelWeg('${id}',this)" title="Artikel verwijderen">${_tIc('<path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M7 7l1 13h8l1-13"/>',15,1.5)}</button>`:''}<div style="flex:1"></div><button class="fv-btn ghost" onclick="document.getElementById('artOv').remove()">Annuleren</button><button class="fv-btn bk-ok" onclick="pbArtikelOpslaan('${id||''}',this)">${x?'Opslaan':'Toevoegen'}</button></div></div>`;
   document.body.appendChild(ov); requestAnimationFrame(()=>ov.classList.add('open'));
   ov.addEventListener('click',e=>{ if(e.target===ov)ov.remove(); });
   setTimeout(()=>{ const f=document.getElementById(x?'art_naam':'art_url'); if(f)f.focus(); },60);
@@ -5118,6 +5127,13 @@ async function pbArtikelHaal(btn){
   if(btn){ btn.classList.remove('bezig'); }
   const naam=document.getElementById('art_naam'); if(naam&&!naam.value.trim()&&meta&&meta.title) naam.value=String(meta.title).slice(0,140);
   const pr=document.getElementById('art_prijs'); if(pr&&!pr.value.trim()&&meta&&meta.price!=null) pr.value=String(meta.price).replace('.',',');
+}
+async function pbArtikelWeg(id,btn){
+  if(!(await uiConfirm('Dit artikel verwijderen?')))return;
+  _pbItems=_pbItems.filter(i=>String(i.id)!==String(id));
+  try{ await sb.from('project_board').delete().eq('id',id); }catch(_){}
+  const ov=document.getElementById('artOv'); if(ov)ov.remove();
+  _finInk=null; _renderProjBoard();
 }
 async function pbArtikelOpslaan(id,btn){
   const url=(document.getElementById('art_url').value||'').trim();
@@ -9102,7 +9118,7 @@ async function bkWeg(sid){
 // (Taak / Subpunt / Afspraak / Notitie). Toepassen maakt precies aan wat aangevinkt staat;
 // "Later invullen" bewaart de (bewerkte) voorstellen bij de bron zodat je ze kunt heropenen.
 let _lt=null;
-const _LT_TYPES=[['taak','Taak'],['subpunt','Subpunt'],['afspraak','Afspraak'],['notitie','Notitie']];
+const _LT_TYPES=[['taak','Taak'],['subpunt','Subpunt'],['afspraak','Afspraak'],['feit','Feit'],['notitie','Notitie']];
 function openLeestafel(cfg){
   return new Promise(resolve=>{
     let rows;
@@ -9116,7 +9132,7 @@ function openLeestafel(cfg){
         rows.push({on:true,type:'afspraak',t:String(a.title).trim(),owner:'',contact:'',due:null,date:a.date||null,start:a.start?String(a.start).slice(0,5):null,end:a.end?String(a.end).slice(0,5):null,location:a.location||''}); });
     }
     const contacts=(cfg.contacts||[]).map(c=>({on:('on' in c)?!!c.on:true,name:String(c.name||'').trim(),email:c.email||'',phone:c.phone||'',company:c.company||'',role:c.role||''})).filter(c=>c.name);
-    _lt={rows,contacts,resolve,titel:String(cfg.titel||cfg.summary||'').trim().slice(0,140),sub:cfg.sub||'',toonLater:cfg.toonLater!==false};
+    _lt={rows,contacts,resolve,titel:String(cfg.titel||cfg.summary||'').trim().slice(0,140),sub:cfg.sub||'',toonLater:cfg.toonLater!==false,client:cfg.client||'',project_id:cfg.projectId||''};
     ltRender();
     const ov=document.getElementById('ltOverlay'); if(!ov){resolve(null);return;}
     ov.setAttribute('aria-hidden','false'); requestAnimationFrame(()=>ov.classList.add('open'));
@@ -9124,10 +9140,12 @@ function openLeestafel(cfg){
 }
 function _ltSluit(){ const ov=document.getElementById('ltOverlay'); if(ov){ ov.classList.remove('open'); ov.setAttribute('aria-hidden','true'); } }
 function ltAnnuleer(){ const r=_lt&&_lt.resolve; _lt=null; _ltSluit(); if(r)r(null); }
-function ltLater(){ if(!_lt)return; const r=_lt.resolve; const uit={later:true,titel:_lt.titel,rows:_lt.rows,contacts:_lt.contacts}; _lt=null; _ltSluit(); if(r)r(uit); }
-function ltPas(){ if(!_lt)return; const r=_lt.resolve; const uit={later:false,titel:_lt.titel,rows:_lt.rows,contacts:_lt.contacts}; _lt=null; _ltSluit(); if(r)r(uit); }
+function ltLater(){ if(!_lt)return; const r=_lt.resolve; const uit={later:true,titel:_lt.titel,rows:_lt.rows,contacts:_lt.contacts,client:_lt.client,project_id:_lt.project_id}; _lt=null; _ltSluit(); if(r)r(uit); }
+function ltPas(){ if(!_lt)return; const r=_lt.resolve; const uit={later:false,titel:_lt.titel,rows:_lt.rows,contacts:_lt.contacts,client:_lt.client,project_id:_lt.project_id}; _lt=null; _ltSluit(); if(r)r(uit); }
 function ltToggle(i){ if(!_lt||!_lt.rows[i])return; _lt.rows[i].on=!_lt.rows[i].on; ltRender(); }
 function ltType(i,ty){ if(!_lt||!_lt.rows[i])return; _lt.rows[i].type=ty; _lt.rows[i].on=true; ltRender(); }
+function ltSetClient(v){ if(!_lt)return; _lt.client=v; _lt.project_id=''; ltRender(); }
+function ltSetProject(v){ if(!_lt)return; _lt.project_id=v; ltRender(); }
 function ltCToggle(i){ if(!_lt||!_lt.contacts[i])return; _lt.contacts[i].on=!_lt.contacts[i].on; ltRender(); }
 function ltDel(i){ if(!_lt)return; _lt.rows.splice(i,1); ltRender(); }
 function ltAddRij(){ if(!_lt)return; _lt.rows.push({on:true,type:'taak',t:'',owner:'',contact:'',due:null,date:null,start:null,end:null,location:''}); ltRender();
@@ -9151,6 +9169,7 @@ function ltRender(){
         <span class="lt-veld"><span class="lt-vlbl">tot</span><input type="time" value="${r.end||''}" onchange="_lt.rows[${i}].end=this.value||null"></span>
         <span class="lt-veld"><span class="lt-vlbl">waar</span><input type="text" value="${esc(r.location||'')}" placeholder="&mdash;" oninput="_lt.rows[${i}].location=this.value"></span>
       </div>`;
+    else if(r.type==='feit') velden=`<div class="lt-velden"><span class="lt-hint">wordt bewaard onder &lsquo;Wat we weten&rsquo; bij het project</span></div>`;
     else if(r.type==='notitie') velden=`<div class="lt-velden"><span class="lt-hint">blijft alleen bij de bron bewaard &mdash; er wordt niets aangemaakt</span></div>`;
     return `<div class="lt-row${r.on?'':' uit'}">
       <button class="lt-chk" onclick="ltToggle(${i})" title="${r.on?'Uitzetten':'Aanzetten'}">${chk(r.on)}</button>
@@ -9170,7 +9189,8 @@ function ltRender(){
     <div class="lt-kop">
       <input class="lt-titel" value="${esc(_lt.titel)}" placeholder="Titel van de verzamelkaart&hellip;" oninput="_lt.titel=this.value">
       ${_lt.sub?`<div class="dov-sub" style="margin-top:6px">${esc(_lt.sub)}</div>`:''}
-      <div class="dov-sub" style="margin-top:4px">Subpunten worden samen &eacute;&eacute;n kaart met checklist &middot; taken worden losse kaarten &middot; afspraken gaan de agenda in.</div>
+      <div class="lt-koppel"><select class="lt-sel" onchange="ltSetClient(this.value)"><option value="">&mdash; klant &mdash;</option>${uniqueClients().filter(Boolean).map(c=>`<option${_lt.client===c?' selected':''}>${esc(c)}</option>`).join('')}</select><select class="lt-sel" onchange="ltSetProject(this.value)"><option value="">&mdash; project &mdash;</option>${state.projects.filter(pp=>pp.id!=='__inbox__'&&pp.client===_lt.client).map(pp=>`<option value="${pp.id}"${_lt.project_id===pp.id?' selected':''}>${esc(pp.project||pp.client)}</option>`).join('')}</select></div>
+      <div class="dov-sub" style="margin-top:4px">Subpunten &rarr; &eacute;&eacute;n kaart met checklist &middot; taken &rarr; losse kaarten &middot; afspraken &rarr; agenda &middot; feiten &rarr; Wat we weten.</div>
     </div>
     ${rijen||'<div class="dov-sub" style="margin:12px 0">Geen vondsten &mdash; voeg zelf een regel toe.</div>'}
     <button class="fv-btn ghost lt-add" onclick="ltAddRij()">+ regel toevoegen</button>
@@ -9213,14 +9233,14 @@ async function openLeestafelVoorBron(sid, btn){
   const s=(state.sources||[]).find(x=>String(x.id)===String(sid)); if(!s)return;
   let cfg;
   if(s.suggestItems&&Array.isArray(s.suggestItems.rows)&&s.suggestItems.rows.length){
-    cfg={rowsDirect:s.suggestItems.rows, contacts:s.suggestItems.contacts||[], titel:s.suggestItems.titel||s.summary||'', sub:(typeof _srcTitle==='function')?_srcTitle(s):''};
+    cfg={rowsDirect:s.suggestItems.rows, contacts:s.suggestItems.contacts||[], titel:s.suggestItems.titel||s.summary||'', sub:(typeof _srcTitle==='function')?_srcTitle(s):'', client:(s.suggestItems.client||(s.proj?(projById(s.proj)||{}).client:'')||''), projectId:s.proj||''};
   } else {
     if(btn){ btn.disabled=true; btn.textContent='✦ Lezen…'; }
     try{
       const raw=s.full||s.text||s.summary||'';
       const r=await fetch('/api/readfile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:raw,name:(typeof _srcTitle==='function')?_srcTitle(s):'bron'})});
       const d=await r.json(); if(d&&d.error)throw new Error(d.error);
-      cfg={items:(d.tasks||[]).map(t=>({title:String(t)})), appts:(d.appointments||[]).map(a=>({title:a.title,date:a.date||null,start:a.time||null})), contacts:[], titel:s.summary||((typeof _srcTitle==='function')?_srcTitle(s):''), sub:(typeof _srcTitle==='function')?_srcTitle(s):''};
+      cfg={items:(d.tasks||[]).map(t=>({title:String(t)})), appts:(d.appointments||[]).map(a=>({title:a.title,date:a.date||null,start:a.time||null})), contacts:[], titel:s.summary||((typeof _srcTitle==='function')?_srcTitle(s):''), sub:(typeof _srcTitle==='function')?_srcTitle(s):'', client:(s.proj?(projById(s.proj)||{}).client:'')||'', projectId:s.proj||''};
       try{ if(typeof loadUsage==='function')loadUsage(); }catch(_){}
     }catch(e){ toonToast('Lezen lukte niet: '+String(e&&e.message||e),'fout'); if(btn){btn.disabled=false;btn.textContent='Leestafel';} return; }
     if(btn){ btn.disabled=false; btn.textContent='Leestafel'; }
@@ -9234,8 +9254,10 @@ async function openLeestafelVoorBron(sid, btn){
     try{ renderPvRight(); }catch(_){} try{ renderPostvak(); }catch(_){}
     return;
   }
-  const r=await _ltApply(cur,{srcId:s.id,projectId:s.proj||null});
-  s.suggestItems=null; try{ await sb.from('sources').update({suggest_items:null}).eq('id',s.id); }catch(_){}
+  let _pid=cur.project_id||s.proj||null;
+  if(!_pid&&cur.client){ const _pp=state.projects.find(x=>x.id!=='__inbox__'&&x.client===cur.client); _pid=_pp?_pp.id:null; }
+  const r=await _ltApply(cur,{srcId:s.id,projectId:_pid});
+  s.suggestItems=null; try{ await sb.from('sources').update({suggest_items:null, project_id:_pid||s.proj||null}).eq('id',s.id); }catch(_){} if(_pid)s.proj=_pid;
   toonToast('✓ '+r.n+' aangemaakt via de leestafel');
   try{ await refresh(); }catch(_){}
 }
