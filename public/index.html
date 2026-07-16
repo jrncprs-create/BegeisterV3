@@ -573,6 +573,24 @@
   .art-eur{display:flex;align-items:center;gap:6px;color:var(--mut2)}
   .art-eur .art-in{text-align:right}
   .pb-inkedit{margin-left:2px}
+  /* L9 — op een rijtje */
+  .pb-brief{margin-left:auto;background:transparent;border:1px solid color-mix(in srgb,var(--scol) 40%,var(--line));border-radius:999px;padding:6px 13px;color:var(--scol);cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-size:12.5px;white-space:nowrap;transition:background .12s}
+  .pb-brief:hover{background:color-mix(in srgb,var(--scol) 14%,transparent)}
+  .brief-modal{width:600px;max-width:94vw;max-height:86vh;display:flex;flex-direction:column}
+  .brief-kop{display:flex;align-items:center;gap:12px;margin:0 0 16px}
+  .brief-kop h3{margin:0;font-size:19px}
+  .brief-badge{width:30px;height:30px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;color:#0e0d10;font-weight:var(--fw-nadruk);flex:0 0 auto}
+  .brief-body{overflow-y:auto;min-height:0}
+  .brief-lead{font-size:14.5px;line-height:1.5;color:var(--txt);margin:0 0 18px}
+  .brief-sec{margin-bottom:18px}
+  .brief-h{font-size:11px;letter-spacing:1.1px;text-transform:uppercase;font-weight:var(--fw-nadruk);color:var(--mut2);margin:0 0 8px}
+  .brief-punt{font-size:14px;line-height:1.5;padding:4px 0 4px 16px;position:relative;color:var(--txt)}
+  .brief-punt::before{content:"";position:absolute;left:2px;top:11px;width:5px;height:5px;border-radius:50%;background:var(--scol)}
+  .brief-oe .brief-h{color:#e6c07a}
+  .brief-oe .brief-punt::before{background:#e6c07a}
+  .brief-loading{display:flex;flex-direction:column;align-items:center;gap:14px;padding:48px 20px;color:var(--mut);text-align:center}
+  .brief-loading svg{opacity:.7;animation:briefpulse 1.4s ease-in-out infinite}
+  @keyframes briefpulse{0%,100%{opacity:.35}50%{opacity:.9}}
   .pb-inkprijs{display:flex;flex-direction:column;align-items:flex-end;margin-left:auto;cursor:pointer;line-height:1.2}
   .pb-inktot{font-size:14px;color:var(--scol);font-weight:var(--fw-nadruk)}
   .pb-inksub{font-size:11px;color:var(--mut2)}
@@ -2386,7 +2404,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v252</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v253</span>
       <!-- V244: loep verhuisd naar het hoofdmenu (waar Bestanden/Contacten stonden). -->
       <!-- V242: Dagoverzicht voorlopig uit beeld (afgesproken 16 juli) — openDayOverview en de overlay blijven in de code staan. -->
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
@@ -4593,7 +4611,8 @@ function _renderProjBoard(){
   const _openTot=inkopenOpen.reduce((s,x)=>s+((x.price!=null&&x.price!=='')?Number(x.price):0)*(x.qty||1),0);
   const secBestel=`<div class="pb-sec"><div class="pb-h"><span>Bestellijst</span><span class="pb-hbtns">${inkopen.length?`<button class="pb-ai" onclick="pbOrderAll()" title="Zet de hele lijst in één keer in je Amazon-mandje">${_tIc('<path d="M6 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M17 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M17 17h-11v-14h-2"/><path d="M6 5l14 1l-1 7h-13"/>',16,1.7)}</button>`:''}<button class="pb-ai" onclick="pbArtikel()" title="Artikel toevoegen — omschrijving, link, aantal en bedrag">+ artikel</button><button class="pb-ai" onclick="pbInkPaste()" title="Plak een verlanglijst of winkelwagen — AI maakt er regels van">${_tIc(_TABCHAN.asterisk,15,1.7)}<span>lijst</span></button>${inkopen.length?`<button class="pb-ai" onclick="pbMoveOpen('all')" title="Hele bestellijst naar een ander project/klant verplaatsen">${_tIc('<path d="M17 3l4 4l-4 4"/><path d="M21 7h-13"/><path d="M7 21l-4 -4l4 -4"/><path d="M3 17h13"/>',15,1.5)}</button><button class="pb-listdel" onclick="pbDelBestel()" title="Hele bestellijst verwijderen"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/></svg></button>`:''}</span></div>${_masterLink}${_bestNietBesteld.length?_bestNietBesteld.map(inkRow).join(''):(_bestBesteld.length?'':'<div class="pb-empty">Nog geen bestellingen.</div>')}<div class="pb-add"><input class="pb-in" data-kind="inkoop" placeholder="+ snel item (alleen tekst)…" onkeydown="pbAddKey(event,'inkoop')"></div>${inkopenOpen.length?`<div class="pb-besteltot"><span class="pb-btlbl">Totaal</span><span class="pb-btval"><span class="pb-btnum"><span class="pb-eur">€</span><b>${fmtEur(_openTot)}</b></span><span class="pb-btsub">excl. <span class="pb-eur">€</span><span class="pb-btsnum">${fmtEur(_openTot/(1+btwPct/100))}</span></span></span></div>`:''}${_bestBesteld.length?`<div class="pb-besteld-sec"><div class="pb-h">Besteld <span class="pb-donecnt">${_bestBesteld.length}</span></div>${_bestBesteld.map(inkRow).join('')}</div>`:''}</div>`;
   const _body=(_pbMode==='financien')?secBestel:(secKlantkant+secOms+secWeten+secFase+secWait+secTaken+secBestel+secDone+secContacts+secAppt+secFiles+secPrijs+secNotes);
-  const _head=`<div class="pb-head"><span class="kbadge" style="background:${col}">${esc(initial)}</span><div class="pb-title"><b>${esc(p.client||'')}</b>${p.project?'<span> · '+esc(p.project)+'</span>':''}${_pbMode==='financien'?'<span style="color:'+col+'"> · inkoop</span>':''}</div></div>`;
+  const _briefBtn=(_pbMode!=='financien')?`<button class="pb-brief" style="--scol:${col}" onclick="openBriefing()" title="Laat de AI dit project op een rijtje zetten">${_tIc(_TABCHAN.asterisk,15,1.7)}<span>op een rijtje</span></button>`:'';
+  const _head=`<div class="pb-head"><span class="kbadge" style="background:${col}">${esc(initial)}</span><div class="pb-title"><b>${esc(p.client||'')}</b>${p.project?'<span> · '+esc(p.project)+'</span>':''}${_pbMode==='financien'?'<span style="color:'+col+'"> · inkoop</span>':''}</div>${_briefBtn}</div>`;
   if(_pbTarget==='finmid'||_pbTarget==='finright'){ const el=document.getElementById(_pbTarget==='finright'?'finRightWrap':'finMidWrap'); const _cls=(_pbTarget==='finright')?'pb-inline pb-board-inline':'pb-inline'; const _h=(_pbTarget==='finright')?'':_head; if(el)el.innerHTML=`<div class="${_cls}" style="--scol:${col}">${_h}${_body}</div>`; return; }
   if(_pbTarget==='beheer'){ const el=document.getElementById('beheerBoardWrap'); if(el)el.innerHTML=`<div class="pb-inline pb-board-inline" style="--scol:${col}"><div class="pb-grid"><div class="pb-colL">${secKlantkant}${secOms}${secWeten}${secFase}${secWait}${secTaken}${secBestel}${secDone}</div><div class="pb-colR">${secContacts}${secAppt}${secFiles}${secPrijs}${secNotes}</div></div></div>`; return; }
   if(!ov)return;
@@ -4617,6 +4636,44 @@ async function ftDel(id){ if(!(await uiConfirm('Dit feit verwijderen?')))return;
   state.facts=(state.facts||[]).filter(f=>String(f.id)!==String(id));
   try{ await sb.from('facts').delete().eq('id',id); }catch(_){}
   _renderProjBoard(); }
+// L9 — "Zet op een rijtje": AI-briefing van het open project.
+async function openBriefing(){
+  const p=projById(_pbPid); if(!p)return;
+  const col=PROJCOL[p.id]||'#888';
+  const ti=iso(TODAY);
+  const open=(p.items||[]).filter(it=>it.status!=='done'&&it.status!=='wait');
+  const taken=open.map(it=>{ const d=it.due?(' [deadline '+it.due+']'):''; const w=it.owner?(' ('+it.owner+')'):''; return (it.t||'')+w+d; });
+  const wacht=(p.items||[]).filter(it=>it.status==='wait').map(it=>{ const dg=it.waitSinds?Math.floor((Date.now()-new Date(it.waitSinds).getTime())/86400000):null; return (it.t||'')+(it.contact?(' — op '+it.contact):'')+(dg!=null?(' ('+dg+'d)'):''); });
+  const feiten=(state.facts||[]).filter(f=>String(f.project_id||'')===String(_pbPid)).map(f=>f.text||'');
+  const afspraken=(state.appointments||[]).filter(a=>String(a.projectId)===String(_pbPid)&&String(a.date||'')>=ti).map(a=>(a.t||'afspraak')+(a.date?(' — '+a.date):'')+(a.start?(' '+String(a.start).slice(0,5)):''));
+  const bronnen=(state.sources||[]).filter(sc=>String(sc.proj||'')===String(_pbPid)&&sc.summary).slice(0,12).map(sc=>sc.summary);
+  const _ink=(_pbItems||[]).filter(x=>x.kind==='inkoop'&&x.price!=null).reduce((s2,x)=>s2+Number(x.price)*(x.qty||1),0);
+  const geld={ prijs:(p.projectprijs!=null?('€'+fmtEur(Number(p.projectprijs))):null), inkoop:_ink?('€'+fmtEur(_ink)):null, marge:(p.projectprijs!=null?('€'+fmtEur(Number(p.projectprijs)-_ink/1.21)):null) };
+  _briefRender({loading:true, client:p.client, project:p.project, col});
+  let d=null;
+  try{ const r=await fetch('/api/briefing',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({client:p.client,project:p.project,today:ti,taken,feiten,afspraken,wacht,geld,bronnen})}); d=await r.json(); }catch(_){}
+  try{ if(typeof loadUsage==='function')loadUsage(); }catch(_){}
+  if(!d||d.error){ _briefRender({error:true, client:p.client, project:p.project, col}); return; }
+  _briefRender({data:d, client:p.client, project:p.project, col});
+}
+function _briefRender(o){
+  let ov=document.getElementById('briefOv'); if(ov)ov.remove();
+  ov=document.createElement('div'); ov.id='briefOv'; ov.className='overlay';
+  const naam=escapeHtml((o.client||'')+(o.project?' · '+o.project:''));
+  let body;
+  if(o.loading){ body=`<div class="brief-loading">${_tIc(_TABCHAN.asterisk,22,1.6)}<span>De AI zet ${naam} op een rijtje…</span></div>`; }
+  else if(o.error){ body=`<div class="brief-loading">Dat lukte even niet — probeer het zo nog eens.</div>`; }
+  else { const d=o.data;
+    const secs=(d.secties||[]).map(s=>`<div class="brief-sec"><div class="brief-h" style="color:${o.col}">${escapeHtml(s.titel)}</div>${s.punten.map(pt=>`<div class="brief-punt">${escapeHtml(pt)}</div>`).join('')}</div>`).join('');
+    const oe=(d.open_eindjes||[]).length?`<div class="brief-sec brief-oe"><div class="brief-h">Open eindjes</div>${d.open_eindjes.map(x=>`<div class="brief-punt">${escapeHtml(x)}</div>`).join('')}</div>`:'';
+    body=`${d.waar_staan_we?`<p class="brief-lead">${escapeHtml(d.waar_staan_we)}</p>`:''}${oe}${secs}`;
+  }
+  ov.innerHTML=`<div class="modal brief-modal" style="--scol:${o.col||'#888'}"><button class="modal-close" onclick="document.getElementById('briefOv').remove()"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <div class="brief-kop"><span class="brief-badge" style="background:${o.col||'#888'}">${escapeHtml((String(o.client||'?').trim()[0]||'?').toUpperCase())}</span><h3>${naam}</h3></div>
+    <div class="brief-body">${body}</div></div>`;
+  document.body.appendChild(ov); requestAnimationFrame(()=>ov.classList.add('open'));
+  ov.addEventListener('click',e=>{ if(e.target===ov)ov.remove(); });
+}
 async function pbToggleTask(id,checked){ const r=findItem(id); if(r&&r.it){ r.it.status=checked?'done':'todo'; } try{ await sb.from('items').update({status:checked?'done':'todo'}).eq('id',id); }catch(_){} if(checked&&r&&r.it){ try{ await _maybeRepeat(r.it, r.p&&r.p.id); }catch(_){} } _renderProjBoard(); try{render();}catch(_){} }
 // Afvinken op het projectbord = archiveren: korte 'Gearchiveerd'-melding, item fadet weg, de rest sluit soepel aan.
 async function pbArchiveTask(id){
