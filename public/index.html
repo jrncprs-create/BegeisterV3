@@ -643,6 +643,11 @@
   .brief-inline .brief-kop h3{font-size:13px;letter-spacing:1.2px;text-transform:uppercase;color:var(--scol);margin:0}
   .brief-collapse{background:none;border:none;color:color-mix(in srgb,var(--scol) 70%,transparent);cursor:pointer;padding:2px;display:inline-flex}
   .brief-collapse:hover{color:var(--scol)}
+  /* Inline briefing: witte tekst, groene (klantkleur) koppen en accenten — geen grijs */
+  .brief-inline .brief-lead,.brief-inline .brief-punt,.brief-inline .brief-kies span{color:#f4f1ea}
+  .brief-inline .brief-h,.brief-inline .brief-oe .brief-h{color:var(--scol)}
+  .brief-inline .brief-punt::before,.brief-inline .brief-oe .brief-punt::before{background:var(--scol)}
+  .brief-inline .brief-oehint{color:rgba(244,241,234,.55)}
   /* Laden: het venster wordt vol in de klantkleur, tekst + sterretje zwart (als de landingschat) */
   .brief-inline.laden{background:var(--scol);border-color:var(--scol)}
   .brief-inline.laden .brief-kop h3{color:#000}
@@ -2557,7 +2562,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v284</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v285</span>
       <!-- V244: loep verhuisd naar het hoofdmenu (waar Bestanden/Contacten stonden). -->
       <!-- V242: Dagoverzicht voorlopig uit beeld (afgesproken 16 juli) — openDayOverview en de overlay blijven in de code staan. -->
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
