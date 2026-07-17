@@ -2496,7 +2496,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v274</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v275</span>
       <!-- V244: loep verhuisd naar het hoofdmenu (waar Bestanden/Contacten stonden). -->
       <!-- V242: Dagoverzicht voorlopig uit beeld (afgesproken 16 juli) — openDayOverview en de overlay blijven in de code staan. -->
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
@@ -4728,7 +4728,7 @@ function _renderProjBoard(){
     const rs=document.getElementById('beheerRailSecs');
     if(rs) rs.innerHTML=`<div class="pb-inline pb-board-inline pb-railsecs" style="--scol:${col}">${secKlantkant}${secAkkoord}${secContacts}</div>`;
     const el=document.getElementById('beheerBoardWrap');
-    if(el)el.innerHTML=`<div class="pb-inline pb-board-inline" style="--scol:${col}">${_briefBtn?`<div class="pb-beheerhead">${_briefBtn}</div>`:''}<div class="pb-grid"><div class="pb-colL">${rs?'':(secKlantkant+secAkkoord)}${secOms}${secWeten}${secFase}${secWait}${secTaken}${secBestel}${secDone}</div><div class="pb-colR">${rs?'':secContacts}${secAppt}${secFiles}${secPrijs}${secNotes}</div></div></div>`;
+    if(el)el.innerHTML=`<div class="pb-inline pb-board-inline" style="--scol:${col}">${_briefBtn?`<div class="pb-beheerhead">${_briefBtn}</div>`:''}<div class="pb-grid"><div class="pb-colL">${rs?'':(secKlantkant+secAkkoord)}${secFase}${secOms}${secWeten}${secWait}${secTaken}${secBestel}${secDone}</div><div class="pb-colR">${rs?'':secContacts}${secAppt}${secFiles}${secPrijs}${secNotes}</div></div></div>`;
     return; }
   if(!ov)return;
   ov.innerHTML=`<div class="modal pb-modal" style="--scol:${col};width:100%;max-width:none">
