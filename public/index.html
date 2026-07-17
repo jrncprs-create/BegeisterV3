@@ -2562,7 +2562,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v285</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v286</span>
       <!-- V244: loep verhuisd naar het hoofdmenu (waar Bestanden/Contacten stonden). -->
       <!-- V242: Dagoverzicht voorlopig uit beeld (afgesproken 16 juli) — openDayOverview en de overlay blijven in de code staan. -->
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
@@ -6657,8 +6657,18 @@ async function saveContactModal(){
     phone:(document.getElementById('c_phone').value||'').trim()||null,
     company:(document.getElementById('c_client').value||'').trim()||null,
     role:(document.getElementById('c_role').value||'').trim()||null};
-  if(contactEditId) await sb.from('contacts').update(row).eq('id',contactEditId);
-  else await sb.from('contacts').insert(row);
+  // E-mail is uniek in de database. Staat het adres al bij iemand anders, dan meldden we dat
+  // vroeger niet — de opslag mislukte stil. Nu vangen we de fout op en zeggen we het.
+  let resp;
+  if(contactEditId) resp=await sb.from('contacts').update(row).eq('id',contactEditId);
+  else resp=await sb.from('contacts').insert(row);
+  if(resp&&resp.error){ toonToast('Opslaan lukte niet: '+(resp.error.message||'onbekende fout'),'fout'); return; }
+  // Dezelfde persoon kan bij meerdere klanten staan. Bewerk je z'n gegevens, dan trekken we
+  // e-mail/telefoon/rol gelijk op ALLE records met dezelfde naam — één waarheid per persoon.
+  if(contactEditId && name){
+    try{ await sb.from('contacts').update({email:row.email,phone:row.phone,role:row.role})
+      .ilike('name',name).neq('id',contactEditId); }catch(_){}
+  }
   closeContactModal(); await refresh();
 }
 async function deleteContactModal(){
