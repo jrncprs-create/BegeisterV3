@@ -2509,7 +2509,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v276</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v277</span>
       <!-- V244: loep verhuisd naar het hoofdmenu (waar Bestanden/Contacten stonden). -->
       <!-- V242: Dagoverzicht voorlopig uit beeld (afgesproken 16 juli) — openDayOverview en de overlay blijven in de code staan. -->
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
@@ -4853,11 +4853,26 @@ function _briefRender(o){
   document.body.appendChild(ov); requestAnimationFrame(()=>ov.classList.add('open'));
   ov.addEventListener('click',e=>{ if(e.target===ov)ov.remove(); });
 }
-async function pbToggleTask(id,checked){ const r=findItem(id); if(r&&r.it){ r.it.status=checked?'done':'todo'; } try{ await sb.from('items').update({status:checked?'done':'todo'}).eq('id',id); }catch(_){} if(checked&&r&&r.it){ try{ await _maybeRepeat(r.it, r.p&&r.p.id); }catch(_){} } _renderProjBoard(); try{render();}catch(_){} }
+// Eén robuuste schrijfroute voor taakstatus: met foutcontrole en één herkansing na een
+// verlopen sessie. Voorheen ging dit "blind" — mislukte de schrijfactie (bv. verlopen token
+// in de desktop-app), dan sprong de taak bij de volgende verversing terug zonder melding.
+async function _itemStatus(id,patch){
+  const probeer=async()=>{ try{ return await sb.from('items').update(patch).eq('id',id).select('id'); }catch(e){ return {error:e}; } };
+  let r=await probeer();
+  if(r.error){ try{ await sb.auth.refreshSession(); }catch(_){} r=await probeer(); }
+  if(r.error){ toonToast('Opslaan lukte niet — controleer je verbinding en probeer opnieuw.','fout'); console.warn('itemStatus',r.error&&r.error.message); return false; }
+  if(!(r.data||[]).length){ toonToast('Deze taak kon niet worden opgeslagen.','fout'); return false; }
+  return true;
+}
+async function pbToggleTask(id,checked){ const r=findItem(id); const oud=r&&r.it?r.it.status:null; if(r&&r.it){ r.it.status=checked?'done':'todo'; }
+  const ok=await _itemStatus(id,{status:checked?'done':'todo'});
+  if(!ok){ if(r&&r.it&&oud!=null)r.it.status=oud; }
+  else if(checked&&r&&r.it){ try{ await _maybeRepeat(r.it, r.p&&r.p.id); }catch(_){} }
+  _renderProjBoard(); try{render();}catch(_){} }
 // Afvinken op het projectbord = archiveren: korte 'Gearchiveerd'-melding, item fadet weg, de rest sluit soepel aan.
 async function pbArchiveTask(id){
   const r=findItem(id); if(r&&r.it) r.it.status='done';
-  try{ sb.from('items').update({status:'done'}).eq('id',id); }catch(_){}
+  _itemStatus(id,{status:'done'}).then(ok=>{ if(!ok){ if(r&&r.it)r.it.status='todo'; _renderProjBoard(); try{render();}catch(_){} } });
   const sel='[data-tid="'+id+'"]'; const row=(document.querySelector('#beheerBoardWrap '+sel)||document.querySelector('#projOverlay '+sel)||document.querySelector('#finMidWrap '+sel));
   if(row){
     const tag=document.createElement('span'); tag.className='pb-archtag'; tag.textContent='Gearchiveerd'; row.appendChild(tag);
@@ -4874,7 +4889,10 @@ async function pbAddProjTask(kind,e){ if(e.key!=='Enter')return; e.preventDefaul
   if(p){ p.items=p.items||[]; p.items.push({id,t:v,status:kind,owner:'',contact:'',due:null,src:null}); }
   _renderProjBoard(); try{render();}catch(_){} pbFocusAdd(kind);
 }
-async function pbUncheckTask(id){ const r=findItem(id); if(r&&r.it)r.it.status='todo'; try{ sb.from('items').update({status:'todo'}).eq('id',id); }catch(_){} _renderProjBoard(); try{render();}catch(_){} }
+async function pbUncheckTask(id){ const r=findItem(id); if(r&&r.it)r.it.status='todo';
+  const ok=await _itemStatus(id,{status:'todo'});
+  if(!ok&&r&&r.it)r.it.status='done';
+  _renderProjBoard(); try{render();}catch(_){} }
 async function pbSetListUrl(sid){ const u=((await uiPrompt('Plak de link naar de hele verlanglijst:'))||'').trim(); if(!/^https?:\/\//i.test(u))return; try{ await sb.from('sources').update({url:u}).eq('id',sid); const s=(state.sources||[]).find(x=>String(x.id)===String(sid)); if(s)s.url=u; }catch(_){} _renderProjBoard(); }
 async function pbAddAppt(e){ if(e.key!=='Enter')return; e.preventDefault(); const v=(e.target.value||'').trim(); if(!v)return; e.target.value='';
   const rec={title:v,date:iso(TODAY),kind:'fysiek',owner:(who||null),project_id:_pbPid};
@@ -8759,7 +8777,8 @@ async function _maybeRepeat(it, projectId){
   }catch(e){ console.warn('herhaal-insert', e&&e.message); return false; }
 }
 toggle = async function(id){const r=findItem(id);if(!r)return;const ns=r.it.status==='done'?'todo':'done';
-  await sb.from('items').update({status:ns}).eq('id',id);
+  const ok=await _itemStatus(id,{status:ns});
+  if(!ok)return;
   if(ns==='done'){ try{ await _maybeRepeat(r.it, r.p&&r.p.id); }catch(_){} }
   notifyPartner((who||'Iemand')+' '+(ns==='done'?'rondde af':'heropende')+': '+r.it.t);
   await refreshTaken();};
