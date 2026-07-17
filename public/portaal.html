@@ -98,9 +98,9 @@ input:focus-visible,textarea:focus-visible{box-shadow:none}
 #vstViewer .vv-bar{position:absolute;left:0;right:0;top:0;z-index:2;display:flex;align-items:center;gap:14px;padding:12px 18px;background:linear-gradient(rgba(0,0,0,.72),transparent);color:#f2efe8}
 #vstViewer .vv-naam{font-weight:var(--fw-nadruk);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:.85}
 #vstViewer .vv-x{background:transparent;border:none;color:#f2efe8;font-size:20px;cursor:pointer;line-height:1}
-#vstViewer .vv-body{flex:1;background:#000;display:flex;align-items:center;justify-content:center}
-#vstViewer .vv-frame{width:100%;height:100%;border:none;display:block;background:#000}
-#vstViewer .vv-body img{max-width:100%;max-height:100%;object-fit:contain;display:block}
+#vstViewer .vv-body{position:absolute;inset:0;background:#000}
+#vstViewer .vv-frame{position:absolute;inset:0;width:100%;height:100%;border:none;display:block;background:#000}
+#vstViewer .vv-body img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block}
 
 /* actie nodig — kaart per document met thumbnail, chip en knoppen */
 .an-kaart{background:rgba(255,255,255,.05);border:1px solid color-mix(in srgb,var(--scol) 22%,transparent);border-radius:var(--r-lg);padding:14px;margin-bottom:12px}
@@ -113,10 +113,11 @@ input:focus-visible,textarea:focus-visible{box-shadow:none}
 .an-knoppen{display:flex;gap:9px;flex-wrap:wrap;margin-top:11px}
 .an-vraagknop{background:transparent;border:1px solid color-mix(in srgb,var(--scol) 32%,transparent);border-radius:var(--r-pil);color:var(--scol);font-size:12.5px;padding:7px 15px}
 .an-vraagknop:hover{border-color:var(--scol)}
-.thumb{flex:none;width:84px;height:58px;border-radius:var(--r-sm);overflow:hidden;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative}
+.thumb{flex:none;width:84px;height:58px;border-radius:var(--r-sm);overflow:hidden;background:#0d0d0d;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative}
 .thumb img{width:100%;height:100%;object-fit:cover;display:block}
-.thumb .tmini{position:absolute;left:0;top:0;width:1120px;height:774px;border:0;transform:scale(0.075);transform-origin:0 0;pointer-events:none;background:#fff}
-.thumb.klein .tmini{transform:scale(0.0536)}
+/* iets groter schalen dan de kader zodat de witte paginarand van het document wegvalt */
+.thumb .tmini{position:absolute;left:-4px;top:-4px;width:1120px;height:774px;border:0;transform:scale(0.082);transform-origin:0 0;pointer-events:none;background:#0d0d0d}
+.thumb.klein .tmini{transform:scale(0.0586)}
 .thumb .tlbl{font-size:9.5px;letter-spacing:.1em;color:color-mix(in srgb,var(--scol) 70%,transparent);text-transform:uppercase;text-align:center;line-height:1.5;padding:4px}
 .thumb.klein{width:60px;height:42px}
 .f-ok{font-size:12px;color:#5bd08a;margin-top:2px}
@@ -267,7 +268,7 @@ function actieNodigHtml(p){
   const kaarten=open.map(f=>{
     const bekijk='toonVoorstel(\''+esc(String(f.link||'')).replace(/'/g,"\\'")+'\',\''+esc(String(f.name||'')).replace(/'/g,"\\'")+'\')';
     return '<div class="an-kaart"><div class="an-kop">'+thumbHtml(f)
-      +'<div class="an-info"><button class="an-naam" onclick="'+bekijk+'">'+esc(f.name||'document')+'</button><span class="an-chip">TER AKKOORD</span>'
+      +'<div class="an-info"><button class="an-naam" onclick="'+bekijk+'">'+esc(f.name||'document')+'</button>'
       +'<div class="an-sub">Klik om te bekijken — opent beeldvullend</div>'
       +'<div class="an-knoppen"><button class="ta-btn" onclick="docAkkoord(\''+esc(String(f.id))+'\',this)">Akkoord geven</button>'
       +'<button class="an-vraagknop" data-opmtoggle="doc:'+esc(String(f.id))+'" data-scrollopen="1">Vraag of opmerking</button></div>'
