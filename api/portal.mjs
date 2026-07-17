@@ -97,12 +97,10 @@ async function projectPagina(db, p) {
   const [items, appts, files, docs, cmts, appr] = await Promise.all([
     db.from("items").select("id,title,status,client_zichtbaar").eq("project_id", pid).eq("client_zichtbaar", true),
     db.from("appointments").select("id,title,date,start_time,client_zichtbaar").eq("project_id", pid).eq("client_zichtbaar", true).order("date"),
-    // Géén visible_to_client-filter meer op tabelniveau: de klant ziet als bestanden
-    // uitsluitend wat in de map "Portaal" ligt (icon/category 'portaal'). Voorstellen komen
-    // er los bovenop (is_voorstel + visible_to_client), ongeacht de map. Daarom halen we
-    // alles op en filteren we hieronder in JS.
-    db.from("files").select("id,name,link,icon,visible_to_client,is_voorstel,voorstel_soort,ter_akkoord,akkoord_op,akkoord_door").eq("owner_type", "project").eq("owner_id", pid),
-    db.from("documents").select("id,filename,link,category,visible_to_client,is_voorstel,voorstel_soort,origin,ter_akkoord,akkoord_op,akkoord_door").eq("project_id", pid).neq("origin", "file"),
+    // L11d — zichtbaarheid is per bestand (visible_to_client, het klant-poppetje).
+    // We halen alles op en filteren hieronder in JS; ter-akkoord-documenten doen ook mee.
+    db.from("files").select("id,name,link,icon,visible_to_client,is_voorstel,voorstel_soort,ter_akkoord,akkoord_op,akkoord_door,sort_order").eq("owner_type", "project").eq("owner_id", pid),
+    db.from("documents").select("id,filename,link,category,visible_to_client,is_voorstel,voorstel_soort,origin,ter_akkoord,akkoord_op,akkoord_door,sort_order").eq("project_id", pid).neq("origin", "file"),
     db.from("comments").select("id,sectie,author,body,van_klant,created_at").eq("scope", "portal").eq("ref_id", pid).order("created_at"),
     db.from("approvals").select("approved_at,snapshot_sha").eq("project_id", pid).maybeSingle(),
   ]);
@@ -112,11 +110,13 @@ async function projectPagina(db, p) {
   pagina.afspraken = (appts.data || []).map((a) => ({ t: a.title, date: a.date, start: a.start_time }));
   // Bestanden uit BEIDE bronnen samenvoegen (files + documents), zodat de klant dezelfde
   // bestanden ziet als in de Bestanden-map van de app.
-  const _alle = (files.data || []).map((f) => ({ id: f.id, name: f.name, link: f.link, icon: f.icon, is_voorstel: f.is_voorstel, voorstel_soort: f.voorstel_soort, zichtbaar: !!f.visible_to_client, ter_akkoord: !!f.ter_akkoord, akkoord_op: f.akkoord_op || null, akkoord_door: f.akkoord_door || null }))
-    .concat((docs.data || []).map((d) => ({ id: "doc:" + d.id, name: d.filename, link: d.link, icon: d.category, is_voorstel: d.is_voorstel, voorstel_soort: d.voorstel_soort, zichtbaar: !!d.visible_to_client, ter_akkoord: !!d.ter_akkoord, akkoord_op: d.akkoord_op || null, akkoord_door: d.akkoord_door || null })));
-  // Bestanden = uitsluitend de map "Portaal". Het team deelt door een bestand daarin te zetten;
-  // de map ís de zichtbaarheidsknop. Platte lijst, geen mappenboom.
-  pagina.bestanden = _alle.filter((f) => _mapVan(f) === "Portaal").map((f) => ({ id: f.id, name: f.name, link: f.link, ter_akkoord: f.ter_akkoord, akkoord_op: f.akkoord_op, akkoord_door: f.akkoord_door }));
+  const _alle = (files.data || []).map((f) => ({ id: f.id, name: f.name, link: f.link, icon: f.icon, is_voorstel: f.is_voorstel, voorstel_soort: f.voorstel_soort, zichtbaar: !!f.visible_to_client, ter_akkoord: !!f.ter_akkoord, akkoord_op: f.akkoord_op || null, akkoord_door: f.akkoord_door || null, volg: (f.sort_order == null ? 1e9 : f.sort_order) }))
+    .concat((docs.data || []).map((d) => ({ id: "doc:" + d.id, name: d.filename, link: d.link, icon: d.category, is_voorstel: d.is_voorstel, voorstel_soort: d.voorstel_soort, zichtbaar: !!d.visible_to_client, ter_akkoord: !!d.ter_akkoord, akkoord_op: d.akkoord_op || null, akkoord_door: d.akkoord_door || null, volg: (d.sort_order == null ? 1e9 : d.sort_order) })));
+  _alle.sort((a, b) => (a.volg - b.volg) || String(a.name || "").localeCompare(String(b.name || "")));
+  // Bestanden = per bestand zichtbaar gezet met het klant-poppetje (visible_to_client).
+  // Documenten die nog OP een akkoord wachten staan alleen onder "Actie nodig" (niet dubbel);
+  // na het akkoord verschijnen ze hier met de groene status.
+  pagina.bestanden = _alle.filter((f) => (f.zichtbaar || f.akkoord_op) && !(f.ter_akkoord && !f.akkoord_op)).map((f) => ({ id: f.id, name: f.name, link: f.link, ter_akkoord: f.ter_akkoord, akkoord_op: f.akkoord_op, akkoord_door: f.akkoord_door }));
   // Voorstellen blijven los werken: gemarkeerd als voorstel én door het team zichtbaar gezet.
   pagina.voorstellen = _alle.filter((f) => f.is_voorstel && f.zichtbaar).map((f) => ({ id: f.id, name: f.name, link: f.link, soort: (f.voorstel_soort || "idee") }));
   // L11: documenten die op een klant-akkoord wachten (of net getekend zijn).
@@ -174,9 +174,9 @@ export default async function handler(req, res) {
 
   try {
     if (action === "data") {
-      // Geen publiceer-drempel meer: de poppetjes (per item) en de map Portaal (bestanden)
-      // zijn de enige zichtbaarheidsschakelaars. De klant ziet zijn eigen, niet-gearchiveerde
-      // projecten, en daarbinnen precies wat het team zichtbaar heeft gezet.
+      // Geen publiceer-drempel meer: de poppetjes (per item én per bestand) zijn de
+      // zichtbaarheidsschakelaars. De klant ziet zijn eigen, niet-gearchiveerde projecten,
+      // en daarbinnen precies wat het team zichtbaar heeft gezet.
       const { data: projecten } = await db.from("projects")
         .select("id,project,client_id,phase,description,notes,projectprijs,btw,portal_secties,portal_bg,portal_bg_image,idee_akkoord_op,budget_akkoord_op,created_at")
         .eq("client_id", ik.client.id).neq("archived", true).order("created_at");
