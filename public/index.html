@@ -582,6 +582,9 @@
   .pb-kk-ics{margin-left:auto;display:inline-flex;gap:4px}
   .pb-kk-ic{background:transparent;border:none;cursor:pointer;color:var(--mut2);padding:6px;display:inline-flex;border-radius:8px;transition:color .12s,background .12s}
   .pb-kk-ic:hover{color:#fff;background:rgba(255,255,255,.06)}
+  .pb-syncic{padding:4px}
+  .pb-syncic.bezig svg{animation:kksync 1s linear infinite}
+  @keyframes kksync{to{transform:rotate(360deg)}}
   .pb-kk-thumb{width:64px;height:44px;border-radius:8px;background-size:cover;background-position:center;flex:0 0 auto;border:1px solid var(--line)}
   .pb-kk-pmain{flex:1;min-width:0}
   .pb-kk-pnaam{font-size:13.5px;color:var(--txt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -2465,7 +2468,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v265</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v266</span>
       <!-- V244: loep verhuisd naar het hoofdmenu (waar Bestanden/Contacten stonden). -->
       <!-- V242: Dagoverzicht voorlopig uit beeld (afgesproken 16 juli) — openDayOverview en de overlay blijven in de code staan. -->
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
@@ -4656,7 +4659,7 @@ function _renderProjBoard(){
   // klik op een bestand opent de voorvertoning als overlay; contacten van de klant erbij.
   const _klant=p.client||'';
   const _fKey='ks|files|'+_klant, _fDicht=(typeof _bvDicht!=='undefined')&&_bvDicht.has(_fKey);
-  const secFiles=`<div class="pb-sec"><div class="pb-h"><span>Bestanden</span><span class="pb-hbtns"><button class="pb-hadd" onclick="dropboxPick('project','${_pbPid}')" title="Bestand koppelen">+</button>${_bvChev(_fKey,_fDicht,col)}</span></div>${_fDicht?'':`<div class="pb-fmtree">${_fmBuildTree('',_klant).replace(/fmFileClick\(/g,'openFileViewer(')}</div>`}</div>`;
+  const secFiles=`<div class="pb-sec"><div class="pb-h"><span>Bestanden</span><span class="pb-hbtns"><button class="pb-kk-ic pb-syncic" onclick="kkSyncDropbox('${_qs(_klant)}',this)" title="Dropbox-mappen van ${esc(_klant)} gelijktrekken met deze indeling">${_tIc('<path d="M20 11a8 8 0 0 0 -15.5 -2"/><path d="M4 5v4h4"/><path d="M4 13a8 8 0 0 0 15.5 2"/><path d="M20 19v-4h-4"/>',15,1.6)}</button><button class="pb-hadd" onclick="dropboxPick('project','${_pbPid}')" title="Bestand koppelen">+</button>${_bvChev(_fKey,_fDicht,col)}</span></div>${_fDicht?'':`<div class="pb-fmtree">${_fmBuildTree('',_klant).replace(/fmFileClick\(/g,'openFileViewer(')}</div>`}</div>`;
   const _conList=(state.contacts||[]).filter(c=>{ try{ return _contactClientOf(c)===_klant; }catch(_){ return false; } }).sort((a,b)=>String(a.name||'').localeCompare(String(b.name||'')));
   const _cKey='ks|con|'+_klant, _cDicht=(typeof _bvDicht!=='undefined')&&_bvDicht.has(_cKey);
   const secContacts=`<div class="pb-sec"><div class="pb-h"><span>Contacten${_conList.length?' · '+_conList.length:''}</span><span class="pb-hbtns"><button class="pb-hadd" onclick="openContactModal(null)" title="Nieuw contact">+</button>${_bvChev(_cKey,_cDicht,col)}</span></div>${_cDicht?'':((_conList.map(c=>`<div class="pb-conrow" onclick="openContactModal('${c.id}')"><div class="cmain"><div class="cname">${esc(c.name||'(naamloos)')}</div>${c.role?`<div class="crole">${esc(c.role)}</div>`:''}</div><div class="cquick">${_conQuick(c)}</div></div>`).join(''))||'<div class="pb-empty">Nog geen contacten.</div>')}</div>`;
@@ -7734,6 +7737,31 @@ async function _fmApplyAllRenames(){
   const ov=document.getElementById('fmRnOv'); if(!ov)return;
   for(const r of [...ov.querySelectorAll('.fmmv-row')]){ const i=+r.dataset.i; const p=ov._changes[i]; if(p)await _applyRename(p); }
   _renderFmTree(); _fmCloseRnOv();
+}
+// V266 — sync per klant vanuit het dossier: alleen de bestanden van deze klant.
+async function kkSyncDropbox(klant,btn){
+  klant=String(klant||'').trim(); if(!klant)return;
+  const files=(state.files||[]).filter(f=>{
+    if(!f.link)return false;
+    if(f.owner_type==='client')return String(f.owner_id)===klant;
+    const p=_fileProject(f); return !!p&&p.id!=='__inbox__'&&p.client===klant;
+  });
+  const items=files.map(f=>{
+    const cat=_cat(f)||'Overig';
+    let proj;
+    if(f.owner_type==='client'){ proj='Algemeen'; }
+    else { const p=_fileProject(f); proj=(p&&(p.project||p.client))||'Overig'; }
+    return { link:f.link, name:f.name, target: klant+'/'+proj+'/'+cat };
+  });
+  if(!items.length){ toonToast('Geen gekoppelde bestanden bij '+klant+' om te syncen.'); return; }
+  if(!(await uiConfirm('Dropbox-mappen van '+klant+' gelijktrekken? '+items.length+' bestand(en) worden verplaatst naar /Begeister/'+klant+'/…',{ok:'Synchroniseren',danger:false}))) return;
+  if(btn){ btn.disabled=true; btn.classList.add('bezig'); }
+  try{
+    const r=await fetch('/api/dropbox/list',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'sync',items})});
+    const d=await r.json(); const res=d.results||[]; const ok=res.filter(x=>x.ok).length;
+    toonToast('✓ '+ok+' van '+items.length+' bestand(en) staan in de juiste Dropbox-map.');
+  }catch(_){ toonToast('Sync mislukte — probeer het zo nog eens.','fout'); }
+  if(btn){ btn.disabled=false; btn.classList.remove('bezig'); }
 }
 async function fmSyncDropbox(){
   const files=(state.files||[]).filter(f=>f.link);
