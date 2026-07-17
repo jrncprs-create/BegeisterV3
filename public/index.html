@@ -50,7 +50,7 @@
   .shell{display:flex;flex-direction:column;min-height:100vh}
 
   /* TOPBAR */
-  .topbar{display:flex;align-items:center;gap:18px;padding:calc(env(safe-area-inset-top) + 11px) 22px 11px;border-bottom:1px solid var(--line);background:var(--side);position:sticky;top:0;z-index:70}
+  .topbar{display:flex;align-items:center;gap:18px;padding:calc(env(safe-area-inset-top) + 11px) 22px 11px;border-bottom:1px solid var(--line);background:var(--bg);position:sticky;top:0;z-index:70}
   .logo{display:flex;align-items:center;gap:10px}
   .logo img{height:30px;width:auto;display:block}
   .logo .mark{width:30px;height:30px;border-radius:9px;background:#2a2a2a;border:1px solid #3a3a3a;display:flex;align-items:center;justify-content:center;font-weight:var(--fw-nadruk);color:var(--mut);font-size:14px}
@@ -668,7 +668,7 @@
   #m_comments .m-ping{flex:1 1 100%}
   /* L12c — klantenmenu: zwevend twee-staps laatje */
   #kMenu{position:fixed;z-index:96;display:flex;gap:7px;align-items:flex-start}
-  #kMenu .km-p1,#kMenu .km-p2{background:#1e1e21;border:1px solid rgba(255,255,255,.13);border-radius:12px;padding:7px;min-width:195px;box-shadow:0 18px 44px rgba(0,0,0,.55);max-height:70vh;overflow:auto}
+  #kMenu .km-p1,#kMenu .km-p2{background:#000;border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:7px;min-width:195px;box-shadow:0 18px 44px rgba(0,0,0,.7);max-height:70vh;overflow:auto}
   #kMenu .km-p2{display:none;min-width:205px}
   #kMenu .km-k,#kMenu .km-pr{display:flex;width:100%;align-items:center;gap:9px;background:none;border:none;font-family:inherit;font-size:14px;font-weight:var(--fw-nadruk,500);text-align:left;padding:8px 11px;border-radius:8px;cursor:pointer}
   #kMenu .km-k{color:var(--kc,#ddd)}
@@ -1611,6 +1611,15 @@
   .pb-notes:focus{outline:none;border-color:var(--mut2)}
   .kicon.kboard:hover{color:#fff}
   .kli.kproj{cursor:pointer}
+  /* "op een rijtje" bij het actieve project: tekst + icoon, geen kader, rechts uitgelijnd */
+  .kbrief{margin-left:auto;flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;background:none;border:none;
+    color:color-mix(in srgb,var(--scol,#9acd32) 78%,transparent);font-family:inherit;font-size:12px;cursor:pointer;padding:2px 0}
+  .kbrief:hover{color:var(--scol,#9acd32)}
+  .kbrief svg{flex:none}
+  .kbrief.bezig{color:var(--scol,#9acd32)}
+  .kbrief.bezig svg{animation:kbriefSpin 1.1s linear infinite}
+  .kbrief-tx{transition:opacity .25s} .kbrief.bezig .kbrief-tx{opacity:.9}
+  @keyframes kbriefSpin{to{transform:rotate(360deg)}}
   .kicon.kfctog svg{transition:transform .15s}
   .kicon.kfctog.open svg{transform:rotate(180deg)}
   /* Project-werkblad op mobiel: beeldvullend, scrollbaar, sluitkruis vast in beeld */
@@ -1811,6 +1820,7 @@
   .modal .m-rightcol .datefield,.modal .m-rightcol select{margin:0}
   /* onderste velden (contact/klant/project) zitten in een <div> en misten daardoor de 18px tussenruimte */
   .modal>.m-fld{margin-top:18px}
+  .m-fldlbl{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut2);margin:0 0 5px 2px}
   .modal>#m_files:not(:empty){margin-top:18px}
   .modal>#m_checklist:not(:empty){margin-top:18px}
   .m-checklist .m-ckhead{font-size:12px;letter-spacing:.4px;text-transform:uppercase;color:var(--mut);margin-bottom:8px}
@@ -2516,7 +2526,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v279</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v280</span>
       <!-- V244: loep verhuisd naar het hoofdmenu (waar Bestanden/Contacten stonden). -->
       <!-- V242: Dagoverzicht voorlopig uit beeld (afgesproken 16 juli) — openDayOverview en de overlay blijven in de code staan. -->
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
@@ -3066,8 +3076,8 @@
       </div>
     </div>
     <div class="m-fld acwrap"><input id="m_contact" placeholder="Contact zoeken of toevoegen…" autocomplete="off"><div class="acmenu" id="m_contactmenu"></div></div>
-    <div class="m-fld"><select id="m_client" onchange="onClientChange()"></select></div>
-    <div class="m-fld"><select id="m_project" onchange="onProjectChange()"></select></div>
+    <div class="m-fld"><span class="m-fldlbl">Klant</span><select id="m_client" onchange="onClientChange()"></select></div>
+    <div class="m-fld"><span class="m-fldlbl">Project</span><select id="m_project" onchange="onProjectChange()"></select></div>
     <div id="m_checklist"></div>
     <div id="m_files"></div>
     <div id="m_comments"></div>
@@ -4737,7 +4747,9 @@ function _renderProjBoard(){
   const _openTot=inkopenOpen.reduce((s,x)=>s+((x.price!=null&&x.price!=='')?Number(x.price):0)*(x.qty||1),0);
   const secBestel=`<div class="pb-sec"><div class="pb-h"><span>Bestellijst</span><span class="pb-hbtns">${inkopen.length?`<button class="pb-ai" onclick="pbOrderAll()" title="Zet de hele lijst in één keer in je Amazon-mandje">${_tIc('<path d="M6 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M17 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M17 17h-11v-14h-2"/><path d="M6 5l14 1l-1 7h-13"/>',16,1.7)}</button>`:''}<button class="pb-ai" onclick="pbArtikel()" title="Artikel toevoegen — omschrijving, link, aantal en bedrag">+ artikel</button><button class="pb-ai" onclick="pbInkPaste()" title="Plak een verlanglijst of winkelwagen — AI maakt er regels van">${_tIc(_TABCHAN.asterisk,15,1.7)}<span>lijst</span></button>${inkopen.length?`<button class="pb-ai" onclick="pbMoveOpen('all')" title="Hele bestellijst naar een ander project/klant verplaatsen">${_tIc('<path d="M17 3l4 4l-4 4"/><path d="M21 7h-13"/><path d="M7 21l-4 -4l4 -4"/><path d="M3 17h13"/>',15,1.5)}</button><button class="pb-listdel" onclick="pbDelBestel()" title="Hele bestellijst verwijderen"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/></svg></button>`:''}</span></div>${_masterLink}${_bestNietBesteld.length?_bestNietBesteld.map(inkRow).join(''):(_bestBesteld.length?'':'<div class="pb-empty">Nog geen bestellingen.</div>')}<div class="pb-add"><input class="pb-in" data-kind="inkoop" placeholder="+ snel item (alleen tekst)…" onkeydown="pbAddKey(event,'inkoop')"></div>${inkopenOpen.length?`<div class="pb-besteltot"><span class="pb-btlbl">Totaal</span><span class="pb-btval"><span class="pb-btnum"><span class="pb-eur">€</span><b>${fmtEur(_openTot)}</b></span><span class="pb-btsub">excl. <span class="pb-eur">€</span><span class="pb-btsnum">${fmtEur(_openTot/(1+btwPct/100))}</span></span></span></div>`:''}${_bestBesteld.length?`<div class="pb-besteld-sec"><div class="pb-h">Besteld <span class="pb-donecnt">${_bestBesteld.length}</span></div>${_bestBesteld.map(inkRow).join('')}</div>`:''}</div>`;
   const _body=(_pbMode==='financien')?secBestel:(secKlantkant+secAkkoord+secOms+secWeten+secFase+secWait+secTaken+secBestel+secDone+secContacts+secAppt+secFiles+secPrijs+secNotes);
-  const _briefBtn=(_pbMode!=='financien')?`<button class="pb-brief" style="--scol:${col}" onclick="openBriefing()" title="Laat de AI dit project op een rijtje zetten">${_tIc(_TABCHAN.asterisk,15,1.7)}<span>op een rijtje</span></button>`:'';
+  // In de Klanten-weergave staat "op een rijtje" bij het project in de linkerkolom (kbrief).
+  // Alleen de zwevende/financiële weergaven houden de knop nog in de kop.
+  const _briefBtn=(_pbMode!=='financien'&&_pbTarget!=='beheer')?`<button class="pb-brief" style="--scol:${col}" onclick="openBriefing()" title="Laat de AI dit project op een rijtje zetten">${_tIc(_TABCHAN.asterisk,15,1.7)}<span>op een rijtje</span></button>`:'';
   const _head=`<div class="pb-head"><span class="kbadge" style="background:${col}">${esc(initial)}</span><div class="pb-title"><b>${esc(p.client||'')}</b>${p.project?'<span> · '+esc(p.project)+'</span>':''}${_pbMode==='financien'?'<span style="color:'+col+'"> · inkoop</span>':''}</div>${_briefBtn}</div>`;
   if(_pbTarget==='finmid'||_pbTarget==='finright'){ const el=document.getElementById(_pbTarget==='finright'?'finRightWrap':'finMidWrap'); const _cls=(_pbTarget==='finright')?'pb-inline pb-board-inline':'pb-inline'; const _h=(_pbTarget==='finright')?'':_head; if(el)el.innerHTML=`<div class="${_cls}" style="--scol:${col}">${_h}${_body}</div>`; return; }
   if(_pbTarget==='beheer'){
@@ -4790,6 +4802,9 @@ async function openBriefing(){
   const p=projById(_pbPid); if(!p)return;
   const col=PROJCOL[p.id]||'#888';
   const payload=_briefData(_pbPid); if(!payload)return;
+  // Inline animatie op de knop bij het project — laat zien wat de AI doet, net als de
+  // cyclerende tekst op de landingspagina (alleen dan compact naast het project).
+  _briefAnimStart();
   _briefRender({loading:true, client:p.client, project:p.project, col});
   // Naast het overzicht draait ook de opruim-AI: staat alles op de juiste plek?
   const _openItems=(p.items||[]).filter(it=>it.status!=='done').map(it=>({id:String(it.id),title:it.t||'',owner:it.owner||'',due:it.due||null,status:it.status,client:p.client,project:p.project}));
@@ -4797,12 +4812,27 @@ async function openBriefing(){
   let d=null;
   try{ const r=await fetch('/api/briefing',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}); d=await r.json(); }catch(_){}
   try{ if(typeof loadUsage==='function')loadUsage(); }catch(_){}
-  if(!d||d.error){ _briefRender({error:true, client:p.client, project:p.project, col}); return; }
+  if(!d||d.error){ _briefAnimStop(); _briefRender({error:true, client:p.client, project:p.project, col}); return; }
   let voorstellen=[];
   try{ const o=await opschoonP; const titelVan=id=>{ const it=(p.items||[]).find(x=>String(x.id)===String(id)); return it?(it.t||''):''; };
     voorstellen=((o&&o.voorstellen)||[]).map(v=>Object.assign({titel:titelVan(v.id)},v)).filter(v=>v.titel); }catch(_){}
   _briefLast={pid:_pbPid, client:p.client, project:p.project, data:d, voorstellen};
+  _briefAnimStop();
   _briefRender({data:d, client:p.client, project:p.project, col, voorstellen});
+}
+const _BRIEF_STAPPEN=['Taken nalopen…','Feiten scheiden…','Dubbelingen zoeken…','Afspraken checken…','Open eindjes vinden…','Op een rijtje zetten…'];
+let _briefAnimT=null;
+function _briefAnimStart(){
+  const el=document.getElementById('briefInline'); if(!el)return;
+  el.classList.add('bezig'); const tx=el.querySelector('.kbrief-tx'); if(!tx)return;
+  let i=0; tx.textContent=_BRIEF_STAPPEN[0];
+  clearInterval(_briefAnimT);
+  _briefAnimT=setInterval(()=>{ i=(i+1)%_BRIEF_STAPPEN.length; tx.style.opacity='0'; setTimeout(()=>{ tx.textContent=_BRIEF_STAPPEN[i]; tx.style.opacity=''; },200); }, 1500);
+}
+function _briefAnimStop(){
+  clearInterval(_briefAnimT); _briefAnimT=null;
+  const el=document.getElementById('briefInline'); if(!el)return;
+  el.classList.remove('bezig'); const tx=el.querySelector('.kbrief-tx'); if(tx)tx.textContent='op een rijtje';
 }
 // Briefing als platte tekst (voor bewaren en pushen).
 function _briefTekst(o){ const d=o.data||{}; let t=(o.client||'')+(o.project?' · '+o.project:'')+' — op een rijtje ('+new Date().toLocaleDateString('nl-NL',{day:'numeric',month:'long'})+')\n\n';
@@ -7410,13 +7440,13 @@ function renderProjecten(){
     // op z'n eigen regel — het actieve project gemarkeerd. Dit is immers een projectkaart.
     const rows=projs.filter(p=>p.project).map(p=>{
       const on=String(p.id)===String(_pbPid);
-      return `<div class="kli kproj${on?' on':''}"><button class="kdot" style="background:${p.color}" onclick="event.stopPropagation();openColorPicker(event,'proj','${p.id}')" title="Kleur"></button><button class="ksub-btn"${on?' style="color:var(--ccol);font-weight:var(--fw-nadruk,500)"':''} onclick="selectBeheerProj('${p.id}')">${escapeHtml(p.project)}</button></div>`;
+      const brief=on?`<button class="kbrief" id="briefInline" style="--scol:${ccol}" onclick="event.stopPropagation();openBriefing()" title="Laat de AI dit project op een rijtje zetten en op de juiste plek">${_tIc(_TABCHAN.asterisk,14,1.7)}<span class="kbrief-tx">op een rijtje</span></button>`:'';
+      return `<div class="kli kproj${on?' on':''}"><button class="kdot" style="background:${p.color}" onclick="event.stopPropagation();openColorPicker(event,'proj','${p.id}')" title="Kleur"></button><button class="ksub-btn"${on?' style="color:var(--ccol);font-weight:var(--fw-nadruk,500)"':''} onclick="selectBeheerProj('${p.id}')">${escapeHtml(p.project)}</button>${brief}</div>`;
     }).join('');
     const kiezer=`<div class="kgroup kactive" style="--ccol:${ccol}">
       <div class="kclient"><span class="kbadge" style="background:${ccol}">${escapeHtml(initial)}</span>
         <span class="kname-btn" style="cursor:default">${escapeHtml(client||'—')}</span>
         <span class="kspring"></span>
-        <button class="kicon" onclick="kWissel(event)" title="Andere klant kiezen (klantenmenu)">${_tIc('<path d="M6 9l6 6l6 -6"/>',16,1.8)}</button>
         <button class="kicon kadd" onclick="event.stopPropagation();addProjectTo('${esc(client)}')" title="Project toevoegen"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 5v14M5 12h14"/></svg></button>
       </div>${rows}</div>`;
     document.getElementById('beheerWrap').innerHTML=kiezer+'<div id="beheerRailSecs"></div>';
@@ -7454,24 +7484,19 @@ function _kMenuBouw(x,y){
   const m=document.createElement('div'); m.id='kMenu';
   m.style.left=Math.max(8,Math.round(x))+'px'; m.style.top=Math.round(y)+'px';
   const esq=s=>String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  // Eén niveau: je kiest een klant. Het bijbehorende project kies je in de linkerkolom.
   m.innerHTML='<div class="km-p1">'+order.map(c=>{
     const col=(byClient[c][0]&&byClient[c][0].color)||'#888';
-    return `<button class="km-k" data-k="${escapeHtml(c)}" style="--kc:${col}"><span>${escapeHtml(c||'—')}</span><span class="km-ch">›</span></button>`;
-  }).join('')+`<button class="km-nieuw" onclick="_kMenuDicht();newClientFromHeader()">+ nieuwe klant</button>`+'</div><div class="km-p2"></div>';
+    return `<button class="km-k" data-k="${escapeHtml(c)}" style="--kc:${col}"><span>${escapeHtml(c||'—')}</span></button>`;
+  }).join('')+`<button class="km-nieuw" onclick="_kMenuDicht();newClientFromHeader()">+ nieuwe klant</button>`+'</div>';
   const vol=!isDesk3();
   if(vol){ m.classList.add('km-full'); m.insertAdjacentHTML('afterbegin','<button class="km-x" onclick="_kMenuDicht()" title="Sluiten">✕</button>'); }
   document.body.appendChild(m);
-  const p1=m.querySelector('.km-p1'), p2=m.querySelector('.km-p2');
   m.querySelectorAll('.km-k').forEach(b=>{
-    const open=()=>{ m.querySelectorAll('.km-k').forEach(z=>z.classList.toggle('on',z===b));
-      const c=b.dataset.k; const projs=byClient[c]||[];
-      p2.innerHTML=(vol?`<button class="km-terug">‹ ${escapeHtml(c||'terug')}</button>`:'')
-        +(projs.filter(p=>p.project).map(p=>`<button class="km-pr${String(p.id)===String(_pbPid)?' on':''}" onclick="kMenuKies('${p.id}')"><span class="km-dot" style="background:${p.color||'#888'}"></span><span>${escapeHtml(p.project)}</span></button>`).join('')||'<div class="km-leeg">Nog geen projecten.</div>')
-        +`<button class="km-nieuw" onclick="_kMenuDicht();addProjectTo('${esq(c)}')">+ nieuw project</button>`;
-      p2.style.display='block';
-      if(vol){ p1.style.display='none'; const tb=p2.querySelector('.km-terug'); if(tb)tb.onclick=e=>{ e.stopPropagation(); p2.style.display='none'; p1.style.display='block'; }; } };
-    if(!vol) b.onmouseenter=open;
-    b.onclick=e=>{ e.stopPropagation(); open(); };
+    b.onclick=e=>{ e.stopPropagation(); const c=b.dataset.k; const projs=(byClient[c]||[]).filter(p=>p.project);
+      // Naar de klant: open het actieve project als dat bij deze klant hoort, anders het eerste.
+      const ap=projById(_pbPid); const doel=(ap&&ap.client===c)?ap:(projs[0]||null);
+      if(doel){ kMenuKies(doel.id); } else { _kMenuDicht(); addProjectTo(c); } };
   });
   m.onclick=e=>e.stopPropagation();
   setTimeout(()=>{ document.addEventListener('click', _kMenuDicht, {once:true}); },0);
