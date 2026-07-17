@@ -2526,7 +2526,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v281</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v282</span>
       <!-- V244: loep verhuisd naar het hoofdmenu (waar Bestanden/Contacten stonden). -->
       <!-- V242: Dagoverzicht voorlopig uit beeld (afgesproken 16 juli) — openDayOverview en de overlay blijven in de code staan. -->
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
@@ -5054,8 +5054,12 @@ function _pbBal(p){
   const wacht=items.filter(i=>i.status==='wait');
   if(wacht.length){
     const oudste=wacht.slice().sort((a,b)=>(a.created||0)-(b.created||0))[0];
-    const bij=[...new Set(wacht.map(i=>i.contact).filter(Boolean))];
-    const wie = bij.length ? bij.slice(0,2).join(' & ') + (bij.length>2?' e.a.':'') : 'de klant';
+    // Op wie wachten we? Eerst een extern contact; anders de interne eigenaar (Marlon/Jeroen/
+    // intern overleg); pas als niets bekend is, de klant.
+    let bij=[...new Set(wacht.map(i=>i.contact).filter(Boolean))];
+    if(!bij.length) bij=[...new Set(wacht.map(i=>i.owner).filter(o=>o&&!/^intern/i.test(o)))];
+    const intern=!wacht.some(i=>i.contact)&&wacht.some(i=>/^intern/i.test(i.owner||''));
+    const wie = bij.length ? bij.slice(0,2).join(' & ') + (bij.length>2?' e.a.':'') : (intern?'intern overleg':'de klant');
     const d=_dagenSinds(oudste.created);
     return {staat:'wacht', wie, dagen:d, aantal:wacht.length};
   }
