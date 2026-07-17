@@ -2489,7 +2489,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v270</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v271</span>
       <!-- V244: loep verhuisd naar het hoofdmenu (waar Bestanden/Contacten stonden). -->
       <!-- V242: Dagoverzicht voorlopig uit beeld (afgesproken 16 juli) — openDayOverview en de overlay blijven in de code staan. -->
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
@@ -4588,8 +4588,17 @@ function closeBeheerBoard(){ _pbTarget=null; _pbPid=null;
   try{ renderProjecten(); }catch(_){}
 }
 async function openProjectBoard(pid, mode){
-  const p=projById(pid); if(!p)return; _pbPid=pid; _pbTarget=null;
-  _pbMode=mode||((typeof view!=='undefined'&&view==='financien')?'financien':'klanten');
+  const p=projById(pid); if(!p)return;
+  const _m=mode||((typeof view!=='undefined'&&view==='financien')?'financien':'klanten');
+  // Het zwevende één-koloms dossier is vervallen: een klant open je altijd in de
+  // driekoloms klantenkaart op de Klanten-pagina. Alleen financiën houdt z'n eigen bord.
+  if(_m!=='financien' && isDesk3()){
+    try{ if(typeof view==='undefined'||view!=='beheer') setView('beheer'); }catch(_){}
+    try{ if(p.client&&typeof _kClientOpen!=='undefined') _kClientOpen.add(p.client); }catch(_){}
+    return selectBeheerProj(pid);
+  }
+  _pbPid=pid; _pbTarget=null;
+  _pbMode=_m;
   try{ const r=await sb.from('project_board').select('*').eq('project_id',pid).order('kind').order('sort').order('created_at'); _pbItems=(r&&r.data)?r.data:[]; }catch(_){ _pbItems=[]; }
   let ov=document.getElementById('projOverlay');
   if(!ov){ ov=document.createElement('div'); ov.id='projOverlay'; ov.className='overlay'; document.body.appendChild(ov); ov.addEventListener('click',e=>{ if(e.target===ov) closeProjectBoard(); }); }
