@@ -2526,7 +2526,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v280</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v281</span>
       <!-- V244: loep verhuisd naar het hoofdmenu (waar Bestanden/Contacten stonden). -->
       <!-- V242: Dagoverzicht voorlopig uit beeld (afgesproken 16 juli) — openDayOverview en de overlay blijven in de code staan. -->
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
@@ -8241,7 +8241,15 @@ async function purgeProject(id){ if(!(await uiConfirm('Dit project definitief ve
 // ---------- acties ----------
 function toggle(id){const r=findItem(id);if(!r)return;r.it.status=r.it.status==='done'?'todo':'done';render();}
 let editingId=null,mDue=null,duePickerRef=iso(TODAY),_dueTarget='task';
-const CONTACTS=['Willem','Leon','Joep','Idz','Noa','Hans','Stavros','Len'];
+// Alle contacten uit ÉÉN bron: de contacts-tabel (state.contacts). Geen apart vast lijstje
+// meer — anders leeft een contact als Onno wel in het dossier maar niet in dit veld.
+function _contactNamen(){
+  const uit=new Set();
+  (state.contacts||[]).forEach(c=>{ const n=(c&&c.name||'').trim(); if(n)uit.add(n); });
+  // taken kunnen nog vrije-tekst-namen bevatten van vroeger; die tonen we ook zodat niets wegvalt
+  (state.projects||[]).forEach(p=>(p.items||[]).forEach(it=>{ const n=(it.contact||'').trim(); if(n)uit.add(n); }));
+  return [...uit].sort((a,b)=>a.localeCompare(b));
+}
 function uniqueClients(){const seen=[];state.projects.forEach(p=>{if(p.id==='__inbox__')return;if(!seen.includes(p.client))seen.push(p.client);});return seen;}
 function fillProjectSelect(client,selId){
   const sel=document.getElementById('m_project');
@@ -8370,7 +8378,7 @@ function _renderApptWho(){ const el=document.getElementById('a_whoToggle'); if(!
   el.innerHTML=`<span class="tw-opt${j?' on':''}" onclick="setApptOwner('Jeroen')">Jeroen</span><span class="tw-opt${m?' on':''}" onclick="setApptOwner('Marlon')">Marlon</span>`;
 }
 // ---- Custom contact-autocomplete (nette dropdown i.p.v. native datalist) ----
-function _acFilter(q){ const base=(typeof CONTACTS!=='undefined'&&CONTACTS)?CONTACTS:[]; const s=(q||'').trim().toLowerCase();
+function _acFilter(q){ const base=_contactNamen(); const s=(q||'').trim().toLowerCase();
   return (s?base.filter(c=>String(c).toLowerCase().includes(s)):base.slice()).slice(0,60); }
 function _acAttach(inputId,menuId){ const inp=document.getElementById(inputId),menu=document.getElementById(menuId); if(!inp||!menu||inp._acOn)return; inp._acOn=true;
   const render=()=>{ const q=inp.value; const list=_acFilter(q);
