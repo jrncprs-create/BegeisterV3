@@ -666,6 +666,19 @@
   .art-del:hover{color:#fff;background:#e0726f;border-color:#e0726f}
   #m_comments{display:flex;flex-wrap:wrap;align-items:center;gap:0}
   #m_comments .m-ping{flex:1 1 100%}
+  /* L12c — klantenmenu: zwevend twee-staps laatje */
+  #kMenu{position:fixed;z-index:96;display:flex;gap:7px;align-items:flex-start}
+  #kMenu .km-p1,#kMenu .km-p2{background:#1e1e21;border:1px solid rgba(255,255,255,.13);border-radius:12px;padding:7px;min-width:195px;box-shadow:0 18px 44px rgba(0,0,0,.55);max-height:70vh;overflow:auto}
+  #kMenu .km-p2{display:none;min-width:205px}
+  #kMenu .km-k,#kMenu .km-pr{display:flex;width:100%;align-items:center;gap:9px;background:none;border:none;font-family:inherit;font-size:14px;font-weight:var(--fw-nadruk,500);text-align:left;padding:8px 11px;border-radius:8px;cursor:pointer}
+  #kMenu .km-k{color:var(--kc,#ddd)}
+  #kMenu .km-pr{color:#d8d5cd;font-weight:400}
+  #kMenu .km-k:hover,#kMenu .km-k.on,#kMenu .km-pr:hover,#kMenu .km-pr.on{background:rgba(255,255,255,.08)}
+  #kMenu .km-ch{margin-left:auto;color:#7c7870}
+  #kMenu .km-dot{width:9px;height:9px;border-radius:50%;flex:none}
+  #kMenu .km-leeg{padding:8px 11px;font-size:13px;color:#8f8a80}
+  #kMenu .km-nieuw{display:block;width:100%;background:none;border:none;border-top:1px solid rgba(255,255,255,.1);color:#8f8a80;font-family:inherit;font-size:12.5px;text-align:left;padding:8px 11px;margin-top:5px;cursor:pointer;border-radius:0}
+  #kMenu .km-nieuw:hover{color:#ddd}
   .pb-railsecs{margin-top:14px;padding:0 2px}
   .pb-railsecs .pb-sec:first-child{border-top:none}
   .pb-akdoc{padding:7px 0;border-bottom:1px solid rgba(255,255,255,.06)} .pb-akdoc:last-of-type{border-bottom:none}
@@ -2486,7 +2499,7 @@
       <button data-v="afspraken" onclick="setView('afspraken')">Afspraken <span class="badge" id="nb-afspraken"></span></button>
       <button data-v="agenda" onclick="setView('agenda')">Agenda</button>
       <button data-v="postvak" onclick="setView('postvak')">Postvak In <span class="badge" id="nb-postvak"></span></button>
-      <button data-v="beheer" onclick="setView('beheer')">Klanten</button>
+      <button data-v="beheer" onclick="kMenuToggle(event)">Klanten</button>
       <!-- V241: Pijplijn en Financiën tijdelijk uit het menu (afgesproken 16 juli) —
            de code en data blijven staan; Financiën komt in een latere fase opnieuw ontworpen terug. -->
       <!-- V244: Bestanden en Contacten wonen voortaan in het klantdossier; het loepje zoekt door alles heen. -->
@@ -2496,7 +2509,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v275</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v276</span>
       <!-- V244: loep verhuisd naar het hoofdmenu (waar Bestanden/Contacten stonden). -->
       <!-- V242: Dagoverzicht voorlopig uit beeld (afgesproken 16 juli) — openDayOverview en de overlay blijven in de code staan. -->
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
@@ -3440,8 +3453,6 @@ function chipTip(x){const di=dueInfo(x.it.due);return (escapeHtml(x.it.t)+' — 
 const RAILVIEWS=['beheer','financien','contacten','archief','files','postvak'];
 function openPlanning(){ const n=document.getElementById('nav'); if(n)n.classList.remove('open'); setView(isDesk3()?'taken':'wachter'); }
 function setView(v){
-  // Klik op "Klanten" in het menu = alle klanten tonen (kiezer open, in klantkleur).
-  try{ if(v==='beheer'&&typeof _kiezerUit!=='undefined') _kiezerUit=true; }catch(_){}
   // Bronnen is geen pagina meer: het is het Archief-tabblad van het Postvak In.
   if(v==='bronnen'){ _pvTab='archief'; v='postvak'; }
   // Sluit zwevende overlays zodat ze niet in een kolom blijven hangen bij menu-wissel
@@ -7309,7 +7320,7 @@ function renderProjecten(){
   // L12 — dossier open? Dan toont kolom 1 geen lange lijst maar het "waar ben je"-blok:
   // de gekozen klant + projecten, met daaronder Klantkant / Akkoorden / Contacten.
   const _dossierOpen=(_pbTarget==='beheer'&&_pbPid&&isDesk3());
-  if(_dossierOpen && !_kiezerUit){
+  if(_dossierOpen){
     const ap=projById(_pbPid); const client=ap?(ap.client||''):'';
     const projs=byClient[client]||[]; const ccol=(projs[0]&&projs[0].color)||'#888';
     const initial=(String(client).trim()[0]||'?').toUpperCase();
@@ -7319,21 +7330,69 @@ function renderProjecten(){
     }).join('');
     const kiezer=`<div class="kgroup kactive" style="--ccol:${ccol}">
       <div class="kclient"><span class="kbadge" style="background:${ccol}">${escapeHtml(initial)}</span>
-        <button class="kname-btn" onclick="kWissel()" title="Andere klant kiezen">${escapeHtml(client||'—')}</button>
+        <span class="kname-btn" style="cursor:default">${escapeHtml(client||'—')}</span>
         <span class="kspring"></span>
-        <button class="kicon" onclick="kWissel()" title="Andere klant kiezen">${_tIc('<path d="M6 9l6 6l6 -6"/>',16,1.8)}</button>
+        <button class="kicon" onclick="kWissel(event)" title="Andere klant kiezen (klantenmenu)">${_tIc('<path d="M6 9l6 6l6 -6"/>',16,1.8)}</button>
         <button class="kicon kadd" onclick="event.stopPropagation();addProjectTo('${esc(client)}')" title="Project toevoegen"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 5v14M5 12h14"/></svg></button>
       </div>${rows}</div>`;
     document.getElementById('beheerWrap').innerHTML=kiezer+'<div id="beheerRailSecs"></div>';
     try{ _renderProjBoard(); }catch(_){}
     return;
   }
-  const _terug=(_dossierOpen&&_kiezerUit)?`<div class="kgroup" style="--ccol:#666"><div class="kclient"><button class="kname-btn" onclick="kWisselTerug()" title="Terug naar het dossier">Kies een klant…</button><span class="kspring"></span><button class="kicon" onclick="kWisselTerug()" title="Terug naar het dossier">${_tIc('<path d="M6 15l6 -6l6 6"/>',16,1.8)}</button></div></div>`:'';
-  document.getElementById('beheerWrap').innerHTML=_terug+(html||'<div class="hint">Nog geen klanten. Maak er een aan met + rechtsboven.</div>');
+  // Desktop zonder gekozen project: geen lange lijst meer — één rustig kiesblok dat het menu opent.
+  if(isDesk3()){
+    document.getElementById('beheerWrap').innerHTML=`<div class="kgroup" style="--ccol:#8a8a8a"><div class="kclient"><span class="kname-btn" style="color:#8f8a80;font-weight:400;cursor:default">Kies een klant…</span><span class="kspring"></span><button class="kicon" onclick="kWissel(event)" title="Klantenmenu openen">${_tIc('<path d="M6 9l6 6l6 -6"/>',16,1.8)}</button></div></div>`;
+    return;
+  }
+  document.getElementById('beheerWrap').innerHTML=(html||'<div class="hint">Nog geen klanten. Maak er een aan met + rechtsboven.</div>');
 }
 var _kiezerUit=false;
-function kWissel(){ _kiezerUit=true; try{ renderProjecten(); }catch(_){} }
+// L12c — het klantenmenu: een zwevend twee-staps laatje (klanten in kleur → projecten),
+// geopend vanaf de menubalk-tab of het chevrontje in het kiezerblok. Geen aparte pagina.
+function kMenuToggle(ev){
+  if(ev&&ev.stopPropagation)ev.stopPropagation();
+  const ex=document.getElementById('kMenu'); if(ex){ ex.remove(); return; }
+  const btn=(ev&&ev.currentTarget)||document.querySelector('[data-v="beheer"]');
+  const r=btn?btn.getBoundingClientRect():{left:20,bottom:50};
+  _kMenuBouw(r.left, r.bottom+8);
+}
+function kWissel(ev){
+  if(ev&&ev.stopPropagation)ev.stopPropagation();
+  const ex=document.getElementById('kMenu'); if(ex){ ex.remove(); return; }
+  const blok=document.querySelector('#beheerWrap .kclient');
+  const r=blok?blok.getBoundingClientRect():{left:20,bottom:120};
+  _kMenuBouw(r.left, r.bottom+8);
+}
 function kWisselTerug(){ _kiezerUit=false; try{ renderProjecten(); }catch(_){} }
+function _kMenuBouw(x,y){
+  const byClient={}, order=[];
+  (state.projects||[]).filter(p=>p.id!=='__inbox__').forEach(p=>{ const c=p.client||''; if(!byClient[c]){byClient[c]=[];order.push(c);} byClient[c].push(p); });
+  const m=document.createElement('div'); m.id='kMenu';
+  m.style.left=Math.max(8,Math.round(x))+'px'; m.style.top=Math.round(y)+'px';
+  const esq=s=>String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  m.innerHTML='<div class="km-p1">'+order.map(c=>{
+    const col=(byClient[c][0]&&byClient[c][0].color)||'#888';
+    return `<button class="km-k" data-k="${escapeHtml(c)}" style="--kc:${col}"><span>${escapeHtml(c||'—')}</span><span class="km-ch">›</span></button>`;
+  }).join('')+`<button class="km-nieuw" onclick="_kMenuDicht();newClientFromHeader()">+ nieuwe klant</button>`+'</div><div class="km-p2"></div>';
+  document.body.appendChild(m);
+  const p2=m.querySelector('.km-p2');
+  m.querySelectorAll('.km-k').forEach(b=>{
+    const open=()=>{ m.querySelectorAll('.km-k').forEach(z=>z.classList.toggle('on',z===b));
+      const c=b.dataset.k; const projs=byClient[c]||[];
+      p2.innerHTML=(projs.filter(p=>p.project).map(p=>`<button class="km-pr${String(p.id)===String(_pbPid)?' on':''}" onclick="kMenuKies('${p.id}')"><span class="km-dot" style="background:${p.color||'#888'}"></span><span>${escapeHtml(p.project)}</span></button>`).join('')||'<div class="km-leeg">Nog geen projecten.</div>')
+        +`<button class="km-nieuw" onclick="_kMenuDicht();addProjectTo('${esq(c)}')">+ nieuw project</button>`;
+      p2.style.display='block'; };
+    b.onmouseenter=open; b.onclick=e=>{ e.stopPropagation(); open(); };
+  });
+  m.onclick=e=>e.stopPropagation();
+  setTimeout(()=>{ document.addEventListener('click', _kMenuDicht, {once:true}); },0);
+}
+function _kMenuDicht(){ const m=document.getElementById('kMenu'); if(m)m.remove(); }
+async function kMenuKies(pid){
+  _kMenuDicht(); _kiezerUit=false;
+  try{ if(typeof view==='undefined'||view!=='beheer') setView('beheer'); }catch(_){}
+  await selectBeheerProj(pid);
+}
 async function newClientFromHeader(){
   const name=((await uiPrompt('Nieuwe klant:'))||'').trim(); if(!name)return;
   const proj=((await uiPrompt('Project / event (optioneel):'))||'').trim();

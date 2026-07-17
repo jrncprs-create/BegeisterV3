@@ -113,8 +113,10 @@ input:focus-visible,textarea:focus-visible{box-shadow:none}
 .an-knoppen{display:flex;gap:9px;flex-wrap:wrap;margin-top:11px}
 .an-vraagknop{background:transparent;border:1px solid color-mix(in srgb,var(--scol) 32%,transparent);border-radius:var(--r-pil);color:var(--scol);font-size:12.5px;padding:7px 15px}
 .an-vraagknop:hover{border-color:var(--scol)}
-.thumb{flex:none;width:84px;height:58px;border-radius:var(--r-sm);overflow:hidden;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.thumb{flex:none;width:84px;height:58px;border-radius:var(--r-sm);overflow:hidden;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative}
 .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb .tmini{position:absolute;left:0;top:0;width:1120px;height:774px;border:0;transform:scale(0.075);transform-origin:0 0;pointer-events:none;background:#fff}
+.thumb.klein .tmini{transform:scale(0.0536)}
 .thumb .tlbl{font-size:9.5px;letter-spacing:.1em;color:color-mix(in srgb,var(--scol) 70%,transparent);text-transform:uppercase;text-align:center;line-height:1.5;padding:4px}
 .thumb.klein{width:60px;height:42px}
 .f-ok{font-size:12px;color:#5bd08a;margin-top:2px}
@@ -241,11 +243,11 @@ function _isBeeld(f){ return /\.(jpe?g|png|gif|webp|heic|heif)$/i.test(String(f.
 function thumbHtml(f,klein){
   const open='toonVoorstel(\''+esc(String(f.link||'')).replace(/'/g,"\\'")+'\',\''+esc(String(f.name||'')).replace(/'/g,"\\'")+'\')';
   if(_isBeeld(f)&&f.link) return '<div class="thumb'+(klein?' klein':'')+'" onclick="'+open+'"><img src="'+esc(_vsrc(f.link))+'" alt="" loading="lazy"></div>';
+  // Echte mini-weergave van het document: het bestand zelf, verkleind in een aanraak-doof iframe.
+  if(f.link) return '<div class="thumb'+(klein?' klein':'')+'" onclick="'+open+'"><iframe class="tmini" src="'+esc(_vsrc(f.link))+'" loading="lazy" tabindex="-1" sandbox="allow-scripts" scrolling="no" aria-hidden="true"></iframe></div>';
   const n=String(f.name||'');
   const ext=(n.match(/\.(\w+)$/)||[])[1]||'doc';
-  let lbl=ext.toUpperCase();
-  if(/bijlage\s*a/i.test(n))lbl='BIJLAGE A'; else if(/bijlage\s*b/i.test(n))lbl='BIJLAGE B'; else if(/bijlage\s*c/i.test(n))lbl='BIJLAGE C'; else if(/pitch/i.test(n))lbl='PITCH';
-  return '<div class="thumb'+(klein?' klein':'')+'" onclick="'+open+'"><span class="tlbl">'+esc(lbl)+'</span></div>';
+  return '<div class="thumb'+(klein?' klein':'')+'" onclick="'+open+'"><span class="tlbl">'+esc(ext.toUpperCase())+'</span></div>';
 }
 function bestandenHtml(files,p){
   if(!files||!files.length) return '<div class="leeg">Nog niets gedeeld.</div>';
