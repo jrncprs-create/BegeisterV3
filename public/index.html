@@ -577,6 +577,10 @@
   .pb-brief{margin-left:auto;background:transparent;border:1px solid color-mix(in srgb,var(--scol) 40%,var(--line));border-radius:999px;padding:6px 13px;color:var(--scol);cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-size:12.5px;white-space:nowrap;transition:background .12s}
   .pb-brief:hover{background:color-mix(in srgb,var(--scol) 14%,transparent)}
   .pb-beheerhead{display:flex;justify-content:flex-end;margin-bottom:8px}
+  /* L12b — kolommen op één bovenlijn met het klantvlakje: de briefknop zweeft op de kopregel */
+  #beheerBoardWrap{position:relative}
+  #beheerBoardWrap .pb-beheerhead{position:absolute;right:0;top:-38px;margin:0;z-index:3}
+  #beheerBoardWrap .pb-grid>.pb-colL>.pb-sec:first-child,#beheerBoardWrap .pb-grid>.pb-colR>.pb-sec:first-child{padding-top:0;border-top:none}
   .pb-kk-h{cursor:pointer}
   .pb-kk-preview{display:flex;align-items:center;gap:12px;margin:4px 0 6px}
   .pb-kk-ics{margin-left:auto;display:inline-flex;gap:4px}
@@ -675,8 +679,8 @@
   .pb-akopm .pb-akbtns{position:absolute;right:7px;top:7px;display:inline-flex;gap:6px}
   .pb-akopm .pb-akbtns .bv-del{opacity:.6;color:#b8b4ab}
   .pb-akopm .pb-akbtns .bv-del:hover{opacity:1;color:#fff}
-  .fm-ta.kz{opacity:.3} .fm-ta.kz.aan{opacity:.95;color:#8ec7a2}
-  .fm-file:hover .fm-ta.kz{opacity:.6} .fm-file:hover .fm-ta.kz.aan{opacity:1}
+  .fm-ta.kz{opacity:.65;color:#9a968c} .fm-ta.kz.aan{opacity:1;color:#5bd08a}
+  .fm-file:hover .fm-ta.kz{opacity:.9;color:#d8d5cd} .fm-file:hover .fm-ta.kz.aan{opacity:1;color:#5bd08a}
   .pb-akwie{font-size:11px;color:#8a8a8a;margin-bottom:2px} .pb-akwie b{color:var(--scol)}
   .pb-aktx{font-size:13px;line-height:1.45;color:#d8d5cd;overflow-wrap:anywhere}
   .pb-aklos{margin-top:8px} .pb-aklosh{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#8a8a8a;margin-bottom:2px}
@@ -1002,7 +1006,7 @@
   .ksub{background:transparent;border:none;color:var(--mut2);font-size:13px;padding:2px 0;width:100%;border-bottom:1px solid transparent}
   .kname:focus,.ksub:focus,.kclient .kname:focus{outline:none;background:transparent;border:none;border-bottom:1px solid var(--line);box-shadow:none}
   .kname::placeholder,.ksub::placeholder{color:var(--mut2)}
-  .kname-btn{background:transparent;border:none;color:var(--s1);font-size:16px;font-weight:var(--fw-nadruk);padding:3px 0;flex:0 1 auto;min-width:0;text-align:left;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .kname-btn{background:transparent;border:none;color:var(--ccol,var(--s1));font-size:16px;font-weight:var(--fw-nadruk);padding:3px 0;flex:0 1 auto;min-width:0;text-align:left;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .ksub-btn{background:transparent;border:none;color:var(--s1);font-size:13px;padding:2px 0;flex:0 1 auto;min-width:0;text-align:left;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .kname-btn:hover,.ksub-btn:hover{color:var(--ccol)}
   .kgroup:hover .kname-btn,.kgroup.kactive .kname-btn{color:var(--ccol)}
@@ -2492,7 +2496,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v273</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v274</span>
       <!-- V244: loep verhuisd naar het hoofdmenu (waar Bestanden/Contacten stonden). -->
       <!-- V242: Dagoverzicht voorlopig uit beeld (afgesproken 16 juli) — openDayOverview en de overlay blijven in de code staan. -->
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
@@ -3436,6 +3440,8 @@ function chipTip(x){const di=dueInfo(x.it.due);return (escapeHtml(x.it.t)+' — 
 const RAILVIEWS=['beheer','financien','contacten','archief','files','postvak'];
 function openPlanning(){ const n=document.getElementById('nav'); if(n)n.classList.remove('open'); setView(isDesk3()?'taken':'wachter'); }
 function setView(v){
+  // Klik op "Klanten" in het menu = alle klanten tonen (kiezer open, in klantkleur).
+  try{ if(v==='beheer'&&typeof _kiezerUit!=='undefined') _kiezerUit=true; }catch(_){}
   // Bronnen is geen pagina meer: het is het Archief-tabblad van het Postvak In.
   if(v==='bronnen'){ _pvTab='archief'; v='postvak'; }
   // Sluit zwevende overlays zodat ze niet in een kolom blijven hangen bij menu-wissel
