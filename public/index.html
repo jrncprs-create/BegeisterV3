@@ -2487,7 +2487,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v268</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v269</span>
       <!-- V244: loep verhuisd naar het hoofdmenu (waar Bestanden/Contacten stonden). -->
       <!-- V242: Dagoverzicht voorlopig uit beeld (afgesproken 16 juli) — openDayOverview en de overlay blijven in de code staan. -->
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
@@ -7832,13 +7832,13 @@ function _akkoordSectie(p){
   const perDoc={}, los=[];
   cmts.forEach(c=>{ const s=String(c.sectie||''); if(s.startsWith('doc:')) (perDoc[s.slice(4)]=perDoc[s.slice(4)]||[]).push(c); else los.push(c); });
   const _d=s=>new Date(s).toLocaleDateString('nl-NL',{day:'numeric',month:'short'});
-  const opmRij=c=>`<div class="pb-akopm"><div class="pb-akwie"><b>${esc(c.author||'')}</b> · ${_d(c.created_at)}${c.van_klant?'':' · team'}</div><div class="pb-aktx">${esc(c.body||'')}</div><span class="pb-akbtns">${c.van_klant?`<button class="bv-del" onclick="akAntwoord('${esc(String(c.sectie||'algemeen'))}')" title="Beantwoorden — de klant ziet het antwoord in het portaal">${_tIc('<path d="M9 14l-4 -4l4 -4"/><path d="M5 10h11a4 4 0 0 1 4 4v4"/>',13,1.6)}</button>`:''}<button class="bv-del" onclick="akOpmEdit('${c.id}')" title="Bewerken">${_tIc('<path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4"/><path d="M13.5 6.5l4 4"/>',13,1.6)}</button><button class="bv-del" onclick="akOpmDel('${c.id}')" title="Verwijderen">${_tIc('<path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/>',13,1.6)}</button></span></div>`;
+  const opmRij=c=>`<div class="pb-akopm"><div class="pb-akwie"><b>${escapeHtml(c.author||'')}</b> · ${_d(c.created_at)}${c.van_klant?'':' · team'}</div><div class="pb-aktx">${escapeHtml(c.body||'')}</div><span class="pb-akbtns">${c.van_klant?`<button class="bv-del" onclick="akAntwoord('${escapeHtml(String(c.sectie||'algemeen'))}')" title="Beantwoorden — de klant ziet het antwoord in het portaal">${_tIc('<path d="M9 14l-4 -4l4 -4"/><path d="M5 10h11a4 4 0 0 1 4 4v4"/>',13,1.6)}</button>`:''}<button class="bv-del" onclick="akOpmEdit('${c.id}')" title="Bewerken">${_tIc('<path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4"/><path d="M13.5 6.5l4 4"/>',13,1.6)}</button><button class="bv-del" onclick="akOpmDel('${c.id}')" title="Verwijderen">${_tIc('<path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/>',13,1.6)}</button></span></div>`;
   let binnen='';
   if(docs.length) binnen+=docs.map(f=>{
     const st=f.akkoord_op
-      ?`<span class="pb-akok">${_tIc('<path d="M5 12l5 5l10 -10"/>',13,2)} akkoord · ${esc(f.akkoord_door||'klant')} · ${_d(f.akkoord_op)}</span>`
+      ?`<span class="pb-akok">${_tIc('<path d="M5 12l5 5l10 -10"/>',13,2)} akkoord · ${escapeHtml(f.akkoord_door||'klant')} · ${_d(f.akkoord_op)}</span>`
       :`<button class="pb-akwacht" onclick="taToggle('${f.id}')" title="Wacht op de klant — klik om terug te trekken">${_tIc('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>',12,1.7)} wacht op klant</button>`;
-    return `<div class="pb-akdoc"><div class="pb-akrij"><button class="pb-aknaam" onclick="openFileViewer('${f.id}')" title="Bekijken">${esc(f.name||'document')}</button>${st}</div>${(perDoc[String(f.id)]||[]).map(opmRij).join('')}</div>`;
+    return `<div class="pb-akdoc"><div class="pb-akrij"><button class="pb-aknaam" onclick="openFileViewer('${f.id}')" title="Bekijken">${escapeHtml(f.name||'document')}</button>${st}</div>${(perDoc[String(f.id)]||[]).map(opmRij).join('')}</div>`;
   }).join('');
   if(los.length) binnen+=`<div class="pb-aklos"><div class="pb-aklosh">Opmerkingen in het portaal</div>${los.map(opmRij).join('')}</div>`;
   if(!binnen) binnen='<div class="pb-empty">Nog niets ter akkoord en geen vragen van de klant. Zet een bestand ter akkoord via het vinkje in Bestanden.</div>';
