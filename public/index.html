@@ -2562,7 +2562,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v289</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v290</span>
       <!-- V244: loep verhuisd naar het hoofdmenu (waar Bestanden/Contacten stonden). -->
       <!-- V242: Dagoverzicht voorlopig uit beeld (afgesproken 16 juli) — openDayOverview en de overlay blijven in de code staan. -->
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
@@ -7563,7 +7563,10 @@ function renderProjecten(){
     const rows=projs.filter(p=>p.project).map(p=>{
       const on=String(p.id)===String(_pbPid);
       const brief=on?`<button class="kbrief" id="briefInline" style="--scol:${ccol}" onclick="event.stopPropagation();openBriefing()" title="Laat de AI dit project op een rijtje zetten en op de juiste plek">${_tIc(_TABCHAN.asterisk,14,1.7)}<span class="kbrief-tx">op een rijtje</span></button>`:'';
-      return `<div class="kli kproj kproj-kiezer${on?' on':''}"><button class="ksub-btn"${on?' style="color:var(--ccol);font-weight:var(--fw-nadruk,500)"':''} onclick="selectBeheerProj('${p.id}')">${escapeHtml(p.project)}</button>${brief}</div>`;
+      const naam=(_kEdit===p.id)
+        ? `<input class="ksub kedit-input" value="${escapeHtml(p.project||'')}" onblur="kProjSave('${p.id}',this.value)" onkeydown="if(event.key==='Enter')this.blur();else if(event.key==='Escape')kEditCancel()" />`
+        : `<button class="ksub-btn"${on?' style="color:var(--ccol);font-weight:var(--fw-nadruk,500)"':''} onclick="selectBeheerProj('${p.id}')">${escapeHtml(p.project)}</button><button class="kicon kpen" onclick="event.stopPropagation();kEditStart('${p.id}')" title="Projectnaam wijzigen">${_penIc}</button>`;
+      return `<div class="kli kproj kproj-kiezer${on?' on':''}">${naam}${brief}</div>`;
     }).join('');
     const kiezer=`<div class="kgroup kactive kiezerblok" style="--ccol:${ccol}">
       <div class="kclient"><button class="kbadge kbadge-btn" style="background:${ccol}" onclick="event.stopPropagation();openColorPicker(event,'proj','${_pbPid}')" title="Klik om de kleur aan te passen">${escapeHtml(initial)}</button>
