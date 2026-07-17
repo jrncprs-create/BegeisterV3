@@ -726,7 +726,7 @@
   .pb-aktx{font-size:13px;line-height:1.45;color:#d8d5cd;overflow-wrap:anywhere}
   .pb-aklos{margin-top:8px} .pb-aklosh{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#8a8a8a;margin-bottom:2px}
   .pb-feit{display:flex;align-items:flex-start;gap:8px;padding:6px 0}
-  .pb-feittx{flex:1;font-size:13.5px;line-height:1.45;color:var(--scol);cursor:pointer}
+  .pb-feittx{flex:1;font-size:13.5px;line-height:1.45;color:var(--scol);cursor:pointer;white-space:pre-wrap;overflow-wrap:anywhere}
   .pb-feitarea{flex:1;min-height:0;height:auto;line-height:1.45;overflow:hidden;resize:none;font-size:13.5px;background:rgba(255,255,255,.05);border:1px solid color-mix(in srgb,var(--scol) 30%,transparent);border-radius:8px;color:var(--scol);font-family:inherit;padding:7px 9px;outline:none}
   .pb-feitarea:focus{border-color:color-mix(in srgb,var(--scol) 55%,transparent)}
   .pb-feittx:hover{color:#fff}
@@ -1180,7 +1180,7 @@
     content:"";position:absolute;left:5.5px;top:2px;width:4px;height:8.5px;
     border:solid #0c0c0c;border-width:0 2px 2px 0;transform:rotate(45deg);
   }
-  .pb-tx{flex:1;font-size:14px}
+  .pb-tx{flex:1;font-size:14px;white-space:pre-wrap;overflow-wrap:anywhere}
   .pb-tx.done{text-decoration:line-through;opacity:.55}
   .pb-del{background:transparent;border:none;cursor:pointer;font-size:17px;line-height:0;padding:0 3px;opacity:.6;display:inline-flex;align-items:center}
   .pb-del:hover{opacity:1}
@@ -2562,7 +2562,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v286</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v287</span>
       <!-- V244: loep verhuisd naar het hoofdmenu (waar Bestanden/Contacten stonden). -->
       <!-- V242: Dagoverzicht voorlopig uit beeld (afgesproken 16 juli) — openDayOverview en de overlay blijven in de code staan. -->
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
