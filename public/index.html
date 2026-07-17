@@ -670,8 +670,10 @@
   .pb-akwacht{flex:none;display:inline-flex;align-items:center;gap:5px;font-size:12px;color:#e8b34c;background:none;border:none;padding:0;cursor:pointer;font-family:inherit}
   .pb-akwacht:hover{text-decoration:underline}
   .pb-akopm{position:relative;margin:6px 0 2px 12px;padding:7px 9px;background:rgba(255,255,255,.04);border-radius:8px}
-  .pb-akopm .pb-akbtns{position:absolute;right:7px;top:7px;display:none;gap:4px}
-  .pb-akopm:hover .pb-akbtns{display:inline-flex}
+  .pb-akopm .pb-akbtns{position:absolute;right:7px;top:7px;display:inline-flex;gap:4px;opacity:.45;transition:opacity .15s}
+  .pb-akopm:hover .pb-akbtns{opacity:1}
+  .fm-ta.kz{opacity:.3} .fm-ta.kz.aan{opacity:.95;color:#8ec7a2}
+  .fm-file:hover .fm-ta.kz{opacity:.6} .fm-file:hover .fm-ta.kz.aan{opacity:1}
   .pb-akwie{font-size:11px;color:#8a8a8a;margin-bottom:2px} .pb-akwie b{color:var(--scol)}
   .pb-aktx{font-size:13px;line-height:1.45;color:#d8d5cd;overflow-wrap:anywhere}
   .pb-aklos{margin-top:8px} .pb-aklosh{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#8a8a8a;margin-bottom:2px}
@@ -2487,7 +2489,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v269</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v270</span>
       <!-- V244: loep verhuisd naar het hoofdmenu (waar Bestanden/Contacten stonden). -->
       <!-- V242: Dagoverzicht voorlopig uit beeld (afgesproken 16 juli) — openDayOverview en de overlay blijven in de code staan. -->
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
@@ -7295,7 +7297,7 @@ function _searchGlyph(){return '<svg viewBox="0 0 24 24" width="16" height="16" 
    Deze twee helpers vertalen een wijziging naar de juiste tabel en kolomnamen,
    zodat de rest van de pagina zich er niets van hoeft aan te trekken. */
 function _fileById(fid){ return (state.files||[]).find(x=>String(x.id)===String(fid))||null; }
-const _DOC_KOLOM={ name:'filename', icon:'category', owner_id:'project_id', summary:'summary', visible_to_client:'visible_to_client', is_voorstel:'is_voorstel', voorstel_soort:'voorstel_soort', verstuurd_op:'verstuurd_op', fin_status:'fin_status', ter_akkoord:'ter_akkoord', akkoord_op:'akkoord_op', akkoord_door:'akkoord_door' };
+const _DOC_KOLOM={ name:'filename', icon:'category', owner_id:'project_id', summary:'summary', visible_to_client:'visible_to_client', is_voorstel:'is_voorstel', voorstel_soort:'voorstel_soort', verstuurd_op:'verstuurd_op', fin_status:'fin_status', ter_akkoord:'ter_akkoord', akkoord_op:'akkoord_op', akkoord_door:'akkoord_door', sort_order:'sort_order' };
 async function _fileUpdate(fOrId, patch){
   const f=(typeof fOrId==='string')?_fileById(fOrId):fOrId;
   if(!f) return false;
@@ -7491,7 +7493,8 @@ function _fmBuildTree(q,alleenKlant){
         const isVast=pr._vast && _TREE_MAPPEN.includes(cat);
         if(!fl.length && !(isVast && !q)) return;
         const ckey=c+'|'+pid+'|'+cat, copen=q?true:_fmOpen.has(ckey);
-        const files=fl.map(f=>`<div class="fm-file" draggable="true" data-fid="${f.id}" ondragstart="fmDragStart(event,'${f.id}')" onclick="fmFileClick('${f.id}')"><span class="fm-ic" style="color:${g.col}">${_fileGlyph(f.name||'')}</span><span class="fm-name">${escapeHtml(f.name||'bestand')}</span>${_taBadge(f)}<button class="fm-edit" style="margin-left:auto" data-kind="file" data-fid="${f.id}" onclick="event.stopPropagation();fmRename(this)" title="Naam wijzigen">${_penGlyph()}</button><button class="fm-edit fm-del" data-fid="${f.id}" onclick="event.stopPropagation();deleteFile('${f.id}')" title="Verwijderen">${_tIc('<path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M7 7l1 13h8l1-13"/>',15,1.5)}</button></div>`).join('');
+        const flSorted=fl.slice().sort((a,b)=>(((a.sort_order==null?1e9:a.sort_order)-(b.sort_order==null?1e9:b.sort_order))||String(a.name||'').localeCompare(String(b.name||''))));
+        const files=flSorted.map(f=>`<div class="fm-file" draggable="true" data-fid="${f.id}" ondragstart="fmDragStart(event,'${f.id}')" onclick="fmFileClick('${f.id}')"><span class="fm-ic" style="color:${g.col}">${_fileGlyph(f.name||'')}</span><span class="fm-name">${escapeHtml(f.name||'bestand')}</span>${_kzFile(f)}${_taBadge(f)}<button class="fm-edit fm-sort" style="margin-left:auto" data-fid="${f.id}" onclick="event.stopPropagation();fmMoveFile('${f.id}',-1)" title="Omhoog in de volgorde (ook in het portaal)">${_tIc('<path d="M12 19V5"/><path d="M6 11l6 -6l6 6"/>',13,1.6)}</button><button class="fm-edit fm-sort" data-fid="${f.id}" onclick="event.stopPropagation();fmMoveFile('${f.id}',1)" title="Omlaag in de volgorde (ook in het portaal)">${_tIc('<path d="M12 5v14"/><path d="M18 13l-6 6l-6 -6"/>',13,1.6)}</button><button class="fm-edit" data-kind="file" data-fid="${f.id}" onclick="event.stopPropagation();fmRename(this)" title="Naam wijzigen">${_penGlyph()}</button><button class="fm-edit fm-del" data-fid="${f.id}" onclick="event.stopPropagation();deleteFile('${f.id}')" title="Verwijderen">${_tIc('<path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M7 7l1 13h8l1-13"/>',15,1.5)}</button></div>`).join('');
         catHtml.push(`<div class="fm-row fm-catrow${copen?' open':''}" draggable="true" ondragstart="fmFolderDragStart(event,'cat',this)" data-drop="1" data-client="${escapeHtml(c)}" data-pid="${escapeHtml(pid)}" data-cat="${escapeHtml(cat)}" ondragover="fmDragOver(event)" ondragleave="fmDragLeave(event)" ondrop="fmDrop(event)" onclick="fmToggle('${_fk(ckey)}')"><span class="fm-tw">▸</span><span class="fm-ic" style="color:${g.col}">${_folderGlyph()}</span><span class="fm-name">${escapeHtml(cat)}</span><span class="fm-cnt">${fl.length}</span><button class="fm-edit" data-kind="cat" data-client="${escapeHtml(c)}" data-pid="${escapeHtml(pid)}" data-cat="${escapeHtml(cat)}" onclick="event.stopPropagation();fmRename(this)" title="Naam wijzigen">${_penGlyph()}</button><button class="fm-edit fm-del" data-kind="cat" data-client="${escapeHtml(c)}" data-pid="${escapeHtml(pid)}" data-cat="${escapeHtml(cat)}" onclick="event.stopPropagation();fmDelete(this)" title="Verwijderen">${_trashGlyph()}</button></div><div class="fm-kids"${copen?'':' style="display:none"'}>${files}</div>`);
       });
       if(!catHtml.length) return;
@@ -7805,6 +7808,26 @@ async function fmSyncDropbox(){
   if(btn){ btn.disabled=false; btn.textContent='Sync naar Dropbox'; }
 }
 let _fmPrevId=null;
+// L11d — zichtbaar-voor-de-klant per bestand (poppetje), plus sorteervolgorde met pijltjes.
+function _kzFile(f){ return `<button class="fm-ta kz${f.visible_to_client?' aan':''}" onclick="event.stopPropagation();fmToggleKlant('${f.id}')" title="${f.visible_to_client?'Zichtbaar voor de klant — klik om te verbergen':'Toon dit bestand in het klantportaal'}">${_KLANT_IC}</button>`; }
+async function fmToggleKlant(fid){
+  const f=_fileById(fid); if(!f)return;
+  f.visible_to_client=!f.visible_to_client;
+  await _fileUpdate(f,{visible_to_client:f.visible_to_client});
+  toonToast(f.visible_to_client?('“'+(f.name||'bestand')+'” staat nu in het klantportaal.'):'Verborgen voor de klant.');
+  try{_renderFmTree();}catch(_){} try{ if(_pbPid)_renderProjBoard(); }catch(_){}
+}
+async function fmMoveFile(fid,richting){
+  const f=_fileById(fid); if(!f)return;
+  const zelfde=(state.files||[]).filter(x=>x.owner_type===f.owner_type&&String(x.owner_id)===String(f.owner_id)&&(_cat(x)||'')===(_cat(f)||''));
+  zelfde.sort((a,b)=>(((a.sort_order==null?1e9:a.sort_order)-(b.sort_order==null?1e9:b.sort_order))||String(a.name||'').localeCompare(String(b.name||''))));
+  const i=zelfde.findIndex(x=>String(x.id)===String(fid)); const j=i+richting;
+  if(i<0||j<0||j>=zelfde.length)return;
+  const arr=zelfde.slice(); const [el]=arr.splice(i,1); arr.splice(j,0,el);
+  arr.forEach((x,k)=>{ x.sort_order=k; });
+  await Promise.all(arr.map(x=>_fileUpdate(x,{sort_order:x.sort_order})));
+  try{_renderFmTree();}catch(_){} try{ if(_pbPid)_renderProjBoard(); }catch(_){}
+}
 // L11 — akkoord per document: ⏳ = wacht op klant, ✓ = getekend, leeg = klik om ter akkoord te vragen.
 function _taBadge(f){
   if(f.akkoord_op){ const d=new Date(f.akkoord_op).toLocaleDateString('nl-NL',{day:'numeric',month:'short'}); return `<span class="fm-ta ok" title="Akkoord door ${escapeHtml(f.akkoord_door||'klant')} · ${d}">${_tIc('<path d="M5 12l5 5l10 -10"/>',13,2)}</span>`; }
@@ -8409,6 +8432,7 @@ async function sbLoad(){
       bytes:d.size||null, summary:d.summary||null,
       is_voorstel:!!d.is_voorstel, voorstel_soort:d.voorstel_soort||null, visible_to_client:!!d.visible_to_client, verstuurd_op:d.verstuurd_op||null, fin_status:d.fin_status||null,
       ter_akkoord:!!d.ter_akkoord, akkoord_op:d.akkoord_op||null, akkoord_door:d.akkoord_door||null,
+      sort_order:(d.sort_order==null?null:d.sort_order),
       storage_path:d.storage_path||'', created_at:d.created_at }));
   const projects=p.data||[], items=i.data||[], sources=s.data||[], atts=a.data||[];
   state.contacts = (c && c.data) ? c.data : [];
