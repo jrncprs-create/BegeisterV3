@@ -2562,7 +2562,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v287</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v288</span>
       <!-- V244: loep verhuisd naar het hoofdmenu (waar Bestanden/Contacten stonden). -->
       <!-- V242: Dagoverzicht voorlopig uit beeld (afgesproken 16 juli) — openDayOverview en de overlay blijven in de code staan. -->
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
@@ -6826,10 +6826,11 @@ async function kkLogin(client){
     <h3 class="art-titel">Klant-login · ${escapeHtml(client)}</h3>
     <div class="kkl-status" id="kkl_status">Laden…</div>
     <label class="art-lbl">E-mailadres (inlognaam)</label>
-    <input id="kkl_email" class="art-in" type="email" placeholder="klant@voorbeeld.nl" autocomplete="off">
+    <input id="kkl_email" class="art-in" type="email" placeholder="klant@voorbeeld.nl" list="kkl_maildl" autocomplete="off">
+    <datalist id="kkl_maildl">${_kklMailOpties(client)}</datalist>
     <label class="art-lbl">Wachtwoord <span class="art-hint">min. 8 tekens — laat leeg om alleen de e-mail te wijzigen</span></label>
     <div class="kkl-pwrow"><input id="kkl_pw" class="art-in" type="text" placeholder="nieuw wachtwoord" autocomplete="off"><button class="pb-kk-btn" type="button" onclick="const i=document.getElementById('kkl_pw');i.value=_kklGenPw()">genereer</button></div>
-    <div class="lt-voet"><button class="fv-btn ghost" onclick="document.getElementById('kkLoginOv').remove()">Sluiten</button><button class="fv-btn bk-ok" onclick="kkLoginSave('${_qs(client)}',this)">Opslaan</button></div></div>`;
+    <div class="lt-voet"><button class="fv-btn ghost" onclick="document.getElementById('kkLoginOv').remove()">Sluiten</button><button class="fv-btn" onclick="kkLoginMail('${_qs(client)}')" title="Opent een kant-en-klare mail in je eigen mailprogramma">Verzend naar klant</button><button class="fv-btn bk-ok" onclick="kkLoginSave('${_qs(client)}',this)">Opslaan</button></div></div>`;
   document.body.appendChild(ov); requestAnimationFrame(()=>ov.classList.add('open'));
   ov.addEventListener('click',e=>{ if(e.target===ov)ov.remove(); });
   try{ const d=await _beheerApi('login_get',{client_name:client}); const st=document.getElementById('kkl_status'); const em=document.getElementById('kkl_email');
@@ -6838,6 +6839,37 @@ async function kkLogin(client){
   }catch(e){ const st=document.getElementById('kkl_status'); if(st)st.textContent='Kon de login niet laden: '+(e.message||e); }
 }
 function _kklGenPw(){ const a='abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let s=''; for(let i=0;i<12;i++)s+=a[Math.floor(Math.random()*a.length)]; return s; }
+// E-mailsuggesties: de contacten van déze klant die een adres hebben (naam als label).
+function _kklMailOpties(client){
+  const seen=new Set();
+  return (state.contacts||[]).filter(c=>{ try{ return _contactClientOf(c)===client && c.email; }catch(_){ return false; } })
+    .filter(c=>{ const e=(c.email||'').toLowerCase(); if(seen.has(e))return false; seen.add(e); return true; })
+    .map(c=>`<option value="${escapeHtml(c.email)}">${escapeHtml(c.name||'')}</option>`).join('');
+}
+// Verzend naar klant (optie A): opent een kant-en-klare welkomstmail in je eigen mailprogramma.
+function kkLoginMail(client){
+  const email=(document.getElementById('kkl_email').value||'').trim();
+  const pw=(document.getElementById('kkl_pw').value||'').trim();
+  if(!email){ toonToast('Vul eerst het e-mailadres van de klant in.','fout'); return; }
+  const portaal='https://app.begeister.nl/portaal';
+  const wieOnd=(who&&who!=='Iemand')?who:'Jeroen';
+  const R='\r\n';
+  const regels=[
+    'Beste '+client+',','',
+    'We hebben een eigen klantportaal voor je klaargezet. Daar volg je de voortgang, bekijk je documenten en geef je akkoord — alles op één plek.','',
+    'Inloggen:',
+    'Adres: '+portaal,
+    'E-mail: '+email,
+    (pw?('Wachtwoord: '+pw):'Wachtwoord: (zoals eerder met je gedeeld)'),'',
+    'Je kunt het wachtwoord na inloggen zelf wijzigen. Vragen? Reageer gewoon op deze mail.','',
+    'Groet,',
+    wieOnd+' — Begeister'
+  ];
+  const subject='Je klantportaal bij Begeister';
+  const url='mailto:'+encodeURIComponent(email)+'?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(regels.join(R));
+  window.location.href=url;
+  toonToast('Mail geopend in je mailprogramma — controleer en verstuur.');
+}
 async function kkLoginSave(client,btn){
   const email=(document.getElementById('kkl_email').value||'').trim();
   const pw=(document.getElementById('kkl_pw').value||'');
