@@ -679,6 +679,13 @@
   #kMenu .km-leeg{padding:8px 11px;font-size:13px;color:#8f8a80}
   #kMenu .km-nieuw{display:block;width:100%;background:none;border:none;border-top:1px solid rgba(255,255,255,.1);color:#8f8a80;font-family:inherit;font-size:12.5px;text-align:left;padding:8px 11px;margin-top:5px;cursor:pointer;border-radius:0}
   #kMenu .km-nieuw:hover{color:#ddd}
+  .kproj-inline{font-size:13px;color:#d8d5cd;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1 1 auto;min-width:0;margin-left:4px}
+  /* mobiel: klantenmenu als schermvullende navigatie */
+  #kMenu.km-full{left:0!important;top:0!important;right:0;bottom:0;width:100vw;height:100dvh;background:rgba(8,8,8,.97);padding:14px;flex-direction:column;gap:0;overflow:auto}
+  #kMenu.km-full .km-p1,#kMenu.km-full .km-p2{width:100%;min-width:0;max-height:none;border:none;background:transparent;box-shadow:none;padding:4px 2px}
+  #kMenu.km-full .km-k,#kMenu.km-full .km-pr{font-size:17px;padding:13px 12px}
+  #kMenu.km-full .km-x{position:absolute;right:12px;top:10px;background:none;border:none;color:#d8d5cd;font-size:22px;padding:8px;cursor:pointer;z-index:2}
+  #kMenu.km-full .km-terug{display:block;width:100%;background:none;border:none;color:#8f8a80;font-family:inherit;font-size:14px;padding:12px;text-align:left;cursor:pointer}
   .pb-railsecs{margin-top:14px;padding:0 2px}
   .pb-railsecs .pb-sec:first-child{border-top:none}
   .pb-akdoc{padding:7px 0;border-bottom:1px solid rgba(255,255,255,.06)} .pb-akdoc:last-of-type{border-bottom:none}
@@ -2509,7 +2516,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v277</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v278</span>
       <!-- V244: loep verhuisd naar het hoofdmenu (waar Bestanden/Contacten stonden). -->
       <!-- V242: Dagoverzicht voorlopig uit beeld (afgesproken 16 juli) — openDayOverview en de overlay blijven in de code staan. -->
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
@@ -7342,13 +7349,14 @@ function renderProjecten(){
     const ap=projById(_pbPid); const client=ap?(ap.client||''):'';
     const projs=byClient[client]||[]; const ccol=(projs[0]&&projs[0].color)||'#888';
     const initial=(String(client).trim()[0]||'?').toUpperCase();
-    const rows=projs.map(p=>{
-      const on=String(p.id)===String(_pbPid);
-      return `<div class="kli kproj${on?' on':''}"><button class="kdot" style="background:${p.color}" onclick="event.stopPropagation();openColorPicker(event,'proj','${p.id}')" title="Kleur"></button><button class="ksub-btn" onclick="selectBeheerProj('${p.id}')">${escapeHtml(p.project||'Project / event')}</button></div>`;
+    // Actieve project naast de klantnaam; alleen de óverige projecten als rijtjes eronder.
+    const rows=projs.filter(p=>String(p.id)!==String(_pbPid)).map(p=>{
+      return `<div class="kli kproj"><button class="kdot" style="background:${p.color}" onclick="event.stopPropagation();openColorPicker(event,'proj','${p.id}')" title="Kleur"></button><button class="ksub-btn" onclick="selectBeheerProj('${p.id}')">${escapeHtml(p.project||'Project / event')}</button></div>`;
     }).join('');
     const kiezer=`<div class="kgroup kactive" style="--ccol:${ccol}">
       <div class="kclient"><span class="kbadge" style="background:${ccol}">${escapeHtml(initial)}</span>
-        <span class="kname-btn" style="cursor:default">${escapeHtml(client||'—')}</span>
+        <span class="kname-btn" style="cursor:default;flex:0 1 auto">${escapeHtml(client||'—')}</span>
+        ${ap&&ap.project?`<span class="kproj-inline" title="${escapeHtml(ap.project)}"><span class="kdot" style="background:${ap.color||ccol};width:8px;height:8px;display:inline-block;border-radius:50%;margin-right:6px"></span>${escapeHtml(ap.project)}</span>`:''}
         <span class="kspring"></span>
         <button class="kicon" onclick="kWissel(event)" title="Andere klant kiezen (klantenmenu)">${_tIc('<path d="M6 9l6 6l6 -6"/>',16,1.8)}</button>
         <button class="kicon kadd" onclick="event.stopPropagation();addProjectTo('${esc(client)}')" title="Project toevoegen"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 5v14M5 12h14"/></svg></button>
@@ -7392,15 +7400,20 @@ function _kMenuBouw(x,y){
     const col=(byClient[c][0]&&byClient[c][0].color)||'#888';
     return `<button class="km-k" data-k="${escapeHtml(c)}" style="--kc:${col}"><span>${escapeHtml(c||'—')}</span><span class="km-ch">›</span></button>`;
   }).join('')+`<button class="km-nieuw" onclick="_kMenuDicht();newClientFromHeader()">+ nieuwe klant</button>`+'</div><div class="km-p2"></div>';
+  const vol=!isDesk3();
+  if(vol){ m.classList.add('km-full'); m.insertAdjacentHTML('afterbegin','<button class="km-x" onclick="_kMenuDicht()" title="Sluiten">✕</button>'); }
   document.body.appendChild(m);
-  const p2=m.querySelector('.km-p2');
+  const p1=m.querySelector('.km-p1'), p2=m.querySelector('.km-p2');
   m.querySelectorAll('.km-k').forEach(b=>{
     const open=()=>{ m.querySelectorAll('.km-k').forEach(z=>z.classList.toggle('on',z===b));
       const c=b.dataset.k; const projs=byClient[c]||[];
-      p2.innerHTML=(projs.filter(p=>p.project).map(p=>`<button class="km-pr${String(p.id)===String(_pbPid)?' on':''}" onclick="kMenuKies('${p.id}')"><span class="km-dot" style="background:${p.color||'#888'}"></span><span>${escapeHtml(p.project)}</span></button>`).join('')||'<div class="km-leeg">Nog geen projecten.</div>')
+      p2.innerHTML=(vol?`<button class="km-terug">‹ ${escapeHtml(c||'terug')}</button>`:'')
+        +(projs.filter(p=>p.project).map(p=>`<button class="km-pr${String(p.id)===String(_pbPid)?' on':''}" onclick="kMenuKies('${p.id}')"><span class="km-dot" style="background:${p.color||'#888'}"></span><span>${escapeHtml(p.project)}</span></button>`).join('')||'<div class="km-leeg">Nog geen projecten.</div>')
         +`<button class="km-nieuw" onclick="_kMenuDicht();addProjectTo('${esq(c)}')">+ nieuw project</button>`;
-      p2.style.display='block'; };
-    b.onmouseenter=open; b.onclick=e=>{ e.stopPropagation(); open(); };
+      p2.style.display='block';
+      if(vol){ p1.style.display='none'; const tb=p2.querySelector('.km-terug'); if(tb)tb.onclick=e=>{ e.stopPropagation(); p2.style.display='none'; p1.style.display='block'; }; } };
+    if(!vol) b.onmouseenter=open;
+    b.onclick=e=>{ e.stopPropagation(); open(); };
   });
   m.onclick=e=>e.stopPropagation();
   setTimeout(()=>{ document.addEventListener('click', _kMenuDicht, {once:true}); },0);
