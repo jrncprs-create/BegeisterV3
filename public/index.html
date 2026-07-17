@@ -635,6 +635,14 @@
   .ppp-dot{width:6px;height:6px;border-radius:50%;background:#c9c9cd;margin-top:8px;flex:0 0 auto}
   .ppp-leeg{color:#8a8a90;font-size:14px;line-height:1.6}
   .brief-modal{width:600px;max-width:94vw;max-height:86vh;display:flex;flex-direction:column}
+  /* L13 — inline briefing-uitklap in de middenkolom (geen modal) */
+  #briefHost:empty{display:none}
+  .brief-inline{background:color-mix(in srgb,var(--scol) 6%,transparent);border:1px solid color-mix(in srgb,var(--scol) 22%,transparent);border-radius:12px;padding:14px 16px;margin:0 0 16px;animation:briefIn .28s cubic-bezier(.16,1,.3,1)}
+  @keyframes briefIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+  .brief-inline .brief-kop{margin:0 0 12px}
+  .brief-inline .brief-kop h3{font-size:13px;letter-spacing:1.2px;text-transform:uppercase;color:var(--scol);margin:0}
+  .brief-collapse{background:none;border:none;color:color-mix(in srgb,var(--scol) 70%,transparent);cursor:pointer;padding:2px;display:inline-flex}
+  .brief-collapse:hover{color:var(--scol)}
   .brief-kop{display:flex;align-items:center;gap:12px;margin:0 0 16px}
   .brief-kop h3{margin:0;font-size:19px}
   .brief-badge{width:30px;height:30px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;color:#0e0d10;font-weight:var(--fw-nadruk);flex:0 0 auto}
@@ -706,6 +714,8 @@
   .pb-aklos{margin-top:8px} .pb-aklosh{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#8a8a8a;margin-bottom:2px}
   .pb-feit{display:flex;align-items:flex-start;gap:8px;padding:6px 0}
   .pb-feittx{flex:1;font-size:13.5px;line-height:1.45;color:var(--scol);cursor:pointer}
+  .pb-feitarea{flex:1;min-height:0;height:auto;line-height:1.45;overflow:hidden;resize:none;font-size:13.5px;background:rgba(255,255,255,.05);border:1px solid color-mix(in srgb,var(--scol) 30%,transparent);border-radius:8px;color:var(--scol);font-family:inherit;padding:7px 9px;outline:none}
+  .pb-feitarea:focus{border-color:color-mix(in srgb,var(--scol) 55%,transparent)}
   .pb-feittx:hover{color:#fff}
   .pb-feitbron{flex:0 0 auto;opacity:.55}
   .pb-feit:hover .pb-feitbron{opacity:.9}
@@ -1764,6 +1774,14 @@
   .overlay.open .modal{transform:translateY(0)}
   .modal h3{margin:0 0 22px;font-size:18px;font-weight:var(--fw-nadruk);letter-spacing:.2px;padding-right:34px}
   /* uiPrompt-kop: badge + titel + sluitkruis op één regel, netjes uitgelijnd */
+  /* Uniforme popup-stijl: witte tekst op een blurred, donkere achtergrond — overal gelijk. */
+  .overlay.uip .modal{background:rgba(14,14,14,.55);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px)}
+  .overlay.uip .modal,.overlay.uip .modal h3,.overlay.uip .modal .uip-input,.overlay.uip .modal .btn{color:#f4f1ea}
+  .overlay.uip .uip-input{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16)}
+  .overlay.uip .uip-input:focus{border-color:rgba(255,255,255,.4)}
+  .overlay.uip .uip-input::placeholder{color:rgba(244,241,234,.45)}
+  .overlay.uip .btn.ghost{color:rgba(244,241,234,.7)}
+  .overlay.uip .modal-close{color:rgba(244,241,234,.7)}
   .uip-head{display:flex;align-items:center;gap:12px;margin:0 0 20px;padding-right:34px;min-height:34px}
   .uip-head h3{margin:0;padding-right:0;flex:1;min-width:0;font-size:17px;line-height:1.3}
   .uip-badge{flex:0 0 auto;width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px}
@@ -2526,7 +2544,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v282</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v283</span>
       <!-- V244: loep verhuisd naar het hoofdmenu (waar Bestanden/Contacten stonden). -->
       <!-- V242: Dagoverzicht voorlopig uit beeld (afgesproken 16 juli) — openDayOverview en de overlay blijven in de code staan. -->
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
@@ -4615,7 +4633,7 @@ async function selectFinProj(pid){
 async function selectBeheerProj(pid){
   if(!isDesk3()){ return openProjectBoard(pid,'klanten'); }
   const p=projById(pid); if(!p)return; _pbPid=pid; _pbMode='klanten'; _pbTarget='beheer';
-  try{ _kiezerUit=false; }catch(_){}
+  try{ _kiezerUit=false; _briefOpen=false; _briefLast=null; }catch(_){}
   try{ const r=await sb.from('project_board').select('*').eq('project_id',pid).order('kind').order('sort').order('created_at'); _pbItems=(r&&r.data)?r.data:[]; }catch(_){ _pbItems=[]; }
   const bb=document.getElementById('view-beheerboard'); if(bb)bb.classList.remove('hidden');
   const rh=document.getElementById('view-railhint'); if(rh)rh.classList.add('hidden');
@@ -4720,7 +4738,8 @@ function _renderProjBoard(){
   const _ftList=(state.facts||[]).filter(x=>String(x.project_id||'')===String(_pbPid));
   const _ftKey='ks|feit|'+_pbPid, _ftDicht=(typeof _bvDicht!=='undefined')&&_bvDicht.has(_ftKey);
   const _kzFeit=(!_geenTraject(p.client))?('<button class="pb-kz'+(((p.portal_secties||{}).feiten)?' aan':'')+'" onclick="event.stopPropagation();pbToggleClientItem(\'sec\',\'feiten\')" title="Zichtbaar voor de klant (aan/uit)">'+_KLANT_IC+'</button>'):'';
-  const secWeten=`<div class="pb-sec"><div class="pb-h"><span>Wat we weten${_ftList.length?' · '+_ftList.length:''}</span><span class="pb-hbtns">${_kzFeit}<button class="pb-hadd" onclick="ftAdd('${_pbPid}')" title="Feit toevoegen">+</button>${_bvChev(_ftKey,_ftDicht,col)}</span></div>${_ftDicht?'':((_ftList.map(x=>`<div class="pb-feit"><span class="pb-feittx" onclick="ftEdit('${x.id}')" title="Klik om aan te passen">${esc(x.text||'')}</span>${x.source_id?`<button class="bv-bronknop pb-feitbron" onclick="openBronOverlay('${x.source_id}')" title="Bron bekijken">${_bvSrcSvg()}</button>`:''}<button class="bv-del pb-feitdel" onclick="ftDel('${x.id}')" title="Verwijderen">${_tIc('<path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/>',13,1.6)}</button></div>`).join(''))||'<div class="pb-empty">Nog geen feiten. Ze komen uit binnengekomen berichten, of voeg er zelf een toe met +.</div>')}</div>`;
+  const _ftNewRow=(_ftNew===_pbPid)?`<div class="pb-feit"><textarea class="pb-notes pb-feitarea" id="ftNewArea" rows="1" placeholder="Nieuw feit…" oninput="_omsGroei(this)" onblur="ftNewSave(this.value)" onkeydown="if(event.key==='Escape'){_ftNew=null;_renderProjBoard();}"></textarea></div>`:'';
+  const secWeten=`<div class="pb-sec"><div class="pb-h"><span>Wat we weten${_ftList.length?' · '+_ftList.length:''}</span><span class="pb-hbtns">${_kzFeit}<button class="pb-hadd" onclick="ftAdd('${_pbPid}')" title="Feit toevoegen">+</button>${_bvChev(_ftKey,_ftDicht,col)}</span></div>${_ftDicht?'':((_ftList.map(x=>`<div class="pb-feit" data-fid="${x.id}"><span class="pb-feittx" onclick="ftEditInline('${x.id}')" title="Klik om aan te passen">${esc(x.text||'')}</span>${x.source_id?`<button class="bv-bronknop pb-feitbron" onclick="openBronOverlay('${x.source_id}')" title="Bron bekijken">${_bvSrcSvg()}</button>`:''}<button class="bv-del pb-feitdel" onclick="ftDel('${x.id}')" title="Verwijderen">${_tIc('<path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/>',13,1.6)}</button></div>`).join('')+_ftNewRow)||(_ftNewRow||'<div class="pb-empty">Nog geen feiten. Ze komen uit binnengekomen berichten, of voeg er zelf een toe met +.</div>'))}</div>`;
   // Klantkant-balk (achtergrond + letterkleur voor het portaal): alleen bij klantprojecten,
   // niet in de financiën-boards. Staat boven het dossier.
   const secKlantkant=(!_geenTraject(p.client)&&_pbTarget!=='finmid'&&_pbTarget!=='finright')?_secKlantkant(p):'';
@@ -4759,7 +4778,8 @@ function _renderProjBoard(){
     const rs=document.getElementById('beheerRailSecs');
     if(rs) rs.innerHTML=`<div class="pb-inline pb-board-inline pb-railsecs" style="--scol:${col}">${secKlantkant}${secAkkoord}${secContacts}</div>`;
     const el=document.getElementById('beheerBoardWrap');
-    if(el)el.innerHTML=`<div class="pb-inline pb-board-inline" style="--scol:${col}">${_briefBtn?`<div class="pb-beheerhead">${_briefBtn}</div>`:''}<div class="pb-grid"><div class="pb-colL">${rs?'':(secKlantkant+secAkkoord)}${secFase}${secOms}${secWeten}${secWait}${secTaken}${secBestel}${secDone}</div><div class="pb-colR">${rs?'':secContacts}${secAppt}${secFiles}${secPrijs}${secNotes}</div></div></div>`;
+    if(el)el.innerHTML=`<div class="pb-inline pb-board-inline" style="--scol:${col}">${_briefBtn?`<div class="pb-beheerhead">${_briefBtn}</div>`:''}<div id="briefHost"></div><div class="pb-grid"><div class="pb-colL">${rs?'':(secKlantkant+secAkkoord)}${secFase}${secOms}${secWeten}${secWait}${secTaken}${secBestel}${secDone}</div><div class="pb-colR">${rs?'':secContacts}${secAppt}${secFiles}${secPrijs}${secNotes}</div></div></div>`;
+    if(_briefOpen&&_briefLast&&_briefLast.data){ try{ _briefRender({data:_briefLast.data, client:_briefLast.client, project:_briefLast.project, col, voorstellen:_briefLast.voorstellen}); }catch(_){} }
     return; }
   if(!ov)return;
   ov.innerHTML=`<div class="modal pb-modal" style="--scol:${col};width:100%;max-width:none">
@@ -4771,13 +4791,22 @@ function _renderProjBoard(){
 function d3date(s){ try{ return new Date(s).toLocaleDateString('nl-NL',{day:'numeric',month:'short'}); }catch(_){ return String(s||''); } }
 function _pbFocus(kind){ setTimeout(()=>{ const sel=(_pbTarget==='finmid')?'#finMidWrap':'#projOverlay'; const inp=document.querySelector(sel+' .pb-in[data-kind="'+kind+'"]'); if(inp)inp.focus(); },0); }
 // L8a — feiten beheren vanuit het dossier
-async function ftAdd(pid){ const t=((await uiPrompt('Nieuw feit:',{},{multiline:true}))||'').trim(); if(!t)return;
-  try{ const ins=await sb.from('facts').insert({project_id:pid,text:t.slice(0,300)}).select().single(); if(ins&&ins.data){ state.facts=state.facts||[]; state.facts.push(ins.data); } }catch(_){}
+// L13 — feiten inline bewerken (geen popup meer): + opent een leeg groeiend veld,
+// klik op een feit maakt het ter plekke bewerkbaar; opslaan gebeurt op blur.
+let _ftNew=null;
+function ftAdd(pid){ _ftNew=pid; _renderProjBoard(); setTimeout(()=>{ const a=document.getElementById('ftNewArea'); if(a){ a.focus(); _omsGroei(a); } },40); }
+async function ftNewSave(v){ const pid=_ftNew; _ftNew=null; const t=(v||'').trim();
+  if(t&&pid){ try{ const ins=await sb.from('facts').insert({project_id:pid,text:t.slice(0,300)}).select().single(); if(ins&&ins.data){ state.facts=state.facts||[]; state.facts.push(ins.data); } }catch(_){} }
   _renderProjBoard(); }
-async function ftEdit(id){ const x=(state.facts||[]).find(f=>String(f.id)===String(id)); if(!x)return;
-  const t=((await uiPrompt('Feit aanpassen:', x.text||'', {multiline:true,rows:6}))||'').trim(); if(!t||t===x.text)return;
-  x.text=t.slice(0,300); try{ await sb.from('facts').update({text:x.text}).eq('id',id); }catch(_){}
-  _renderProjBoard(); }
+function ftEditInline(id){ const x=(state.facts||[]).find(f=>String(f.id)===String(id)); if(!x)return;
+  const row=document.querySelector('.pb-feit[data-fid="'+id+'"]'); const span=row&&row.querySelector('.pb-feittx'); if(!span)return;
+  const ta=document.createElement('textarea'); ta.className='pb-notes pb-feitarea'; ta.rows=1; ta.value=x.text||'';
+  span.replaceWith(ta); _omsGroei(ta); ta.focus(); try{ ta.setSelectionRange(ta.value.length,ta.value.length); }catch(_){}
+  ta.addEventListener('input',()=>_omsGroei(ta));
+  let klaar=false;
+  const save=async()=>{ if(klaar)return; klaar=true; const t=(ta.value||'').trim(); if(t&&t!==x.text){ x.text=t.slice(0,300); try{ await sb.from('facts').update({text:x.text}).eq('id',id); }catch(_){} } _renderProjBoard(); };
+  ta.addEventListener('blur',save);
+  ta.addEventListener('keydown',e=>{ if(e.key==='Escape'){ klaar=true; _renderProjBoard(); } else if(e.key==='Enter'&&(e.metaKey||e.ctrlKey)){ ta.blur(); } }); }
 async function ftDel(id){ if(!(await uiConfirm('Dit feit verwijderen?')))return;
   state.facts=(state.facts||[]).filter(f=>String(f.id)!==String(id));
   try{ await sb.from('facts').delete().eq('id',id); }catch(_){}
@@ -4798,6 +4827,7 @@ function _briefData(pid){
   return {client:p.client,project:p.project,today:ti,taken,feiten,afspraken,wacht,geld,bronnen};
 }
 let _briefLast=null;
+let _briefOpen=false;
 async function openBriefing(){
   const p=projById(_pbPid); if(!p)return;
   const col=PROJCOL[p.id]||'#888';
@@ -4845,7 +4875,7 @@ let _briefOpSel=new Set();
 function briefOpKies(i){
   if(_briefOpSel.has(i))_briefOpSel.delete(i); else _briefOpSel.add(i);
   const rij=document.getElementById('bop_'+i); if(rij){ const b=rij.querySelector('.bv-chk'); if(b)b.innerHTML=_bvBoxSvg(_briefOpSel.has(i)?'#e6c07a':'#5a5a5f',_briefOpSel.has(i)); }
-  const kn=document.querySelector('#briefOv .brief-ruim'); if(kn){ kn.style.display=_briefOpSel.size?'inline-flex':'none'; kn.textContent='Zet op de juiste plek · '+_briefOpSel.size; }
+  const kn=(_briefRoot()||document).querySelector('.brief-ruim'); if(kn){ kn.style.display=_briefOpSel.size?'inline-flex':'none'; kn.textContent='Zet op de juiste plek · '+_briefOpSel.size; }
 }
 // "Zet op de juiste plek": past de aangevinkte opruimvoorstellen toe — feit wordt feit,
 // ruis gaat weg, dubbelingen voegen samen, scope schuift naar de omschrijving.
@@ -4883,13 +4913,17 @@ async function briefRuimOp(btn){
   }
   toonToast('✓ '+n+' punt'+(n===1?'':'en')+' op de juiste plek gezet.');
   _briefOpSel=new Set();
+  // Voorstellen zijn verwerkt: haal ze uit de bewaarde briefing zodat de rerender ze niet terugzet.
+  if(_briefLast)_briefLast.voorstellen=[];
   try{ _renderProjBoard(); }catch(_){} try{ render(); }catch(_){}
-  const ov=document.getElementById('briefOv'); if(ov){ const blok=[...ov.querySelectorAll('.brief-oe')].find(e=>/Op de juiste plek/.test(e.textContent)); if(blok)blok.remove(); const kn=ov.querySelector('.brief-ruim'); if(kn)kn.remove(); }
+  const rt=_briefRoot(); if(rt){ const blok=[...rt.querySelectorAll('.brief-oe')].find(e=>/Op de juiste plek/.test(e.textContent)); if(blok)blok.remove(); const kn=rt.querySelector('.brief-ruim'); if(kn)kn.remove(); }
 }
+function _briefRoot(){ return document.getElementById('briefHost')||document.getElementById('briefOv'); }
+function briefSluit(){ _briefOpen=false; const h=document.getElementById('briefHost'); if(h)h.innerHTML=''; const ov=document.getElementById('briefOv'); if(ov)ov.remove(); }
 function briefKies(i){
   if(_briefSel.has(i))_briefSel.delete(i); else _briefSel.add(i);
   const rij=document.getElementById('boe_'+i); if(rij){ const b=rij.querySelector('.bv-chk'); if(b)b.innerHTML=_bvBoxSvg(_briefSel.has(i)?'#e6c07a':'#5a5a5f',_briefSel.has(i)); }
-  const kn=document.querySelector('#briefOv .brief-neem'); if(kn){ kn.style.display=_briefSel.size?'inline-flex':'none'; kn.textContent='Neem op als taken · '+_briefSel.size; }
+  const kn=(_briefRoot()||document).querySelector('.brief-neem'); if(kn){ kn.style.display=_briefSel.size?'inline-flex':'none'; kn.textContent='Neem op als taken · '+_briefSel.size; }
 }
 async function briefNeemOp(btn){
   if(!_briefLast||!_briefSel.size)return;
@@ -4902,8 +4936,8 @@ async function briefNeemOp(btn){
   }
   toonToast('✓ '+n+' open eindje'+(n===1?'':'s')+' als taak opgenomen');
   _briefSel=new Set();
-  const ov=document.getElementById('briefOv'); if(ov)ov.remove();
   try{ await refresh(); }catch(_){}
+  try{ if(_pbTarget&&_pbPid)_renderProjBoard(); }catch(_){}
 }
 // Knop 1 — bewaren in het dossier (bovenaan de Notities).
 async function briefBewaar(btn){
@@ -4923,9 +4957,30 @@ async function briefPush(btn){
   if(btn){ btn.classList.add('ok'); btn.textContent='Naar '+ander+' gestuurd'; }
 }
 function _briefRender(o){
+  // L13 — inline in de middenkolom (uitklap onder het project) i.p.v. een modal.
+  const host=document.getElementById('briefHost');
+  const naam=escapeHtml((o.client||'')+(o.project?' · '+o.project:''));
+  if(host){
+    _briefOpen=true;
+    let body;
+    if(o.loading){ body=`<div class="brief-loading">${_tIc(_TABCHAN.asterisk,20,1.6)}<span>De AI zet ${naam} op een rijtje…</span></div>`; }
+    else if(o.error){ body=`<div class="brief-loading">Dat lukte even niet — probeer het zo nog eens.</div>`; }
+    else { const d=o.data; _briefSel=new Set();
+      const secs=(d.secties||[]).map(s=>`<div class="brief-sec"><div class="brief-h" style="color:${o.col}">${escapeHtml(s.titel)}</div>${s.punten.map(pt=>`<div class="brief-punt">${escapeHtml(pt)}</div>`).join('')}</div>`).join('');
+      const oe=(d.open_eindjes||[]).length?`<div class="brief-sec brief-oe"><div class="brief-h">Open eindjes <span class="brief-oehint">vink aan wat een taak moet worden</span></div>${d.open_eindjes.map((x,i)=>`<div class="brief-punt brief-kies" id="boe_${i}"><button class="bv-chk" onclick="briefKies(${i})">${_bvBoxSvg('#5a5a5f',false)}</button><span>${escapeHtml(x)}</span></div>`).join('')}</div>`:'';
+      const _vzLbl={feit:'wordt feit',verwijderen:'weg — geen taak',samenvoegen:'samenvoegen',scope:'naar omschrijving'};
+      _briefOpSel=new Set((o.voorstellen||[]).map((_,i)=>i));
+      const vz=(o.voorstellen||[]).length?`<div class="brief-sec brief-oe"><div class="brief-h">Op de juiste plek <span class="brief-oehint">dit staat verkeerd — vink uit wat moet blijven</span></div>${o.voorstellen.map((v,i)=>`<div class="brief-punt brief-kies" id="bop_${i}"><button class="bv-chk" onclick="briefOpKies(${i})">${_bvBoxSvg('#e6c07a',true)}</button><span><b style="color:#e6c07a">${_vzLbl[v.actie]||v.actie}</b> · ${escapeHtml(v.titel)}${v.naar?` <span style="opacity:.65">→ ${escapeHtml(v.naar)}</span>`:''}</span></div>`).join('')}</div>`:'';
+      body=`${d.waar_staan_we?`<p class="brief-lead">${escapeHtml(d.waar_staan_we)}</p>`:''}${vz}${oe}${secs}`;
+    }
+    const voet=(o.data)?`<div class="brief-voet">${(o.voorstellen||[]).length?`<button class="fv-btn bk-ok brief-ruim" onclick="briefRuimOp(this)">Zet op de juiste plek · ${(o.voorstellen||[]).length}</button>`:''}<button class="fv-btn bk-ok brief-neem" onclick="briefNeemOp(this)" style="display:none">Neem op als taken</button><button class="fv-btn" onclick="briefBewaar(this)">Bewaar in dossier</button><button class="fv-btn" onclick="briefPush(this)">Stuur naar ${(who==='Marlon')?'Jeroen':'Marlon'}</button></div>`:'';
+    host.innerHTML=`<div class="brief-inline" style="--scol:${o.col||'#888'}"><div class="brief-kop"><span class="brief-badge" style="background:${o.col||'#888'}">${escapeHtml((String(o.client||'?').trim()[0]||'?').toUpperCase())}</span><h3>op een rijtje</h3><span style="flex:1"></span><button class="brief-collapse" onclick="briefSluit()" title="Inklappen">${_tIc('<path d="M6 15l6 -6l6 6"/>',18,1.7)}</button></div><div class="brief-body">${body}</div>${voet}</div>`;
+    try{ host.scrollIntoView({block:'nearest',behavior:'smooth'}); }catch(_){}
+    return;
+  }
+  // Vangnet (financiën/zwevend): oude modal.
   let ov=document.getElementById('briefOv'); if(ov)ov.remove();
   ov=document.createElement('div'); ov.id='briefOv'; ov.className='overlay';
-  const naam=escapeHtml((o.client||'')+(o.project?' · '+o.project:''));
   let body;
   if(o.loading){ body=`<div class="brief-loading">${_tIc(_TABCHAN.asterisk,22,1.6)}<span>De AI zet ${naam} op een rijtje…</span></div>`; }
   else if(o.error){ body=`<div class="brief-loading">Dat lukte even niet — probeer het zo nog eens.</div>`; }
@@ -8272,7 +8327,7 @@ function uiPrompt(title, value='', opts={}){
   const badgeHtml=(badge&&accent)?'<span class="uip-badge" style="background:'+accent+'">'+escapeHtml(badge)+'</span>':'';
   const accentVar=accent?'--uipc:'+accent+';':'';
   return new Promise(resolve=>{
-    const ov=document.createElement('div'); ov.className='overlay';
+    const ov=document.createElement('div'); ov.className='overlay uip';
     ov.innerHTML='<div class="modal" style="'+accentVar+'width:'+(opts.multiline?'620px':'440px')+';max-width:92vw">'
       +'<button class="modal-close" aria-label="Sluiten"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>'
       +'<div class="uip-head">'+badgeHtml+'<h3>'+titleHtml+'</h3></div>'
