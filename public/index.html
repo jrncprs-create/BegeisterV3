@@ -643,6 +643,14 @@
   .brief-inline .brief-kop h3{font-size:13px;letter-spacing:1.2px;text-transform:uppercase;color:var(--scol);margin:0}
   .brief-collapse{background:none;border:none;color:color-mix(in srgb,var(--scol) 70%,transparent);cursor:pointer;padding:2px;display:inline-flex}
   .brief-collapse:hover{color:var(--scol)}
+  /* Laden: het venster wordt vol in de klantkleur, tekst + sterretje zwart (als de landingschat) */
+  .brief-inline.laden{background:var(--scol);border-color:var(--scol)}
+  .brief-inline.laden .brief-kop h3{color:#000}
+  .brief-inline.laden .brief-badge{background:#000 !important;color:var(--scol)}
+  .brief-inline.laden .brief-collapse{color:rgba(0,0,0,.6)} .brief-inline.laden .brief-collapse:hover{color:#000}
+  .brief-load2{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:40px 20px;text-align:center}
+  .brief-load2 .think-anim{width:40px;height:40px;filter:brightness(0)}
+  .brief-load-tx{font-size:14px;color:#000;font-weight:var(--fw-nadruk,500);transition:opacity .25s ease}
   .brief-kop{display:flex;align-items:center;gap:12px;margin:0 0 16px}
   .brief-kop h3{margin:0;font-size:19px}
   .brief-badge{width:30px;height:30px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;color:#0e0d10;font-weight:var(--fw-nadruk);flex:0 0 auto}
@@ -1059,6 +1067,11 @@
   .kgroup .kli{border-bottom:1px solid var(--line)}
   .kgroup .kli:last-child{border-bottom:none}
   .kgroup .kli.kproj{padding:2px 0 2px 6px;border-bottom:none}
+  /* Kiezerblok: meer lucht onder het streepje, geen bolletje, badge = kleurknop */
+  .kiezerblok .kclient{padding-bottom:14px}
+  .kiezerblok .kli.kproj-kiezer{padding:12px 2px 4px 4px}
+  .kiezerblok .kproj-kiezer .ksub-btn{font-size:14px}
+  .kbadge-btn{border:none;cursor:pointer;transition:transform .12s} .kbadge-btn:hover{transform:scale(1.05)}
   .kprojblock{border-bottom:none;padding-bottom:0}
   .kprojblock.last{border-bottom:none;padding-bottom:2px}
   .proj-row{display:grid;grid-template-columns:42px minmax(0,1.5fr) minmax(0,1.5fr) 56px auto;gap:12px;align-items:center;padding:10px 4px;border-bottom:1px solid var(--line)}
@@ -2544,7 +2557,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v283</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v284</span>
       <!-- V244: loep verhuisd naar het hoofdmenu (waar Bestanden/Contacten stonden). -->
       <!-- V242: Dagoverzicht voorlopig uit beeld (afgesproken 16 juli) — openDayOverview en de overlay blijven in de code staan. -->
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
@@ -4828,6 +4841,7 @@ function _briefData(pid){
 }
 let _briefLast=null;
 let _briefOpen=false;
+let _briefLoadTimer=null;
 async function openBriefing(){
   const p=projById(_pbPid); if(!p)return;
   const col=PROJCOL[p.id]||'#888';
@@ -4963,7 +4977,7 @@ function _briefRender(o){
   if(host){
     _briefOpen=true;
     let body;
-    if(o.loading){ body=`<div class="brief-loading">${_tIc(_TABCHAN.asterisk,20,1.6)}<span>De AI zet ${naam} op een rijtje…</span></div>`; }
+    if(o.loading){ body=`<div class="brief-load2"><img class="think-anim" src="/thinking.webp" alt=""><span class="brief-load-tx" id="briefLoadTx">${_BRIEF_STAPPEN[0]}</span></div>`; }
     else if(o.error){ body=`<div class="brief-loading">Dat lukte even niet — probeer het zo nog eens.</div>`; }
     else { const d=o.data; _briefSel=new Set();
       const secs=(d.secties||[]).map(s=>`<div class="brief-sec"><div class="brief-h" style="color:${o.col}">${escapeHtml(s.titel)}</div>${s.punten.map(pt=>`<div class="brief-punt">${escapeHtml(pt)}</div>`).join('')}</div>`).join('');
@@ -4974,7 +4988,9 @@ function _briefRender(o){
       body=`${d.waar_staan_we?`<p class="brief-lead">${escapeHtml(d.waar_staan_we)}</p>`:''}${vz}${oe}${secs}`;
     }
     const voet=(o.data)?`<div class="brief-voet">${(o.voorstellen||[]).length?`<button class="fv-btn bk-ok brief-ruim" onclick="briefRuimOp(this)">Zet op de juiste plek · ${(o.voorstellen||[]).length}</button>`:''}<button class="fv-btn bk-ok brief-neem" onclick="briefNeemOp(this)" style="display:none">Neem op als taken</button><button class="fv-btn" onclick="briefBewaar(this)">Bewaar in dossier</button><button class="fv-btn" onclick="briefPush(this)">Stuur naar ${(who==='Marlon')?'Jeroen':'Marlon'}</button></div>`:'';
-    host.innerHTML=`<div class="brief-inline" style="--scol:${o.col||'#888'}"><div class="brief-kop"><span class="brief-badge" style="background:${o.col||'#888'}">${escapeHtml((String(o.client||'?').trim()[0]||'?').toUpperCase())}</span><h3>op een rijtje</h3><span style="flex:1"></span><button class="brief-collapse" onclick="briefSluit()" title="Inklappen">${_tIc('<path d="M6 15l6 -6l6 6"/>',18,1.7)}</button></div><div class="brief-body">${body}</div>${voet}</div>`;
+    host.innerHTML=`<div class="brief-inline${o.loading?' laden':''}" style="--scol:${o.col||'#888'}"><div class="brief-kop"><span class="brief-badge" style="background:${o.col||'#888'}">${escapeHtml((String(o.client||'?').trim()[0]||'?').toUpperCase())}</span><h3>op een rijtje</h3><span style="flex:1"></span><button class="brief-collapse" onclick="briefSluit()" title="Inklappen">${_tIc('<path d="M6 15l6 -6l6 6"/>',18,1.7)}</button></div><div class="brief-body">${body}</div>${voet}</div>`;
+    if(o.loading){ let i=0; clearInterval(_briefLoadTimer); _briefLoadTimer=setInterval(()=>{ const tx=document.getElementById('briefLoadTx'); if(!tx){clearInterval(_briefLoadTimer);return;} i=(i+1)%_BRIEF_STAPPEN.length; tx.style.opacity='0'; setTimeout(()=>{ tx.textContent=_BRIEF_STAPPEN[i]; tx.style.opacity=''; },200); },1500); }
+    else { clearInterval(_briefLoadTimer); }
     try{ host.scrollIntoView({block:'nearest',behavior:'smooth'}); }catch(_){}
     return;
   }
@@ -7500,10 +7516,10 @@ function renderProjecten(){
     const rows=projs.filter(p=>p.project).map(p=>{
       const on=String(p.id)===String(_pbPid);
       const brief=on?`<button class="kbrief" id="briefInline" style="--scol:${ccol}" onclick="event.stopPropagation();openBriefing()" title="Laat de AI dit project op een rijtje zetten en op de juiste plek">${_tIc(_TABCHAN.asterisk,14,1.7)}<span class="kbrief-tx">op een rijtje</span></button>`:'';
-      return `<div class="kli kproj${on?' on':''}"><button class="kdot" style="background:${p.color}" onclick="event.stopPropagation();openColorPicker(event,'proj','${p.id}')" title="Kleur"></button><button class="ksub-btn"${on?' style="color:var(--ccol);font-weight:var(--fw-nadruk,500)"':''} onclick="selectBeheerProj('${p.id}')">${escapeHtml(p.project)}</button>${brief}</div>`;
+      return `<div class="kli kproj kproj-kiezer${on?' on':''}"><button class="ksub-btn"${on?' style="color:var(--ccol);font-weight:var(--fw-nadruk,500)"':''} onclick="selectBeheerProj('${p.id}')">${escapeHtml(p.project)}</button>${brief}</div>`;
     }).join('');
-    const kiezer=`<div class="kgroup kactive" style="--ccol:${ccol}">
-      <div class="kclient"><span class="kbadge" style="background:${ccol}">${escapeHtml(initial)}</span>
+    const kiezer=`<div class="kgroup kactive kiezerblok" style="--ccol:${ccol}">
+      <div class="kclient"><button class="kbadge kbadge-btn" style="background:${ccol}" onclick="event.stopPropagation();openColorPicker(event,'proj','${_pbPid}')" title="Klik om de kleur aan te passen">${escapeHtml(initial)}</button>
         <span class="kname-btn" style="cursor:default">${escapeHtml(client||'—')}</span>
         <span class="kspring"></span>
         <button class="kicon kadd" onclick="event.stopPropagation();addProjectTo('${esc(client)}')" title="Project toevoegen"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 5v14M5 12h14"/></svg></button>
@@ -8300,14 +8316,22 @@ async function purgeProject(id){ if(!(await uiConfirm('Dit project definitief ve
 // ---------- acties ----------
 function toggle(id){const r=findItem(id);if(!r)return;r.it.status=r.it.status==='done'?'todo':'done';render();}
 let editingId=null,mDue=null,duePickerRef=iso(TODAY),_dueTarget='task';
-// Alle contacten uit ÉÉN bron: de contacts-tabel (state.contacts). Geen apart vast lijstje
-// meer — anders leeft een contact als Onno wel in het dossier maar niet in dit veld.
+// Contacten uit ÉÉN bron: de contacts-tabel. GEEN vrije-tekst van oude taken meer erbij —
+// anders vervuilen half-getypte namen ("Nicky", "Nicky Heertjes"…) de suggesties.
 function _contactNamen(){
   const uit=new Set();
   (state.contacts||[]).forEach(c=>{ const n=(c&&c.name||'').trim(); if(n)uit.add(n); });
-  // taken kunnen nog vrije-tekst-namen bevatten van vroeger; die tonen we ook zodat niets wegvalt
-  (state.projects||[]).forEach(p=>(p.items||[]).forEach(it=>{ const n=(it.contact||'').trim(); if(n)uit.add(n); }));
   return [...uit].sort((a,b)=>a.localeCompare(b));
+}
+// Eén waarheid bij het kiezen/typen van een contact: bestaat de naam al (ongeacht hoofdletters),
+// gebruik dan die exacte schrijfwijze; is hij nieuw, maak dan ÉÉN contact aan (geen duplicaten).
+async function _contactOpslaan(naam, projectId){
+  const n=(naam||'').trim(); if(!n) return null;
+  const best=(state.contacts||[]).find(c=>String(c.name||'').trim().toLowerCase()===n.toLowerCase());
+  if(best) return best.name;
+  try{ const ins=await sb.from('contacts').insert({name:n, project_id:projectId||null}).select().single();
+    if(ins&&ins.data){ state.contacts=state.contacts||[]; state.contacts.push(ins.data); } }catch(_){}
+  return n;
 }
 function uniqueClients(){const seen=[];state.projects.forEach(p=>{if(p.id==='__inbox__')return;if(!seen.includes(p.client))seen.push(p.client);});return seen;}
 function fillProjectSelect(client,selId){
@@ -8950,8 +8974,9 @@ saveModal = async function(){
   if(!editingId){   // nieuwe taak
     const title=document.getElementById('m_t').value.trim();
     if(!title){alert('Vul een omschrijving in.');return;}
-    const rec={project_id:document.getElementById('m_project').value||null,title,
-      owner:_ownerFromChecks()||null,contact:document.getElementById('m_contact').value||null,
+    const _prj=document.getElementById('m_project').value||null;
+    const rec={project_id:_prj,title,
+      owner:_ownerFromChecks()||null,contact:await _contactOpslaan(document.getElementById('m_contact').value,_prj),
       due:mDue||null,status:document.getElementById('m_status').value||'todo',
       herhaal:(document.getElementById('m_herhaal')?document.getElementById('m_herhaal').value:'')||null,
       source_id:_dropSrc||null};
@@ -8967,12 +8992,13 @@ saveModal = async function(){
   }
   const r=findItem(editingId);if(!r)return;
   const _oldOwner=r.it.owner||'';
+  const _eprj=document.getElementById('m_project').value||null;
   const patch={title:document.getElementById('m_t').value.trim()||r.it.t,
     owner:_ownerFromChecks()||null,
-    contact:document.getElementById('m_contact').value||null,
+    contact:await _contactOpslaan(document.getElementById('m_contact').value,_eprj),
     due:mDue||null,status:document.getElementById('m_status').value,
     herhaal:(document.getElementById('m_herhaal')?document.getElementById('m_herhaal').value:'')||null,
-    project_id:document.getElementById('m_project').value||null};
+    project_id:_eprj};
   await sb.from('items').update(patch).eq('id',editingId);
   if(patch.project_id && patch.project_id!==r.p.id && activeTab!=='all') activeTab=patch.project_id;
   notifyPartner((who||'Iemand')+' paste een taak aan: '+(patch.title||r.it.t));
