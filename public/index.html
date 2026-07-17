@@ -583,6 +583,12 @@
   .pb-kk-ic{background:transparent;border:none;cursor:pointer;color:var(--mut2);padding:6px;display:inline-flex;border-radius:8px;transition:color .12s,background .12s}
   .pb-kk-ic:hover{color:#fff;background:rgba(255,255,255,.06)}
   .pb-syncic{padding:4px}
+  .fm-ta{background:none;border:none;cursor:pointer;padding:2px;display:inline-flex;flex:0 0 auto;margin-left:6px}
+  .fm-ta.vraag{color:var(--mut2);opacity:0}
+  .fm-file:hover .fm-ta.vraag{opacity:.7}
+  .fm-ta.vraag:hover{opacity:1;color:#fff}
+  .fm-ta.wacht{color:#e6c07a;opacity:.95}
+  .fm-ta.ok{color:#5bd08a;cursor:default}
   .pb-syncic.bezig svg{animation:kksync 1s linear infinite}
   @keyframes kksync{to{transform:rotate(360deg)}}
   .pb-kk-thumb{width:64px;height:44px;border-radius:8px;background-size:cover;background-position:center;flex:0 0 auto;border:1px solid var(--line)}
@@ -2468,7 +2474,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v266</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v267</span>
       <!-- V244: loep verhuisd naar het hoofdmenu (waar Bestanden/Contacten stonden). -->
       <!-- V242: Dagoverzicht voorlopig uit beeld (afgesproken 16 juli) — openDayOverview en de overlay blijven in de code staan. -->
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
@@ -4708,6 +4714,7 @@ function _briefData(pid){
   const open=(p.items||[]).filter(it=>it.status!=='done'&&it.status!=='wait');
   const taken=open.map(it=>{ const d=it.due?(' [deadline '+it.due+']'):''; const w=it.owner?(' ('+it.owner+')'):''; return (it.t||'')+w+d; });
   const wacht=(p.items||[]).filter(it=>it.status==='wait').map(it=>{ const dg=it.waitSinds?Math.floor((Date.now()-new Date(it.waitSinds).getTime())/86400000):null; return (it.t||'')+(it.contact?(' — op '+it.contact):'')+(dg!=null?(' ('+dg+'d)'):''); });
+  (state.files||[]).concat(state.docFiles||[]).forEach(f=>{ const vanProj=(f.owner_type==='project'&&String(f.owner_id)===String(pid)); if(vanProj&&f.ter_akkoord&&!f.akkoord_op) wacht.push('Akkoord van de klant op “'+(f.name||'document')+'” (ter akkoord in het portaal)'); });
   const feiten=(state.facts||[]).filter(f=>String(f.project_id||'')===String(pid)).map(f=>f.text||'');
   const afspraken=(state.appointments||[]).filter(a=>String(a.projectId)===String(pid)&&String(a.date||'')>=ti).map(a=>(a.t||'afspraak')+(a.date?(' — '+a.date):'')+(a.start?(' '+String(a.start).slice(0,5)):''));
   const bronnen=(state.sources||[]).filter(sc=>String(sc.proj||'')===String(pid)&&sc.summary).slice(0,12).map(sc=>sc.summary);
@@ -7273,7 +7280,7 @@ function _searchGlyph(){return '<svg viewBox="0 0 24 24" width="16" height="16" 
    Deze twee helpers vertalen een wijziging naar de juiste tabel en kolomnamen,
    zodat de rest van de pagina zich er niets van hoeft aan te trekken. */
 function _fileById(fid){ return (state.files||[]).find(x=>String(x.id)===String(fid))||null; }
-const _DOC_KOLOM={ name:'filename', icon:'category', owner_id:'project_id', summary:'summary', visible_to_client:'visible_to_client', is_voorstel:'is_voorstel', voorstel_soort:'voorstel_soort', verstuurd_op:'verstuurd_op', fin_status:'fin_status' };
+const _DOC_KOLOM={ name:'filename', icon:'category', owner_id:'project_id', summary:'summary', visible_to_client:'visible_to_client', is_voorstel:'is_voorstel', voorstel_soort:'voorstel_soort', verstuurd_op:'verstuurd_op', fin_status:'fin_status', ter_akkoord:'ter_akkoord', akkoord_op:'akkoord_op', akkoord_door:'akkoord_door' };
 async function _fileUpdate(fOrId, patch){
   const f=(typeof fOrId==='string')?_fileById(fOrId):fOrId;
   if(!f) return false;
@@ -7469,7 +7476,7 @@ function _fmBuildTree(q,alleenKlant){
         const isVast=pr._vast && _TREE_MAPPEN.includes(cat);
         if(!fl.length && !(isVast && !q)) return;
         const ckey=c+'|'+pid+'|'+cat, copen=q?true:_fmOpen.has(ckey);
-        const files=fl.map(f=>`<div class="fm-file" draggable="true" data-fid="${f.id}" ondragstart="fmDragStart(event,'${f.id}')" onclick="fmFileClick('${f.id}')"><span class="fm-ic" style="color:${g.col}">${_fileGlyph(f.name||'')}</span><span class="fm-name">${escapeHtml(f.name||'bestand')}</span><button class="fm-edit" style="margin-left:auto" data-kind="file" data-fid="${f.id}" onclick="event.stopPropagation();fmRename(this)" title="Naam wijzigen">${_penGlyph()}</button><button class="fm-edit fm-del" data-fid="${f.id}" onclick="event.stopPropagation();deleteFile('${f.id}')" title="Verwijderen">${_tIc('<path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M7 7l1 13h8l1-13"/>',15,1.5)}</button></div>`).join('');
+        const files=fl.map(f=>`<div class="fm-file" draggable="true" data-fid="${f.id}" ondragstart="fmDragStart(event,'${f.id}')" onclick="fmFileClick('${f.id}')"><span class="fm-ic" style="color:${g.col}">${_fileGlyph(f.name||'')}</span><span class="fm-name">${escapeHtml(f.name||'bestand')}</span>${_taBadge(f)}<button class="fm-edit" style="margin-left:auto" data-kind="file" data-fid="${f.id}" onclick="event.stopPropagation();fmRename(this)" title="Naam wijzigen">${_penGlyph()}</button><button class="fm-edit fm-del" data-fid="${f.id}" onclick="event.stopPropagation();deleteFile('${f.id}')" title="Verwijderen">${_tIc('<path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M7 7l1 13h8l1-13"/>',15,1.5)}</button></div>`).join('');
         catHtml.push(`<div class="fm-row fm-catrow${copen?' open':''}" draggable="true" ondragstart="fmFolderDragStart(event,'cat',this)" data-drop="1" data-client="${escapeHtml(c)}" data-pid="${escapeHtml(pid)}" data-cat="${escapeHtml(cat)}" ondragover="fmDragOver(event)" ondragleave="fmDragLeave(event)" ondrop="fmDrop(event)" onclick="fmToggle('${_fk(ckey)}')"><span class="fm-tw">▸</span><span class="fm-ic" style="color:${g.col}">${_folderGlyph()}</span><span class="fm-name">${escapeHtml(cat)}</span><span class="fm-cnt">${fl.length}</span><button class="fm-edit" data-kind="cat" data-client="${escapeHtml(c)}" data-pid="${escapeHtml(pid)}" data-cat="${escapeHtml(cat)}" onclick="event.stopPropagation();fmRename(this)" title="Naam wijzigen">${_penGlyph()}</button><button class="fm-edit fm-del" data-kind="cat" data-client="${escapeHtml(c)}" data-pid="${escapeHtml(pid)}" data-cat="${escapeHtml(cat)}" onclick="event.stopPropagation();fmDelete(this)" title="Verwijderen">${_trashGlyph()}</button></div><div class="fm-kids"${copen?'':' style="display:none"'}>${files}</div>`);
       });
       if(!catHtml.length) return;
@@ -7783,6 +7790,22 @@ async function fmSyncDropbox(){
   if(btn){ btn.disabled=false; btn.textContent='Sync naar Dropbox'; }
 }
 let _fmPrevId=null;
+// L11 — akkoord per document: ⏳ = wacht op klant, ✓ = getekend, leeg = klik om ter akkoord te vragen.
+function _taBadge(f){
+  if(f.akkoord_op){ const d=new Date(f.akkoord_op).toLocaleDateString('nl-NL',{day:'numeric',month:'short'}); return `<span class="fm-ta ok" title="Akkoord door ${escapeHtml(f.akkoord_door||'klant')} · ${d}">${_tIc('<path d="M5 12l5 5l10 -10"/>',13,2)}</span>`; }
+  if(f.ter_akkoord) return `<button class="fm-ta wacht" onclick="event.stopPropagation();taToggle('${f.id}')" title="Wacht op akkoord van de klant — klik om terug te trekken">${_tIc('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>',13,1.7)}</button>`;
+  return `<button class="fm-ta vraag" onclick="event.stopPropagation();taToggle('${f.id}')" title="Ter akkoord voorleggen aan de klant">${_tIc('<path d="M9 12l2 2l4 -4"/><circle cx="12" cy="12" r="9"/>',13,1.5)}</button>`;
+}
+async function taToggle(fid){
+  const f=_fileById(fid); if(!f)return;
+  if(f.akkoord_op){ toonToast('Al akkoord gegeven door '+(f.akkoord_door||'de klant')+'.'); return; }
+  const aan=!f.ter_akkoord;
+  f.ter_akkoord=aan; if(!aan){ f.akkoord_op=null; f.akkoord_door=null; }
+  await _fileUpdate(f, aan?{ter_akkoord:true}:{ter_akkoord:false, akkoord_op:null, akkoord_door:null});
+  toonToast(aan?('“'+(f.name||'document')+'” staat ter akkoord bij de klant.'):'Akkoordverzoek teruggetrokken.');
+  try{ _renderFmTree(); }catch(_){}
+  try{ if(_pbPid)_renderProjBoard(); }catch(_){}
+}
 function fmFileClick(id){ if(_inspAan){ _inspAan=false; setView('files'); } if(isDesk3()) fmPreview(id); else openFileViewer(id); }
 function fmClosePreview(){ _fmPrevId=null; const pane=document.getElementById('view-filespreview'); if(pane)pane.innerHTML='<div class="fmp-empty">Kies een bestand</div>'; document.querySelectorAll('#fmTree .fm-file.sel').forEach(e=>e.classList.remove('sel')); }
 async function fmPreview(id){
@@ -8338,6 +8361,7 @@ async function sbLoad(){
       name:d.filename||'bijlage', link:d.link||'', icon:d.category||'',
       bytes:d.size||null, summary:d.summary||null,
       is_voorstel:!!d.is_voorstel, voorstel_soort:d.voorstel_soort||null, visible_to_client:!!d.visible_to_client, verstuurd_op:d.verstuurd_op||null, fin_status:d.fin_status||null,
+      ter_akkoord:!!d.ter_akkoord, akkoord_op:d.akkoord_op||null, akkoord_door:d.akkoord_door||null,
       storage_path:d.storage_path||'', created_at:d.created_at }));
   const projects=p.data||[], items=i.data||[], sources=s.data||[], atts=a.data||[];
   state.contacts = (c && c.data) ? c.data : [];

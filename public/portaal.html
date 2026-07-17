@@ -84,6 +84,10 @@ button{font-family:inherit;font-weight:var(--fw);cursor:pointer}
 .akkoord{margin-top:20px;padding-top:16px;border-top:1px solid color-mix(in srgb,var(--scol) 34%,transparent);text-align:center}
 .akknoot{font-size:12px;color:color-mix(in srgb,var(--scol) 62%,transparent);margin:0 0 12px}
 .akkbtn{background:var(--scol);color:var(--bg);border:none;border-radius:var(--r-pil);font-family:inherit;font-weight:var(--fw-nadruk);font-size:14px;padding:11px 26px;cursor:pointer}
+.ta-rij{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid color-mix(in srgb,var(--scol) 14%,transparent)}
+.ta-rij:last-child{border-bottom:none}
+.ta-btn{background:var(--scol);color:var(--bg);border:none;border-radius:var(--r-pil);font-family:inherit;font-weight:var(--fw-nadruk);font-size:12.5px;padding:7px 16px;cursor:pointer;flex:0 0 auto}
+.ta-ok{font-size:12.5px;color:#5bd08a;flex:0 0 auto;white-space:nowrap}
 .akkbtn[disabled]{opacity:.5;cursor:default}
 .akkoord.vast .groot{font-size:18px;color:var(--scol)}
 
@@ -226,6 +230,14 @@ function render(){
   if((p.taken||[]).length) L+='<div class="sec"><div class="h">Taken</div>'+p.taken.map(it=>'<div class="rij'+(it.done?' klaar':'')+'"><span class="dot"></span><span class="tx">'+esc(it.t||'')+'</span></div>').join('')+'</div>';
 
   let R='';
+  if((p.ter_akkoord||[]).length){
+    R+='<div class="sec"><div class="h">Ter akkoord</div>'+p.ter_akkoord.map(f=>{
+      const open='toonVoorstel(\''+esc(String(f.link||'')).replace(/'/g,"\\'")+'\',\''+esc(String(f.name||'')).replace(/'/g,"\\'")+'\')';
+      const st=f.akkoord_op?('<span class="ta-ok">✓ akkoord · '+esc(kort(f.akkoord_op))+'</span>')
+                          :('<button class="ta-btn" onclick="docAkkoord(\''+esc(String(f.id))+'\',this)">Akkoord geven</button>');
+      return '<div class="ta-rij"><button class="flink" onclick="'+open+'" title="Bekijken">'+esc(f.name||'document')+'</button>'+st+'</div>';
+    }).join('')+'</div>';
+  }
   if((p.afspraken||[]).length) R+='<div class="sec"><div class="h">Afspraken</div>'+p.afspraken.map(a=>'<div class="rij"><span class="tx">'+esc(a.t||'Afspraak')+'</span><span class="meta">'+esc(kort(a.date))+(a.start?' · '+esc(String(a.start).slice(0,5)):'')+'</span></div>').join('')+'</div>';
   if((p.bestanden||[]).length) R+='<div class="sec"><div class="h">Bestanden</div>'+bestandenHtml(p.bestanden)+'</div>';
 
@@ -301,6 +313,13 @@ function toonVoorstel(link,naam){
 }
 
 async function laad(){ const j=PREVIEW?await api('preview',{project_id:PREVIEW}):await api('data'); DATA=j; if(ACTIEF>=DATA.projecten.length)ACTIEF=0; render(); }
+async function docAkkoord(id,btn){
+  if(PREVIEW){ toast('Voorbeeld — akkoord geven doet de klant zelf.'); return; }
+  if(!confirm('Akkoord geven op dit document? Dit wordt vastgelegd met je naam en datum.')) return;
+  if(btn){ btn.disabled=true; btn.textContent='Momentje…'; }
+  try{ const p=DATA.projecten[ACTIEF]; await api('doc_akkoord',{file_id:id,project_id:p&&p.id}); toast('Akkoord vastgelegd — dank je wel.'); await laad(); }
+  catch(e){ toast(e.message); if(btn){ btn.disabled=false; btn.textContent='Akkoord geven'; } }
+}
 
 async function start(){
   const s=await sb.auth.getSession();
