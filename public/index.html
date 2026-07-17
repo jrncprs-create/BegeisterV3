@@ -2562,7 +2562,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v288</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v289</span>
       <!-- V244: loep verhuisd naar het hoofdmenu (waar Bestanden/Contacten stonden). -->
       <!-- V242: Dagoverzicht voorlopig uit beeld (afgesproken 16 juli) — openDayOverview en de overlay blijven in de code staan. -->
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
@@ -7567,7 +7567,9 @@ function renderProjecten(){
     }).join('');
     const kiezer=`<div class="kgroup kactive kiezerblok" style="--ccol:${ccol}">
       <div class="kclient"><button class="kbadge kbadge-btn" style="background:${ccol}" onclick="event.stopPropagation();openColorPicker(event,'proj','${_pbPid}')" title="Klik om de kleur aan te passen">${escapeHtml(initial)}</button>
-        <span class="kname-btn" style="cursor:default">${escapeHtml(client||'—')}</span>
+        ${(_kEdit==='c:'+client)
+          ? `<input class="kname kedit-input" value="${escapeHtml(client)}" onblur="kClientSave('${esc(client)}',this.value)" onkeydown="if(event.key==='Enter')this.blur();else if(event.key==='Escape')kEditCancel()" />`
+          : `<span class="kname-btn" style="cursor:default">${escapeHtml(client||'—')}</span><button class="kicon kpen" onclick="event.stopPropagation();kEditStart('c:${esc(client)}')" title="Klantnaam wijzigen">${_penIc}</button>`}
         <span class="kspring"></span>
         <button class="kicon kadd" onclick="event.stopPropagation();addProjectTo('${esc(client)}')" title="Project toevoegen"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 5v14M5 12h14"/></svg></button>
       </div>${rows}</div>`;
