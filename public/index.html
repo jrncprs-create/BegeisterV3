@@ -2566,7 +2566,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v291</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v292</span>
       <!-- V244: loep verhuisd naar het hoofdmenu (waar Bestanden/Contacten stonden). -->
       <!-- V242: Dagoverzicht voorlopig uit beeld (afgesproken 16 juli) — openDayOverview en de overlay blijven in de code staan. -->
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
@@ -7383,6 +7383,8 @@ function renderRail(){
   shown.forEach(f=>{ if(!perProj[f.p.id]){perProj[f.p.id]={p:f.p,items:[]};volg.push(f.p.id);} perProj[f.p.id].items.push(f.it); });
   _h+=volg.map(pid=>_bvVenster(perProj[pid].p,perProj[pid].items,'wacht')).join('');
   if(list) list.innerHTML = _h || '<div class="hint">Niets dat nu aandacht vraagt <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="vertical-align:-1px"><path d="M12 5v14"/><path d="M6 8l12 8"/><path d="M18 8l-12 8"/></svg></div>';
+  // Accord-kaart: klant/project-kiezers de gekleurde dropdown geven (zelfde als het menu).
+  try{ _accordBronnen().forEach(s=>{ _enhanceSelect('bkcl_'+s.id,'client'); _enhanceSelect('bkpr_'+s.id,'project'); }); }catch(_){}
   const undated=allItems().filter(x=>x.it.status!=='done'&&!x.it.due&&x.it.status!=='wait').length;
   const foot=document.getElementById('wachterFoot');
   if(foot) foot.textContent = undated ? `${undated} actiepunt(en) staan nog zonder datum` : '';
@@ -9809,7 +9811,7 @@ function _accordKaartenHTML(){
     const body=sectie('Taken',gTaken)+sectie('Afspraken',gAppts)+sectie('Feiten',gFeit);
     return `<div class="bk" style="--kk:${col}">
       <div class="bk-kop"><span class="bk-ttl">${escapeHtml(st.titel||'Nieuw binnengekomen')}</span><span class="bk-sub">${escapeHtml((typeof _srcTitle==='function')?_srcTitle(s):'bron')} · AI vulde ${st.rows.length} punt${st.rows.length===1?'':'en'} in</span></div>
-      <div class="bk-sel"><select onchange="bkClient('${s.id}',this.value)">${klOpts}</select><select onchange="_bkState['${s.id}'].project_id=this.value">${prOpts}</select></div>
+      <div class="bk-sel"><select id="bkcl_${s.id}" onchange="bkClient('${s.id}',this.value)">${klOpts}</select><select id="bkpr_${s.id}" onchange="_bkState['${s.id}'].project_id=this.value">${prOpts}</select></div>
       ${body}
       <div class="bk-voet"><button class="fv-btn bk-ok" onclick="bkAkkoord('${s.id}',this)">${_tIc('<path d="M5 12l5 5l10 -10"/>',15,2)}<span>Opslaan</span></button><button class="fv-btn" onclick="bkBewaar('${s.id}',this)" title="Alleen het bestand en de feiten bewaren — geen taken of afspraken maken">${_tIc('<path d="M3 4h18v4H3z"/><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1 -1V8"/><path d="M10 12h4"/>',15,1.6)}<span>Archief</span></button><button class="fv-btn ghost bk-weg" onclick="bkWeg('${s.id}')" title="Voorstellen weggooien (bron en bestand blijven)">${_tIc('<path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/>',15,1.6)}</button></div>
     </div>`;
