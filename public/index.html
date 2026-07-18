@@ -2566,7 +2566,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v293</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v294</span>
       <!-- V244: loep verhuisd naar het hoofdmenu (waar Bestanden/Contacten stonden). -->
       <!-- V242: Dagoverzicht voorlopig uit beeld (afgesproken 16 juli) — openDayOverview en de overlay blijven in de code staan. -->
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
@@ -8973,6 +8973,7 @@ function renderUsagePop(){
     '<div class="row"><span>Chat</span><b>'+e(b.chat)+'</b></div>'+
     '<div class="row"><span>Intake</span><b>'+e(b.intake)+'</b></div>'+
     '<div class="row"><span>Foto/vision</span><b>'+e(b.vision)+'</b></div>'+
+    ((Number(b.overig)||0)>0.005?'<div class="row"><span>Overig (AI-functies)</span><b>'+e(b.overig)+'</b></div>':'')+
     '<div class="row tot"><span>Totaal</span><b>'+e(d.eur)+'</b></div>'+
     '<div class="sub">'+( (Number(t.input)||0)+(Number(t.output)||0) ).toLocaleString('nl-NL')+' tokens · '+(Number(t.web_searches)||0)+' web-searches<br>~$'+(Number(d.usd)||0).toFixed(2)+' (koers benadering)</div>';
 }
