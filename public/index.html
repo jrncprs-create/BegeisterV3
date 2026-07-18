@@ -734,24 +734,28 @@
   .pb-feit:hover .pb-feitbron{opacity:.9}
   .pb-feitdel{flex:0 0 auto;opacity:0}
   .pb-feit:hover .pb-feitdel{opacity:.6}
-  .bk-rij.feit .bk-tx{color:var(--mut);font-style:normal}
-  .bk-type{min-width:64px}
-  .bk{border:1px dashed var(--line);border-radius:14px;padding:12px;margin-bottom:12px}
-  .bk-kop{margin-bottom:8px}
-  .bk-ttl{display:block;font-size:13px;color:var(--txt);font-weight:var(--fw-nadruk);line-height:1.4}
-  .bk-sub{font-size:11px;color:var(--mut2)}
-  .bk-sel{display:flex;gap:6px;margin-bottom:8px}
-  .bk-sel select{flex:1;min-width:0;background:transparent;border:1px solid var(--line);border-radius:999px;color:var(--mut);font:inherit;font-size:11.5px;padding:3px 8px;outline:none;color-scheme:dark}
-  .bk-rij{display:flex;align-items:center;gap:8px;padding:3px 0}
-  .bk-rij.uit{opacity:.4}
-  .bk-tx{flex:1;min-width:0;background:transparent;border:none;border-bottom:1px dashed transparent;color:var(--mut);font:inherit;font-size:12.5px;outline:none;padding:1px 0;overflow-wrap:anywhere}
-  .bk-tx:focus{border-bottom-color:var(--line);color:var(--txt)}
+  /* Accord-kaart (herontwerp): gesplitst in Taken/Feiten, picto-toggles, meer lucht. */
+  .bk{border:1px solid var(--line);border-radius:16px;padding:18px 18px 16px;margin-bottom:14px;background:#0f0f0f}
+  .bk-kop{margin-bottom:14px}
+  .bk-ttl{display:block;font-size:14px;color:var(--txt);font-weight:var(--fw-nadruk);line-height:1.4}
+  .bk-sub{font-size:12px;color:var(--mut2);margin-top:3px}
+  .bk-sel{display:flex;gap:9px;margin-bottom:6px}
+  .bk-sel select{flex:1;min-width:0;background:#1a1a1a;border:0.5px solid rgba(255,255,255,.12);border-radius:9px;color:var(--txt);font:inherit;font-size:13px;padding:8px 11px;outline:none;color-scheme:dark}
+  .bk-sec{font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--mut2);margin:18px 0 2px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.1)}
+  .bk-rij{display:flex;align-items:flex-start;gap:13px;padding:12px 0;border-top:1px solid rgba(255,255,255,.05)}
+  .bk-sec + .bk-rij{border-top:none}
+  .bk-rij.uit .bk-tx{color:var(--mut2)}
+  .bk-toggle{background:none;border:none;padding:0;cursor:pointer;flex:0 0 auto;line-height:0;display:flex}
+  .bk-tx{flex:1;min-width:0;background:transparent;border:none;color:var(--txt);font:inherit;font-size:14px;line-height:1.5;outline:none;padding:1px 0;overflow-wrap:anywhere}
+  .bk-tx:focus{color:var(--txt)}
   .bk-type{background:none;border:1px solid var(--line);border-radius:999px;color:var(--mut2);font:inherit;font-size:10px;letter-spacing:.5px;text-transform:uppercase;padding:2px 8px;cursor:pointer;flex:0 0 auto}
   .bk-type.aan{color:#e6c07a;border-color:#e6c07a}
-  .bk-avelden{display:flex;gap:6px;margin:2px 0 4px 24px}
-  .bk-avelden input{background:transparent;border:1px solid var(--line);border-radius:8px;color:var(--mut);font:inherit;font-size:11.5px;padding:2px 7px;outline:none;color-scheme:dark}
-  .bk-voet{display:flex;gap:8px;margin-top:9px}
-  .bk-ok{border-color:#e6c07a;color:#e6c07a}
+  .bk-avelden{display:flex;gap:8px;margin:2px 0 4px 34px}
+  .bk-avelden input{background:#1a1a1a;border:0.5px solid rgba(255,255,255,.12);border-radius:8px;color:var(--txt);font:inherit;font-size:12.5px;padding:5px 9px;outline:none;color-scheme:dark}
+  .bk-voet{display:flex;align-items:center;gap:10px;margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.08)}
+  .bk-voet .fv-btn{display:inline-flex;align-items:center;gap:7px}
+  .bk-ok{border-color:var(--kk,#cbb26a);color:#1a1400;background:var(--kk,#cbb26a)}
+  .bk-weg{margin-left:auto;border:none;color:var(--mut2);padding:8px}
   .dp{border:1px dashed var(--line);border-radius:14px;padding:11px 12px;margin-bottom:12px}
   .dp-rij{margin-bottom:10px}
   .dp-rij:last-child{margin-bottom:0}
@@ -2562,7 +2566,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v290</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v291</span>
       <!-- V244: loep verhuisd naar het hoofdmenu (waar Bestanden/Contacten stonden). -->
       <!-- V242: Dagoverzicht voorlopig uit beeld (afgesproken 16 juli) — openDayOverview en de overlay blijven in de code staan. -->
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
@@ -9782,24 +9786,49 @@ function _accordKaartenHTML(){
     const klOpts='<option value="">— klant —</option>'+kl.map(c=>`<option${st.client===c?' selected':''}>${escapeHtml(c)}</option>`).join('');
     const projs=state.projects.filter(p=>p.id!=='__inbox__'&&p.client===st.client);
     const prOpts='<option value="">— project —</option>'+projs.map(p=>`<option value="${p.id}"${st.project_id===p.id?' selected':''}>${escapeHtml(p.project||p.client)}</option>`).join('');
-    const rows=st.rows.map((r,i)=>{
-      const uit=r.on===false; const isA=r.type==='afspraak'; const isF=r.type==='feit';
-      let h=`<div class="bk-rij${uit?' uit':''}${isF?' feit':''}">
-        <button class="bv-chk" onclick="bkToggle('${s.id}',${i})" title="${uit?'Meenemen':'Overslaan'}">${_bvBoxSvg(uit?'#5a5a5f':'#c9c9cd',false)}</button>
+    // Klantkleur voor de accenten; val terug op een rustige goudtint als de klant geen
+    // (of een te donkere) kleur heeft, zodat "aan" altijd leesbaar blijft op de donkere kaart.
+    const col=_accKleur(st.client);
+    // Eén picto per regel; de sectie zegt al of het een taak, afspraak of feit is.
+    const rijHtml=(r,i)=>{
+      const uit=r.on===false; const isA=r.type==='afspraak';
+      const picto=isA?_accCal(!uit,col):(r.type==='feit'?_accLamp(!uit,col):_accChk(!uit,col));
+      let h=`<div class="bk-rij${uit?' uit':''}">
+        <button class="bk-toggle" onclick="bkToggle('${s.id}',${i})" title="${uit?'Weer meenemen':'Uitzetten'}">${picto}</button>
         <input class="bk-tx" value="${escapeHtml(r.t||'')}" oninput="_bkState['${s.id}'].rows[${i}].t=this.value">
-        <button class="bk-type${(isA||isF)?' aan':''}" onclick="bkType('${s.id}',${i})" title="Klik om te wisselen: taak → afspraak → feit">${isF?'feit':(isA?'afspraak':'taak')}</button>
       </div>`;
       if(isA&&!uit) h+=`<div class="bk-avelden"><input type="date" value="${r.date||''}" onchange="_bkState['${s.id}'].rows[${i}].date=this.value||null"><input type="time" value="${r.start||''}" onchange="_bkState['${s.id}'].rows[${i}].start=this.value||null"></div>`;
       return h;
-    }).join('');
-    return `<div class="bk">
+    };
+    const idx=st.rows.map((r,i)=>i);
+    const grp=(pred)=>idx.filter(i=>pred(st.rows[i]));
+    const gTaken=grp(r=>!r.type||r.type==='taak');
+    const gAppts=grp(r=>r.type==='afspraak');
+    const gFeit=grp(r=>r.type==='feit');
+    const sectie=(label,ids)=>ids.length?`<div class="bk-sec" style="--kk:${col}">${label}</div>${ids.map(i=>rijHtml(st.rows[i],i)).join('')}`:'';
+    const body=sectie('Taken',gTaken)+sectie('Afspraken',gAppts)+sectie('Feiten',gFeit);
+    return `<div class="bk" style="--kk:${col}">
       <div class="bk-kop"><span class="bk-ttl">${escapeHtml(st.titel||'Nieuw binnengekomen')}</span><span class="bk-sub">${escapeHtml((typeof _srcTitle==='function')?_srcTitle(s):'bron')} · AI vulde ${st.rows.length} punt${st.rows.length===1?'':'en'} in</span></div>
       <div class="bk-sel"><select onchange="bkClient('${s.id}',this.value)">${klOpts}</select><select onchange="_bkState['${s.id}'].project_id=this.value">${prOpts}</select></div>
-      ${rows}
-      <div class="bk-voet"><button class="fv-btn bk-ok" onclick="bkAkkoord('${s.id}',this)">✓ akkoord</button><button class="fv-btn" onclick="bkBewaar('${s.id}',this)" title="Alleen het bestand en de feiten bewaren — geen taken of afspraken maken">alleen bewaren</button><button class="fv-btn ghost" onclick="bkWeg('${s.id}')" title="Voorstellen weggooien (bron en bestand blijven)">×</button></div>
+      ${body}
+      <div class="bk-voet"><button class="fv-btn bk-ok" onclick="bkAkkoord('${s.id}',this)">${_tIc('<path d="M5 12l5 5l10 -10"/>',15,2)}<span>Opslaan</span></button><button class="fv-btn" onclick="bkBewaar('${s.id}',this)" title="Alleen het bestand en de feiten bewaren — geen taken of afspraken maken">${_tIc('<path d="M3 4h18v4H3z"/><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1 -1V8"/><path d="M10 12h4"/>',15,1.6)}<span>Archief</span></button><button class="fv-btn ghost bk-weg" onclick="bkWeg('${s.id}')" title="Voorstellen weggooien (bron en bestand blijven)">${_tIc('<path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/>',15,1.6)}</button></div>
     </div>`;
   }).join('');
 }
+// Klantkleur-fallback: geldige, niet te donkere hex → gebruik 'm; anders rustige goudtint.
+function _accKleur(client){
+  let c=''; try{ const p=(state.projects||[]).find(x=>x.id!=='__inbox__'&&x.client===client); c=(p&&p.color)||''; }catch(_){}
+  c=String(c||'').trim();
+  if(/^#([0-9a-f]{6})$/i.test(c)){ const r=parseInt(c.slice(1,3),16),g=parseInt(c.slice(3,5),16),b=parseInt(c.slice(5,7),16);
+    const lum=0.2126*r+0.7152*g+0.0722*b; if(lum>60) return c; }
+  return '#cbb26a';
+}
+// Taak-vinkje: omlijnd afgerond vierkantje; aan = klantkleur + vinkje, uit = grijs, leeg.
+function _accChk(on,col){ const c=on?col:'#5a574f'; return '<svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="'+c+'" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5.5"/>'+(on?'<path d="M8 12.5l2.6 2.6l5 -5.6" stroke-width="2"/>':'')+'</svg>'; }
+// Feit-lampje: aan = klantkleur, uit = grijs.
+function _accLamp(on,col){ const c=on?col:'#5a574f'; return '<svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="'+c+'" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0 -4 10.4c.7 .7 1 1.5 1 2.6h6c0 -1.1 .3 -1.9 1 -2.6A6 6 0 0 0 12 3z"/></svg>'; }
+// Afspraak-picto: kalender.
+function _accCal(on,col){ const c=on?col:'#5a574f'; return '<svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="'+c+'" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="16" rx="3"/><path d="M16 3v4M8 3v4M4 11h16"/></svg>'; }
 function bkToggle(sid,i){ const st=_bkState[sid]; if(!st||!st.rows[i])return; st.rows[i].on=(st.rows[i].on===false); renderRail(); }
 function bkType(sid,i){ const st=_bkState[sid]; if(!st||!st.rows[i])return; const t=st.rows[i].type; st.rows[i].type=(t==='taak'||!t)?'afspraak':(t==='afspraak'?'feit':'taak'); st.rows[i].on=true; renderRail(); }
 function bkClient(sid,v){ const st=_bkState[sid]; if(!st)return; st.client=v; st.project_id=''; renderRail(); }
