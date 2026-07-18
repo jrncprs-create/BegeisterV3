@@ -226,7 +226,7 @@
   .cdd-cur{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .cdd-chev{flex:0 0 auto;color:var(--mut2);transition:transform .15s}
   .cdd.open .cdd-chev{transform:rotate(180deg)}
-  .cdd-menu{position:absolute;top:calc(100% + 6px);left:0;right:0;background:#2a2a2a;border:1px solid #3a3a3a;border-radius:12px;padding:6px;z-index:60;box-shadow:0 14px 38px rgba(0,0,0,.6);display:none;max-height:62vh;overflow:auto;scrollbar-width:none}
+  .cdd-menu{position:absolute;top:calc(100% + 6px);left:0;right:0;background:#000;border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:6px;z-index:60;box-shadow:0 14px 38px rgba(0,0,0,.7);display:none;max-height:62vh;overflow:auto;scrollbar-width:none}
   .cdd-menu::-webkit-scrollbar{display:none}
   .cdd.open .cdd-menu{display:block}
   /* Open menu wordt naar <body> verplaatst en op het scherm vastgezet (past altijd, klapt slim om) */
@@ -2566,7 +2566,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v292</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v293</span>
       <!-- V244: loep verhuisd naar het hoofdmenu (waar Bestanden/Contacten stonden). -->
       <!-- V242: Dagoverzicht voorlopig uit beeld (afgesproken 16 juli) — openDayOverview en de overlay blijven in de code staan. -->
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
