@@ -61,6 +61,49 @@ async function aiFromBlocks(blocks, opts, src) {
   return { reply: parsed.reply || "", items, facts, kind, client: (parsed.client || "").toString().trim(), project: (parsed.project || "").toString().trim(), type: (parsed.type || "").toString().trim(), from: (parsed.from || "").toString().trim(), category: (parsed.category || "").toString().trim(), subject: (parsed.subject || "").toString().trim() };
 }
 
+// De bestandsnaam is vaak het duidelijkste signaal ("Ostrica Athene 2027 - Pitch.html").
+// We normaliseren eerst (koppeltekens/underscores → spaties, accenten weg, extensie weg)
+// zodat ook hernoemde bestanden als "Ostrica-Athene-2027-pitch-v1.html" gewoon matchen.
+function _norm(s) {
+  return String(s || "")
+    .normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/\.[a-z0-9]{1,5}$/i, " ")      // extensie weg
+    .replace(/[_\-–—.]+/g, " ")   // koppeltekens/underscores → spatie
+    .replace(/\s+/g, " ").trim();
+}
+// Raad klant/project uit de bestandsnaam; kiest de LANGSTE match zodat "Athene 2027" wint
+// van een kortere toevallige treffer.
+function raadUitNaam(name, catalog) {
+  const n = " " + _norm(name) + " ";
+  let best = { client: "", project: "", project_id: null, score: 0 };
+  for (const c of catalog || []) {
+    const cl = _norm(c.client), pr = _norm(c.project);
+    const heeftCl = !!(cl && n.includes(cl));
+    const heeftPr = !!(pr && n.includes(pr));
+    if (!heeftCl && !heeftPr) continue;
+    const score = (heeftCl ? cl.length : 0) + (heeftPr ? pr.length * 2 : 0);
+    if (score > best.score) {
+      best = { client: (heeftCl || heeftPr) ? c.client : "", project: heeftPr ? c.project : "", project_id: heeftPr ? c.project_id : null, score };
+    }
+  }
+  return { client: best.client || "", project: best.project || "", project_id: best.project_id || null };
+}
+// Vul klant/project aan uit de bestandsnaam wanneer de AI ze niet uit de inhoud kon halen.
+function metNaamFallback(out, name, catalog) {
+  const o = out || {};
+  if (!String(o.client || "").trim() || !String(o.project || "").trim()) {
+    const g = raadUitNaam(name, catalog);
+    if (!String(o.client || "").trim() && g.client) o.client = g.client;
+    if (!String(o.project || "").trim() && g.project) o.project = g.project;
+    if (!o.project_id && g.project_id) o.project_id = g.project_id;
+  }
+  // Weten we het nog steeds niet? Dan gaat het bestand naar "Inkomend" — daar raakt niets
+  // kwijt en kun je het later alsnog aan een klant/project hangen.
+  if (!String(o.client || "").trim()) o.category = "Inkomend";
+  return o;
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "method not allowed" });
   try {
@@ -76,7 +119,7 @@ export default async function handler(req, res) {
         { type: "image", source: { type: "base64", media_type: mime || "image/jpeg", data } },
         { type: "text", text: `Toegevoegde afbeelding${name ? " (" + name + ")" : ""}. Vat samen en stel actiepunten voor.` },
       ];
-      return res.status(200).json(await aiFromBlocks(blocks, opts, "drop-image"));
+      return res.status(200).json(metNaamFallback(await aiFromBlocks(blocks, opts, "drop-image"), name, catalog));
     }
 
     // 2) PDF → document-block (Claude leest de PDF zelf)
@@ -86,7 +129,7 @@ export default async function handler(req, res) {
         { type: "document", source: { type: "base64", media_type: "application/pdf", data } },
         { type: "text", text: `Toegevoegde PDF${name ? " (" + name + ")" : ""}. Vat samen en stel actiepunten voor.` },
       ];
-      return res.status(200).json(await aiFromBlocks(blocks, opts, "drop-pdf"));
+      return res.status(200).json(metNaamFallback(await aiFromBlocks(blocks, opts, "drop-pdf"), name, catalog));
     }
 
     // 2b) U9 — Spraakmemo (.m4a/.mp3/.wav/…): eerst transcriberen (Groq Whisper, dezelfde
@@ -107,12 +150,12 @@ export default async function handler(req, res) {
       if (!transcript) return res.status(200).json({ reply: "Ik hoorde geen verstaanbare tekst in dit spraakbericht.", items: [], transcript: "", type: "spraakmemo", subject: name });
       const ex = await extractItems({ text: transcript, sender: who || "Spraakmemo", subject: name, today, catalog, context });
       if (ex.usage) { try { await logUsage(null, { source: "drop-audio", ...ex.usage }); } catch (_) {} }
-      return res.status(200).json({
+      return res.status(200).json(metNaamFallback({
         reply: (ex.summary || "Spraakmemo gelezen.") , transcript,
         items: ex.items || [], facts: ex.facts || [], appointments: ex.appointments || [], contacts: ex.contacts || [], client: ex.client || "", project: ex.project || "",
         type: ex.type || "spraakmemo", from: ex.from || (who || ""),
         category: ex.category || "Briefing", subject: ex.subject || name,
-      });
+      }, name, catalog));
     }
 
     // 3) Word (.docx) → tekst eruit halen met mammoth, dan extractItems
@@ -129,7 +172,7 @@ export default async function handler(req, res) {
       if (!docText) return res.status(200).json({ reply: "Het Word-document lijkt leeg of bevat geen leesbare tekst.", items: [] });
       const ex = await extractItems({ text: docText, sender: who || "Document", subject: name, today, catalog, context });
       if (ex.usage) { try { await logUsage(null, { source: "drop-docx", ...ex.usage }); } catch (_) {} }
-      return res.status(200).json({ reply: ex.summary || "Document gelezen.", items: ex.items || [], facts: ex.facts || [], appointments: ex.appointments || [], contacts: ex.contacts || [], client: ex.client || "", project: ex.project || "", type: ex.type || "", from: ex.from || "", category: ex.category || "", subject: ex.subject || "" });
+      return res.status(200).json(metNaamFallback({ reply: ex.summary || "Document gelezen.", items: ex.items || [], facts: ex.facts || [], appointments: ex.appointments || [], contacts: ex.contacts || [], client: ex.client || "", project: ex.project || "", type: ex.type || "", from: ex.from || "", category: ex.category || "", subject: ex.subject || "" }, name, catalog));
     }
 
     // 4) HTML (.html/.htm) → tags/scripts/styles strippen, dan de leesbare tekst laten lezen.
@@ -148,22 +191,20 @@ export default async function handler(req, res) {
       // bestandsnaam en zetten het klaar (het portaal rendert het deck later gewoon live).
       if (t.length < 300) {
         const laag = String(name || "").toLowerCase();
-        let cli = "", prj = "";
-        for (const c of catalog || []) {
-          if (c.client && laag.includes(String(c.client).toLowerCase())) { cli = c.client; if (c.project && laag.includes(String(c.project).toLowerCase())) prj = c.project; break; }
-        }
+        const g = raadUitNaam(name, catalog);
+        const cli = g.client, prj = g.project;
         const isDeck = /pitch|deck|voorstel|presentatie|slides?/.test(laag);
-        return res.status(200).json({
+        return res.status(200).json(metNaamFallback({
           reply: isDeck ? "Pitch/deck herkend — klaar om op te slaan. (De pagina bouwt zichzelf met JavaScript, dus ik kon de inhoud niet meelezen; in het portaal opent hij gewoon.)"
                         : "Interactieve HTML-pagina herkend — klaar om op te slaan.",
-          items: [], client: cli, project: prj, type: isDeck ? "pitchdeck" : "html", from: who || "",
+          items: [], client: cli, project: prj, project_id: g.project_id || null, type: isDeck ? "pitchdeck" : "html", from: who || "",
           category: "Concept & ontwerp", subject: name,
-        });
+        }, name, catalog));
       }
       t = t.slice(0, 24000);
       const ex = await extractItems({ text: t, sender: who || "HTML", subject: name, today, catalog, context });
       if (ex.usage) { try { await logUsage(null, { source: "drop-html", ...ex.usage }); } catch (_) {} }
-      return res.status(200).json({ reply: ex.summary || "HTML gelezen.", items: ex.items || [], facts: ex.facts || [], appointments: ex.appointments || [], contacts: ex.contacts || [], client: ex.client || "", project: ex.project || "", type: ex.type || "", from: ex.from || "", category: ex.category || "", subject: ex.subject || "" });
+      return res.status(200).json(metNaamFallback({ reply: ex.summary || "HTML gelezen.", items: ex.items || [], facts: ex.facts || [], appointments: ex.appointments || [], contacts: ex.contacts || [], client: ex.client || "", project: ex.project || "", type: ex.type || "", from: ex.from || "", category: ex.category || "", subject: ex.subject || "" }, name, catalog));
     }
 
     // 5) Platte tekst (.txt/.md/etc.) → extractItems
@@ -171,7 +212,7 @@ export default async function handler(req, res) {
     if (plain) {
       const ex = await extractItems({ text: plain, sender: who || "Tekst", subject: name, today, catalog, context });
       if (ex.usage) { try { await logUsage(null, { source: "drop-text", ...ex.usage }); } catch (_) {} }
-      return res.status(200).json({ reply: ex.summary || "Tekst gelezen.", items: ex.items || [], facts: ex.facts || [], appointments: ex.appointments || [], contacts: ex.contacts || [], client: ex.client || "", project: ex.project || "", type: ex.type || "", from: ex.from || "", category: ex.category || "", subject: ex.subject || "" });
+      return res.status(200).json(metNaamFallback({ reply: ex.summary || "Tekst gelezen.", items: ex.items || [], facts: ex.facts || [], appointments: ex.appointments || [], contacts: ex.contacts || [], client: ex.client || "", project: ex.project || "", type: ex.type || "", from: ex.from || "", category: ex.category || "", subject: ex.subject || "" }, name, catalog));
     }
 
     return res.status(400).json({ error: "leeg of niet-ondersteund bestandstype: " + (mime || name) });
