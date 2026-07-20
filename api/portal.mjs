@@ -63,6 +63,18 @@ async function wieBelt(db, req) {
   return { user: data.user, client: klant };
 }
 
+// Wie geeft het akkoord? Niet de bedrijfsnaam, maar de persoon die is ingelogd. Naam uit
+// het profiel, anders het deel vóór de @ van het e-mailadres — nooit leeg.
+function wiePersoon(ik) {
+  const u = (ik && ik.user) || {};
+  const m = u.user_metadata || {};
+  const email = String(u.email || "").trim();
+  const naam = String(m.full_name || m.name || m.naam || "").trim()
+    || (email ? email.split("@")[0].replace(/[._-]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) : "")
+    || String((ik && ik.client && ik.client.name) || "Klant");
+  return { naam, email };
+}
+
 function zichtbaar(p) {
   const z = (p && p.portal_secties) || {};
   const uit = {};
@@ -102,7 +114,10 @@ async function projectPagina(db, p) {
     db.from("files").select("id,name,link,icon,visible_to_client,is_voorstel,voorstel_soort,ter_akkoord,akkoord_op,akkoord_door,sort_order").eq("owner_type", "project").eq("owner_id", pid),
     db.from("documents").select("id,filename,link,category,visible_to_client,is_voorstel,voorstel_soort,origin,ter_akkoord,akkoord_op,akkoord_door,sort_order").eq("project_id", pid).neq("origin", "file"),
     db.from("comments").select("id,sectie,author,body,van_klant,created_at").eq("scope", "portal").eq("ref_id", pid).order("created_at"),
-    db.from("approvals").select("approved_at,snapshot_sha").eq("project_id", pid).maybeSingle(),
+    // Alle akkoorden van dit project (idee, budget én per document). Bewust géén
+    // maybeSingle: zodra er meer dan één akkoord was, gaf die een fout en verdween
+    // het akkoordblok stilletjes uit het portaal.
+    db.from("approvals").select("approved_at,snapshot,snapshot_sha,soort,voorstel_ref").eq("project_id", pid).order("approved_at"),
   ]);
 
   pagina.taken   = (items.data || []).filter((i) => i.status !== "wait").map((i) => ({ t: i.title, done: i.status === "done" }));
@@ -127,7 +142,21 @@ async function projectPagina(db, p) {
   pagina.opmerkingen = {};
   for (const c of cmts.data || []) { const s = c.sectie || "algemeen"; (pagina.opmerkingen[s] = pagina.opmerkingen[s] || []).push(c); }
 
-  pagina.akkoord = appr.data || null;
+  // Akkoordenlogboek — precies dezelfde lijst voor de klant en voor ons: wie, waarop,
+  // wanneer. Geen interpretatie, gewoon wat er is vastgelegd.
+  const _appr = appr.data || [];
+  pagina.akkoorden = _appr.map((a) => {
+    const s = a.snapshot || {};
+    return {
+      soort: a.soort || "",
+      wat: s.document || (a.soort === "budget" ? "Budget" : a.soort === "idee" ? "Idee" : "Akkoord"),
+      persoon: s.persoon || s.klant || "",
+      email: s.email || "",
+      op: a.approved_at || s.genomen_op || null,
+      kenmerk: String(a.snapshot_sha || "").slice(0, 12),
+    };
+  }).sort((a, b) => String(a.op || "").localeCompare(String(b.op || "")));
+  pagina.akkoord = _appr.length ? _appr[_appr.length - 1] : null;
   return pagina;
 }
 
@@ -190,30 +219,63 @@ export default async function handler(req, res) {
       });
     }
 
-    // L11 — de klant tekent per document. Naam + moment worden vastgelegd; het team krijgt een push.
+    // L11 — de klant tekent per document. We leggen de PERSOON vast (niet alleen de
+    // bedrijfsnaam) plus een onveranderlijke momentopname van wát er is goedgekeurd.
+    // Het akkoord is daarna zichtbaar aan beide kanten: bij de klant in het portaal,
+    // bij ons in het dossier — en er gaat direct een pushbericht uit.
     if (action === "doc_akkoord") {
       const { file_id } = req.body || {};
-      const wie = ik.client.name || "Klant";
+      const persoon = wiePersoon(ik);
+      const wie = persoon.naam;
       const wanneer = new Date().toISOString();
-      let naam = "document";
+      let naam = "document", link = "", projectId = null;
       if (String(file_id).startsWith("doc:")) {
         const did = String(file_id).slice(4);
-        const { data: d0 } = await db.from("documents").select("filename,ter_akkoord").eq("id", did).maybeSingle();
+        const { data: d0 } = await db.from("documents").select("filename,link,project_id,ter_akkoord").eq("id", did).maybeSingle();
         if (!d0 || !d0.ter_akkoord) return fout(res, 404, "niet ter akkoord");
-        naam = d0.filename || naam;
+        naam = d0.filename || naam; link = d0.link || ""; projectId = d0.project_id || null;
         const { error } = await db.from("documents").update({ akkoord_op: wanneer, akkoord_door: wie }).eq("id", did);
         if (error) throw error;
       } else {
-        const { data: f0 } = await db.from("files").select("name,ter_akkoord").eq("id", file_id).maybeSingle();
+        const { data: f0 } = await db.from("files").select("name,link,owner_id,owner_type,ter_akkoord").eq("id", file_id).maybeSingle();
         if (!f0 || !f0.ter_akkoord) return fout(res, 404, "niet ter akkoord");
-        naam = f0.name || naam;
+        naam = f0.name || naam; link = f0.link || "";
+        projectId = (f0.owner_type === "project") ? (f0.owner_id || null) : null;
         const { error } = await db.from("files").update({ akkoord_op: wanneer, akkoord_door: wie }).eq("id", file_id);
         if (error) throw error;
       }
+
+      // Projectnaam erbij (voor het pushbericht en de momentopname).
+      let projectNaam = "";
+      if (projectId) {
+        try { const { data: pr } = await db.from("projects").select("project").eq("id", projectId).maybeSingle(); projectNaam = (pr && pr.project) || ""; } catch (_) {}
+      }
+
+      // Momentopname + vingerafdruk: hiermee kun je later aantonen wélke versie is
+      // goedgekeurd, ook als het bestand daarna is vervangen.
+      let sha = "";
+      try {
+        const snapshot = {
+          genomen_op: wanneer, soort: "document", document: naam, link,
+          klant: ik.client.name, project: projectNaam,
+          persoon: persoon.naam, email: persoon.email, user_id: ik.user.id,
+        };
+        sha = createHash("sha256").update(JSON.stringify(snapshot)).digest("hex");
+        await db.from("approvals").insert({
+          project_id: projectId, doc_id: null, user_id: ik.user.id, client_id: ik.client.id,
+          soort: "document", voorstel_ref: String(file_id), snapshot, snapshot_sha: sha,
+        });
+      } catch (e) { console.error("doc_akkoord historie", e && e.message); }
+
       try {
         const { sendToAll } = await import("../lib/push.mjs");
-        await sendToAll(db, { title: "Akkoord van " + wie, body: wie + " gaf akkoord op " + naam, url: "/" });
-      } catch (_) {}
+        await sendToAll(db, {
+          title: "Akkoord van " + wie + (ik.client.name && ik.client.name !== wie ? " (" + ik.client.name + ")" : ""),
+          body: naam + (projectNaam ? " · " + projectNaam : ""),
+          url: "/",
+        });
+      } catch (e) { console.error("doc_akkoord push", e && e.message); }
+
       return res.status(200).json({ ok: true, akkoord_op: wanneer, akkoord_door: wie });
     }
 
@@ -278,9 +340,11 @@ export default async function handler(req, res) {
       const { error } = await db.from("projects").update(patch).eq("id", project_id);
       if (error) throw error;
 
-      // Historie: een akkoord-rij met snapshot per spoor (voor de zekerheid, niet fataal).
+      // Historie: een akkoord-rij met momentopname per spoor (voor de zekerheid, niet fataal).
+      // Ook hier de persoon erbij, niet alleen de bedrijfsnaam.
       try {
-        const snapshot = { genomen_op: nu, soort, klant: ik.client.name, project: p.project, fase: patch.phase || p.phase };
+        const wp = wiePersoon(ik);
+        const snapshot = { genomen_op: nu, soort, klant: ik.client.name, project: p.project, fase: patch.phase || p.phase, persoon: wp.naam, email: wp.email, user_id: ik.user.id };
         const sha = createHash("sha256").update(JSON.stringify(snapshot)).digest("hex");
         await db.from("approvals").insert({
           project_id, doc_id: null, user_id: ik.user.id, client_id: ik.client.id,
@@ -289,9 +353,10 @@ export default async function handler(req, res) {
       } catch (e) { console.error("portal akkoord historie", e && e.message); }
 
       try {
+        const wp2 = wiePersoon(ik);
         await fetch(`http://127.0.0.1:${process.env.PORT || 8080}/api/notify`, {
           method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ title: `${ik.client.name} gaf akkoord op ${soort}`, body: p.project + (patch.phase ? " · nu in productie" : ""), url: "/" }),
+          body: JSON.stringify({ title: `${wp2.naam} gaf akkoord op ${soort}`, body: ik.client.name + " · " + p.project + (patch.phase ? " · nu in productie" : ""), url: "/" }),
         });
       } catch (e) { console.error("portal akkoord melding", e && e.message); }
 
