@@ -121,6 +121,12 @@ input:focus-visible,textarea:focus-visible{box-shadow:none}
 .thumb .tlbl{font-size:9.5px;letter-spacing:.1em;color:color-mix(in srgb,var(--scol) 70%,transparent);text-transform:uppercase;text-align:center;line-height:1.5;padding:4px}
 .thumb.klein{width:60px;height:42px}
 .f-ok{font-size:12px;color:#5bd08a;margin-top:2px}
+/* akkoordenlogboek */
+.akk-rij{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid color-mix(in srgb,var(--scol) 12%,transparent)}
+.akk-rij:last-child{border-bottom:0}
+.akk-vink{color:var(--scol);flex:none;position:relative;top:2px}
+.akk-tx{flex:1;min-width:0}
+.akk-tx .tx{margin:0}
 .f-sub{font-size:12px;color:color-mix(in srgb,var(--scol) 55%,transparent);margin-top:2px}
 
 /* inklapbare secties */
@@ -172,6 +178,8 @@ const sb=supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefr
 
 const MERK='<svg viewBox="0 0 147.39 172.8" fill="none" stroke="currentColor" stroke-width="4" width="100%" height="100%"><path d="M73.7 4v164.8"/><path d="M6 40l135.4 92.8"/><path d="M141.4 40L6 132.8"/></svg>';
 const CHEV='<svg class="chev" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6l6 -6"/></svg>';
+// Huisstijl-vinkje: outline afgerond vierkantje met een vink erin, in de klantkleur.
+const VINKJE='<svg class="akk-vink" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="5.5"/><path d="M8 12.3l2.8 2.8L16.2 9.6"/></svg>';
 const FICO='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/></svg>';
 
 const EMBED=new URLSearchParams(location.search).get('embed')==='1';
@@ -320,6 +328,15 @@ function render(){
     R+=V;
   }
 
+  // Akkoordenlogboek — wat er is goedgekeurd, door wie en wanneer. Zelfde lijst als wij
+  // in het dossier zien, zodat er nooit onduidelijkheid over kan bestaan.
+  if((p.akkoorden||[]).length) R+=sec('akkoorden','Akkoorden',(p.akkoorden||[]).map(a=>
+      '<div class="akk-rij">'+VINKJE
+      +'<div class="akk-tx"><div class="tx">'+esc(a.wat||'Akkoord')+'</div>'
+      +'<div class="f-sub">'+esc(a.persoon||'')+(a.email?' · '+esc(a.email):'')+'</div></div>'
+      +'<span class="meta">'+esc(datum(a.op))+'</span></div>').join('')
+    +'<div class="akknoot" style="margin-top:12px">Vastgelegd met naam, moment en een kenmerk van de goedgekeurde versie. Klopt er iets niet? Laat het weten, dan draaien we het terug.</div>');
+
   if(!L) L='<div class="midden">Nog niets om te tonen.</div>';
   document.getElementById('app').innerHTML='<div class="wrap">'+kopHtml(p)+'<div class="grid"><div class="colL">'+L+'</div><div class="colR">'+R+'</div></div></div>';
   bind(p);
@@ -350,7 +367,7 @@ function bind(p){
   document.querySelectorAll('[data-opm]').forEach(b=>b.onclick=async()=>{ const s=b.dataset.opm; const ta=document.getElementById('ot_'+s); const t=(ta.value||'').trim(); if(!t)return; b.disabled=true;
     try{ await api('reactie',{project_id:p.id,sectie:s,body:t}); ta.value=''; OPEN_OPM.add(s); toast('Geplaatst.'); await laad(); }catch(e){ toast(e.message); b.disabled=false; } });
   document.querySelectorAll('[data-gate]').forEach(b=>b.onclick=async()=>{ const soort=b.dataset.gate;
-    if(!confirm('Akkoord geven op '+(soort==='budget'?'het budget':'het idee')+'? We gaan hiermee verder.'))return; b.disabled=true; b.textContent='Momentje…';
+    if(!confirm('Akkoord geven op '+(soort==='budget'?'het budget':'het idee')+'? Dit wordt vastgelegd met je naam en het moment, en is daarna zichtbaar in je portaal.'))return; b.disabled=true; b.textContent='Momentje…';
     try{ await api('akkoord',{project_id:p.id,soort}); toast('Akkoord vastgelegd.'); await laad(); }catch(e){ toast(e.message); b.disabled=false; b.textContent='Akkoord geven'; } });
   document.querySelectorAll('[data-vopen]').forEach(b=>b.onclick=()=>toonVoorstel(b.dataset.vlink,b.dataset.vnaam));
 }
@@ -378,7 +395,7 @@ function toonVoorstel(link,naam){
 async function laad(){ const j=PREVIEW?await api('preview',{project_id:PREVIEW}):await api('data'); DATA=j; if(ACTIEF>=DATA.projecten.length)ACTIEF=0; render(); }
 async function docAkkoord(id,btn){
   if(PREVIEW){ toast('Voorbeeld — akkoord geven doet de klant zelf.'); return; }
-  if(!confirm('Akkoord geven op dit document? Dit wordt vastgelegd met je naam en datum.')) return;
+  if(!confirm('Akkoord geven op dit document? Dit wordt vastgelegd met je naam en het moment, en is daarna zichtbaar in je portaal.')) return;
   if(btn){ btn.disabled=true; btn.textContent='Momentje…'; }
   try{ const p=DATA.projecten[ACTIEF]; await api('doc_akkoord',{file_id:id,project_id:p&&p.id}); toast('Akkoord vastgelegd — dank je wel.'); await laad(); }
   catch(e){ toast(e.message); if(btn){ btn.disabled=false; btn.textContent='Akkoord geven'; } }
