@@ -48,6 +48,49 @@ async function loadContext(db) {
   } catch (_) { return ""; }
 }
 
+// Projectgeheugen (1 aug 2026, zie AI-DOORLICHTING.md lek 2): recente feiten en open
+// taken per project meegeven aan de extractie, zodat elk bericht niet wordt behandeld
+// door "een uitzendkracht op dag één". Compact: max 5 feiten + 5 open taken per project,
+// alleen projecten uit de catalogus, en het geheel gemaximeerd op ~6000 tekens.
+// Faalt stil: zonder projectkennis werkt de intake gewoon zoals voorheen.
+async function loadProjectkennis(db, catalog) {
+  try {
+    const [fRes, iRes] = await Promise.all([
+      db.from("facts").select("project_id, text").order("created_at", { ascending: false }).limit(150),
+      db.from("items").select("project_id, title, status").neq("status", "done").limit(200),
+    ]);
+    const byProj = new Map();
+    const bak = (pid) => {
+      if (!byProj.has(pid)) byProj.set(pid, { feiten: [], taken: [] });
+      return byProj.get(pid);
+    };
+    for (const f of (fRes.data || [])) {
+      if (!f.project_id || !f.text) continue;
+      const b = bak(String(f.project_id));
+      if (b.feiten.length < 5) b.feiten.push(String(f.text).replace(/\s+/g, " ").slice(0, 140));
+    }
+    for (const it of (iRes.data || [])) {
+      if (!it.project_id || !it.title) continue;
+      const b = bak(String(it.project_id));
+      if (b.taken.length < 5) b.taken.push(String(it.title).replace(/\s+/g, " ").slice(0, 100));
+    }
+    const regels = [];
+    for (const c of catalog) {
+      const b = byProj.get(String(c.project_id));
+      if (!b || (!b.feiten.length && !b.taken.length)) continue;
+      const kop = `• ${c.client}${c.project ? " · " + c.project : ""} (${c.project_id})`;
+      const sub = [];
+      if (b.feiten.length) sub.push("  feiten: " + b.feiten.join(" | "));
+      if (b.taken.length) sub.push("  open taken: " + b.taken.join(" | "));
+      regels.push(kop + "\n" + sub.join("\n"));
+      if (regels.length >= 20) break;
+    }
+    if (!regels.length) return "";
+    return ("PROJECTKENNIS (recente feiten en open taken per project — gebruik dit om berichten te herkennen en aan het juiste project te koppelen; herhaal bekende feiten niet als nieuw feit):\n"
+      + regels.join("\n")).slice(0, 6000);
+  } catch (_) { return ""; }
+}
+
 // Gevonden contacten opslaan. Dedupe: op e-mail indien aanwezig (upsert),
 // anders alleen inserten als er nog geen contact met dezelfde (lower) naam is.
 async function saveContacts(db, contacts, sourceId, projectId) {
@@ -79,6 +122,7 @@ export async function run() {
   const db = supa();
   const catalog = await loadCatalog(db);
   const context = await loadContext(db);
+  const kennis = await loadProjectkennis(db, catalog);
   const today = new Date().toISOString().slice(0, 10);
 
   const client = new ImapFlow({
@@ -186,7 +230,8 @@ export async function run() {
 
         // 3) Claude haalt actiepunten (en contacten) eruit
         const { items, summary, contacts, usage, client: exClient = "", project: exProject = "", reply: exReply = "", appointments: exAppts = [], facts: exFacts = [], kind: exKind = "werk" } = await extractItems({
-          text: body, sender, subject: mail.subject || "", today, catalog, context,
+          text: body, sender, subject: mail.subject || "", today, catalog,
+          context: [context, kennis].filter(Boolean).join("\n\n"),
         });
         // verbruik loggen (faalt stil)
         if (usage) await logUsage(db, { source: "intake", ...usage });

@@ -3,10 +3,11 @@
 // Verzint nooit een klant: kiest uitsluitend uit de meegegeven catalogus.
 import Anthropic from "@anthropic-ai/sdk";
 import { createMessage } from "../lib/airetry.mjs";
+import { BEGEISTER_REGELS } from "../lib/ai-regels.mjs";
 
 const KEY = (process.env.ANTHROPIC_API_KEY || "").trim();
 const anthropic = KEY ? new Anthropic({ apiKey: KEY }) : null;
-const MODEL = "claude-haiku-4-5-20251001";
+import { MODEL_SLIM as MODEL } from "../lib/models.mjs";
 
 const KINDS = ["werk", "inspiratie", "prive", "ruis"];
 
@@ -127,13 +128,15 @@ Geef per bron:
 CATALOGUS (project_id → klant · project):
 ${catTxt}
 
+${BEGEISTER_REGELS}
+
 Antwoord ALLEEN met geldige JSON, zonder tekst eromheen:
 {"<bron-id>":{"kind":"werk","project_id":"","reden":"","nieuw_klant":"","nieuw_project":""}}`;
 
     // In blokken. Eén call over 60 bronnen liep tegen max_tokens aan: de JSON werd
     // afgekapt, JSON.parse faalde, en er kwam stilletjes niets terug. Kleine blokken
     // passen ruim binnen de limiet en lopen bovendien parallel.
-    const blocks = chunk(sources.slice(0, 90), 15);
+    const blocks = chunk(sources.slice(0, 90), 8);
     const results = await Promise.all(blocks.map(async (blk, n) => {
       const list = blk.map(s => {
         const bits = [
@@ -141,7 +144,7 @@ Antwoord ALLEEN met geldige JSON, zonder tekst eromheen:
           `kanaal=${s.channel || "?"}`,
           s.sender ? `van="${String(s.sender).slice(0, 60)}"` : "",
           s.subject ? `onderwerp="${String(s.subject).slice(0, 80)}"` : "",
-          `tekst="${String(s.body || "").replace(/\s+/g, " ").slice(0, 220)}"`,
+          `tekst="${String(s.body || "").replace(/\s+/g, " ").slice(0, 700)}"`,
         ].filter(Boolean);
         return bits.join(" | ");
       }).join("\n");
