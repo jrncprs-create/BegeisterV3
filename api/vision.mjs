@@ -4,7 +4,7 @@ import { logUsage } from "../lib/usage.mjs";
 
 const KEY = (process.env.ANTHROPIC_API_KEY || "").trim();
 const anthropic = KEY ? new Anthropic({ apiKey: KEY }) : null;
-const MODEL = "claude-sonnet-4-6";
+import { MODEL_SLIM as MODEL } from "../lib/models.mjs";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "method not allowed" });

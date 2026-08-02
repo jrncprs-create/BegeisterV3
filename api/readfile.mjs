@@ -8,7 +8,7 @@ import { extractTekst } from "../lib/extractdoc.mjs";
 
 const KEY = (process.env.ANTHROPIC_API_KEY || "").trim();
 const anthropic = KEY ? new Anthropic({ apiKey: KEY }) : null;
-const MODEL = "claude-haiku-4-5-20251001";
+import { MODEL_SNEL as MODEL } from "../lib/models.mjs";
 
 function directLink(link) {
   try {

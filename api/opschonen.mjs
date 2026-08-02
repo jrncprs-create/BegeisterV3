@@ -7,7 +7,7 @@ import { logUsage } from "../lib/usage.mjs";
 
 const KEY = (process.env.ANTHROPIC_API_KEY || "").trim();
 const anthropic = KEY ? new Anthropic({ apiKey: KEY }) : null;
-const MODEL = "claude-sonnet-4-6";
+import { MODEL_SLIM as MODEL } from "../lib/models.mjs";
 
 const SYSTEM = `Je bent de opschoon-assistent van Begeister (licht, decor en event-productie).
 Je krijgt een lijst OPEN TAKEN (per project). Je taak: de lijst kritisch tegen het licht houden en

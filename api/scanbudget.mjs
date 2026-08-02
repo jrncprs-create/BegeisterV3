@@ -8,7 +8,7 @@ import { createMessage } from "../lib/airetry.mjs";
 
 const KEY = (process.env.ANTHROPIC_API_KEY || "").trim();
 const anthropic = KEY ? new Anthropic({ apiKey: KEY }) : null;
-const MODEL = "claude-sonnet-4-6";
+import { MODEL_SLIM as MODEL } from "../lib/models.mjs";
 
 function supa() {
   return createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {

@@ -3,7 +3,7 @@ import Anthropic from "@anthropic-ai/sdk";
 
 const KEY = (process.env.ANTHROPIC_API_KEY || "").trim();
 const anthropic = KEY ? new Anthropic({ apiKey: KEY }) : null;
-const MODEL = "claude-haiku-4-5-20251001";
+import { MODEL_SNEL as MODEL } from "../lib/models.mjs";
 
 // Zes vaste mappen per project — dezelfde overal (Bestanden, portaal, Dropbox).
 const PROJ = ["Briefing","Concept & ontwerp","Techniek","Beeld","Financieel","Oplevering"];

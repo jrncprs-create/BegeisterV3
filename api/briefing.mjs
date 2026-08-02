@@ -9,7 +9,7 @@ import { BEGEISTER_REGELS } from "../lib/ai-regels.mjs";
 
 const KEY = (process.env.ANTHROPIC_API_KEY || "").trim();
 const anthropic = KEY ? new Anthropic({ apiKey: KEY }) : null;
-const MODEL = "claude-sonnet-4-6";
+import { MODEL_SLIM as MODEL } from "../lib/models.mjs";
 
 const SYSTEM = `Je bent de productie-assistent van Begeister (licht, decor, events).
 Je krijgt ALLES wat de app van één project weet. Maak er een helder, kort overzicht van dat

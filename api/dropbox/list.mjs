@@ -6,7 +6,7 @@ import Anthropic from "@anthropic-ai/sdk";
 const ROOT = "/Begeister";
 const AKEY = (process.env.ANTHROPIC_API_KEY || "").trim();
 const anthropic = AKEY ? new Anthropic({ apiKey: AKEY }) : null;
-const MODEL = "claude-sonnet-4-6";
+import { MODEL_SLIM as MODEL } from "../../lib/models.mjs";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "method not allowed" });
