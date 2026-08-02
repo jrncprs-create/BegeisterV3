@@ -5,8 +5,7 @@ import { createClient } from "@supabase/supabase-js";
 
 const KEY = (process.env.ANTHROPIC_API_KEY || "").trim();
 const anthropic = KEY ? new Anthropic({ apiKey: KEY }) : null;
-const VISION = "claude-sonnet-4-6";
-const FAST = "claude-haiku-4-5-20251001";
+import { MODEL_SLIM as VISION, MODEL_SNEL as FAST } from "../lib/models.mjs";
 const BUCKET = "intake";
 
 export function supa() {

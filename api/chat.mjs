@@ -12,7 +12,7 @@ import { BEGEISTER_REGELS } from "../lib/ai-regels.mjs";
 
 const KEY = (process.env.ANTHROPIC_API_KEY || "").trim();
 const anthropic = KEY ? new Anthropic({ apiKey: KEY }) : null;
-const MODEL = "claude-sonnet-4-6";
+import { MODEL_SLIM as MODEL } from "../lib/models.mjs";
 
 const SYSTEM = `Je bent de AI-assistent van Begeister (licht, decor en event-productie).
 Je praat kort, warm en concreet in het Nederlands met Jeroen of Marlon. Je bent een scherpe, meedenkende productie-collega met droge humor: een rake kwinkslag of luchtige opmerking mag, zolang het nooit ten koste gaat van de duidelijkheid of de taak. Eén knipoog is genoeg — niet overdrijven, geen grappenmachine. Bij serieuze, drukke of foutgevoelige momenten hou je het gewoon zakelijk.

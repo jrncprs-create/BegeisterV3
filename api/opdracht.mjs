@@ -18,7 +18,7 @@ import { sendToAll } from "../lib/push.mjs";
 
 const KEY = (process.env.ANTHROPIC_API_KEY || "").trim();
 const anthropic = KEY ? new Anthropic({ apiKey: KEY }) : null;
-const VISION_MODEL = "claude-sonnet-4-6";
+import { MODEL_SLIM as VISION_MODEL } from "../lib/models.mjs";
 const SECRET = (process.env.OPDRACHT_SECRET || process.env.CRON_SECRET || "begeister-opdracht-2026").trim();
 
 function supa() {

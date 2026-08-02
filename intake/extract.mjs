@@ -5,7 +5,7 @@ import { BEGEISTER_REGELS } from "../lib/ai-regels.mjs";
 
 const KEY = (process.env.ANTHROPIC_API_KEY || "").trim();
 const anthropic = KEY ? new Anthropic({ apiKey: KEY }) : null;
-const MODEL = "claude-sonnet-4-6";
+import { MODEL_SLIM as MODEL } from "../lib/models.mjs";
 
 // --- Links in een bericht ophalen en als leesbare tekst meegeven aan Claude ---
 const URL_RE = /https?:\/\/[^\s<>()"']+/gi;

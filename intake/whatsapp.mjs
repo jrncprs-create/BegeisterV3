@@ -22,7 +22,7 @@ const VERIFY_TOKEN = (process.env.WHATSAPP_VERIFY_TOKEN || "begeister-wa-2026").
 const WA_TOKEN = (process.env.WHATSAPP_TOKEN || "").trim();
 const AKEY = (process.env.ANTHROPIC_API_KEY || "").trim();
 const anthropic = AKEY ? new Anthropic({ apiKey: AKEY }) : null;
-const VISION_MODEL = "claude-sonnet-4-6";
+import { MODEL_SLIM as VISION_MODEL } from "../lib/models.mjs";
 const GRAPH = "https://graph.facebook.com/v21.0/";
 // Alleen Jeroen en Marlon appen naar het Begeister-nummer; koppel hun WhatsApp-nummer aan hun naam.
 const WHO_BY_NUMBER = { "31628777056": "Jeroen", "31642634901": "Marlon" };
