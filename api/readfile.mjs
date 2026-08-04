@@ -1,6 +1,6 @@
 // Leest een gekoppeld Dropbox-bestand en laat Claude er een samenvatting + taken + afspraken uithalen.
-// PDF's: eerst de TEKST eruit (snel, geen zware beeld-verwerking) — dat voorkomt de 'Premature close'
-// die bij het als-beeld-versturen optrad. Beeld/opmaak (bv. tabellen) alleen op verzoek via mode:"vision".
+// PDF's gaan standaard VOLLEDIG mee (tekst + afbeeldingen + tabellen) als document-block, zodat ook
+// gescande pagina's en tekeningen meegelezen worden. Alleen bij >24MB vallen we terug op tekst-extractie.
 import Anthropic from "@anthropic-ai/sdk";
 import { svc, logUsage } from "../lib/usage.mjs";
 import { createMessage } from "../lib/airetry.mjs";
@@ -81,23 +81,34 @@ export default async function handler(req, res) {
       messages: [{ role: "user", content }],
     });
 
-    let content, thin = false;
-    const canVision = !!link && ext === "pdf";
+    let content, thin = false, visionUsed = false;
 
     if (String(rawText).trim()) {
       // Rauwe tekst (bv. een bron/mail/appje) — direct laten lezen.
       let t = String(rawText); if (t.length > 120000) t = t.slice(0, 120000);
       content = [{ type: "text", text: "BRON: " + name + "\n\n\"\"\"\n" + t + "\n\"\"\"\n\nGeef het resultaat volgens de instructie." }];
-    } else if (ext === "pdf" && mode === "vision") {
-      // Stap 2 (op verzoek): PDF als beeld+tekst meesturen zodat tabellen/tekst-in-afbeeldingen ook meegaan.
+    } else if (ext === "pdf" && link) {
+      // PDF's gaan standaard VOLLEDIG mee (tekst + afbeeldingen + tabellen) als document-block —
+      // zo mist de AI geen tekeningen, gescande pagina's of tekst-in-beeld. Alleen bij hele
+      // grote bestanden (>24MB) vallen we terug op tekst-extractie.
       const r = await fetch(durl, { redirect: "follow" });
       if (!r.ok) return res.status(200).json({ error: "kon bestand niet ophalen (" + r.status + ")" });
       const buf = Buffer.from(await r.arrayBuffer());
-      if (buf.length > 24 * 1024 * 1024) return res.status(200).json({ error: "PDF te groot om als beeld te lezen" });
-      content = [
-        { type: "document", source: { type: "base64", media_type: "application/pdf", data: buf.toString("base64") } },
-        { type: "text", text: "Lees nu OOK de afbeeldingen en opmaak (bv. tabellen) van dit document (" + name + ") en geef het resultaat volgens de instructie." },
-      ];
+      if (buf.length <= 24 * 1024 * 1024) {
+        visionUsed = true;
+        content = [
+          { type: "document", source: { type: "base64", media_type: "application/pdf", data: buf.toString("base64") } },
+          { type: "text", text: "Lees dit document (" + name + ") volledig — dus ook afbeeldingen, tekeningen en opmaak (bv. tabellen) — en geef het resultaat volgens de instructie." },
+        ];
+      } else {
+        // Te groot voor beeld-verwerking: alleen de tekst eruit halen.
+        let uit;
+        try { uit = await extractTekst(buf, name); }
+        catch (e) { return res.status(200).json({ error: (e && e.message) || "kan dit bestand niet lezen", code: (e && e.code) || "", url: (e && e.url) || "" }); }
+        const text = uit.tekst || "";
+        thin = text.replace(/\s/g, "").length < 120;
+        content = [{ type: "text", text: "BESTAND (" + uit.label + "): " + name + "\n\n\"\"\"\n" + (text || "(geen leesbare tekst gevonden)") + "\n\"\"\"\n\nGeef het resultaat volgens de instructie." }];
+      }
     } else {
       // Alle overige formaten via één gedeelde extractor: pdf, docx, xlsx, pptx, csv, tekst.
       // Google-snelkoppelingen en .webloc geven daar een eigen, uitlegbare fout.
@@ -124,7 +135,9 @@ export default async function handler(req, res) {
         inputTokens: resp?.usage?.input_tokens || 0, outputTokens: resp?.usage?.output_tokens || 0, webSearches: 0 });
     } catch (_) {}
 
-    return res.status(200).json({ ...out, thin, canVision, mode });
+    // canVision=false: PDF's worden nu standaard al met beeld gelezen, dus de
+    // "lees ook beeld"-vervolgknop in de app is niet meer nodig.
+    return res.status(200).json({ ...out, thin, canVision: false, visionDone: visionUsed, mode: visionUsed ? "vision" : mode });
   } catch (e) {
     return res.status(200).json({ error: friendlyErr(e) });
   }
