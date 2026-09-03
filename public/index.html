@@ -10578,18 +10578,20 @@ async function _saveDropToWait(items, summary, srcMeta, fileObj, listUrl, cur){
   }
   // Eén kaart per bron: bij 2+ actiepunten worden het afvinkbare subpunten (checklist) onder
   // één taak. Bij precies één punt is dat gewoon de taaktitel. Zo geen muur van losse kaartjes.
+  // Nul actiepunten (bv. een screenshot zonder actie) → GEEN taak: alleen bewaren.
   const punten=(items&&items.length)?items:[];
-  let titel, checklist=[];
-  if(punten.length>=2){ titel=((summary||'').trim().slice(0,140))||'Nieuwe taken'; checklist=punten.map(it=>({t:((it.title||'').trim())||'Actiepunt',done:false})); }
-  else if(punten.length===1){ titel=((punten[0].title||'').trim())||(summary||'Bestand'); }
-  else { titel=(summary||'Nieuw bestand'); }
-  const _p0=punten[0]||{};
-  const rec={ project_id: _p0.project_id||pid||null, source_id: srcId||null, title: titel,
-    owner:(punten.length===1&&(_p0.owner==='Jeroen'||_p0.owner==='Marlon'))?_p0.owner:null,
-    contact:(punten.length===1?_p0.contact:null)||null, due:(punten.length===1?_p0.due:null)||null,
-    status:'wait', checklist };
   let firstId=null;
-  try{ const ins=await sb.from('items').insert(rec).select('id').single(); if(ins&&ins.data)firstId=ins.data.id; }catch(_){}
+  if(punten.length){
+    let titel, checklist=[];
+    if(punten.length>=2){ titel=((summary||'').trim().slice(0,140))||'Nieuwe taken'; checklist=punten.map(it=>({t:((it.title||'').trim())||'Actiepunt',done:false})); }
+    else { titel=((punten[0].title||'').trim())||(summary||'Bestand'); }
+    const _p0=punten[0]||{};
+    const rec={ project_id: _p0.project_id||pid||null, source_id: srcId||null, title: titel,
+      owner:(punten.length===1&&(_p0.owner==='Jeroen'||_p0.owner==='Marlon'))?_p0.owner:null,
+      contact:(punten.length===1?_p0.contact:null)||null, due:(punten.length===1?_p0.due:null)||null,
+      status:'wait', checklist };
+    try{ const ins=await sb.from('items').insert(rec).select('id').single(); if(ins&&ins.data)firstId=ins.data.id; }catch(_){}
+  }
   // Het bestand werd alleen bewaard als er óók een taak uit kwam (`firstId`). Leverde de AI
   // geen actiepunten op — een screenshot, een verslag, een pitch — dan verdween het bestand
   // en hield je een bron met alleen een bestandsnaam over. Vandaar geen preview.
@@ -10611,7 +10613,7 @@ async function _saveDropToWait(items, summary, srcMeta, fileObj, listUrl, cur){
         dropbox_path:up.file.link, size:fileObj.size||null, summary:(summary||'').slice(0,2000)||null})
         .eq('source_id',srcId).eq('filename',aiName); }catch(_){}
     } }catch(e){ console.warn('bestand bewaren mislukte', e); }}
-  try{ notifyPartner((who||'Iemand')+' zette '+items.length+' punt(en) in afwachting uit een bestand.'); }catch(_){}
+  try{ notifyPartner(items.length ? ((who||'Iemand')+' zette '+items.length+' punt(en) in afwachting uit een bestand.') : ((who||'Iemand')+' bewaarde een bestand (geen actiepunten).')); }catch(_){}
   try{ await refresh(); }catch(_){}
 }
 function _startDropReview(items, summary, srcId){
