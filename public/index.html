@@ -74,6 +74,9 @@
     line-height:0;border-radius:6px;transition:color .15s}
   .dag-ic:hover{color:#fff}
   .ver-chip{font-size:10px;color:var(--mut2);opacity:.5;font-weight:var(--fw-nadruk);letter-spacing:.3px;padding:2px 6px;border:1px solid var(--line);border-radius:999px;white-space:nowrap}
+  .load-status-chip{font-size:12px;color:#e0726f;font-weight:var(--fw-nadruk);cursor:pointer;padding:3px 9px;border:1px solid rgba(224,114,111,.5);background:rgba(224,114,111,.1);border-radius:999px;white-space:nowrap;font-family:inherit}
+  .load-status-chip:hover{background:rgba(224,114,111,.18)}
+  .load-status-chip:disabled{opacity:.6;cursor:default}
   /* iOS zoomt in op invoervelden < 16px; 16px voorkomt dat (zonder pinch-zoom te blokkeren) */
   @media(max-width:600px){ input,textarea,select{font-size:16px!important} }
   /* Bestand-preview overlay (Bronnen/Bestanden) — scherm-dekkend, duidelijke sluit-knop */
@@ -8790,23 +8793,54 @@ function _mapSource(s,atts){
           attachFull:myAtts.map(a=>({filename:a.filename||'bijlage',storage_path:a.storage_path||'',mime:a.mime||''})),
           images:[]};
 }
+// ---- Laadstatus: zichtbaar onderscheid tussen "niets gevonden" en "niet geladen" ----
+// Verschijnt alleen bij een probleem; bij succes verdwijnt hij weer meteen. Geen chip
+// zichtbaar = laatste load was geslaagd. sbLoad() roept dit aan het eind van elke poging.
+function _setLoadStatus(ok, msg){
+  state._loadOk=ok; state._loadErrMsg=msg||''; state._loadAt=Date.now();
+  const box=document.querySelector('.userbox'); if(!box) return;
+  let el=document.getElementById('loadStatus');
+  if(ok===false){
+    if(!el){ el=document.createElement('button'); el.id='loadStatus'; el.className='load-status-chip'; el.type='button';
+      el.onclick=()=>{ el.disabled=true; el.textContent='Bezig…'; refresh().finally(()=>{ el.disabled=false; }); };
+      box.insertBefore(el, box.firstChild); }
+    el.title='Laatste poging: '+new Date(state._loadAt).toLocaleTimeString('nl-NL')+(msg?' — '+msg:'');
+    el.textContent='⚠ Database niet bereikbaar · opnieuw proberen';
+  } else if(el){ el.remove(); }
+}
 async function sbLoad(){
   // _archCleanup() NIET meer automatisch bij elke load: lezen mag nooit data verwijderen.
   // Permanent opschonen wordt straks een losse, expliciete beheeractie (zie _archCleanup hierboven).
-  const [p,i,s,a,ap,c,f,cx,fo,cm,dc,ft] = await Promise.all([
-    sb.from('projects').select('*').order('sort'),
-    sb.from('items').select('*').order('created_at'),
-    sb.from('sources').select('*').order('received_at',{ascending:false}),
-    sb.from('attachments').select('*'),
-    sb.from('appointments').select('*').order('date'),
-    sb.from('contacts').select('*').order('name'),
-    sb.from('files').select('*').order('created_at',{ascending:false}),
-    sb.from('app_context').select('*'),
-    sb.from('folders').select('*').order('sort'),
-    sb.from('comments').select('*').order('created_at'),
-    sb.from('documents').select('*').order('created_at',{ascending:false}),
-    sb.from('facts').select('*').order('created_at'),
-  ]);
+  let p,i,s,a,ap,c,f,cx,fo,cm,dc,ft;
+  try{
+    [p,i,s,a,ap,c,f,cx,fo,cm,dc,ft] = await Promise.all([
+      sb.from('projects').select('*').order('sort'),
+      sb.from('items').select('*').order('created_at'),
+      sb.from('sources').select('*').order('received_at',{ascending:false}),
+      sb.from('attachments').select('*'),
+      sb.from('appointments').select('*').order('date'),
+      sb.from('contacts').select('*').order('name'),
+      sb.from('files').select('*').order('created_at',{ascending:false}),
+      sb.from('app_context').select('*'),
+      sb.from('folders').select('*').order('sort'),
+      sb.from('comments').select('*').order('created_at'),
+      sb.from('documents').select('*').order('created_at',{ascending:false}),
+      sb.from('facts').select('*').order('created_at'),
+    ]);
+  }catch(e){
+    // Verbinding volledig weg (offline, DNS, timeout): oude state laten staan, alleen
+    // de foutstatus tonen. Nooit de laatst geladen inhoud vervangen door een lege pagina.
+    _setLoadStatus(false, (e&&e.message)||'verbinding mislukt');
+    return;
+  }
+  // Elke tabel kan los een fout teruggeven (RLS, verlopen sessie, tijdelijke DB-storing)
+  // zonder dat de promise zelf reject — .data is dan null, .error is gezet. Vervang de
+  // zichtbare state dan NIET door lege lijsten: dat oogt als "niets gevonden" terwijl
+  // het "niet geladen" is. Oude state blijft staan, met een duidelijke foutstatus erbij.
+  const _res={projecten:p,taken:i,bronnen:s,bijlagen:a,afspraken:ap,contacten:c,bestanden:f,context:cx,mappen:fo,opmerkingen:cm,documenten:dc,feiten:ft};
+  const _failed=Object.entries(_res).filter(([,r])=>r&&r.error).map(([k,r])=>k+': '+((r.error&&r.error.message)||r.error));
+  if(_failed.length){ _setLoadStatus(false, _failed.join(' · ')); return; }
+  _setLoadStatus(true);
   state.facts = (ft && ft.data) ? ft.data : [];
   state.comments = (cm && cm.data) ? cm.data : [];
   state.documents = (dc && dc.data) ? dc.data : [];
