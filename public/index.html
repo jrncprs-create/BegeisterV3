@@ -8776,6 +8776,12 @@ const SB_URL = "https://rwevsqwvgqbzypaudzuj.supabase.co";
 const SB_KEY = "sb_publishable_m_mWsrZEQXlok9gEWFeTbQ_80vnBEQL";
 const sb = supabase.createClient(SB_URL, SB_KEY);
 
+// Supabase-js rejecte niet bij de meeste fouten (RLS, constraint) — het antwoord komt terug
+// als {data,error}. Een kale try{await sb.from(...).insert(...)}catch(_){} vangt zo'n
+// mislukte schrijfactie dus NOOIT. sbGo() gooit alsnog een echte Error als result.error is
+// gezet, zodat bestaande catch-blokken een mislukte insert/update wél als mislukking zien.
+async function sbGo(q){ const r=await q; if(r&&r.error) throw r.error; return r; }
+
 // localStorage uitschakelen — we werken nu op de database
 save = function(){};
 
@@ -9893,9 +9899,14 @@ async function bkAkkoord(sid,btn){
   if(!pid&&st.client){ const p=state.projects.find(x=>x.id!=='__inbox__'&&x.client===st.client); pid=p?p.id:null; }
   const rows=st.rows.filter(r=>r.on!==false&&String(r.t||'').trim()).map(r=>({on:true,type:(r.type==='afspraak')?'afspraak':(r.type==='feit'?'feit':'taak'),t:r.t,owner:r.owner||'',contact:r.contact||'',due:r.due||null,date:r.date||null,start:r.start||null,end:r.end||null,location:r.location||''}));
   const r=await _ltApply({titel:st.titel,rows,contacts:st.contacts||[]},{srcId:s.id,projectId:pid});
+  if(r.fails>0&&r.n===0){
+    toonToast('Opslaan mislukt — probeer het nog eens.','fout');
+    if(btn){ btn.disabled=false; btn.textContent='Opslaan'; }
+    return;
+  }
   try{ await sb.from('sources').update({suggest_items:null, project_id:pid||s.proj||null}).eq('id',s.id); }catch(_){}
   s.suggestItems=null; if(pid)s.proj=pid; delete _bkState[sid];
-  toonToast('✓ '+r.n+' punt'+(r.n===1?'':'en')+' aangemaakt');
+  toonToast(r.fails>0?('✓ '+r.n+' punt'+(r.n===1?'':'en')+' aangemaakt — '+r.fails+' mislukt'):('✓ '+r.n+' punt'+(r.n===1?'':'en')+' aangemaakt'));
   try{ await refresh(); }catch(_){}
 }
 // L8a: alleen bewaren — feiten en de bron gaan naar het gekozen project, taken/afspraken vervallen.
@@ -9905,11 +9916,16 @@ async function bkBewaar(sid,btn){
   let pid=st.project_id||null;
   if(!pid&&st.client){ const p=state.projects.find(x=>x.id!=='__inbox__'&&x.client===st.client); pid=p?p.id:null; }
   const feiten=st.rows.filter(r=>r.on!==false&&r.type==='feit'&&String(r.t||'').trim());
-  let n=0;
-  for(const r of feiten){ try{ await sb.from('facts').insert({project_id:pid,source_id:s.id,text:r.t.trim().slice(0,300)}); n++; }catch(_){} }
+  let n=0, fails=0;
+  for(const r of feiten){ try{ await sbGo(sb.from('facts').insert({project_id:pid,source_id:s.id,text:r.t.trim().slice(0,300)})); n++; }catch(_){ fails++; } }
+  if(fails>0&&n===0){
+    toonToast('Opslaan mislukt — probeer het nog eens.','fout');
+    if(btn){ btn.disabled=false; btn.textContent='Archief'; }
+    return;
+  }
   try{ await sb.from('sources').update({suggest_items:null, project_id:pid||s.proj||null}).eq('id',s.id); }catch(_){}
   s.suggestItems=null; if(pid)s.proj=pid; delete _bkState[sid];
-  toonToast(n?('Bewaard — '+n+' feit'+(n===1?'':'en')+' bij het project'):'Bewaard — geen taken gemaakt');
+  toonToast(n?('Bewaard — '+n+' feit'+(n===1?'':'en')+' bij het project'+(fails?(' — '+fails+' mislukt'):'')):(fails?('Bewaard — '+fails+' feit'+(fails===1?'':'en')+' mislukt'):'Bewaard — geen taken gemaakt'));
   try{ await refresh(); }catch(_){}
 }
 async function bkWeg(sid){
@@ -10020,23 +10036,23 @@ async function _ltApply(cur, ctx){
   const taken=rows.filter(r=>r.type==='taak');
   const appts=rows.filter(r=>r.type==='afspraak'&&r.date);
   const feiten=rows.filter(r=>r.type==='feit');
-  let n=0, firstId=null;
+  let n=0, firstId=null, fails=0;
   if(sub.length){
     const titel=(String(cur.titel||'').trim()||'Actiepunten').slice(0,140);
-    try{ const ins=await sb.from('items').insert({project_id:pid,source_id:sid,title:titel,status:'todo',checklist:sub.map(r=>({t:r.t.trim(),done:false}))}).select('id').single(); if(ins&&ins.data)firstId=ins.data.id; n++; }catch(_){}
+    try{ const ins=await sbGo(sb.from('items').insert({project_id:pid,source_id:sid,title:titel,status:'todo',checklist:sub.map(r=>({t:r.t.trim(),done:false}))}).select('id').single()); if(ins&&ins.data)firstId=ins.data.id; n++; }catch(_){ fails++; }
   }
-  for(const r of taken){ try{ const ins=await sb.from('items').insert({project_id:pid,source_id:sid,title:r.t.trim().slice(0,300),owner:r.owner||null,contact:String(r.contact||'').trim()||null,due:r.due||null,status:'todo'}).select('id').single(); if(!firstId&&ins&&ins.data)firstId=ins.data.id; n++; }catch(_){} }
-  for(const r of appts){ try{ await sb.from('appointments').insert({title:r.t.trim().slice(0,140),date:r.date,start_time:r.start||null,end_time:r.end||null,location:String(r.location||'').trim()||null,kind:'fysiek',project_id:pid}); n++; }catch(_){} }
-  for(const r of feiten){ try{ await sb.from('facts').insert({project_id:pid,source_id:sid,text:r.t.trim().slice(0,300)}); state.facts=state.facts||[]; n++; }catch(_){} }
+  for(const r of taken){ try{ const ins=await sbGo(sb.from('items').insert({project_id:pid,source_id:sid,title:r.t.trim().slice(0,300),owner:r.owner||null,contact:String(r.contact||'').trim()||null,due:r.due||null,status:'todo'}).select('id').single()); if(!firstId&&ins&&ins.data)firstId=ins.data.id; n++; }catch(_){ fails++; } }
+  for(const r of appts){ try{ await sbGo(sb.from('appointments').insert({title:r.t.trim().slice(0,140),date:r.date,start_time:r.start||null,end_time:r.end||null,location:String(r.location||'').trim()||null,kind:'fysiek',project_id:pid})); n++; }catch(_){ fails++; } }
+  for(const r of feiten){ try{ await sbGo(sb.from('facts').insert({project_id:pid,source_id:sid,text:r.t.trim().slice(0,300)})); state.facts=state.facts||[]; n++; }catch(_){ fails++; } }
   for(const c of (cur.contacts||[])){ if(!c.on||!String(c.name||'').trim())continue;
     const email=String(c.email||'').trim().toLowerCase();
     try{
-      if(email) await sb.from('contacts').upsert({name:c.name.trim(),email,phone:String(c.phone||'').trim()||null,company:String(c.company||'').trim()||null,role:String(c.role||'').trim()||null,source_id:sid,project_id:pid},{onConflict:'email'});
-      else{ const ex=await sb.from('contacts').select('id').ilike('name',c.name.trim()).maybeSingle(); if(!(ex&&ex.data)) await sb.from('contacts').insert({name:c.name.trim(),phone:String(c.phone||'').trim()||null,company:String(c.company||'').trim()||null,role:String(c.role||'').trim()||null,source_id:sid,project_id:pid}); }
+      if(email) await sbGo(sb.from('contacts').upsert({name:c.name.trim(),email,phone:String(c.phone||'').trim()||null,company:String(c.company||'').trim()||null,role:String(c.role||'').trim()||null,source_id:sid,project_id:pid},{onConflict:'email'}));
+      else{ const ex=await sbGo(sb.from('contacts').select('id').ilike('name',c.name.trim()).maybeSingle()); if(!(ex&&ex.data)) await sbGo(sb.from('contacts').insert({name:c.name.trim(),phone:String(c.phone||'').trim()||null,company:String(c.company||'').trim()||null,role:String(c.role||'').trim()||null,source_id:sid,project_id:pid})); }
       n++;
-    }catch(_){}
+    }catch(_){ fails++; }
   }
-  return {n,firstId};
+  return {n,firstId,fails};
 }
 // Leestafel voor een bestaande bron (Postvak): bewaarde voorstellen heropenen, of de
 // bron opnieuw laten lezen en dan per punt reviewen.
@@ -10068,8 +10084,12 @@ async function openLeestafelVoorBron(sid, btn){
   let _pid=cur.project_id||s.proj||null;
   if(!_pid&&cur.client){ const _pp=state.projects.find(x=>x.id!=='__inbox__'&&x.client===cur.client); _pid=_pp?_pp.id:null; }
   const r=await _ltApply(cur,{srcId:s.id,projectId:_pid});
+  if(r.fails>0&&r.n===0){
+    toonToast('Opslaan mislukt — probeer het nog eens.','fout');
+    return;
+  }
   s.suggestItems=null; try{ await sb.from('sources').update({suggest_items:null, project_id:_pid||s.proj||null}).eq('id',s.id); }catch(_){} if(_pid)s.proj=_pid;
-  toonToast('✓ '+r.n+' aangemaakt via de leestafel');
+  toonToast(r.fails>0?('✓ '+r.n+' aangemaakt via de leestafel — '+r.fails+' mislukt'):('✓ '+r.n+' aangemaakt via de leestafel'));
   try{ await refresh(); }catch(_){}
 }
 
