@@ -8775,7 +8775,8 @@ function _mapSource(s,atts){
           images:[]};
 }
 async function sbLoad(){
-  await _archCleanup();   // afgevinkte taken ouder dan 2 weken opruimen vóór het laden
+  // _archCleanup() NIET meer automatisch bij elke load: lezen mag nooit data verwijderen.
+  // Permanent opschonen wordt straks een losse, expliciete beheeractie (zie _archCleanup hierboven).
   const [p,i,s,a,ap,c,f,cx,fo,cm,dc,ft] = await Promise.all([
     sb.from('projects').select('*').order('sort'),
     sb.from('items').select('*').order('created_at'),
