@@ -2973,7 +2973,7 @@
   </div>
 </div>
 <input type="file" id="camInput" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(event)" />
-<input type="file" id="attInput" style="display:none" onchange="handlePhoto(event)" />
+<input type="file" id="attInput" style="display:none" onchange="handleAttach(event)" />
 
 <!-- GLOBALE SLEEP-ZONE: bestand de app in slepen -> als input verwerken -->
 <div id="dropZone" aria-hidden="true">
@@ -11111,6 +11111,19 @@ function _followupReminder(convo){
 // ---------- camera / bijlage / voice / beeld ----------
 function openCamera(){closePlus();if(isMobile()&&view!=='home')setView('home');composeMode(true);document.getElementById('camInput').click();}
 function chatAttach(){closePlus();if(isMobile()&&view!=='home')setView('home');composeMode(true);document.getElementById('attInput').click();}
+// De bijlage-knop accepteert elk bestandstype (geen accept-filter). Alleen een echte
+// afbeelding gaat naar de vision-flow (handlePhoto); PDF, Word en overig gaan naar
+// dezelfde lees-en-voorstel-route als een gesleept bestand — die kan die types wél lezen.
+function handleAttach(e){
+  const f=e.target.files&&e.target.files[0]; if(!f){ e.target.value=''; return; }
+  const isImg=/^image\//i.test(f.type||'')||/\.(png|jpe?g|gif|webp|heic|heif|bmp)$/i.test(f.name||'');
+  if(isImg){ handlePhoto(e); return; }
+  e.target.value='';
+  if(isMobile()&&view!=='home')setView('home'); composeMode(true);
+  addMsg('me','Bestand: '+f.name);
+  addMsg('ai','Ik lees het bestand en zet er zo een voorstel van klaar — je vindt het zo in Postvak In.');
+  handleDroppedFiles([f]);
+}
 function fileToB64(f){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>{const s=String(r.result);res(s.slice(s.indexOf(',')+1));};r.onerror=rej;r.readAsDataURL(f);});}
 async function handlePhoto(e){
   const f=e.target.files&&e.target.files[0];if(!f)return;e.target.value='';
