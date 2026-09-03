@@ -10598,7 +10598,7 @@ async function _saveDropToWait(items, summary, srcMeta, fileObj, listUrl, cur){
   if(fileObj && srcId){ try{ const b64=await fileToB64(fileObj); const aiName=_intakeName(fileObj);
     // Eigenaar: het PROJECT als dat bekend is (dan staat het bestand netjes in de
     // projectmappen en overleeft het een verwijderde taak), anders pas de taak.
-    const projId = pid || (list[0] && list[0].project_id) || null;
+    const projId = pid || (items[0] && items[0].project_id) || null;
     const eig = projId ? {owner_type:'project', owner_id:projId}
               : (firstId ? {owner_type:'task', owner_id:firstId} : {});
     const up=await fetch('/api/dropbox/list',{method:'POST',headers:{'Content-Type':'application/json'},
@@ -10611,7 +10611,7 @@ async function _saveDropToWait(items, summary, srcMeta, fileObj, listUrl, cur){
         dropbox_path:up.file.link, size:fileObj.size||null, summary:(summary||'').slice(0,2000)||null})
         .eq('source_id',srcId).eq('filename',aiName); }catch(_){}
     } }catch(e){ console.warn('bestand bewaren mislukte', e); }}
-  try{ notifyPartner((who||'Iemand')+' zette '+list.length+' punt(en) in afwachting uit een bestand.'); }catch(_){}
+  try{ notifyPartner((who||'Iemand')+' zette '+items.length+' punt(en) in afwachting uit een bestand.'); }catch(_){}
   try{ await refresh(); }catch(_){}
 }
 function _startDropReview(items, summary, srcId){
