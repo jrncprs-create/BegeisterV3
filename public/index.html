@@ -7611,6 +7611,10 @@ var _kiezerUit=false;
 function kMenuToggle(ev){
   if(ev&&ev.stopPropagation)ev.stopPropagation();
   const ex=document.getElementById('kMenu'); if(ex){ ex.remove(); return; }
+  // Op mobiel opent "Klanten" vanuit het hamburgermenu (#nav.open) — die blijft anders
+  // ONDER het klantenlaatje openstaan. Sluit het kMenu dan, blijft dat hamburgermenu
+  // zichtbaar staan en lijkt het of er niets gebeurt bij het sluiten.
+  const nv=document.getElementById('nav'); if(nv)nv.classList.remove('open');
   const btn=(ev&&ev.currentTarget)||document.querySelector('[data-v="beheer"]');
   const r=btn?btn.getBoundingClientRect():{left:20,bottom:50};
   _kMenuBouw(r.left, r.bottom+8);
