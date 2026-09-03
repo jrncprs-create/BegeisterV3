@@ -162,6 +162,18 @@
   .fm-search:focus-within,.acwrap:focus-within{border-color:var(--mut2)}
   .fm-search input:focus-visible{box-shadow:none}
 
+  /* ---- ACTIEKNOPPEN OP TOUCH ------------------------------------------------
+     Verwijder-/bewerkknoppen (prullenbak, potlood) staan standaard op opacity:0
+     en worden pas zichtbaar via :hover van de rij. Op een apparaat zonder hover
+     (telefoon/tablet) simuleert de browser die hover soms bij de eerste tik —
+     de knop verschijnt dan wel, maar diezelfde tik telt niet als klik. Op zulke
+     apparaten laten we deze knoppen daarom gewoon altijd zichtbaar staan. */
+  @media (hover:none){
+    .bv-src,.bv-del,.bv-kop .bv-kopdel,.bv-bronweg,
+    .pb-feitdel,.kicon.kpen,.pb-edit,.pb-board-inline .pb-del,
+    #bronMidWrap .con-li .bron-del,.wisknop,.m-ckdel{opacity:.6}
+  }
+
   /* ---- UITGESCHAKELD --------------------------------------------------------
      Stond nergens in CSS; drie plekken zetten `style.opacity='.6'` vanuit JS. */
   .btn[disabled],.fv-btn[disabled],.insp-btn[disabled],.pb-ai[disabled],
