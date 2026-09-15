@@ -1530,6 +1530,24 @@
   .pv-chip{font-size:11px;border:1px solid var(--lin);border-radius:6px;padding:1px 6px;flex:none}
   .pv-chip.dubbel{color:#e0a45f;border-color:rgba(224,164,95,.45)}
   .pv-reden{font-size:12px;color:var(--mut2);margin-top:3px;line-height:1.4}
+  /* Previewstrook: laat zien WAT er in een bericht zit zonder het te openen. */
+  .pv-prev{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:7px 0 0}
+  .pv-thumb{width:64px;height:64px;object-fit:cover;border-radius:9px;border:1px solid var(--line);
+            background:rgba(255,255,255,.04);flex:none;cursor:pointer}
+  .pv-thumb.ph{opacity:.35}
+  .pv-att{display:inline-flex;align-items:center;gap:6px;max-width:220px;padding:5px 9px;cursor:pointer;
+          border:1px solid var(--line);border-radius:9px;font-size:12px;color:var(--mut)}
+  .pv-att .fname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pv-att svg{flex:none}
+  .pv-link{display:inline-flex;align-items:center;gap:8px;max-width:100%;padding:5px 9px 5px 5px;cursor:pointer;
+           border:1px solid var(--line);border-radius:9px;font-size:12px;color:var(--mut);text-decoration:none}
+  .pv-link img{width:44px;height:44px;object-fit:cover;border-radius:7px;flex:none;display:none;
+               background:rgba(255,255,255,.04)}
+  .pv-link img.er{display:block}
+  .pv-link .lmain{min-width:0}
+  .pv-link .ltitel{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:230px;color:var(--fg)}
+  .pv-link .lhost{display:block;font-size:11px;color:var(--mut2)}
+  .pv-meer{font-size:11px;color:var(--mut2)}
   .pv-tekst{font-size:13px;color:var(--mut2);margin:4px 0 0;line-height:1.45;
     display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
   .pv-voorstel{font-size:12px;color:var(--mut2);margin:4px 0 0}
@@ -3851,9 +3869,11 @@ function renderPvMid(){
         +   _wisknopHTML("event.stopPropagation();pvVerwijder('"+s.id+"',this)", !!_pvDelWacht[s.id])
         + '</div>'
         + (cl||nAtt?'<div class="pv-reden">'+escapeHtml(cl||'Geen klant')+(nAtt?' \u00b7 '+nAtt+' bijlage'+(nAtt>1?'n':''):'')+'</div>':'')
+        + _pvPreviewHTML(s)
         + '</div>';
     }).join('');
     w.innerHTML=_pvTabbalk()+rijen;
+    _fillPvPreviews();
     return;
   }
 
@@ -3879,6 +3899,7 @@ function renderPvMid(){
      +     _wisknopHTML("event.stopPropagation();pvVerwijder('"+s.id+"',this)", !!_pvDelWacht[s.id])
      +   '</div>'
      +   '<div class="pv-tekst">'+escapeHtml(_pvSnippet(s))+'</div>'
+     +   _pvPreviewHTML(s)
      +   (sug&&sug.reden?'<div class="pv-reden">'+escapeHtml(sug.reden)+'</div>':'')
      +   _pvVoorstelRegel(s, sug)
      +   '<div class="pv-acties" onclick="event.stopPropagation()">'
@@ -3894,6 +3915,7 @@ function renderPvMid(){
   });
   w.innerHTML=_pvTabbalk()+h;
   _uniformeSelects(w);
+  _fillPvPreviews();
 }
 
 // Kolom 3 — dezelfde bronpreview als op de Bronnen-pagina.
@@ -6372,7 +6394,7 @@ function _bronPreviewHTML(s){
 }
 function _pvTreeItem(s){
   const open=(String(_pvSel)===String(s.id)); const dt=s.date?_finShortDate(s.date):''; const nAtt=(s.attachFull&&s.attachFull.length)?s.attachFull.length:0;
-  let h=`<div class="mtree-item${open?' open':''}" onclick="pvToggleItem('${s.id}')"><div class="cmain"><div class="cname">${escapeHtml(_srcTitle(s))}</div><div class="crole">${escapeHtml(dt)}${nAtt?' · '+nAtt+' bijlage'+(nAtt>1?'n':''):''}</div></div><button class="bron-del" onclick="event.stopPropagation();srcDelete('${s.id}')" title="Bron verwijderen" aria-label="Bron verwijderen">${_tIc('<path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M7 7l1 13h8l1-13"/>',16,1.6)}</button></div>`;
+  let h=`<div class="mtree-item${open?' open':''}" onclick="pvToggleItem('${s.id}')"><div class="cmain"><div class="cname">${escapeHtml(_srcTitle(s))}</div><div class="crole">${escapeHtml(dt)}${nAtt?' · '+nAtt+' bijlage'+(nAtt>1?'n':''):''}</div>${_pvPreviewHTML(s)}</div><button class="bron-del" onclick="event.stopPropagation();srcDelete('${s.id}')" title="Bron verwijderen" aria-label="Bron verwijderen">${_tIc('<path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M7 7l1 13h8l1-13"/>',16,1.6)}</button></div>`;
   if(open) h+=`<div class="mtree-detail">${_bronPreviewHTML(s)}${_apptBlokHTML(s)}${_replyBlokHTML(s)}</div>`;
   return h;
 }
@@ -6390,6 +6412,59 @@ function _pvTreeMobile(wrap){
   _PV_KANAAL.forEach(x=>{ h+=kanRow(x.k,x.l); });
   h+=kanRow('overig','Overig');
   wrap.innerHTML=h+(lijst.length?'':'<div class="hint">Niets gevonden.</div>');
+  _fillPvPreviews();
+}
+// Previewstrook voor een postvakrij: laat zien wat erin zit zonder het te openen.
+// Afbeeldingen worden miniaturen, andere bijlagen een chip met bestandsnaam, en een
+// bericht dat alleen een link bevat krijgt de titel + het plaatje van die pagina.
+const _PV_IMG_RE=/\.(png|jpe?g|gif|webp|heic|heif|bmp|tiff?|svg)$/i;
+function _pvPreviewHTML(s){
+  const atts=(s.attachFull&&s.attachFull.length)?s.attachFull:[];
+  let h='', getoond=0;
+  atts.forEach((a,i)=>{
+    if(getoond>=3) return;
+    const isImg=_PV_IMG_RE.test(a.filename||'')||/^image\//i.test(a.mime||'');
+    if(isImg&&a.storage_path){
+      h+=`<img class="pv-thumb ph" data-sp="${escapeHtml(a.storage_path)}" alt="${escapeHtml(a.filename||'afbeelding')}" loading="lazy" onclick="event.stopPropagation();openAttachment('${s.id}',${i})">`;
+    } else {
+      h+=`<span class="pv-att" onclick="event.stopPropagation();openAttachment('${s.id}',${i})" title="${escapeHtml(a.filename||'')}"><span class="file-ic">${_fileGlyph(a.filename)}</span><span class="fname">${escapeHtml(a.filename||'bijlage')}</span></span>`;
+    }
+    getoond++;
+  });
+  if(atts.length>getoond) h+=`<span class="pv-meer">+${atts.length-getoond} meer</span>`;
+  if(!atts.length){
+    const lnk=(typeof _bronLink==='function')?_bronLink(s):'';
+    if(lnk){
+      let host=''; try{ host=new URL(lnk).hostname.replace(/^www\./,''); }catch(_){ host=lnk.slice(0,40); }
+      h+=`<a class="pv-link" href="${escapeHtml(lnk)}" target="_blank" rel="noopener" data-url="${escapeHtml(lnk)}" onclick="event.stopPropagation()">`
+       + `<img alt=""><span class="lmain"><span class="ltitel">${escapeHtml(host)}</span><span class="lhost">${escapeHtml(host)}</span></span></a>`;
+    }
+  }
+  return h?`<div class="pv-prev">${h}</div>`:'';
+}
+// Vult de miniaturen en linkpreviews die _pvPreviewHTML heeft klaargezet.
+const _pvLinkCache=new Map();
+async function _fillPvPreviews(){
+  for(const im of document.querySelectorAll('.pv-thumb[data-sp]:not([data-done])')){
+    im.setAttribute('data-done','1');
+    const url=await _bestandUrl({storage_path: im.getAttribute('data-sp')||''});
+    if(url){ im.onload=()=>im.classList.remove('ph'); im.src=url; }
+  }
+  const links=[...document.querySelectorAll('.pv-link[data-url]:not([data-done])')].slice(0,12);
+  for(const el of links){
+    el.setAttribute('data-done','1');
+    const u=el.getAttribute('data-url')||''; if(!u) continue;
+    let meta=_pvLinkCache.get(u);
+    if(!meta){
+      try{
+        const r=await fetch('/api/linkmeta',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:u})});
+        meta=await r.json();
+      }catch(_){ meta={}; }
+      _pvLinkCache.set(u,meta||{});
+    }
+    if(meta&&meta.title){ const t=el.querySelector('.ltitel'); if(t)t.textContent=meta.title; }
+    if(meta&&meta.image){ const i=el.querySelector('img'); if(i){ i.onload=()=>i.classList.add('er'); i.src=meta.image; } }
+  }
 }
 // Thumbnails van afbeeldings-bijlagen laden. Gaat via de gedeelde url-resolver.
 async function _fillSrcThumbs(){
