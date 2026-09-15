@@ -3723,6 +3723,7 @@ function renderBadges(){
    Inspiratie levert NOOIT taken op — dat is een uitdrukkelijke keuze.
    ============================================================================ */
 var _pvSug={};              // bron-id -> {kind, project_id, reden} (AI-voorstel)
+var _pvLaatsteInsp=null;    // laatste verplaatsing naar inspiratie, om terug te kunnen draaien
 var _pvBusy=false;
 
 const _PV_KIND={
@@ -3838,6 +3839,10 @@ function renderPostvak(){
     if(knoppen) foot+='<div class="pv-bulk"><span class="pv-bulk-lbl">Alles in \u00e9\u00e9n keer:</span>'+knoppen+'</div>';
     if(b.werkZonderProject.length) foot+='<span class="pv-rest">'+b.werkZonderProject.length+' \u00d7 werk zonder project \u2014 met de hand</span>';
   }
+  if(_pvLaatsteInsp&&_pvLaatsteInsp.bronnen&&_pvLaatsteInsp.bronnen.length){
+    foot+='<button class="btn ghost" onclick="pvInspTerug()" title="Zet de laatste verplaatsing naar inspiratie terug in het postvak">\u21a9 '
+        + _pvLaatsteInsp.bronnen.length+' \u00d7 inspiratie terugzetten</button>';
+  }
   foot+='</div>';
   }
 
@@ -3946,6 +3951,27 @@ function _wisknopHTML(onclick, zeker){
 
 
 // Eén AI-call over het hele postvak. Vult de dropdowns voor, kiest niets definitief.
+// Inspiratie gaat automatisch naar het bord: er hangt geen klant, taak of deadline aan,
+// dus een misser kost niets en het scheelt telkens een knop. Alleen bronnen met beeld of
+// link gaan mee (de rest zou uit het postvak verdwijnen zonder ergens zichtbaar te worden),
+// en het blijft terug te draaien via de knop in het postvak.
+async function _pvAutoInspiratie(){
+  const ids=(_pvBuckets().inspiratie||[]).filter(_bronHeeftBeeld);
+  if(!ids.length) return 0;
+  const gedaan=await _pvTriageMany(ids,'inspiratie');
+  ids.forEach(sid=>{ delete _pvSug[sid]; });
+  if(gedaan) toonToast(gedaan+' item'+(gedaan===1?'':'s')+' automatisch naar inspiratie gezet');
+  return gedaan;
+}
+// Draait die laatste automatische verplaatsing terug: bordkaarten weg, bronnen terug in het postvak.
+async function pvInspTerug(){
+  const laatste=_pvLaatsteInsp; if(!laatste) return;
+  _pvLaatsteInsp=null;
+  try{ if(laatste.items.length) await sbGo(sb.from('insp_items').delete().in('id',laatste.items)); }catch(_){}
+  try{ if(laatste.bronnen.length) await sbGo(sb.from('sources').update({triage:null}).in('id',laatste.bronnen)); }catch(_){}
+  toonToast('Teruggezet in het postvak');
+  await refresh();
+}
 async function pvSuggestAll(){
   if(_pvBusy)return; _pvBusy=true; renderPostvak();
   try{
@@ -3958,6 +3984,7 @@ async function pvSuggestAll(){
     const d=await r.json();
     _pvSug=(d&&d.suggestions)||{};
     await _pvBewaarVoorstellen(_pvSug);
+    await _pvAutoInspiratie();
   }catch(_){ _pvSug={}; }
   try{ loadUsage(); }catch(_){}
   _pvBusy=false; renderPostvak();
@@ -4063,6 +4090,8 @@ async function _pvTriageMany(ids, kind){
         // Bewaar de preview meteen als eigen bestand. Doen we dat niet, dan verloopt de
         // ondertekende Instagram-url over een paar dagen en staat er een zwart vlak.
         const nieuwe=(ins&&ins.data)||[];
+        // Onthouden wat we aanmaakten, zodat een automatische verplaatsing terug kan.
+        _pvLaatsteInsp={bronnen:doen.slice(), items:nieuwe.map(r=>r.id).filter(Boolean)};
         await Promise.all(nieuwe.filter(r=>r.url&&!r.storage_path).map(r=>
           fetch('/api/inspthumb',{method:'POST',headers:{'Content-Type':'application/json'},
             body:JSON.stringify({url:r.url,id:r.id})}).catch(()=>{})));
@@ -6402,6 +6431,10 @@ function _pvTreeMobile(wrap){
   const lijst=_pvGefilterd();
   const per={}; lijst.forEach(s=>{ const k=_pvKanaalVan(s); (per[k]=per[k]||[]).push(s); });
   let h=_kolomZoek('pv_search', _pvZoek, _pvTab==='archief'?'Zoek in het archief…':'Zoek in het postvak…', '_pvZoeken')+_pvTabbalk();
+  if(_pvTab==='wacht'&&_pvLaatsteInsp&&_pvLaatsteInsp.bronnen&&_pvLaatsteInsp.bronnen.length){
+    h+='<div class="pv-foot"><button class="btn ghost" onclick="pvInspTerug()">\u21a9 '
+      + _pvLaatsteInsp.bronnen.length+' \u00d7 inspiratie terugzetten</button></div>';
+  }
   const kanRow=(k,l)=>{
     const list=per[k]||[]; if(!list.length) return '';
     const open=_pvTreeKan.has(k);
