@@ -22,7 +22,7 @@ aantallen, materiaallijsten, technische gegevens = FEITEN ("facts"), geen taken.
 controle- of check-taak bij een specificatie. Liever 0 taken dan een verzonnen taak.
 Geef "facts" = korte, zelfstandig leesbare feitzinnen die het waard zijn om bij het project te
 onthouden (maten, lijsten samengevat, tijden, locaties, keuzes). Max ~140 tekens per feit, 0-5 stuks.
-owner = "Jeroen" of "Marlon" of leeg. contact = externe persoon of leeg. due = YYYY-MM-DD of null. status = todo. project_id = ALLEEN als klant/project eenduidig in het bestand staat én matcht met de catalogus, anders null (dan vult de gebruiker het zelf).
+owner = "Jeroen" of "Marlon" of leeg. contact = externe persoon of leeg. due = YYYY-MM-DD of null. status = todo. project_id (bovenaan én per item) = het BEST PASSENDE project uit de catalogus zodra het bestand over een herkenbare klant of een herkenbaar project gaat, ook bij een afwijkende schrijfwijze of kortere naam; alleen null als niets naar een klant wijst. project_zekerheid = "hoog" (duidelijk, één passende regel), "midden" (aannemelijk) of "laag" (gok).
 ${context ? "VASTE CONTEXT (team/bedrijf — gebruik dit):\n" + context + "\n" : ""}VANDAAG: ${today || ""}. GEBRUIKER: ${who || ""}. Reken geen weekdagen zelf uit; gebruik de datumtabel.
 DATUMTABEL:\n${dates || "(geen)"}
 CATALOGUS (project_id → klant · project):\n${cat}
@@ -31,7 +31,7 @@ Geef "type" = kort documenttype in 1-2 woorden (bv. "pitchdeck", "offerte", "fac
 Geef "category" = kies de best passende map uit deze VASTE lijst: Briefing, Concept & ontwerp, Techniek, Beeld, Financieel, Oplevering. Bij twijfel: "Concept & ontwerp". Richtlijn: Briefing = aanvraag/projectbrief/intake/debrief; Concept & ontwerp = concept/moodboard/lichtontwerp/decor/ontwerp; Techniek = tekeningen/plattegronden/draaiboek/planning/leveranciers/patch/rigging; Beeld = foto's/video/referenties/inspiratie; Financieel = offerte/factuur/bon/inkoop/budget/calculatie/prijsopgave; Oplevering = eindfoto's/nazorg/aftermovie/eindresultaat.
 Geef "subject" = kort, concreet onderwerp van het document in 2-3 woorden (zo bondig mogelijk), ZONDER klantnaam en ZONDER datum, MÉT het documenttype erin verwerkt als dat logisch is (bv. "licht offerte", "concept", "draaiboek opbouw", "factuur huur"). Geen interne codenamen of projectcodes. Kleine letters, gewone spaties, geen leestekens.
 Geef "kind" = "werk", "inspiratie" of "prive". "inspiratie" = beeld, sfeer, referentie of een mooie foto zónder concrete actie. "prive" = persoonlijk, niets met werk te maken. Bij "inspiratie" laat je "items" ALTIJD leeg — een referentiebeeld levert geen actiepunten op. Bij twijfel: "werk".
-Antwoord ALLEEN met geldige JSON: {"reply":"korte samenvatting (1 zin)","client":"","project":"","type":"","from":"","category":"","subject":"","kind":"werk","items":[{"title":"","owner":"","contact":"","due":null,"status":"todo","project_id":null}],"facts":["..."]}
+Antwoord ALLEEN met geldige JSON: {"reply":"korte samenvatting (1 zin)","project_id":null,"project_zekerheid":"","client":"","project":"","type":"","from":"","category":"","subject":"","kind":"werk","items":[{"title":"","owner":"","contact":"","due":null,"status":"todo","project_id":null}],"facts":["..."]}
 ` + BEGEISTER_REGELS;
 }
 
@@ -58,7 +58,8 @@ async function aiFromBlocks(blocks, opts, src) {
   // Inspiratie levert nooit actiepunten op — hard afdwingen, niet alleen vragen.
   const items = (kind === "inspiratie") ? [] : (Array.isArray(parsed.items) ? parsed.items : []);
   const facts = (kind === "inspiratie") ? [] : (Array.isArray(parsed.facts) ? parsed.facts : []).map(f => String(f || "").trim()).filter(Boolean).slice(0, 10);
-  return { reply: parsed.reply || "", items, facts, kind, client: (parsed.client || "").toString().trim(), project: (parsed.project || "").toString().trim(), type: (parsed.type || "").toString().trim(), from: (parsed.from || "").toString().trim(), category: (parsed.category || "").toString().trim(), subject: (parsed.subject || "").toString().trim() };
+  const _pid = ((opts && opts.catalog) || []).some(c => String(c.project_id) === String(parsed.project_id || "")) ? String(parsed.project_id) : null;
+  return { reply: parsed.reply || "", items, facts, kind, project_id: _pid, project_zekerheid: _pid && ["hoog","midden","laag"].includes(parsed.project_zekerheid) ? parsed.project_zekerheid : "", client: (parsed.client || "").toString().trim(), project: (parsed.project || "").toString().trim(), type: (parsed.type || "").toString().trim(), from: (parsed.from || "").toString().trim(), category: (parsed.category || "").toString().trim(), subject: (parsed.subject || "").toString().trim() };
 }
 
 // De bestandsnaam is vaak het duidelijkste signaal ("Ostrica Athene 2027 - Pitch.html").

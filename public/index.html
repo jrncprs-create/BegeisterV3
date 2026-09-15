@@ -3723,7 +3723,8 @@ function renderBadges(){
    Inspiratie levert NOOIT taken op — dat is een uitdrukkelijke keuze.
    ============================================================================ */
 var _pvSug={};              // bron-id -> {kind, project_id, reden} (AI-voorstel)
-var _pvLaatsteInsp=null;    // laatste verplaatsing naar inspiratie, om terug te kunnen draaien
+var _pvLaatsteInsp=null;    // laatste automatische verdeling (inspiratie + werk), om terug te kunnen draaien
+function _pvAutoTel(){ const l=_pvLaatsteInsp; return l?((l.bronnen||[]).length+(l.werk||[]).length):0; }
 var _pvBusy=false;
 
 const _PV_KIND={
@@ -3745,7 +3746,7 @@ function _pvProjOptions(sel){
   let h='<option value="">— kies klant · project —</option>';
   order.forEach(c=>{
     h+='<optgroup label="'+escapeHtml(c)+'">';
-    byC[c].forEach(p=>{ const lbl=p.project?p.project:'(algemeen)';
+    byC[c].forEach(p=>{ const lbl=c+' \u00b7 '+(p.project?p.project:'algemeen');
       h+='<option value="'+p.id+'"'+(String(sel)===String(p.id)?' selected':'')+'>'+escapeHtml(lbl)+'</option>'; });
     h+='</optgroup>';
   });
@@ -3839,9 +3840,9 @@ function renderPostvak(){
     if(knoppen) foot+='<div class="pv-bulk"><span class="pv-bulk-lbl">Alles in \u00e9\u00e9n keer:</span>'+knoppen+'</div>';
     if(b.werkZonderProject.length) foot+='<span class="pv-rest">'+b.werkZonderProject.length+' \u00d7 werk zonder project \u2014 met de hand</span>';
   }
-  if(_pvLaatsteInsp&&_pvLaatsteInsp.bronnen&&_pvLaatsteInsp.bronnen.length){
-    foot+='<button class="btn ghost" onclick="pvInspTerug()" title="Zet de laatste verplaatsing naar inspiratie terug in het postvak">\u21a9 '
-        + _pvLaatsteInsp.bronnen.length+' \u00d7 inspiratie terugzetten</button>';
+  if(_pvAutoTel()){
+    foot+='<button class="btn ghost" onclick="pvInspTerug()" title="Zet de laatste automatische verdeling terug in het postvak">\u21a9 '
+        + _pvAutoTel()+' \u00d7 automatisch verdeeld terugzetten</button>';
   }
   foot+='</div>';
   }
@@ -3956,11 +3957,18 @@ function _wisknopHTML(onclick, zeker){
 // link gaan mee (de rest zou uit het postvak verdwijnen zonder ergens zichtbaar te worden),
 // en het blijft terug te draaien via de knop in het postvak.
 async function _pvAutoInspiratie(){
-  const ids=(_pvBuckets().inspiratie||[]).filter(_bronHeeftBeeld);
-  if(!ids.length) return 0;
-  const gedaan=await _pvTriageMany(ids,'inspiratie');
-  ids.forEach(sid=>{ delete _pvSug[sid]; });
-  if(gedaan) toonToast(gedaan+' item'+(gedaan===1?'':'s')+' automatisch naar inspiratie gezet');
+  const b=_pvBuckets();
+  _pvLaatsteInsp=null; // elke AI-ronde is één terugdraaibare eenheid
+  let gedaan=0; const werk=[];
+  // Inspiratie: naar het bord.
+  const ids=(b.inspiratie||[]).filter(_bronHeeftBeeld);
+  if(ids.length){ gedaan+=await _pvTriageMany(ids,'inspiratie'); ids.forEach(sid=>{ delete _pvSug[sid]; }); }
+  // Werk met hoge zekerheid: meteen naar het project. Midden/laag blijft voorgevuld wachten.
+  const perProject={};
+  (b.werk||[]).forEach(sid=>{ const su=_pvSug[sid]; if(su&&su.project_id&&su.zekerheid==='hoog'){ (perProject[su.project_id]=perProject[su.project_id]||[]).push(sid); } });
+  for(const [pid,sids] of Object.entries(perProject)){ await _pvMoveToProject(sids,pid); sids.forEach(sid=>{ delete _pvSug[sid]; werk.push(sid); }); }
+  if(werk.length){ _pvLaatsteInsp=_pvLaatsteInsp||{bronnen:[],items:[]}; _pvLaatsteInsp.werk=werk; gedaan+=werk.length; }
+  if(gedaan) toonToast(gedaan+' item'+(gedaan===1?'':'s')+' automatisch verdeeld');
   return gedaan;
 }
 // Draait die laatste automatische verplaatsing terug: bordkaarten weg, bronnen terug in het postvak.
@@ -3969,6 +3977,9 @@ async function pvInspTerug(){
   _pvLaatsteInsp=null;
   try{ if(laatste.items.length) await sbGo(sb.from('insp_items').delete().in('id',laatste.items)); }catch(_){}
   try{ if(laatste.bronnen.length) await sbGo(sb.from('sources').update({triage:null}).in('id',laatste.bronnen)); }catch(_){}
+  const werk=laatste.werk||[];
+  try{ if(werk.length) await sbGo(sb.from('sources').update({project_id:null,triage:null}).in('id',werk)); }catch(_){}
+  try{ if(werk.length) await sbGo(sb.from('items').update({project_id:null}).in('source_id',werk)); }catch(_){}
   toonToast('Teruggezet in het postvak');
   await refresh();
 }
@@ -6431,9 +6442,9 @@ function _pvTreeMobile(wrap){
   const lijst=_pvGefilterd();
   const per={}; lijst.forEach(s=>{ const k=_pvKanaalVan(s); (per[k]=per[k]||[]).push(s); });
   let h=_kolomZoek('pv_search', _pvZoek, _pvTab==='archief'?'Zoek in het archief…':'Zoek in het postvak…', '_pvZoeken')+_pvTabbalk();
-  if(_pvTab==='wacht'&&_pvLaatsteInsp&&_pvLaatsteInsp.bronnen&&_pvLaatsteInsp.bronnen.length){
+  if(_pvTab==='wacht'&&_pvAutoTel()){
     h+='<div class="pv-foot"><button class="btn ghost" onclick="pvInspTerug()">\u21a9 '
-      + _pvLaatsteInsp.bronnen.length+' \u00d7 inspiratie terugzetten</button></div>';
+      + _pvAutoTel()+' \u00d7 automatisch verdeeld terugzetten</button></div>';
   }
   const kanRow=(k,l)=>{
     const list=per[k]||[]; if(!list.length) return '';
@@ -9949,7 +9960,14 @@ let _bkState={};
 function _accordBronnen(){ return (state.sources||[]).filter(s=>s.suggestItems&&Array.isArray(s.suggestItems.rows)&&s.suggestItems.rows.length); }
 function _accordKaartenHTML(){
   return _accordBronnen().map(s=>{
-    const st=_bkState[s.id]||(_bkState[s.id]={rows:JSON.parse(JSON.stringify(s.suggestItems.rows)),contacts:s.suggestItems.contacts||[],client:s.suggestItems.client||'',project_id:s.proj||'',titel:s.suggestItems.titel||s.summary||''});
+    const st=_bkState[s.id]||(_bkState[s.id]=(()=>{
+      // AI-first: de kaart staat voorgevuld met wat de AI koos; jij hoeft alleen nog te tikken.
+      const pidVoor=s.proj||s.suggestItems.project_id||'';
+      const pVoor=pidVoor?(state.projects||[]).find(x=>String(x.id)===String(pidVoor)):null;
+      return {rows:JSON.parse(JSON.stringify(s.suggestItems.rows)),contacts:s.suggestItems.contacts||[],
+        client:(pVoor&&pVoor.client)||s.suggestItems.client||'',project_id:pVoor?pVoor.id:'',
+        zekerheid:s.suggestItems.zekerheid||'',titel:s.suggestItems.titel||s.summary||''};
+    })());
     const kl=uniqueClients();
     const klOpts='<option value="">— klant —</option>'+kl.map(c=>`<option${st.client===c?' selected':''}>${escapeHtml(c)}</option>`).join('');
     const projs=state.projects.filter(p=>p.id!=='__inbox__'&&p.client===st.client);

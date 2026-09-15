@@ -67,7 +67,8 @@ export function sanitize(raw, sources, cats) {
       if (!nieuwKlant) nieuwProject = "";
     }
 
-    out[sid] = { kind, project_id: pid, reden: reden.slice(0, 60),
+    const zekerheid = pid && ["hoog","midden","laag"].includes(val.zekerheid) ? val.zekerheid : "";
+    out[sid] = { kind, project_id: pid, zekerheid, reden: reden.slice(0, 60),
                  nieuw_klant: nieuwKlant, nieuw_project: nieuwProject,
                  klant_bestaat: !!(nieuwKlant && klantOp.has(nieuwKlant.toLowerCase())) };
   }
@@ -107,8 +108,12 @@ Geef per bron:
    • Twijfel je tussen werk en ruis? Kies "werk". Iets ten onrechte laten staan kost
      een seconde; iets ten onrechte wegzetten kost een document.
 
-2. "project_id" — ALLEEN een id uit de catalogus hieronder, en alleen als het onmiskenbaar klopt.
-   Twijfel je? Laat leeg (""). Een verkeerde koppeling is erger dan geen koppeling.
+2. "project_id" — het BEST PASSENDE id uit de catalogus hieronder zodra de bron over een
+   herkenbare klant of een herkenbaar project gaat, ook bij een afwijkende schrijfwijze of een
+   kortere naam ("Kooibos" ↔ "Kooibos 7 - Almere"). Kies; de gebruiker zet het desnoods om.
+   Alleen leeg ("") als niets naar een klant wijst.
+   "zekerheid" — "hoog" (duidelijk genoemd, één passende regel), "midden" (aannemelijk),
+   "laag" (gok). Leeg als project_id leeg is.
    Voor "prive" kies je een privé-klant uit de catalogus als die bestaat, anders leeg.
    Voor "inspiratie" en "ruis" laat je project_id leeg tenzij het overduidelijk bij één project hoort.
 
@@ -131,7 +136,7 @@ ${catTxt}
 ${BEGEISTER_REGELS}
 
 Antwoord ALLEEN met geldige JSON, zonder tekst eromheen:
-{"<bron-id>":{"kind":"werk","project_id":"","reden":"","nieuw_klant":"","nieuw_project":""}}`;
+{"<bron-id>":{"kind":"werk","project_id":"","zekerheid":"","reden":"","nieuw_klant":"","nieuw_project":""}}`;
 
     // In blokken. Eén call over 60 bronnen liep tegen max_tokens aan: de JSON werd
     // afgekapt, JSON.parse faalde, en er kwam stilletjes niets terug. Kleine blokken

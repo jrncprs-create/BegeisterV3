@@ -78,7 +78,8 @@ Regels:
 - contact = de externe persoon waar het mee te maken heeft (bv. Leon, Willem, Noa). Mag leeg.
 - due = ISO-datum (YYYY-MM-DD) alleen als er een concrete datum/deadline genoemd is, anders null.
 - status = todo | doing | wait | done. "wait" als er op iemand gewacht wordt.
-- project_id = ALLEEN invullen als de klant of het project expliciet en eenduidig in het bericht genoemd wordt en exact matcht met de catalogus. Bij enige twijfel: null (de gebruiker koppelt het dan zelf).
+- project_id = het BEST PASSENDE project uit de catalogus zodra het bericht over een herkenbare klant of een herkenbaar project gaat — ook bij een afwijkende schrijfwijze of een kortere naam ("Kooibos" ↔ "Kooibos 7 - Almere"). Kies altijd; de gebruiker zet het desnoods om. Alleen null als niets in het bericht naar een klant wijst.
+- project_zekerheid = hoe zeker die keuze is: "hoog" (klant/project duidelijk genoemd en één passende catalogusregel), "midden" (aannemelijk, maar niet letterlijk genoemd of meerdere kandidaten), "laag" (een gok). Leeg als project_id null is.
 - contacts = externe personen die EXPLICIET in het bericht voorkomen, met hun gegevens. Wees conservatief: alleen contacten die echt in het bericht staan. Verzin geen e-mailadressen of telefoonnummers. Lege velden laat je leeg (""). Neem GEEN interne Begeister-mensen (Jeroen, Marlon) op.
 - client = de klant/opdrachtgever waar dit bericht duidelijk over gaat (anders ""). project = projectnaam als die expliciet genoemd wordt; staat er geen projectnaam maar wél een duidelijk onderwerp, stel dan een KORTE projectnaam voor (paar woorden); anders "".
 - type = kort documenttype in 1-2 woorden (bv. "mail", "appje", "offerte", "factuur", "pitchdeck", "draaiboek"), anders "". from = afzender/auteur als die herkenbaar is, anders "".
@@ -116,6 +117,8 @@ ${catalog.map(c => `- ${c.project_id} → ${c.client} · ${c.project}`).join("\n
 Geef JSON in exact dit formaat:
 {
   "summary": "korte samenvatting van het bericht in 1 zin",
+  "project_id": null,
+  "project_zekerheid": "",
   "client": "",
   "project": "",
   "type": "",
@@ -163,6 +166,9 @@ Geef JSON in exact dit formaat:
       contacts: Array.isArray(parsed.contacts) ? parsed.contacts : [],
       client: (parsed.client || "").toString().trim(),
       project: (parsed.project || "").toString().trim(),
+      // AI-first: het model kiest altijd een project; wij controleren alleen of het id bestaat.
+      project_id: (catalog || []).some(c => String(c.project_id) === String(parsed.project_id || "")) ? String(parsed.project_id) : null,
+      project_zekerheid: ["hoog","midden","laag"].includes(parsed.project_zekerheid) ? parsed.project_zekerheid : "",
       type: (parsed.type || "").toString().trim(),
       from: (parsed.from || "").toString().trim(),
       category: (parsed.category || "").toString().trim(),

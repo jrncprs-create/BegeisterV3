@@ -229,7 +229,7 @@ export async function run() {
         }
 
         // 3) Claude haalt actiepunten (en contacten) eruit
-        const { items, summary, contacts, usage, client: exClient = "", project: exProject = "", reply: exReply = "", appointments: exAppts = [], facts: exFacts = [], kind: exKind = "werk" } = await extractItems({
+        const { items, summary, contacts, usage, client: exClient = "", project: exProject = "", reply: exReply = "", appointments: exAppts = [], facts: exFacts = [], kind: exKind = "werk", project_id: exProjectId = null, project_zekerheid: exZeker = "" } = await extractItems({
           text: body, sender, subject: mail.subject || "", today, catalog,
           context: [context, kennis].filter(Boolean).join("\n\n"),
         });
@@ -237,7 +237,9 @@ export async function run() {
         if (usage) await logUsage(db, { source: "intake", ...usage });
 
         // Project van dit bericht bepalen (voor de kaart en de bronkoppeling).
-        let msgProject = (items.find(it => it.project_id) || {}).project_id || null;
+        // AI-first: bij hoge zekerheid koppelen we de bron meteen aan het project. Bij
+        // midden/laag gaat de keuze als voorstel mee op de kaart (voorgevuld, één tik).
+        let msgProject = (exZeker === "hoog" && exProjectId) ? exProjectId : ((items.find(it => it.project_id) || {}).project_id || null);
         if (!msgProject && (exClient || exProject)) {
           const norm = v => String(v || "").toLowerCase().replace(/[^a-z0-9]/g, "");
           const nc = norm(exClient), np = norm(exProject);
@@ -263,7 +265,8 @@ export async function run() {
           }
         }
         const suggest = (exKind === "werk" && _rows.length)
-          ? { titel: (summary || mail.subject || "").slice(0, 140), rows: _rows, contacts: contacts || [], client: exClient || "" }
+          ? { titel: (summary || mail.subject || "").slice(0, 140), rows: _rows, contacts: contacts || [], client: exClient || "",
+              project_id: exProjectId || msgProject || null, zekerheid: exZeker || "" }
           : null;
 
         // 3b) gevonden contacten: bij een kaart gaan ze mee in de review; anders (geen kaart)
