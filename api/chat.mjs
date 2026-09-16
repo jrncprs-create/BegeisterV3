@@ -7,13 +7,15 @@
 // Het EINDANTWOORD blijft het bestaande JSON-contract {reply, items, ...}.
 import Anthropic from "@anthropic-ai/sdk";
 import { svc, logUsage, countWebSearches } from "../lib/usage.mjs";
+import { createMessage } from "../lib/airetry.mjs";
+import { BEGEISTER_REGELS } from "../lib/ai-regels.mjs";
 
 const KEY = (process.env.ANTHROPIC_API_KEY || "").trim();
 const anthropic = KEY ? new Anthropic({ apiKey: KEY }) : null;
 const MODEL = "claude-sonnet-4-6";
 
 const SYSTEM = `Je bent de AI-assistent van Begeister (licht, decor en event-productie).
-Je praat kort, warm en concreet in het Nederlands met Jeroen of Marlon. Je bent een scherpe, meedenkende productie-collega.
+Je praat kort, warm en concreet in het Nederlands met Jeroen of Marlon. Je bent een scherpe, meedenkende productie-collega met droge humor: een rake kwinkslag of luchtige opmerking mag, zolang het nooit ten koste gaat van de duidelijkheid of de taak. Eén knipoog is genoeg — niet overdrijven, geen grappenmachine. Bij serieuze, drukke of foutgevoelige momenten hou je het gewoon zakelijk.
 
 Doel: van losse input (een appje, mail, aantekening of voice-transcriptie) heldere ACTIEPUNTEN maken,
 open eindjes ophelderen, en realistisch meedenken over planning en haalbaarheid.
@@ -214,7 +216,7 @@ async function runTool(db, name, input, flags) {
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "method not allowed" });
   try {
-    const { history = [], catalog = [], existing = [], appts = [], today, dates = "", who } = req.body || {};
+    const { history = [], catalog = [], existing = [], appts = [], today, dates = "", who, context = "" } = req.body || {};
     if (!anthropic) {
       return res.status(200).json({ reply: "(AI staat nog uit — ik heb je input genoteerd.)", items: [], updates: [], removes: [], done: false, noai: true });
     }
@@ -225,7 +227,7 @@ export default async function handler(req, res) {
     const ap = (appts || []).slice(0, 40)
       .map(a => `- ${a.date}${a.start ? " " + a.start : ""} | ${a.title} (${a.kind === "bel" ? "bel" : "fysiek"})${a.contact ? " met " + a.contact : ""}${a.client ? " [" + a.client + "]" : ""}`)
       .join("\n") || "(nog geen afspraken gepland)";
-    const sys = `${SYSTEM}\n\nVANDAAG: ${today || ""}\nGEBRUIKER: ${who || ""}\n\nDATUMTABEL (gebruik deze voor alle relatieve dagen):\n${dates}\n\nCATALOGUS (project_id → klant · project):\n${cat}\n\nBESTAANDE OPENSTAANDE TAKEN (met id; voor dubbele-check, werkdruk, en updates/removes):\n${ex}\n\nBESTAANDE AFSPRAKEN (komende; voor dubbele-check):\n${ap}`;
+    const sys = `${SYSTEM}\n${BEGEISTER_REGELS}${context ? "\n\nVASTE CONTEXT (achtergrondinfo over het team en bedrijf — gebruik dit altijd):\n" + context : ""}\n\nVANDAAG: ${today || ""}\nGEBRUIKER: ${who || ""}\n\nDATUMTABEL (gebruik deze voor alle relatieve dagen):\n${dates}\n\nCATALOGUS (project_id → klant · project):\n${cat}\n\nBESTAANDE OPENSTAANDE TAKEN (met id; voor dubbele-check, werkdruk, en updates/removes):\n${ex}\n\nBESTAANDE AFSPRAKEN (komende; voor dubbele-check):\n${ap}`;
     const messages = (history || []).slice(-24).map(m => ({
       role: m.role === "assistant" ? "assistant" : "user",
       content: String(m.content || ""),
@@ -243,7 +245,7 @@ export default async function handler(req, res) {
       const convo = messages.slice();
       const MAX_ITERS = 5;
       for (let i = 0; i < MAX_ITERS; i++) {
-        resp = await anthropic.messages.create({
+        resp = await createMessage(anthropic, {
           model: MODEL, max_tokens: 1600, system: sys, tools, messages: convo,
         });
         totalIn += resp?.usage?.input_tokens || 0;
@@ -273,7 +275,7 @@ export default async function handler(req, res) {
       // Fallback: simpele call zonder tools (oorspronkelijk gedrag).
       try { console.error("chat tool-loop fout:", toolErr.message); } catch (_) { /* ignore */ }
       try {
-        resp = await anthropic.messages.create({ model: MODEL, max_tokens: 1600, system: sys, messages });
+        resp = await createMessage(anthropic, { model: MODEL, max_tokens: 1600, system: sys, messages });
         totalIn += resp?.usage?.input_tokens || 0;
         totalOut += resp?.usage?.output_tokens || 0;
       } catch (e2) {

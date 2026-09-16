@@ -36,6 +36,9 @@ export default async function handler(req, res) {
       if (r.source in bd) bd[r.source] += c;
     }
     const eur = usd * EUR_RATE;
+    // "Overig" = al het andere AI-verbruik (op een rijtje, opruimen, transcriberen, antwoorden…)
+    // zodat de regels ALTIJD optellen tot het totaal.
+    const overigUsd = Math.max(0, usd - bd.chat - bd.intake - bd.vision);
     return res.status(200).json({
       month: monthName,
       usd,
@@ -44,6 +47,7 @@ export default async function handler(req, res) {
         chat: bd.chat * EUR_RATE,
         intake: bd.intake * EUR_RATE,
         vision: bd.vision * EUR_RATE,
+        overig: overigUsd * EUR_RATE,
       },
       tokens: { input, output, web_searches: web },
     });

@@ -12,6 +12,8 @@ import { simpleParser } from "mailparser";
 import { createClient } from "@supabase/supabase-js";
 import { extractItems } from "./extract.mjs";
 import { sendToAll } from "../lib/push.mjs";
+import { beoordeelBijlage, hashVan } from "../lib/bijlagefilter.mjs";
+import { magDirect } from "../lib/dropboxsync.mjs";
 import { logUsage } from "../lib/usage.mjs";
 
 const BUCKET = "intake";
@@ -31,6 +33,19 @@ async function loadCatalog(db) {
     client: p.client || "",
     project: p.project || "",
   }));
+}
+
+// Vaste AI-context (Over Begeister / Jeroen / Marlon) → string voor de extractie.
+async function loadContext(db) {
+  try {
+    const { data } = await db.from("app_context").select("key, body");
+    const m = {}; (data || []).forEach(r => { m[r.key] = r.body || ""; });
+    let s = "";
+    if (m.begeister) s += "OVER BEGEISTER:\n" + m.begeister + "\n\n";
+    if (m.jeroen) s += "OVER JEROEN:\n" + m.jeroen + "\n\n";
+    if (m.marlon) s += "OVER MARLON:\n" + m.marlon + "\n";
+    return s.trim();
+  } catch (_) { return ""; }
 }
 
 // Gevonden contacten opslaan. Dedupe: op e-mail indien aanwezig (upsert),
@@ -63,6 +78,7 @@ async function saveContacts(db, contacts, sourceId, projectId) {
 export async function run() {
   const db = supa();
   const catalog = await loadCatalog(db);
+  const context = await loadContext(db);
   const today = new Date().toISOString().slice(0, 10);
 
   const client = new ImapFlow({
@@ -107,8 +123,20 @@ export async function run() {
         }).select().single();
         if (srcErr) throw srcErr;
 
-        // 2) bijlagen naar Storage
+        // 2) bijlagen naar Storage — maar niet het behang uit de handtekening.
+        //    Welke bestanden we al vaker zagen staat in bijlage_hashes; komt iets in drie
+        //    of meer bronnen voor, dan wordt het voortaan overgeslagen.
+        const { data: geblokkeerd } = await db
+          .from("bijlage_hashes").select("hash").eq("geblokkeerd", true);
+        const bekendeHashes = new Set((geblokkeerd || []).map(r => r.hash));
+
         for (const att of mail.attachments || []) {
+          const oordeel = beoordeelBijlage(att, { bekendeHashes });
+          if (!oordeel.houden) {
+            console.log(`bijlage overgeslagen (${oordeel.reden}): ${att.filename || "naamloos"}`);
+            continue;
+          }
+
           const path = `${source.id}/${att.filename || "bijlage"}`;
           const up = await db.storage.from(BUCKET).upload(path, att.content, {
             contentType: att.contentType, upsert: true,
@@ -118,35 +146,96 @@ export async function run() {
               source_id: source.id, filename: att.filename, storage_path: path,
               mime: att.contentType, size: att.size,
             });
+            // Klein genoeg? Dan meteen naar Dropbox. Grote bestanden pakt de uurlijkse
+            // wachtrij op — anders staat de intake tientallen seconden stil per foto.
+            // Lukt het, dan zetten we het document op gesynct; anders zou de wachtrij het
+            // straks nóg een keer uploaden.
+            if (magDirect(att.size)) {
+              try {
+                const r = await fetch(`http://127.0.0.1:${process.env.PORT || 8080}/api/dropbox/list`, {
+                  method: "POST", headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ action: "upload", name: att.filename,
+                    b64: att.content.toString("base64"), target: "Postvak In", owner_type: "client" }),
+                }).then(x => x.json());
+                const link = r && r.file ? r.file.link : null;
+                if (link) {
+                  await db.from("documents")
+                    .update({ dropbox_path: link, dropbox_gesynct_op: new Date() })
+                    .eq("storage_path", path);
+                }
+              } catch (_) { /* mislukt? de uurlijkse ronde pakt 'm alsnog op */ }
+            }
+
+            // Tel mee hoe vaak deze inhoud voorbijkomt. Bij drie bronnen slaat de trigger 'm dicht.
+            try {
+              const h = hashVan(att.content);
+              const { data: bestaand } = await db
+                .from("bijlage_hashes").select("bronnen").eq("hash", h).maybeSingle();
+              if (bestaand) {
+                await db.from("bijlage_hashes")
+                  .update({ bronnen: bestaand.bronnen + 1, laatst_gezien: new Date() })
+                  .eq("hash", h);
+              } else {
+                await db.from("bijlage_hashes").insert({
+                  hash: h, filename: att.filename, mime: att.contentType, size: att.size,
+                });
+              }
+            } catch (_) { /* tellen is een gemak, geen noodzaak */ }
           }
         }
 
         // 3) Claude haalt actiepunten (en contacten) eruit
-        const { items, summary, contacts, usage } = await extractItems({
-          text: body, sender, subject: mail.subject || "", today, catalog,
+        const { items, summary, contacts, usage, client: exClient = "", project: exProject = "", reply: exReply = "", appointments: exAppts = [], facts: exFacts = [], kind: exKind = "werk" } = await extractItems({
+          text: body, sender, subject: mail.subject || "", today, catalog, context,
         });
         // verbruik loggen (faalt stil)
         if (usage) await logUsage(db, { source: "intake", ...usage });
-        if (items.length) {
-          await db.from("items").insert(items.map(it => ({
-            project_id: it.project_id || null,
-            source_id: source.id,
-            title: it.title,
-            owner: it.owner || null,
-            contact: it.contact || null,
-            due: it.due || null,
-            status: ["todo", "doing", "wait", "done"].includes(it.status) ? it.status : "todo",
-          })));
+
+        // Project van dit bericht bepalen (voor de kaart en de bronkoppeling).
+        let msgProject = (items.find(it => it.project_id) || {}).project_id || null;
+        if (!msgProject && (exClient || exProject)) {
+          const norm = v => String(v || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+          const nc = norm(exClient), np = norm(exProject);
+          const hit = (nc && np && catalog.find(c => norm(c.client) === nc && norm(c.project) === np))
+                   || (nc && catalog.find(c => norm(c.client) === nc));
+          if (hit) msgProject = hit.project_id;
         }
 
-        // 3b) gevonden contacten opslaan (dedupe op e-mail; anders op naam)
+        // V252 — ÉÉN ROUTE: de mail-intake maakt niet langer stilletjes taken/feiten aan, maar
+        // legt (net als drops) een accord-kaart klaar in "In afwachting". De mens keurt goed.
+        // Zo glipt er niets ongezien binnen en loopt alle intake via dezelfde poort.
+        const _rows = [];
+        if (exKind === "werk") {
+          for (const it of items) {
+            const t = String(it.title || "").trim(); if (!t) continue;
+            _rows.push({ on: true, type: "taak", t, owner: it.owner || "", contact: it.contact || "", due: it.due || null });
+          }
+          for (const a of exAppts) {
+            if (a && a.title && a.date) _rows.push({ on: true, type: "afspraak", t: String(a.title).trim(), date: a.date, start: a.start ? String(a.start).slice(0,5) : null, end: a.end ? String(a.end).slice(0,5) : null, location: a.location || "" });
+          }
+          for (const ft of exFacts) {
+            const t = String(ft || "").trim(); if (t) _rows.push({ on: true, type: "feit", t });
+          }
+        }
+        const suggest = (exKind === "werk" && _rows.length)
+          ? { titel: (summary || mail.subject || "").slice(0, 140), rows: _rows, contacts: contacts || [], client: exClient || "" }
+          : null;
+
+        // 3b) gevonden contacten: bij een kaart gaan ze mee in de review; anders (geen kaart)
+        // direct opslaan zodat ze niet verloren gaan.
         try {
-          // project_id van dit bericht: het eerste item dat een eenduidig project kreeg
-          const msgProject = (items.find(it => it.project_id) || {}).project_id || null;
-          await saveContacts(db, contacts, source.id, msgProject);
+          if (!suggest) await saveContacts(db, contacts, source.id, msgProject);
         } catch (e) { console.error("contact-fout:", e.message); }
 
-        await db.from("sources").update({ processed: true, summary: summary || null }).eq("id", source.id);
+        // U8/U11b + de accord-kaart klaarzetten bij de bron.
+        await db.from("sources").update({
+          processed: true,
+          project_id: msgProject || null,
+          summary: summary || null,
+          suggest_reply: exReply || null,
+          suggest_appts: exAppts.length ? exAppts : null,
+          suggest_items: suggest,
+        }).eq("id", source.id);
 
         // 1 melding per binnengekomen bericht — korte AI-samenvatting
         try {
