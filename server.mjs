@@ -175,5 +175,19 @@ cron.schedule("0 8 * * 1", async () => {
   }
 }, { timezone: "Europe/Amsterdam" });
 
+// Losse pushmeldingen van buitenaf (tabel `meldingen`, lib/meldingen.mjs): elke minuut.
+cron.schedule("* * * * *", async () => {
+  try {
+    const { svc } = await import("./lib/usage.mjs");
+    const { verstuurOpen } = await import("./lib/meldingen.mjs");
+    const db = svc();
+    if (!db) return;
+    const r = await verstuurOpen(db);
+    if (r.length) console.log("meldingen", JSON.stringify(r));
+  } catch (e) {
+    console.error("cron meldingen", e && e.message);
+  }
+}, { timezone: "Europe/Amsterdam" });
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log("Begeister draait op poort " + PORT));
