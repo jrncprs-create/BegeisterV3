@@ -98,8 +98,9 @@ function rAkkoord(body){
   const open=st.vst.filter(v=>v.status==='open');
   const s=sec(body,'Wacht op akkoord',open.length?open.length+' open':'');
   if(!st.vst.length){s.appendChild(el('p','lf-leeg','Nog geen voorstellen. De agent zet hier prijswijzigingen en antwoorden aan gasten neer.'));return}
-  if(!open.length)s.appendChild(el('p','lf-leeg','Niets open. Eerdere besluiten staan hieronder.'));
-  const lijst=[...st.vst].sort((a,b)=>(a.status==='open'?0:1)-(b.status==='open'?0:1)).slice(0,12);
+  // Open voorstellen bovenaan; daaronder alleen wat op uitvoering wacht (status 'ja'). Afgehandeld staat in het logboek.
+  const lijst=st.vst.filter(v=>v.status==='open'||(v.status==='ja'&&!v.uitgevoerd_op)).sort((a,b)=>(a.status==='open'?0:1)-(b.status==='open'?0:1)).slice(0,12);
+  if(!open.length)s.appendChild(el('p','lf-leeg',lijst.length?'Niets open. Hieronder wat de agent nog doorvoert.':'Niets open.'));
   if(focusId){const i=lijst.findIndex(v=>v.id===focusId);if(i>0)lijst.unshift(lijst.splice(i,1)[0])}
   lijst.forEach(v=>s.appendChild(vstKaart(v)));
   focusId=null;
