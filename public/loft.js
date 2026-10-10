@@ -101,7 +101,9 @@ function rAkkoord(body){
   // Open voorstellen bovenaan; daaronder alleen wat op uitvoering wacht (status 'ja'). Afgehandeld staat in het logboek.
   const lijst=st.vst.filter(v=>v.status==='open'||(v.status==='ja'&&!v.uitgevoerd_op)).sort((a,b)=>(a.status==='open'?0:1)-(b.status==='open'?0:1)).slice(0,12);
   if(!open.length)s.appendChild(el('p','lf-leeg',lijst.length?'Niets open. Hieronder wat de agent nog doorvoert.':'Niets open.'));
-  if(focusId){const i=lijst.findIndex(v=>v.id===focusId);if(i>0)lijst.unshift(lijst.splice(i,1)[0])}
+  // Vanuit een melding: dat voorstel altijd bovenaan tonen, ook als het al is afgehandeld.
+  if(focusId){const i=lijst.findIndex(v=>v.id===focusId);if(i>0)lijst.unshift(lijst.splice(i,1)[0]);
+    else if(i<0){const v=st.vst.find(x=>x.id===focusId);if(v)lijst.unshift(v);else toonToast('Dit voorstel bestaat niet meer')}}
   lijst.forEach(v=>s.appendChild(vstKaart(v)));
   focusId=null;
 }
@@ -187,11 +189,22 @@ function rBuurt(body){
 
 function tijd(x){const d=new Date(x);if(isNaN(d))return '';return String(d.getDate()).padStart(2,'0')+'-'+String(d.getMonth()+1).padStart(2,'0')+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}
 function rMeldingen(body){
-  const s=sec(body,'Meldingen','wat je op je telefoon kreeg');
-  if(!st.meld.length)s.appendChild(el('p','lf-leeg','Nog geen meldingen verstuurd.'));
-  st.meld.forEach(mx=>{const plat=/airbnb/i.test(mx.titel)?'air':(/booking/i.test(mx.titel)?'bk':'');const r=el('div','lf-rij '+plat);r.style.cursor='pointer';
-    r.onclick=()=>{const id=(mx.url||'').match(/[?&]loft=([^&#]+)/);if(id&&!VIEWS.includes(id[1])){focusId=id[1];toon('akkoord')}else toon((id&&id[1])||'akkoord')};
-    const tx=el('div','lf-tx');tx.appendChild(el('b','',mx.titel||''));tx.appendChild(el('br'));tx.append(mx.tekst||'');r.append(tx,el('div','lf-meta lf-num',tijd(mx.aangemaakt)));s.appendChild(r)});
+  // Slim gefilterd: bovenaan alleen meldingen waar je nog iets mee kunt (voorstel open of nog niet uitgevoerd),
+  // de rest ingeklapt onder 'Afgehandeld'. Ouder dan 30 dagen valt weg.
+  const grens=Date.now()-30*864e5;
+  const idVan=mx=>{const m=(mx.url||'').match(/[?&]loft=([^&#]+)/);return m&&!VIEWS.includes(m[1])?m[1]:null};
+  const actief=mx=>{const id=idVan(mx);if(!id)return false;const v=st.vst.find(x=>x.id===id);return !!v&&(v.status==='open'||(v.status==='ja'&&!v.uitgevoerd_op))};
+  const alle=st.meld.filter(mx=>new Date(mx.aangemaakt).getTime()>grens);
+  const todo=alle.filter(actief), rest=alle.filter(mx=>!actief(mx));
+  const rij=mx=>{const plat=/airbnb/i.test(mx.titel)?'air':(/booking/i.test(mx.titel)?'bk':'');const r=el('div','lf-rij '+plat);r.style.cursor='pointer';
+    r.onclick=()=>{const id=idVan(mx);if(id){focusId=id;toon('akkoord')}else{const m=(mx.url||'').match(/[?&]loft=([^&#]+)/);toon((m&&m[1])||'akkoord')}};
+    const tx=el('div','lf-tx');tx.appendChild(el('b','',mx.titel||''));tx.appendChild(el('br'));tx.append(mx.tekst||'');r.append(tx,el('div','lf-meta lf-num',tijd(mx.aangemaakt)));return r};
+  const s=sec(body,'Meldingen',todo.length?todo.length+' wacht op jou':'niets wacht op jou');
+  if(!todo.length)s.appendChild(el('p','lf-leeg','Alles is afgehandeld.'));
+  todo.forEach(mx=>s.appendChild(rij(mx)));
+  if(rest.length){const kn=el('button','lf-btn ghost','Afgehandeld ('+rest.length+')');kn.style.minHeight='36px';kn.style.padding='6px 14px';
+    const box=el('div');box.hidden=true;rest.forEach(mx=>box.appendChild(rij(mx)));
+    kn.onclick=()=>{box.hidden=!box.hidden;kn.textContent=(box.hidden?'Afgehandeld (':'Verberg (')+rest.length+')'};s.append(kn,box)}
   const s2=sec(body,'Open punten'); const op=st.inst.open_punten||[];
   if(!op.length)s2.appendChild(el('p','lf-leeg','Niets open.'));
   op.forEach(t=>{const r=el('div','lf-rij');r.append(el('div','lf-tx',t.text||''),el('div','lf-meta',t.who||''));s2.appendChild(r)});
