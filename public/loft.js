@@ -197,7 +197,7 @@ function rMeldingen(body){
   op.forEach(t=>{const r=el('div','lf-rij');r.append(el('div','lf-tx',t.text||''),el('div','lf-meta',t.who||''));s2.appendChild(r)});
   const s4=sec(body,'Agenda op Mac en iPhone','abonneer één keer, daarna automatisch');
   if(!st.inst.ical_token){s4.appendChild(el('p','lf-leeg','Nog geen agendasleutel.'))}
-  else [['airbnb','Verhuur Airbnb (rood)'],['booking','Verhuur Booking (blauw)'],['schoonmaak','Schoonmaak (met herinnering)']].forEach(([p,l])=>{
+  else [['airbnb','Verhuur Airbnb (rood, herinnering 4 uur voor aankomst)'],['booking','Verhuur Booking (blauw, herinnering 4 uur voor aankomst)']].forEach(([p,l])=>{
     const url=location.origin+'/api/loft-ical?platform='+p+'&t='+st.inst.ical_token;
     const r=el('div','lf-rij '+kl(p));const tx=el('div','lf-tx',l);const b=el('button','lf-btn ghost','Kopieer link');b.style.minHeight='36px';b.style.padding='6px 14px';
     b.onclick=()=>{navigator.clipboard.writeText(url).then(()=>toonToast('Link gekopieerd. Agenda > Archief > Nieuw agenda-abonnement, plakken.')).catch(()=>{prompt('Kopieer deze link:',url)})};
