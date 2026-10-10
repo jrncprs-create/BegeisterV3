@@ -1,0 +1,76 @@
+/* Loft Spinozastraat (kamerverhuur). Volgt de UI-standaard: near-black, Outfit 300, uppercase sectiekoppen,
+   dunne lijnen. Alles wat bij één platform hoort kleurt mee: Airbnb lichtrood, Booking blauw. */
+#loftOverlay{--air:#ff9aa6;--bk:#8fb2ff;--ok:#5bd08a;--warn:#fbbf24;--wit:#f2f2f2}
+#loftOverlay .lf-inner{max-width:720px}
+#loftOverlay .dov-greet b{font-weight:var(--fw-nadruk)}
+#loftOverlay .lf-status{font-size:12px;border:1px solid var(--line);border-radius:var(--r-pil);padding:3px 11px;display:inline-flex;align-items:center;gap:7px;color:var(--wit)}
+#loftOverlay .lf-lamp{width:7px;height:7px;border-radius:50%;background:#555}
+#loftOverlay .lf-lamp.ok{background:var(--ok)} #loftOverlay .lf-lamp.warn{background:var(--warn)}
+#loftOverlay .lf-tabs{position:sticky;top:0;z-index:2;background:var(--bg);padding:6px 0 12px;display:flex;gap:4px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+#loftOverlay .lf-tabs button{flex:1;border:1px solid var(--line);background:transparent;color:var(--mut);font-family:inherit;font-size:13px;padding:9px 6px;border-radius:var(--r-pil);cursor:pointer;white-space:nowrap;position:relative;min-height:40px}
+#loftOverlay .lf-tabs button.on{color:var(--wit);border-color:var(--wit)}
+#loftOverlay .lf-tabs .lf-badge{position:absolute;top:-6px;right:6px;min-width:17px;height:17px;border-radius:9px;background:var(--wit);color:var(--bg);font-size:10px;font-weight:var(--fw-nadruk);line-height:17px;padding:0 5px}
+#loftOverlay .lf-view{color:var(--wit)}
+#loftOverlay .pb-h{color:var(--wit)}
+#loftOverlay .lf-dim{color:var(--mut)}
+#loftOverlay .lf-leeg{font-size:14px;color:var(--mut);padding:8px 0}
+#loftOverlay .lf-num{font-variant-numeric:tabular-nums}
+#loftOverlay .lf-stat{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:6px}
+#loftOverlay .lf-stat>div{border-top:1px solid var(--line);padding-top:8px}
+#loftOverlay .lf-stat .k{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--mut)}
+#loftOverlay .lf-stat .v{font-size:20px;font-weight:var(--fw-nadruk)}
+/* rijen */
+#loftOverlay .lf-rij{display:flex;gap:11px;align-items:flex-start;padding:11px 0;border-top:1px solid rgba(255,255,255,.1)}
+#loftOverlay .lf-rij:first-of-type{border-top:none}
+#loftOverlay .lf-tx{flex:1;min-width:0;white-space:pre-wrap;overflow-wrap:anywhere}
+#loftOverlay .lf-meta{font-size:13px;color:var(--mut);flex:none}
+/* voorstellen */
+#loftOverlay .lf-vst{padding:14px 0;border-top:1px solid rgba(255,255,255,.12);display:grid;gap:8px}
+#loftOverlay .lf-vst:first-of-type{border-top:none}
+#loftOverlay .lf-vsub{font-size:12px;letter-spacing:.6px;text-transform:uppercase;color:var(--mut)}
+#loftOverlay .lf-vkop{font-size:16px;font-weight:var(--fw-nadruk)}
+#loftOverlay .lf-vraag{white-space:pre-wrap;color:var(--mut);border-left:2px solid var(--line);padding:4px 0 4px 12px;font-size:13.5px}
+#loftOverlay .lf-concept{white-space:pre-wrap;border-left:2px solid var(--wit);padding:6px 0 6px 12px}
+#loftOverlay .lf-acts{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+#loftOverlay .lf-btn{background:var(--wit);color:var(--bg);border:none;border-radius:var(--r-pil);font-family:inherit;font-weight:var(--fw-nadruk);font-size:14px;padding:11px 22px;min-height:44px;cursor:pointer}
+#loftOverlay .lf-btn.ghost{background:transparent;color:var(--wit);border:1px solid var(--line)}
+#loftOverlay .lf-btn:disabled{opacity:.45;cursor:default}
+#loftOverlay .lf-instr{display:flex;gap:8px}
+#loftOverlay .lf-instr input{flex:1;min-width:0;background:transparent;border:none;border-bottom:1px solid var(--line);color:var(--wit);font-family:inherit;font-size:15px;padding:8px 2px}
+#loftOverlay .lf-instr input:focus{outline:none;border-bottom-color:var(--wit)}
+#loftOverlay .lf-besluit{font-size:13px;color:var(--mut)}
+/* agenda */
+#loftOverlay .lf-maand{font-size:12px;letter-spacing:1.2px;text-transform:uppercase;font-weight:var(--fw-nadruk);padding:18px 0 4px;color:var(--wit)}
+#loftOverlay .lf-dag{display:grid;grid-template-columns:52px 1fr auto;gap:12px;align-items:center;padding:10px 0;border-top:1px solid rgba(255,255,255,.08)}
+#loftOverlay .lf-dag .dt{font-size:13px;line-height:1.2;color:var(--mut)}
+#loftOverlay .lf-dag .dt b{display:block;font-size:18px;font-weight:var(--fw-nadruk);color:var(--wit)}
+#loftOverlay .lf-dag.we .dt b{text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:4px}
+#loftOverlay .lf-dag .wie{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#loftOverlay .lf-dag .pr{text-align:right;font-size:14px;line-height:1.3}
+#loftOverlay .lf-wissel{display:grid;grid-template-columns:52px 1fr;gap:12px;padding:6px 0 10px;font-size:13px;color:var(--warn)}
+#loftOverlay .lf-wissel .dt{text-align:right;letter-spacing:.5px;text-transform:uppercase;font-size:11px}
+#loftOverlay .lf-plat{display:inline-flex;align-items:center;gap:7px}
+#loftOverlay .lf-plat i{width:8px;height:8px;border-radius:2px;display:inline-block;background:#666}
+/* platformkleur op alles wat erbij hoort */
+#loftOverlay .air{--pc:var(--air)} #loftOverlay .bk{--pc:var(--bk)}
+#loftOverlay .air,#loftOverlay .air *,#loftOverlay .bk,#loftOverlay .bk *{color:var(--pc)}
+#loftOverlay .air .lf-plat i,#loftOverlay .bk .lf-plat i{background:var(--pc)}
+#loftOverlay .air .lf-vsub,#loftOverlay .bk .lf-vsub,#loftOverlay .air .lf-meta,#loftOverlay .bk .lf-meta,#loftOverlay .air .lf-vraag,#loftOverlay .bk .lf-vraag,#loftOverlay .air .lf-dim,#loftOverlay .bk .lf-dim{color:color-mix(in srgb,var(--pc) 70%,transparent)}
+#loftOverlay .air .lf-concept,#loftOverlay .bk .lf-concept{border-left-color:var(--pc)}
+#loftOverlay .air .lf-btn,#loftOverlay .bk .lf-btn{background:var(--pc);color:var(--bg)}
+#loftOverlay .air .lf-btn.ghost,#loftOverlay .bk .lf-btn.ghost{background:transparent;color:var(--pc);border-color:color-mix(in srgb,var(--pc) 50%,transparent)}
+#loftOverlay .air .lf-instr input,#loftOverlay .bk .lf-instr input{color:var(--pc);border-bottom-color:color-mix(in srgb,var(--pc) 50%,transparent)}
+/* instellingen */
+#loftOverlay .lf-veld{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:12px 0;border-top:1px solid rgba(255,255,255,.1)}
+#loftOverlay .lf-veld:first-of-type{border-top:none}
+#loftOverlay .lf-veld label{flex:1;min-width:0}
+#loftOverlay .lf-veld input{width:96px;text-align:right;background:transparent;border:none;border-bottom:1px solid var(--line);color:var(--wit);font-family:inherit;font-weight:var(--fw-nadruk);font-size:17px;padding:6px 2px}
+#loftOverlay .lf-veld input:focus{outline:none;border-bottom-color:var(--wit)}
+#loftOverlay .lf-noot{font-size:12px;color:var(--mut);margin-top:8px}
+/* buurt */
+#loftOverlay .lf-buur{display:grid;grid-template-columns:1fr auto;gap:2px 12px;padding:10px 0;border-top:1px solid rgba(255,255,255,.08)}
+#loftOverlay .lf-buur .nm{min-width:0;overflow-wrap:anywhere}
+#loftOverlay .lf-buur .pn{text-align:right;font-weight:var(--fw-nadruk)}
+#loftOverlay .lf-buur .sub{grid-column:1/-1;font-size:12px;color:var(--mut)}
+#loftOverlay .lf-buur.ik .nm,#loftOverlay .lf-buur.ik .pn{font-weight:var(--fw-nadruk)}
+#loftBtn.loft-badge::after{content:attr(data-n);margin-left:6px;font-size:11px;background:var(--txt);color:var(--bg);border-radius:9px;padding:0 5px;line-height:16px}

@@ -70,6 +70,9 @@ await mount("/api/deploy", "./api/deploy.mjs");
 await mount("/api/dropbox/connect", "./api/dropbox/connect.mjs");
 await mount("/api/dropbox/callback", "./api/dropbox/callback.mjs");
 await mount("/api/dropbox/list", "./api/dropbox/list.mjs");
+// Loft Spinozastraat (kamerverhuur, alleen Jeroen): acties en agendafeed.
+await mount("/api/loft", "./api/loft.mjs");
+await mount("/api/loft-ical", "./api/loft-ical.mjs");
 
 // Statische app
 app.use(express.static(path.join(__dirname, "public"), { extensions: ["html"] }));
