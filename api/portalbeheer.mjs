@@ -31,7 +31,7 @@ async function dossier(db, p) {
   const [taken, appts, files, cmts, appr] = await Promise.all([
     db.from("items").select("id,title,status").eq("project_id", p.id).neq("status", "wait"),
     db.from("appointments").select("id,title,date,start_time").eq("project_id", p.id).order("date"),
-    db.from("files").select("id,name,link,visible_to_client").eq("owner_type", "project").eq("owner_id", p.id),
+    db.from("files").select("id,name,link,visible_to_client").eq("owner_type", "project").eq("owner_id", p.id).is("archived_at", null),
     db.from("comments").select("id,sectie,author,body,van_klant,created_at").eq("scope", "portal").eq("ref_id", p.id).order("created_at"),
     db.from("approvals").select("approved_at,snapshot_sha").eq("project_id", p.id).maybeSingle(),
   ]);

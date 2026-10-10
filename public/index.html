@@ -2599,7 +2599,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v295</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v296</span>
       <!-- V244: loep verhuisd naar het hoofdmenu (waar Bestanden/Contacten stonden). -->
       <!-- V242: Dagoverzicht voorlopig uit beeld (afgesproken 16 juli) — openDayOverview en de overlay blijven in de code staan. -->
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
@@ -7529,7 +7529,7 @@ async function _moveApprovedFiles(r){
   try{
     const pid=r.it.project_id; const p=pid?projById(pid):null;
     if(!p || p.id==='__inbox__' || !p.client) return;   // geen project -> laat in /In afwachting/
-    const { data:files } = await sb.from('files').select('*').eq('owner_type','task').eq('owner_id',String(r.it.id));
+    const { data:files } = await sb.from('files').select('*').is('archived_at',null).eq('owner_type','task').eq('owner_id',String(r.it.id));
     for(const f of (files||[])){
       const cat=(f.icon||'Concept');
       const target=p.client+'/'+(p.project||p.client)+'/'+cat;
@@ -8945,11 +8945,11 @@ async function sbLoad(){
       sb.from('attachments').select('*'),
       sb.from('appointments').select('*').order('date'),
       sb.from('contacts').select('*').order('name'),
-      sb.from('files').select('*').order('created_at',{ascending:false}),
+      sb.from('files').select('*').is('archived_at',null).order('created_at',{ascending:false}),
       sb.from('app_context').select('*'),
       sb.from('folders').select('*').order('sort'),
       sb.from('comments').select('*').order('created_at'),
-      sb.from('documents').select('*').order('created_at',{ascending:false}),
+      sb.from('documents').select('*').is('archived_at',null).order('created_at',{ascending:false}),
       sb.from('facts').select('*').order('created_at'),
     ]);
   }catch(e){

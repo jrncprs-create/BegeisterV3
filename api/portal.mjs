@@ -111,8 +111,8 @@ async function projectPagina(db, p) {
     db.from("appointments").select("id,title,date,start_time,client_zichtbaar").eq("project_id", pid).eq("client_zichtbaar", true).order("date"),
     // L11d — zichtbaarheid is per bestand (visible_to_client, het klant-poppetje).
     // We halen alles op en filteren hieronder in JS; ter-akkoord-documenten doen ook mee.
-    db.from("files").select("id,name,link,icon,visible_to_client,is_voorstel,voorstel_soort,ter_akkoord,akkoord_op,akkoord_door,sort_order").eq("owner_type", "project").eq("owner_id", pid),
-    db.from("documents").select("id,filename,link,category,visible_to_client,is_voorstel,voorstel_soort,origin,ter_akkoord,akkoord_op,akkoord_door,sort_order").eq("project_id", pid).neq("origin", "file"),
+    db.from("files").select("id,name,link,icon,visible_to_client,is_voorstel,voorstel_soort,ter_akkoord,akkoord_op,akkoord_door,sort_order").eq("owner_type", "project").eq("owner_id", pid).is("archived_at", null),
+    db.from("documents").select("id,filename,link,category,visible_to_client,is_voorstel,voorstel_soort,origin,ter_akkoord,akkoord_op,akkoord_door,sort_order").eq("project_id", pid).neq("origin", "file").is("archived_at", null),
     db.from("comments").select("id,sectie,author,body,van_klant,created_at").eq("scope", "portal").eq("ref_id", pid).order("created_at"),
     // Alle akkoorden van dit project (idee, budget én per document). Bewust géén
     // maybeSingle: zodra er meer dan één akkoord was, gaf die een fout en verdween
