@@ -1,15 +1,14 @@
 // Loft Spinozastraat: acties vanuit de Loft-tab. Alleen voor Jeroen (team + e-mail).
 //  besluit   {id, status: 'ja'|'nee'}           voorstel goed- of afkeuren
 //  herschrijf{id, instructie}                   conceptantwoord opnieuw schrijven op basis van één regel van Jeroen
-//  verstuur  {id}                               conceptantwoord als mail naar de gast sturen (reply_to), status 'verzonden'
+//  verstuur  {id}                               conceptantwoord in de wachtrij zetten; de cloud-agent mailt het binnen het uur via Gmail
 //  instellingen {weekdag, weekend, minimum, maximum, langverblijf_pct, leeg_dagen}
-// Mail gaat via Gmail-SMTP met een app-wachtwoord uit Railway: LOFT_MAIL_USER, LOFT_MAIL_PASS, LOFT_MAIL_FROM.
+// De app verstuurt zelf geen mail: geen extra wachtwoorden in Railway, één koppeling minder.
 import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@supabase/supabase-js";
 import { createMessage } from "../lib/airetry.mjs";
 import { logUsage } from "../lib/usage.mjs";
 import { MODEL_SLIM as MODEL } from "../lib/models.mjs";
-import { verstuurMail } from "../lib/loft-mail.mjs";
 
 const KEY = (process.env.ANTHROPIC_API_KEY || "").trim();
 const anthropic = KEY ? new Anthropic({ apiKey: KEY }) : null;
@@ -95,11 +94,10 @@ WAT JEROEN WIL ZEGGEN (één regel, dit is leidend): ${String(instructie || "").
       if (v.soort !== "bericht") return fout(res, 400, "alleen berichten kunnen verstuurd worden");
       if (!v.reply_to) return fout(res, 400, "geen antwoordadres bij dit bericht");
       if (!v.concept) return fout(res, 400, "geen concept om te versturen");
-      const r = await verstuurMail({ aan: v.reply_to, onderwerp: v.onderwerp || "Re: je bericht", tekst: v.concept, inReplyTo: v.mail_id });
-      const { error } = await db.from("loft_voorstellen").update({ status: "verzonden", uitgevoerd_op: new Date().toISOString(), resultaat: r.id || "verzonden" }).eq("id", id);
+      const { error } = await db.from("loft_voorstellen").update({ status: "ja", besloten_op: new Date().toISOString(), resultaat: "in wachtrij" }).eq("id", id);
       if (error) throw new Error(error.message);
-      await db.from("loft_log").insert({ tekst: "Antwoord verstuurd aan " + (v.gast || v.reply_to) + " (" + (v.platform || "?") + ")" });
-      return res.json({ ok: true });
+      await db.from("loft_log").insert({ tekst: "Antwoord aan " + (v.gast || v.reply_to) + " (" + (v.platform || "?") + ") in de wachtrij; de agent verstuurt het binnen het uur" });
+      return res.json({ ok: true, wachtrij: true });
     }
 
     return fout(res, 400, "onbekende actie: " + action);

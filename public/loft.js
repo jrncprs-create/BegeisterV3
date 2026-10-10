@@ -122,13 +122,13 @@ function vstKaart(v){
     const ja=el('button','lf-btn',v.soort==='bericht'?'Verstuur':'Ja, doorvoeren');
     const nee=el('button','lf-btn ghost','Nee');
     ja.onclick=async()=>{ja.disabled=nee.disabled=true;try{
-        if(v.soort==='bericht'){await api({action:'verstuur',id:v.id});toonToast('Verstuurd aan '+(v.gast||'de gast'))}
+        if(v.soort==='bericht'){await api({action:'verstuur',id:v.id});toonToast('In de wachtrij. Gaat binnen het uur naar '+(v.gast||'de gast')+'.')}
         else{await api({action:'besluit',id:v.id,status:'ja'});toonToast('Akkoord. Volgt bij de volgende ronde.')}
         await laad();toon(view)}catch(e){ja.disabled=nee.disabled=false;toonToast(e.message,'fout')}};
     nee.onclick=async()=>{ja.disabled=nee.disabled=true;try{await api({action:'besluit',id:v.id,status:'nee'});toonToast('Afgewezen');await laad();toon(view)}catch(e){ja.disabled=nee.disabled=false;toonToast(e.message,'fout')}};
     acts.append(ja,nee); k.appendChild(acts);
   } else {
-    k.appendChild(el('div','lf-besluit',{ja:'Akkoord, volgt bij de volgende ronde',nee:'Afgewezen',verzonden:'Verstuurd',uitgevoerd:'Doorgevoerd'}[v.status]||v.status));
+    k.appendChild(el('div','lf-besluit',(v.resultaat==='in wachtrij'?'In de wachtrij, de agent verstuurt het binnen het uur':{ja:'Akkoord, volgt bij de volgende ronde',nee:'Afgewezen',verzonden:'Verstuurd',uitgevoerd:'Doorgevoerd'}[v.status])||v.status));
   }
   return k;
 }

@@ -12,6 +12,7 @@ create table if not exists loft_instellingen (
   leeg_dagen    int default 14,          -- prijs omlaag als nog leeg zoveel dagen vooraf
   status        jsonb default '{}'::jsonb,  -- {airbnbLive, bookingLive, bookingIssues, synced}
   open_punten   jsonb default '[]'::jsonb,  -- [{who, text}]
+  ical_token    text,                        -- geheime sleutel voor /api/loft-ical
   bijgewerkt    timestamptz default now()
 );
 
