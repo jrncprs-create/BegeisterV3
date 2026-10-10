@@ -143,8 +143,15 @@ function rAgenda(body){
     if(d.getMonth()!==m){m=d.getMonth();s.appendChild(el('div','lf-maand',MND[m]+' '+d.getFullYear()))}
     const info=per.get(iso)||{}; const we=d.getDay()===5||d.getDay()===6;
     const gist=per.get(new Date(d-864e5).toISOString().slice(0,10));
-    if(info.aankomst&&gist&&(gist.status==='airbnb'||gist.status==='booking')&&gist.code!==info.code){
-      const w=el('div','lf-wissel');w.appendChild(el('div','dt','wissel'));w.appendChild(el('div','', '12 tot 16 uur: '+(gist.gast||'gast')+' vertrekt, '+(info.gast||'gast')+' komt'));s.appendChild(w);
+    const gistBezet=gist&&(gist.status==='airbnb'||gist.status==='booking');
+    const blijft=gistBezet&&(info.status===gist.status)&&info.code===gist.code&&!info.aankomst;
+    if(gistBezet&&!blijft){
+      const wissel=!!(info.aankomst&&(info.status==='airbnb'||info.status==='booking'));
+      const volgende=wissel?info:st.dagen.find(x=>x.datum>iso&&x.aankomst);
+      const w=el('div','lf-wissel');w.appendChild(el('div','dt',wissel?'wissel':'schoon'));
+      w.appendChild(el('div','',wissel?'12 tot 16 uur: '+(gist.gast||'gast')+' vertrekt, '+(info.gast||'gast')+' komt':
+        'Schoonmaken na 12:00'+(volgende?', '+(volgende.gast||'gast')+' komt '+volgende.datum.slice(8,10)+'-'+volgende.datum.slice(5,7):', nog geen volgende gast')));
+      s.appendChild(w);
     }
     const r=el('div','lf-dag'+(we?' we':'')+' '+kl(info.status));
     const dt=el('div','dt');dt.appendChild(el('b','lf-num',String(d.getDate())));dt.append(DAG[d.getDay()]);
