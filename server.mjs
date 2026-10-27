@@ -9,6 +9,8 @@ import { run as intakeRun } from "./intake/poller.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
+// GEEN_CRONS=1: geen mail ophalen, geen pushmeldingen, geen Dropbox-sync (voor test-exemplaren).
+const plan = (...a) => (process.env.GEEN_CRONS === "1" ? null : cron.schedule(...a));
 app.use(express.json({ limit: "25mb" }));
 app.use(express.urlencoded({ extended: true, limit: "25mb" }));
 
@@ -74,6 +76,12 @@ await mount("/api/dropbox/list", "./api/dropbox/list.mjs");
 await mount("/api/loft", "./api/loft.mjs");
 await mount("/api/loft-ical", "./api/loft-ical.mjs");
 
+// Browserconfig: adres en publieke sleutel van de API (uit de omgeving, niet uit de code).
+app.get("/config.js", (req, res) => {
+  res.type("application/javascript").set("Cache-Control", "no-store")
+    .send(`window.APP_CONFIG=${JSON.stringify({ SB_URL: process.env.PUBLIC_SB_URL || process.env.SUPABASE_URL, SB_KEY: process.env.PUBLIC_SB_KEY || "" })};`);
+});
+
 // Statische app
 app.use(express.static(path.join(__dirname, "public"), { extensions: ["html"] }));
 
@@ -92,7 +100,7 @@ app.get("*", (req, res, next) => {
 });
 
 // Interne intake-cron: elke 2 minuten de mailbox verwerken.
-cron.schedule("*/2 * * * *", () => {
+plan("*/2 * * * *", () => {
   intakeRun().then(r => { if (r && (r.processed || r.items)) console.log("intake", r); })
              .catch(e => console.error("cron intake", e && e.message));
 });
@@ -100,7 +108,7 @@ cron.schedule("*/2 * * * *", () => {
 // Dropbox-sync: elk uur. Kleine bijlagen gingen al direct mee bij binnenkomst;
 // hier zetten we de grote in de wachtrij en werken we er een paar af.
 // Bewust een kleine portie: één upload van 6 MB duurt tientallen seconden.
-cron.schedule("7 * * * *", async () => {
+plan("7 * * * *", async () => {
   try {
     const { svc } = await import("./lib/usage.mjs");
     const { vulWachtrij, werkWachtrijAf } = await import("./lib/dropboxsync.mjs");
@@ -135,7 +143,7 @@ cron.schedule("7 * * * *", async () => {
 // U5 — Ochtendherinnering (07:30 NL-tijd): een push per persoon met wat er vandaag op het
 // bord ligt (deadline vandaag/te laat + de handmatige "vandaag doen"-selectie). Taken zonder
 // eigenaar tellen bij iedereen mee. Geen taken = geen melding (stilte is ook informatie).
-cron.schedule("30 7 * * *", async () => {
+plan("30 7 * * *", async () => {
   try {
     const { svc } = await import("./lib/usage.mjs");
     const { sendToWho } = await import("./lib/push.mjs");
@@ -165,7 +173,7 @@ cron.schedule("30 7 * * *", async () => {
 
 // U17 — Wekelijkse gezondheidscheck (maandag 08:00 NL): duplicaten, wezen en rare
 // financiële waardes → één taakkaart met checklist + push. Stil als er niets is.
-cron.schedule("0 8 * * 1", async () => {
+plan("0 8 * * 1", async () => {
   try {
     const { svc } = await import("./lib/usage.mjs");
     const { draaiGezondheidscheck } = await import("./lib/gezondheid.mjs");
@@ -179,7 +187,7 @@ cron.schedule("0 8 * * 1", async () => {
 }, { timezone: "Europe/Amsterdam" });
 
 // Losse pushmeldingen van buitenaf (tabel `meldingen`, lib/meldingen.mjs): elke minuut.
-cron.schedule("* * * * *", async () => {
+plan("* * * * *", async () => {
   try {
     const { svc } = await import("./lib/usage.mjs");
     const { verstuurOpen } = await import("./lib/meldingen.mjs");
