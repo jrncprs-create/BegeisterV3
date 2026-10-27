@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
+<script src="/config.js"></script>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>Begeister — Workflow</title>
@@ -8891,8 +8892,8 @@ render();
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ── config (publiek; veilig in de browser dankzij RLS) ──
-const SB_URL = "https://rwevsqwvgqbzypaudzuj.supabase.co";
-const SB_KEY = "sb_publishable_m_mWsrZEQXlok9gEWFeTbQ_80vnBEQL";
+const SB_URL = window.APP_CONFIG.SB_URL;
+const SB_KEY = window.APP_CONFIG.SB_KEY;
 const sb = supabase.createClient(SB_URL, SB_KEY);
 
 // Supabase-js rejecte niet bij de meeste fouten (RLS, constraint) — het antwoord komt terug
@@ -9113,15 +9114,7 @@ async function liveTick(){
   finally{ _liveBusy=false; }
 }
 function liveSoon(){ clearTimeout(_liveTimer); _liveTimer=setTimeout(liveTick, 450); }
-try{
-  sb.channel('begeister-live')
-    .on('postgres_changes',{event:'INSERT',schema:'public',table:'items'},liveSoon)
-    .on('postgres_changes',{event:'INSERT',schema:'public',table:'sources'},liveSoon)
-    .on('postgres_changes',{event:'INSERT',schema:'public',table:'appointments'},liveSoon)
-    .on('postgres_changes',{event:'INSERT',schema:'public',table:'insp_items'},liveSoon)
-    .on('postgres_changes',{event:'INSERT',schema:'public',table:'insp_boards'},liveSoon)
-    .subscribe();
-}catch(_){}
+// Live verversen: elke 20 seconden via liveTick (geen realtime-websocket meer).
 setTimeout(()=>{ liveTick(); setInterval(liveTick, 20000); }, 3500);
 // ---------- verbruiksteller ----------
 let _usage=null;
