@@ -904,6 +904,8 @@
   .evrow{display:flex;gap:12px;align-items:flex-start;padding:11px 4px;border-bottom:1px solid var(--line);cursor:pointer}
   .evrow:hover{background:var(--panel)}
   .evdot{width:9px;height:9px;border-radius:50%;margin-top:5px;flex:none}
+  .evchk{background:none;border:0;padding:0;margin-top:1px;flex:none;cursor:pointer;line-height:0}
+  .bv-later{display:flex;align-items:center;justify-content:space-between;margin-top:6px;padding:8px 0 2px;border-top:1px solid var(--line);color:var(--mut2);font-size:13px;cursor:pointer}
   .evtitle{font-size:14px;display:flex;align-items:center;gap:6px}
   .evtitle .kindic{color:var(--mut);flex:none}
   .evsub{font-size:12px;color:var(--mut2);margin-top:3px}
@@ -2600,7 +2602,7 @@
     </nav>
     <div class="spacer"></div>
     <div class="userbox">
-      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v299</span>
+      <span class="ver-chip" title="App-versie — hoog ik op bij elke deploy">v300</span>
       <!-- V244: loep verhuisd naar het hoofdmenu (waar Bestanden/Contacten stonden). -->
       <!-- V242: Dagoverzicht voorlopig uit beeld (afgesproken 16 juli) — openDayOverview en de overlay blijven in de code staan. -->
       <span id="usageChip" class="usage-chip" onclick="toggleUsage(event)" title="Verbruik deze maand"></span>
@@ -4558,10 +4560,16 @@ function agendaList(){
 // gecombineerde dagrijen: eerst afspraken (op tijd), dan taken
 function dayRows(di){return apptsOn(di).map(a=>apptRow(a,di)).join('')+itemsOn(di).map(evRow).join('');}
 
+// Afvinken vanuit de agenda: zelfde opslag als in Taken (pbToggleTask), eerst kort het vinkje tonen.
+function agendaAfvinken(id,btn){
+  const r=findItem(id); const col=(r&&r.p&&PROJCOL[r.p.id])||'#888';
+  if(btn){ btn.innerHTML=_bvBoxSvg(col,true); btn.disabled=true; }
+  setTimeout(()=>pbToggleTask(id,true),300);
+}
 function itemsOn(dayIso){return allItems().filter(x=>x.it.status!=='done'&&x.it.due===dayIso);}
 function evRow(x){const di=dueInfo(x.it.due);
   return `<div class="evrow" data-id="${x.it.id}" onclick="openModal('${x.it.id}')">
-    <span class="evdot" style="background:${PROJCOL[x.p.id]}"></span>
+    <button class="evchk" onclick="event.stopPropagation();agendaAfvinken('${x.it.id}',this)" title="Afvinken" aria-label="Afvinken">${_bvBoxSvg(PROJCOL[x.p.id]||'#888',false)}</button>
     <div class="evmain"><div class="evtitle">${escapeHtml(x.it.t)}</div>
     <div class="evsub">${escapeHtml(projName(x.p.id))}${projProj(x.p.id)?' — '+escapeHtml(projProj(x.p.id)):''} · ${escapeHtml(ownerText(x.it))}${x.it.due?' · '+escapeHtml(di.txt):''}</div></div>
   </div>`;}
@@ -8889,6 +8897,7 @@ render();
   <div id="auth_msg" style="color:var(--mut2);font-size:13px;min-height:16px"></div>
 </div>
 
+<script src="/taken-later.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ── config (publiek; veilig in de browser dankzij RLS) ──
@@ -9921,7 +9930,17 @@ function _bvVenster(p,items,mode){
       else los.push(...arr);
     });
     los.sort((a,b)=>((a.status==='done')-(b.status==='done'))||((a.due?d(a.due).getTime():8.64e15)-(b.due?d(b.due).getTime():8.64e15))||((b.created||0)-(a.created||0)));
-    if(los.length) h+=(h?'<div class="bv-scheiding"></div>':'')+'<div class="bv-rijen">'+los.map(it=>_bvRij(p,it,mode)).join('')+'</div>';
+    if(los.length){
+      // Taken met een deadline verder dan 7 dagen klappen in onder "Later" (zie public/taken-later.js).
+      if(mode==='taken'&&!window.TakenLater) console.error('taken-later.js niet geladen: Later-blok uit');
+      const sp=(mode==='taken'&&window.TakenLater)?TakenLater.splitsLater(los,iso(TODAY)):{nu:los,later:[]};
+      if(sp.nu.length) h+=(h?'<div class="bv-scheiding"></div>':'')+'<div class="bv-rijen">'+sp.nu.map(it=>_bvRij(p,it,mode)).join('')+'</div>';
+      if(sp.later.length){
+        const lKey=vKey+'|later-open', lOpen=_bvDicht.has(lKey);
+        h+=`<div class="bv-later" onclick="_bvKlap('${lKey}')"><span>Later · ${sp.later.length}</span>${_bvChev(lKey,!lOpen,col)}</div>`;
+        if(lOpen) h+='<div class="bv-rijen">'+sp.later.map(it=>_bvRij(p,it,mode)).join('')+'</div>';
+      }
+    }
   }
   const kopKlik=(p.id!=='__inbox__')?` onclick="openProjectBoard('${p.id}','klanten')"`:'';
   return `<div class="bv${vDicht?' dicht':''}" style="--kk:${col}">
