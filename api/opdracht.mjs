@@ -15,6 +15,8 @@ import { createClient } from "@supabase/supabase-js";
 import { extractItems } from "../intake/extract.mjs";
 import { logUsage } from "../lib/usage.mjs";
 import { sendToAll } from "../lib/push.mjs";
+import { isInspiratie, inspiratieLink, inspiratieThema } from "../lib/inspiratieregel.mjs";
+import { addInspirationLink } from "../intake/inspiration.mjs";
 
 const KEY = (process.env.ANTHROPIC_API_KEY || "").trim();
 const anthropic = KEY ? new Anthropic({ apiKey: KEY }) : null;
@@ -139,6 +141,27 @@ export default async function handler(req, res) {
   if (!db) return res.status(500).json({ error: "geen database-config" });
   const today = new Date().toISOString().slice(0, 10);
   const { catalog, context } = await loadCatalogContext(db);
+
+  // Inspiratie-route (gelijk aan WhatsApp): gedeelde Instagram-link of "insp" in de tekst
+  // gaat naar Inspiratie en maakt geen taken. Alleen voor tekst met een link; een foto
+  // volgt de gewone route.
+  if (!image && isInspiratie(text) && inspiratieLink(text)) {
+    try {
+      const thema = inspiratieThema(text);
+      const r = await addInspirationLink(db, { url: inspiratieLink(text), theme: thema || null });
+      const gekozen = (r && r.theme) || thema || "Inspiratie";
+      const { error: srcErr } = await db.from("sources").insert({
+        channel: "opdracht", sender: who || "Opdracht", subject: "", body: text,
+        received_at: new Date(), processed: true, summary: "Inspiratie · " + gekozen,
+      });
+      if (srcErr) throw srcErr;
+      try { await sendToAll(db, { title: "Inspiratie", body: "Toegevoegd · " + gekozen, url: "/" }); } catch (_) {}
+      return res.status(200).json({ ok: true, inspiratie: true, thema: gekozen });
+    } catch (e) {
+      console.error("opdracht-insp:", e.message);
+      return res.status(500).json({ ok: false, error: String(e.message || e) });
+    }
+  }
 
   try {
     let items = [], summary = "", contacts = [], usage = null;
